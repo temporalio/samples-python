@@ -1,0 +1,47 @@
+[tool.poetry]
+name = "temporalio-samples"
+version = "0.1a1"
+description = "Temporal.io Python SDK samples"
+license = "MIT"
+authors = ["Temporal Technologies Inc <sdk@temporal.io>"]
+readme = "README.md"
+homepage = "https://github.com/temporalio/samples-python"
+repository = "https://github.com/temporalio/samples-python"
+documentation = "https://docs.temporal.io/docs/python"
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/temporalio/samples-python/issues"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+temporalio = "0.1a1"
+
+[tool.poetry.dev-dependencies]
+black = "^21.12b0"
+isort = "^5.10.1"
+mypy = "^0.931"
+pytest = "^6.2.5"
+pytest-asyncio = "^0.18.0"
+
+[tool.poe.tasks]
+format = [{cmd = "black ."}, {cmd = "isort ."}]
+lint = [{cmd = "black --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]
+lint-types = "mypy ."
+test = "pytest"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+
+[tool.mypy]
+ignore_missing_imports = true

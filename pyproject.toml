@@ -14,7 +14,7 @@ documentation = "https://docs.temporal.io/docs/python"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-temporalio = "0.1a1"
+temporalio = "^0.1a1"
 
 [tool.poetry.dev-dependencies]
 black = "^21.12b0"

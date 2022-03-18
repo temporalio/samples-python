@@ -1,5 +1,7 @@
 # Temporal Python SDK Samples
 
+This is the set of Python samples for the [Python SDK](https://github.com/temporalio/sdk-python).
+
 **UNDER DEVELOPMENT**
 
 The Python SDK is under development. There are no compatibility guarantees nor proper documentation pages at this time.

@@ -1,6 +1,7 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import IntEnum
 from typing import List
 
 from temporalio import activity, workflow
@@ -30,9 +31,17 @@ async def order_oranges(amount: int) -> str:
     return f"Ordered {amount} Oranges..."
 
 
+# We have to make enumerates IntEnum to be JSON serializable
+class Fruit(IntEnum):
+    APPLE = 1
+    BANANA = 2
+    CHERRY = 3
+    ORANGE = 4
+
+
 @dataclass
 class ShoppingListItem:
-    fruit: str
+    fruit: Fruit
     amount: int
 
 
@@ -49,7 +58,7 @@ class PurchaseFruitsWorkflow:
         # Order each thing on the list
         ordered: List[str] = []
         for item in list.items:
-            if item.fruit == "apple":
+            if item.fruit is Fruit.APPLE:
                 ordered.append(
                     await workflow.execute_activity(
                         order_apples,
@@ -57,7 +66,7 @@ class PurchaseFruitsWorkflow:
                         start_to_close_timeout=timedelta(seconds=5),
                     )
                 )
-            elif item.fruit == "banana":
+            elif item.fruit is Fruit.BANANA:
                 ordered.append(
                     await workflow.execute_activity(
                         order_bananas,
@@ -65,7 +74,7 @@ class PurchaseFruitsWorkflow:
                         start_to_close_timeout=timedelta(seconds=5),
                     )
                 )
-            elif item.fruit == "cherry":
+            elif item.fruit is Fruit.CHERRY:
                 ordered.append(
                     await workflow.execute_activity(
                         order_cherries,
@@ -73,7 +82,7 @@ class PurchaseFruitsWorkflow:
                         start_to_close_timeout=timedelta(seconds=5),
                     )
                 )
-            elif item.fruit == "orange":
+            elif item.fruit is Fruit.ORANGE:
                 ordered.append(
                     await workflow.execute_activity(
                         order_oranges,
@@ -105,10 +114,10 @@ async def main():
             PurchaseFruitsWorkflow.run,
             ShoppingList(
                 [
-                    ShoppingListItem("apple", 8),
-                    ShoppingListItem("banana", 5),
-                    ShoppingListItem("cherry", 1),
-                    ShoppingListItem("orange", 4),
+                    ShoppingListItem(Fruit.APPLE, 8),
+                    ShoppingListItem(Fruit.BANANA, 5),
+                    ShoppingListItem(Fruit.CHERRY, 1),
+                    ShoppingListItem(Fruit.ORANGE, 4),
                 ]
             ),
             id="hello-activity-choice-workflow-id",

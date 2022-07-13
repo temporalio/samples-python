@@ -31,8 +31,11 @@ See each sample's directory for specific instructions.
   * [hello_activity](hello/hello_activity.py) - Execute an activity from a workflow.
   * [hello_activity_choice](hello/hello_activity_choice.py) - Execute certain activities inside a workflow based on
     dynamic input.
+  * [hello_activity_multiprocess](hello/hello_activity_multiprocess.py) - Execute a synchronous activity on a process
+    pool.
   * [hello_activity_retry](hello/hello_activity_retry.py) - Demonstrate activity retry by failing until a certain number
     of attempts.
+  * [hello_activity_threaded](hello/hello_activity_threaded.py) - Execute a synchronous activity on a thread pool.
   * [hello_async_activity_completion](hello/hello_async_activity_completion.py) - Complete an activity outside of the
     function that was called.
   * [hello_cancellation](hello/hello_cancellation.py) - Manually react to cancellation inside workflows and activities.

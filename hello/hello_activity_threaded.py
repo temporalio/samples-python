@@ -1,5 +1,7 @@
 import asyncio
-import logging
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -8,48 +10,50 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 
-# While we could use multiple parameters in the activity, Temporal strongly
-# encourages using a single dataclass instead which can have fields added to it
-# in a backwards-compatible way.
 @dataclass
 class ComposeGreetingInput:
     greeting: str
     name: str
 
 
-# Basic activity that logs and does string concatenation
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
-    activity.logger.info("Running activity with parameter %s" % input)
+def compose_greeting(input: ComposeGreetingInput) -> str:
+    # We'll wait for 3 seconds, heartbeating in between (like all long-running
+    # activities should do), then return the greeting
+    for _ in range(0, 3):
+        print(f"Heartbeating activity on thread {threading.get_ident()}")
+        activity.heartbeat()
+        time.sleep(1)
     return f"{input.greeting}, {input.name}!"
 
 
-# Basic workflow that logs and invokes an activity
 @workflow.defn
 class GreetingWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:
-        workflow.logger.info("Running workflow with parameter %s" % name)
         return await workflow.execute_activity(
             compose_greeting,
             ComposeGreetingInput("Hello", name),
             start_to_close_timeout=timedelta(seconds=10),
+            # Always set a heartbeat timeout for long-running activities
+            heartbeat_timeout=timedelta(seconds=2),
         )
 
 
 async def main():
-    # Uncomment the line below to see logging
-    # logging.basicConfig(level=logging.INFO)
-
     # Start client
     client = await Client.connect("http://localhost:7233")
 
     # Run a worker for the workflow
     async with Worker(
         client,
-        task_queue="hello-activity-task-queue",
+        task_queue="hello-activity-threaded-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
+        # Synchronous activities are not allowed unless we provide some kind of
+        # executor. This same thread pool could be passed to multiple workers if
+        # desired.
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to run the workflow and
@@ -58,10 +62,10 @@ async def main():
         result = await client.execute_workflow(
             GreetingWorkflow.run,
             "World",
-            id="hello-activity-workflow-id",
-            task_queue="hello-activity-task-queue",
+            id="hello-activity-threaded-workflow-id",
+            task_queue="hello-activity-threaded-task-queue",
         )
-        print(f"Result: {result}")
+        print(f"Result on thread {threading.get_ident()}: {result}")
 
 
 if __name__ == "__main__":

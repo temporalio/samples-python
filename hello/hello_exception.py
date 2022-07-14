@@ -1,11 +1,13 @@
 import asyncio
+import logging
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import NoReturn
+from typing import NoReturn, Optional
 
 from temporalio import activity, workflow
-from temporalio.client import Client
+from temporalio.client import Client, WorkflowFailureError
 from temporalio.common import RetryPolicy
+from temporalio.exceptions import FailureError
 from temporalio.worker import Worker
 
 
@@ -52,12 +54,38 @@ async def main():
         #
         # This will raise a WorkflowFailureError with cause ActivityError with
         # cause ApplicationError with the error message and stack trace.
-        await client.execute_workflow(
-            GreetingWorkflow.run,
-            "World",
-            id="hello-exception-workflow-id",
-            task_queue="hello-exception-task-queue",
-        )
+        try:
+            await client.execute_workflow(
+                GreetingWorkflow.run,
+                "World",
+                id="hello-exception-workflow-id",
+                task_queue="hello-exception-task-queue",
+            )
+        except WorkflowFailureError as err:
+            # Python does not support deserializing the traceback and putting it
+            # back on the exception so we cannot repopulate the stack. Instead,
+            # users can use the helper below to append the stack to the message.
+            #
+            # See https://github.com/temporalio/sdk-python/issues/58.
+            append_temporal_stack(err)
+
+            # Log the exception
+            logging.exception("Got workflow failure")
+
+
+# This is an example of appending the stack to every Temporal failure error
+def append_temporal_stack(exc: Optional[BaseException]) -> None:
+    while exc:
+        # Only append if it doesn't appear already there
+        if (
+            isinstance(exc, FailureError)
+            and exc.failure
+            and exc.failure.stack_trace
+            and len(exc.args) == 1
+            and "\nStack:\n" not in exc.args[0]
+        ):
+            exc.args = (f"{exc}\nStack:\n{exc.failure.stack_trace.rstrip()}",)
+        exc = exc.__cause__
 
 
 if __name__ == "__main__":

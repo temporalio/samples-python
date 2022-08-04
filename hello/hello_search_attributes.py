@@ -2,8 +2,8 @@ import asyncio
 from typing import List
 
 from temporalio import workflow
-from temporalio.client import Client, WorkflowDescription
-from temporalio.common import SearchAttributeValue
+from temporalio.client import Client, WorkflowExecutionDescription
+from temporalio.common import SearchAttributeValues
 from temporalio.converter import default as default_converter
 from temporalio.worker import Worker
 
@@ -17,23 +17,9 @@ class GreetingWorkflow:
         workflow.upsert_search_attributes({"CustomKeywordField": ["new-value"]})
 
 
-# Gets a search attribute and decodes it
-async def get_search_attribute(
-    desc: WorkflowDescription, name: str
-) -> List[SearchAttributeValue]:
-    payload = (
-        desc.raw_message.workflow_execution_info.search_attributes.indexed_fields.get(
-            name
-        )
-    )
-    if not payload:
-        return ["<unknown>"]
-    return (await default_converter().decode([payload]))[0]
-
-
 async def main():
     # Start client
-    client = await Client.connect("http://localhost:7233")
+    client = await Client.connect("localhost:7233")
 
     # Run a worker for the workflow
     async with Worker(
@@ -56,12 +42,12 @@ async def main():
         # Show search attributes before and after a few seconds
         print(
             "First search attribute values: ",
-            await get_search_attribute(await handle.describe(), "CustomKeywordField"),
+            (await handle.describe()).search_attributes.get("CustomKeywordField"),
         )
         await asyncio.sleep(3)
         print(
             "Second search attribute values: ",
-            await get_search_attribute(await handle.describe(), "CustomKeywordField"),
+            (await handle.describe()).search_attributes.get("CustomKeywordField"),
         )
 
 

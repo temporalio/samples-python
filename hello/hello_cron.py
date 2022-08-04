@@ -4,7 +4,6 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.common import RetryPolicy
 from temporalio.worker import Worker
 
 
@@ -28,12 +27,12 @@ class GreetingWorkflow:
             ComposeGreetingInput("Hello", name),
             start_to_close_timeout=timedelta(seconds=10),
         )
-        print(f"Result: {result}")
+        workflow.logger.info("Result: %s", result)
 
 
 async def main():
     # Start client
-    client = await Client.connect("http://localhost:7233")
+    client = await Client.connect("localhost:7233")
 
     # Run a worker for the workflow
     async with Worker(

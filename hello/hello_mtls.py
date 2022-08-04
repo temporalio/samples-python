@@ -37,7 +37,7 @@ async def main():
     # Load certs from CLI args
     parser = argparse.ArgumentParser(description="Use mTLS with server")
     parser.add_argument(
-        "--target-url", help="URL for the server", default="https://localhost:7233"
+        "--target-host", help="Host:port for the server", default="localhost:7233"
     )
     parser.add_argument(
         "--namespace", help="Namespace for the server", default="default"
@@ -63,9 +63,9 @@ async def main():
 
     # Start client with TLS configured
     client = await Client.connect(
-        args.target_url,
+        args.target_host,
         namespace=args.namespace,
-        tls_config=TLSConfig(
+        tls=TLSConfig(
             server_root_ca_cert=server_root_ca_cert,
             client_cert=client_cert,
             client_private_key=client_key,

@@ -48,7 +48,7 @@ class CancellationWorkflow:
 
 async def main():
     # Start client
-    client = await Client.connect("http://localhost:7233")
+    client = await Client.connect("localhost:7233")
 
     # Run a worker for the workflow
     async with Worker(

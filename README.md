@@ -40,8 +40,7 @@ See each sample's directory for specific instructions.
     function that was called.
   * [hello_cancellation](hello/hello_cancellation.py) - Manually react to cancellation inside workflows and activities.
   * [hello_child_workflow](hello/hello_child_workflow.py) - Execute a child workflow from a workflow.
-  * [hello_continue_as_new](hello/hello_continue_as_new.py) - Use continue as new on a workflow periodically until
-    signalled.
+  * [hello_continue_as_new](hello/hello_continue_as_new.py) - Use continue as new to restart a workflow.
   * [hello_cron](hello/hello_cron.py) - Execute a workflow once a minute.
   * [hello_exception](hello/hello_exception.py) - Execute an activity that raises an error out of the workflow and out
     of the program.

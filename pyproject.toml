@@ -8,13 +8,16 @@ readme = "README.md"
 homepage = "https://github.com/temporalio/samples-python"
 repository = "https://github.com/temporalio/samples-python"
 documentation = "https://docs.temporal.io/docs/python"
+packages = [
+    { include = "**/*.py", from = "."  }
+]
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/temporalio/samples-python/issues"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-temporalio = "^0.1a2"
+temporalio = "^0.1b1"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
@@ -26,7 +29,7 @@ pytest-asyncio = "^0.18.3"
 [tool.poe.tasks]
 format = [{cmd = "black ."}, {cmd = "isort ."}]
 lint = [{cmd = "black --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]
-lint-types = "mypy ."
+lint-types = "mypy --no-silence-site-packages --check-untyped-defs ."
 test = "pytest"
 
 [build-system]

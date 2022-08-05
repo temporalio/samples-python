@@ -18,7 +18,7 @@ async def say_hello_activity(name: str) -> str:
 
 async def main():
     # Create client to localhost on default namespace
-    client = await Client.connect("http://localhost:7233")
+    client = await Client.connect("localhost:7233")
 
     # Run activity worker
     async with Worker(client, task_queue=task_queue, activities=[say_hello_activity]):

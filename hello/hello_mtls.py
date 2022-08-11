@@ -60,7 +60,7 @@ async def main():
         client_cert = f.read()
     with open(args.client_key, "rb") as f:
         client_key = f.read()
-
+    # @@@SNIPSTART python-mtls-configuration
     # Start client with TLS configured
     client = await Client.connect(
         args.target_host,
@@ -71,6 +71,7 @@ async def main():
             client_private_key=client_key,
         ),
     )
+    # @@@SNIPEND
 
     # Run a worker for the workflow
     async with Worker(

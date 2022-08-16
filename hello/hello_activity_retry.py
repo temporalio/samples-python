@@ -32,12 +32,14 @@ class GreetingWorkflow:
         # for an unlimited amount of time and an unlimited number of attempts.
         # We'll keep those defaults except we'll set the maximum interval to
         # just 2 seconds.
+        # @@@SNIPSTART python-activity-retry
         return await workflow.execute_activity(
             compose_greeting,
             ComposeGreetingInput("Hello", name),
             start_to_close_timeout=timedelta(seconds=10),
             retry_policy=RetryPolicy(maximum_interval=timedelta(seconds=2)),
         )
+        # @@@SNIPEND
 
 
 async def main():

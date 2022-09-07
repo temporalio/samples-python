@@ -16,13 +16,13 @@ Prerequisites:
 
 With this repository cloned, run the following at the root of the directory:
 
-    poetry install --no-root
+    poetry install
 
-That loads all dependencies. Then to run a sample, usually you just run it in Python. For example:
+That loads all required dependencies. Then to run a sample, usually you just run it in Python. For example:
 
     poetry run python hello/hello_activity.py
 
-See each sample's directory for specific instructions.
+Some examples require extra dependencies. See each sample's directory for specific instructions.
 
 ## Samples
 
@@ -53,3 +53,4 @@ See each sample's directory for specific instructions.
     while running.
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
+* [encryption](encryption) - Apply end-to-end encryption for all input/output.

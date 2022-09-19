@@ -52,5 +52,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_search_attributes](hello/hello_search_attributes.py) - Start workflow with search attributes then change
     while running.
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
+<!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
+* [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.

@@ -11,4 +11,5 @@ This will start the worker. Then, in another terminal, run the following to exec
 
     poetry run python starter.py
 
-The workflow should complete with the hello result. If the custom converter was not set for the custom input and output classes, we would get an error on the client side and on the worker side.
+The workflow should complete with the hello result. If the custom converter was not set for the custom input and output
+classes, we would get an error on the client side and on the worker side.

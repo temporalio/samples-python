@@ -53,4 +53,6 @@ Some examples require extra dependencies. See each sample's directory for specif
     while running.
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
+* [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
+* [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.

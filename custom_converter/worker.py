@@ -34,7 +34,7 @@ class GreetingWorkflow:
 class GreetingEncodingPayloadConverter(EncodingPayloadConverter):
     @property
     def encoding(self) -> str:
-        return "my-greeting-encoding"
+        return "text/my-greeting-encoding"
 
     def to_payload(self, value: Any) -> Optional[Payload]:
         if isinstance(value, GreetingInput):

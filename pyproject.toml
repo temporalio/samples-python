@@ -36,7 +36,7 @@ dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 [tool.poe.tasks]
 format = [{cmd = "black ."}, {cmd = "isort ."}]
 lint = [{cmd = "black --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]
-lint-types = "mypy --no-silence-site-packages --check-untyped-defs ."
+lint-types = "mypy --check-untyped-defs ."
 test = "pytest"
 
 [build-system]
@@ -55,6 +55,7 @@ skip_gitignore = true
 
 [tool.mypy]
 ignore_missing_imports = true
+namespace_packages = true
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

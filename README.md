@@ -56,3 +56,14 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
+
+
+## Test
+
+Running the tests requires `poe` to be installed.
+
+    python -m pip install poethepoet
+
+Once you have `poe` installed you can run:
+
+    poe test

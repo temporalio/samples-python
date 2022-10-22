@@ -16,7 +16,7 @@ class GreetingWorkflow:
     async def run(self) -> List[str]:
         # Continually handle from queue or wait for exit to be received
         greetings: List[str] = []
-        while not self._exit:
+        while True:
             # Wait for queue item or exit
             await workflow.wait_condition(
                 lambda: not self._pending_greetings.empty() or self._exit
@@ -26,7 +26,9 @@ class GreetingWorkflow:
             while not self._pending_greetings.empty():
                 greetings.append(f"Hello, {self._pending_greetings.get_nowait()}")
 
-        return greetings
+            # Exit it complete
+            if self._exit:
+                return greetings
 
     @workflow.signal
     async def submit_greeting(self, name: str) -> None:

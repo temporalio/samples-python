@@ -26,7 +26,7 @@ class GreetingWorkflow:
             while not self._pending_greetings.empty():
                 greetings.append(f"Hello, {self._pending_greetings.get_nowait()}")
 
-            # Exit it complete
+            # Exit if complete
             if self._exit:
                 return greetings
 

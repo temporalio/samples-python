@@ -13,11 +13,6 @@ from temporalio.worker import (
 )
 
 
-def _make_serializable_args(args: list[Any]):
-    """Convert dataclass arg values to dict, making args list JSON serializable"""
-    return [asdict(arg) if is_dataclass(arg) else arg for arg in args]
-
-
 class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
     async def execute_activity(self, input: ExecuteActivityInput) -> Any:
         transaction_name = input.fn.__module__ + "." + input.fn.__name__
@@ -30,9 +25,10 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
             try:
                 return await super().execute_activity(input)
             except Exception as e:
-                sentry_sdk.set_context(
-                    "temporal.activity.input", _make_serializable_args(input.args)
-                )
+                if len(input.args) == 1 and is_dataclass(input.args[0]):
+                    sentry_sdk.set_context(
+                        "temporal.activity.input", asdict(input.args[0])
+                    )
                 sentry_sdk.capture_exception(e)
                 raise e
             finally:
@@ -51,9 +47,10 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
             try:
                 return await super().execute_workflow(input)
             except Exception as e:
-                sentry_sdk.set_context(
-                    "temporal.workflow.input", _make_serializable_args(input.args)
-                )
+                if len(input.args) == 1 and is_dataclass(input.args[0]):
+                    sentry_sdk.set_context(
+                        "temporal.workflow.input", asdict(input.args[0])
+                    )
                 sentry_sdk.set_context(
                     "temporal.workflow.info", workflow.info().__dict__
                 )

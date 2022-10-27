@@ -54,5 +54,17 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
+* [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
+* [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
+
+## Test
+
+Running the tests requires `poe` to be installed.
+
+    python -m pip install poethepoet
+
+Once you have `poe` installed you can run:
+
+    poe test

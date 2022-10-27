@@ -10,12 +10,7 @@ For this sample, the optional `open_telemetry` dependency group must be included
 To run, first see [README.md](../README.md) for prerequisites. Then run the following to start a Jaeger container to
 view the trace results:
 
-    docker run -d --name jaeger \
-      -e COLLECTOR_OTLP_ENABLED=true \
-      -p 16686:16686 \
-      -p 4317:4317 \
-      -p 4318:4318 \
-      jaegertracing/all-in-one:latest
+    docker run -d --name jaeger -p 16686:16686 -p 6831:6831/udp jaegertracing/all-in-one:latest
 
 Now, from this directory, start the worker in one terminal:
 
@@ -35,3 +30,18 @@ Note, in-workflow spans do not have a time associated with them. This is by inte
 OpenTelemetry, only the process that started the span may end it. But in Temporal a span may cross workers/processes.
 Therefore we intentionally start-then-end in-workflow spans immediately. So while the start time and hierarchy is
 accurate, the duration is not.
+
+## OTLP gRPC
+
+Currently this example uses the `opentelemetry-exporter-jaeger-thrift` exporter because the common OTLP gRPC exporter
+`opentelemetry-exporter-otlp-proto-grpc` uses an older, incompatible `protobuf` library. See
+[this issue](https://github.com/open-telemetry/opentelemetry-python/issues/2880) for more information.
+
+Once OTel supports latest protobuf, the exporter can be changed and Jaeger could be run with:
+
+    docker run -d --name jaeger \
+      -e COLLECTOR_OTLP_ENABLED=true \
+      -p 16686:16686 \
+      -p 4317:4317 \
+      -p 4318:4318 \
+      jaegertracing/all-in-one:latest

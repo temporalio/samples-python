@@ -2,7 +2,8 @@ import asyncio
 from datetime import timedelta
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+# See note in README about why Thrift
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -33,7 +34,7 @@ interrupt_event = asyncio.Event()
 
 def init_opentelemetry() -> None:
     provider = TracerProvider(resource=Resource.create({SERVICE_NAME: "my-service"}))
-    provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+    provider.add_span_processor(BatchSpanProcessor(JaegerExporter()))
     trace.set_tracer_provider(provider)
 
 

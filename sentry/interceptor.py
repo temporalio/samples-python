@@ -16,10 +16,8 @@ from temporalio.worker import (
 def _set_common_workflow_tags(
     info: workflow.Info | activity.Info,
 ):
-    sentry_sdk.set_tag("temporal.workflow.namespace", info.workflow_namespace)
     sentry_sdk.set_tag("temporal.workflow.type", info.workflow_type)
     sentry_sdk.set_tag("temporal.workflow.id", info.workflow_id)
-    sentry_sdk.set_tag("temporal.workflow.run_id", info.run_id)
 
 
 class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
@@ -35,6 +33,12 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
             sentry_sdk.set_tag("temporal.activity.id", activity_info.activity_id)
             sentry_sdk.set_tag("temporal.activity.type", activity_info.activity_type)
             sentry_sdk.set_tag("temporal.activity.task_queue", activity_info.task_queue)
+            sentry_sdk.set_tag(
+                "temporal.workflow.namespace", activity_info.workflow_namespace
+            )
+            sentry_sdk.set_tag(
+                "temporal.workflow.run_id", activity_info.workflow_run_id
+            )
             try:
                 return await super().execute_activity(input)
             except Exception as e:
@@ -62,6 +66,8 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
             workflow_info = workflow.info()
             _set_common_workflow_tags(workflow_info)
             sentry_sdk.set_tag("temporal.workflow.task_queue", workflow_info.task_queue)
+            sentry_sdk.set_tag("temporal.workflow.namespace", workflow_info.namespace)
+            sentry_sdk.set_tag("temporal.workflow.run_id", workflow_info.run_id)
             try:
                 return await super().execute_workflow(input)
             except Exception as e:

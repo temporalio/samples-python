@@ -2,6 +2,7 @@ import asyncio
 from datetime import timedelta
 
 from opentelemetry import trace
+
 # See note in README about why Thrift
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource

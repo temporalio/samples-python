@@ -2,7 +2,7 @@ from dataclasses import asdict, is_dataclass
 from typing import Any, Optional, Type
 
 import sentry_sdk
-from temporalio import workflow
+from temporalio import workflow, activity
 from temporalio.worker import (
     ActivityInboundInterceptor,
     ExecuteActivityInput,
@@ -13,15 +13,28 @@ from temporalio.worker import (
 )
 
 
+def _set_common_workflow_tags(
+    info: workflow.Info | activity.Info,
+):
+    sentry_sdk.set_tag("temporal.workflow.namespace", info.workflow_namespace)
+    sentry_sdk.set_tag("temporal.workflow.type", info.workflow_type)
+    sentry_sdk.set_tag("temporal.workflow.id", info.workflow_id)
+    sentry_sdk.set_tag("temporal.workflow.run_id", info.run_id)
+
+
 class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
     async def execute_activity(self, input: ExecuteActivityInput) -> Any:
-        transaction_name = input.fn.__module__ + "." + input.fn.__name__
+        transaction_name = input.fn.__module__ + "." + input.fn.__qualname__
         scope_ctx_manager = sentry_sdk.configure_scope()
         with scope_ctx_manager as scope, sentry_sdk.start_transaction(
             name=transaction_name
         ):
             sentry_sdk.set_tag("temporal.execution_type", "activity")
-            sentry_sdk.set_tag("temporal.activity.name", input.fn.__name__)
+            activity_info = activity.info()
+            _set_common_workflow_tags(activity_info)
+            sentry_sdk.set_tag("temporal.activity.id", activity_info.activity_id)
+            sentry_sdk.set_tag("temporal.activity.type", activity_info.activity_type)
+            sentry_sdk.set_tag("temporal.activity.task_queue", activity_info.task_queue)
             try:
                 return await super().execute_activity(input)
             except Exception as e:
@@ -29,6 +42,9 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
                     sentry_sdk.set_context(
                         "temporal.activity.input", asdict(input.args[0])
                     )
+                sentry_sdk.set_context(
+                    "temporal.activity.info", activity.info().__dict__
+                )
                 sentry_sdk.capture_exception(e)
                 raise e
             finally:
@@ -37,13 +53,15 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
 
 class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
     async def execute_workflow(self, input: ExecuteWorkflowInput) -> Any:
-        transaction_name = input.type.__module__ + "." + input.type.__name__
+        transaction_name = input.fn.__module__ + "." + input.fn.__qualname__
         scope_ctx_manager = sentry_sdk.configure_scope()
         with scope_ctx_manager as scope, sentry_sdk.start_transaction(
             name=transaction_name
         ):
             sentry_sdk.set_tag("temporal.execution_type", "workflow")
-            sentry_sdk.set_tag("temporal.workflow.name", input.type.__name__)
+            workflow_info = workflow.info()
+            _set_common_workflow_tags(workflow_info)
+            sentry_sdk.set_tag("temporal.workflow.task_queue", workflow_info.task_queue)
             try:
                 return await super().execute_workflow(input)
             except Exception as e:
@@ -61,6 +79,8 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
 
 
 class SentryInterceptor(Interceptor):
+    """Temporal Interceptor class which will report workflow & activity exceptions to Sentry"""
+
     def intercept_activity(
         self, next: ActivityInboundInterceptor
     ) -> ActivityInboundInterceptor:

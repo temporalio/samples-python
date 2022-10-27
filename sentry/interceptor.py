@@ -53,7 +53,7 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
 
 class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
     async def execute_workflow(self, input: ExecuteWorkflowInput) -> Any:
-        transaction_name = input.fn.__module__ + "." + input.fn.__qualname__
+        transaction_name = input.run_fn.__module__ + "." + input.run_fn.__qualname__
         scope_ctx_manager = sentry_sdk.configure_scope()
         with scope_ctx_manager as scope, sentry_sdk.start_transaction(
             name=transaction_name

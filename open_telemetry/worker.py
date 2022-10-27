@@ -9,6 +9,7 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import activity, workflow
+from temporalio.bridge import telemetry
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.worker import Worker
@@ -34,9 +35,19 @@ interrupt_event = asyncio.Event()
 
 
 def init_opentelemetry() -> None:
+    # Setup global tracer for workflow traces
     provider = TracerProvider(resource=Resource.create({SERVICE_NAME: "my-service"}))
     provider.add_span_processor(BatchSpanProcessor(JaegerExporter()))
     trace.set_tracer_provider(provider)
+
+    # Setup SDK metrics to OTel endpoint
+    telemetry.init_telemetry(
+        telemetry.TelemetryConfig(
+            otel_metrics=telemetry.OtelCollectorConfig(
+                url="http://localhost:4317", headers={}
+            )
+        )
+    )
 
 
 async def main():

@@ -7,7 +7,7 @@ from temporalio.api.common.v1 import Payload
 from temporalio.converter import PayloadCodec
 
 default_key = b"test-key-test-key-test-key-test!"
-default_key_id = "my-key"
+default_key_id = "test-key-id"
 
 
 class EncryptionCodec(PayloadCodec):

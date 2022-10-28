@@ -20,10 +20,10 @@ async def main():
 
     # Run workflow
     result = await client.execute_workflow(
-        GreetingWorkflow.run,
+        @workflow.defn(name="Workflow"),
         "Temporal",
         id=f"encryption-workflow-id",
-        task_queue="encryption-task-queue",
+        task_queue="encryption",
     )
     print(f"Workflow result: {result}")
 

@@ -33,6 +33,12 @@ pytest-asyncio = "^0.18.3"
 optional = true
 dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 
+[tool.poetry.group.open_telemetry]
+optional = true
+[tool.poetry.group.open_telemetry.dependencies]
+temporalio = { version = "*", extras = ["opentelemetry"] }
+opentelemetry-exporter-jaeger-thrift = "^1.13.0"
+
 [tool.poe.tasks]
 format = [{cmd = "black ."}, {cmd = "isort ."}]
 lint = [{cmd = "black --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]
@@ -59,4 +65,8 @@ namespace_packages = true
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "opentelemetry.*"
 ignore_errors = true

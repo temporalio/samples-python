@@ -14,10 +14,10 @@ from temporalio.worker import (
 
 
 def _set_common_workflow_tags(
-    info: workflow.Info | activity.Info,
+    info: workflow.Info | activity.Info, scope: sentry_sdk.Scope
 ):
-    sentry_sdk.set_tag("temporal.workflow.type", info.workflow_type)
-    sentry_sdk.set_tag("temporal.workflow.id", info.workflow_id)
+    scope.set_tag("temporal.workflow.type", info.workflow_type)
+    scope.set_tag("temporal.workflow.id", info.workflow_id)
 
 
 class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
@@ -27,28 +27,22 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
         with scope_ctx_manager as scope, sentry_sdk.start_transaction(
             name=transaction_name
         ):
-            sentry_sdk.set_tag("temporal.execution_type", "activity")
+            scope.set_tag("temporal.execution_type", "activity")
             activity_info = activity.info()
-            _set_common_workflow_tags(activity_info)
-            sentry_sdk.set_tag("temporal.activity.id", activity_info.activity_id)
-            sentry_sdk.set_tag("temporal.activity.type", activity_info.activity_type)
-            sentry_sdk.set_tag("temporal.activity.task_queue", activity_info.task_queue)
-            sentry_sdk.set_tag(
+            _set_common_workflow_tags(activity_info, scope)
+            scope.set_tag("temporal.activity.id", activity_info.activity_id)
+            scope.set_tag("temporal.activity.type", activity_info.activity_type)
+            scope.set_tag("temporal.activity.task_queue", activity_info.task_queue)
+            scope.set_tag(
                 "temporal.workflow.namespace", activity_info.workflow_namespace
             )
-            sentry_sdk.set_tag(
-                "temporal.workflow.run_id", activity_info.workflow_run_id
-            )
+            scope.set_tag("temporal.workflow.run_id", activity_info.workflow_run_id)
             try:
                 return await super().execute_activity(input)
             except Exception as e:
                 if len(input.args) == 1 and is_dataclass(input.args[0]):
-                    sentry_sdk.set_context(
-                        "temporal.activity.input", asdict(input.args[0])
-                    )
-                sentry_sdk.set_context(
-                    "temporal.activity.info", activity.info().__dict__
-                )
+                    scope.set_context("temporal.activity.input", asdict(input.args[0]))
+                scope.set_context("temporal.activity.info", activity.info().__dict__)
                 sentry_sdk.capture_exception(e)
                 raise e
             finally:
@@ -62,22 +56,18 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
         with scope_ctx_manager as scope, sentry_sdk.start_transaction(
             name=transaction_name
         ):
-            sentry_sdk.set_tag("temporal.execution_type", "workflow")
+            scope.set_tag("temporal.execution_type", "workflow")
             workflow_info = workflow.info()
-            _set_common_workflow_tags(workflow_info)
-            sentry_sdk.set_tag("temporal.workflow.task_queue", workflow_info.task_queue)
-            sentry_sdk.set_tag("temporal.workflow.namespace", workflow_info.namespace)
-            sentry_sdk.set_tag("temporal.workflow.run_id", workflow_info.run_id)
+            _set_common_workflow_tags(workflow_info, scope)
+            scope.set_tag("temporal.workflow.task_queue", workflow_info.task_queue)
+            scope.set_tag("temporal.workflow.namespace", workflow_info.namespace)
+            scope.set_tag("temporal.workflow.run_id", workflow_info.run_id)
             try:
                 return await super().execute_workflow(input)
             except Exception as e:
                 if len(input.args) == 1 and is_dataclass(input.args[0]):
-                    sentry_sdk.set_context(
-                        "temporal.workflow.input", asdict(input.args[0])
-                    )
-                sentry_sdk.set_context(
-                    "temporal.workflow.info", workflow.info().__dict__
-                )
+                    scope.set_context("temporal.workflow.input", asdict(input.args[0]))
+                scope.set_context("temporal.workflow.info", workflow.info().__dict__)
                 sentry_sdk.capture_exception(e)
                 raise e
             finally:

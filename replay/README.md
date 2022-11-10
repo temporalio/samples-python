@@ -21,7 +21,7 @@ Which should produce some output like:
     WorkflowReplayResults(replay_failures={})
 
 Great! Replay worked. Of course, the reason for the exercise is to catch if you've changed workflow
-code in a manner which is *not* compatible with the existin histories. Try it. Open up `worker.py`
+code in a manner which is *not* compatible with the existing histories. Try it. Open up `worker.py`
 and change the `JustActivity` workflow to sleep just before running the activity. Add
 `await asyncio.sleep(0.1)` just before the line with `workflow.execute_activity`.
 

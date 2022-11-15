@@ -434,6 +434,17 @@ typing-extensions = {version = ">=3.7.2", markers = "python_version < \"3.8\""}
 testing = ["coverage (==6.2)", "flaky (>=3.5.0)", "hypothesis (>=5.7.1)", "mypy (==0.931)", "pytest-trio (>=0.7.0)"]
 
 [[package]]
+name = "python-dateutil"
+version = "2.8.2"
+description = "Extensions to the standard Python datetime module"
+category = "main"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+
+[package.dependencies]
+six = ">=1.5"
+
+[[package]]
 name = "setuptools"
 version = "65.5.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -456,7 +467,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "temporalio"
-version = "0.1b2"
+version = "0.1b3"
 description = "Temporal.io Python SDK"
 category = "main"
 optional = false
@@ -467,6 +478,7 @@ grpcio = ">=1.48.0,<2.0.0"
 opentelemetry-api = {version = ">=1.11.1,<2.0.0", optional = true, markers = "extra == \"opentelemetry\""}
 opentelemetry-sdk = {version = ">=1.11.1,<2.0.0", optional = true, markers = "extra == \"opentelemetry\""}
 protobuf = ">=4.21,<4.22"
+python-dateutil = {version = ">=2.8.2,<3.0.0", markers = "python_version < \"3.11\""}
 types-protobuf = ">=3.20,<3.21"
 typing-extensions = ">=4.2.0,<5.0.0"
 
@@ -557,7 +569,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "19807842dede9104ff28469e05eb4638dc9cfe15f59fcb6f7945450d9dfef374"
+content-hash = "e69c332108ce8982c06e65171c8959dac70b8d6a74a0f9a63936db4c82e71240"
 
 [metadata.files]
 aiohttp = [
@@ -1081,6 +1093,10 @@ pytest-asyncio = [
     {file = "pytest_asyncio-0.18.3-1-py3-none-any.whl", hash = "sha256:16cf40bdf2b4fb7fc8e4b82bd05ce3fbcd454cbf7b92afc445fe299dabb88213"},
     {file = "pytest_asyncio-0.18.3-py3-none-any.whl", hash = "sha256:8fafa6c52161addfd41ee7ab35f11836c5a16ec208f93ee388f752bea3493a84"},
 ]
+python-dateutil = [
+    {file = "python-dateutil-2.8.2.tar.gz", hash = "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86"},
+    {file = "python_dateutil-2.8.2-py2.py3-none-any.whl", hash = "sha256:961d03dc3453ebbc59dbdea9e4e11c5651520a876d0f4db161e8674aae935da9"},
+]
 setuptools = [
     {file = "setuptools-65.5.0-py3-none-any.whl", hash = "sha256:f62ea9da9ed6289bfe868cd6845968a2c854d1427f8548d52cae02a42b4f0356"},
     {file = "setuptools-65.5.0.tar.gz", hash = "sha256:512e5536220e38146176efb833d4a62aa726b7bbff82cfbc8ba9eaa3996e0b17"},
@@ -1090,11 +1106,12 @@ six = [
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
 temporalio = [
-    {file = "temporalio-0.1b2-cp37-abi3-macosx_10_16_x86_64.whl", hash = "sha256:62d50c72127f6741e152a077f56f3047f6256f4941a5c76d3356c58ea5566dc8"},
-    {file = "temporalio-0.1b2-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:0bad3aa899b8d953ce176bb55d78a1415cc52a1297024e25680b9aaa8e13e9cb"},
-    {file = "temporalio-0.1b2-cp37-abi3-win_amd64.whl", hash = "sha256:a599b3e2977d2d66a52a3e8948964da2663b6003a6e03427b2c90354c2c0dc23"},
-    {file = "temporalio-0.1b2-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:296ad431e78e377f0c9f04786a51e23a57c42d4854f0458f97c25058a10617f2"},
-    {file = "temporalio-0.1b2.tar.gz", hash = "sha256:12baf4e107dfb78c4cfe3e64df04421d17193d163886658de4661b5d6c3eb485"},
+    {file = "temporalio-0.1b3-cp37-abi3-macosx_10_16_x86_64.whl", hash = "sha256:97cceca6b4c923c837c9f47a2ec8c345499e8653da17d7c9e244cbb68d3e8c07"},
+    {file = "temporalio-0.1b3-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:7f3ee745f2172d1716c064f3b6f06bde1e905870ccf4bb731e01293786e6396e"},
+    {file = "temporalio-0.1b3-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:a4e9c2ffc8089c6bcae78104d75db08bf75a784bee15cecba64a729013bbfef2"},
+    {file = "temporalio-0.1b3-cp37-abi3-win_amd64.whl", hash = "sha256:f694e91e06fc81a83ab722e3ca0650eb367dc14a3e7011067eaa3a5fc8c8874d"},
+    {file = "temporalio-0.1b3-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:5fab5060139afadbbdab093c61c2fcf214436781c9a8a616f42dd13be3d7b11b"},
+    {file = "temporalio-0.1b3.tar.gz", hash = "sha256:8f2ea6f32cc7fbbdb7bfd0bf9a9338715444d37c5e1a43b3b0a4b3301e3523e1"},
 ]
 thrift = [
     {file = "thrift-0.16.0.tar.gz", hash = "sha256:2b5b6488fcded21f9d312aa23c9ff6a0195d0f6ae26ddbd5ad9e3e25dfc14408"},

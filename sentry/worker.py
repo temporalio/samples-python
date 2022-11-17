@@ -49,20 +49,15 @@ async def main():
     client = await Client.connect("localhost:7233")
 
     # Run a worker for the workflow
-    async with Worker(
+    worker = Worker(
         client,
-        task_queue="hello-activity-task-queue",
+        task_queue="sentry-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
         interceptors=[SentryInterceptor()],  # Use SentryInterceptor for error reporting
-    ):
-        result = await client.execute_workflow(
-            GreetingWorkflow.run,
-            "World",
-            id="hello-activity-workflow-id",
-            task_queue="hello-activity-task-queue",
-        )
-        print(f"Result: {result}")
+    )
+
+    await worker.run()
 
 
 if __name__ == "__main__":

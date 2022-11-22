@@ -36,6 +36,7 @@ class JustActivity:
             start_to_close_timeout=timedelta(seconds=10),
         )
 
+
 # A workflow which just runs a timer
 @workflow.defn
 class JustTimer:
@@ -45,12 +46,15 @@ class JustTimer:
         await asyncio.sleep(0.1)
         return "Slept"
 
+
 # A workflow which runs a timer then an activity
 @workflow.defn
 class TimerThenActivity:
     @workflow.run
     async def run(self, name: str) -> str:
-        workflow.logger.info("Running timer then activity workflow with parameter %s" % name)
+        workflow.logger.info(
+            "Running timer then activity workflow with parameter %s" % name
+        )
         await asyncio.sleep(0.1)
         return await workflow.execute_activity(
             compose_greeting,
@@ -71,10 +75,10 @@ async def main():
 
     # Run a worker for the workflow
     async with Worker(
-            client,
-            task_queue="replay-sample",
-            workflows=[JustActivity, JustTimer, TimerThenActivity],
-            activities=[compose_greeting],
+        client,
+        task_queue="replay-sample",
+        workflows=[JustActivity, JustTimer, TimerThenActivity],
+        activities=[compose_greeting],
     ):
         # Wait until interrupted
         print("Worker started, ctrl+c to exit")

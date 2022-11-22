@@ -13,9 +13,7 @@ async def main():
     # Fetch the histories of the workflows to be replayed
     workflows = client.list_workflows('WorkflowId="replayer-workflow-id"')
     histories = workflows.map_histories()
-    replayer = Replayer(
-        workflows=[JustActivity, JustTimer, TimerThenActivity]
-    )
+    replayer = Replayer(workflows=[JustActivity, JustTimer, TimerThenActivity])
     results = await replayer.replay_workflows(histories, raise_on_replay_failure=False)
     print(results)
 

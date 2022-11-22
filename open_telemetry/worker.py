@@ -1,6 +1,7 @@
 import asyncio
 from datetime import timedelta
 
+import opentelemetry.context
 from opentelemetry import trace
 
 # See note in README about why Thrift
@@ -9,7 +10,12 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import activity, workflow
-from temporalio.bridge import telemetry
+from temporalio.bridge.runtime import (
+    MetricsConfig,
+    OpenTelemetryConfig,
+    Runtime,
+    TelemetryConfig,
+)
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.worker import Worker
@@ -34,30 +40,38 @@ async def compose_greeting(name: str) -> str:
 interrupt_event = asyncio.Event()
 
 
-def init_opentelemetry() -> None:
+def init_runtime_with_telemetry() -> Runtime:
     # Setup global tracer for workflow traces
     provider = TracerProvider(resource=Resource.create({SERVICE_NAME: "my-service"}))
     provider.add_span_processor(BatchSpanProcessor(JaegerExporter()))
     trace.set_tracer_provider(provider)
 
     # Setup SDK metrics to OTel endpoint
-    telemetry.init_telemetry(
-        telemetry.TelemetryConfig(
-            otel_metrics=telemetry.OtelCollectorConfig(
-                url="http://localhost:4317", headers={}
+    return Runtime(
+        telemetry=TelemetryConfig(
+            # TODO(cretz): Remove type ignore when
+            # https://github.com/temporalio/sdk-python/issues/198 fixed
+            metrics=MetricsConfig(  # type: ignore
+                opentelemetry=OpenTelemetryConfig(
+                    url="http://localhost:4317", headers={}
+                )
             )
         )
     )
 
 
 async def main():
-    init_opentelemetry()
+    runtime = init_runtime_with_telemetry()
+
+    # See https://github.com/temporalio/sdk-python/issues/199
+    opentelemetry.context.get_current()
 
     # Connect client
     client = await Client.connect(
         "localhost:7233",
         # Use OpenTelemetry interceptor
         interceptors=[TracingInterceptor()],
+        runtime=runtime,
     )
 
     # Run a worker for the workflow

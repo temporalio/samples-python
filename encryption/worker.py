@@ -9,7 +9,7 @@ from temporalio.worker import Worker
 from encryption.codec import EncryptionCodec
 
 
-@workflow.defn
+@workflow.defn(name="Workflow")
 class GreetingWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:

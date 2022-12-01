@@ -6,8 +6,8 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import PayloadCodec
 
-default_key = base64.b64decode(b"MkUb3RVdHQuOTedqETZW7ra2GkZqpBRmYWRACUospMc=")
-default_key_id = "my-key"
+default_key = b"test-key-test-key-test-key-test!"
+default_key_id = "test-key-id"
 
 
 class EncryptionCodec(PayloadCodec):
@@ -43,7 +43,9 @@ class EncryptionCodec(PayloadCodec):
             # Confirm our key ID is the same
             key_id = p.metadata.get("encryption-key-id", b"").decode()
             if key_id != self.key_id:
-                raise ValueError(f"Unrecognized key ID {key_id}")
+                raise ValueError(
+                    f"Unrecognized key ID {key_id}. Current key ID is {self.key_id}."
+                )
             # Decrypt and append
             ret.append(Payload.FromString(self.decrypt(p.data)))
         return ret

@@ -1,8 +1,8 @@
 from dataclasses import asdict, is_dataclass
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 
 import sentry_sdk
-from temporalio import workflow, activity
+from temporalio import activity, workflow
 from temporalio.worker import (
     ActivityInboundInterceptor,
     ExecuteActivityInput,
@@ -14,7 +14,7 @@ from temporalio.worker import (
 
 
 def _set_common_workflow_tags(
-    info: workflow.Info | activity.Info, scope: sentry_sdk.Scope
+    info: Union[workflow.Info, activity.Info], scope: sentry_sdk.Scope
 ):
     scope.set_tag("temporal.workflow.type", info.workflow_type)
     scope.set_tag("temporal.workflow.id", info.workflow_id)

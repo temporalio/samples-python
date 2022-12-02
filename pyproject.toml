@@ -39,6 +39,10 @@ optional = true
 temporalio = { version = "*", extras = ["opentelemetry"] }
 opentelemetry-exporter-jaeger-thrift = "^1.13.0"
 
+[tool.poetry.group.sentry]
+optional = true
+dependencies = { sentry-sdk = "^1.11.0" }
+
 [tool.poe.tasks]
 format = [{cmd = "black ."}, {cmd = "isort ."}]
 lint = [{cmd = "black --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]

@@ -508,7 +508,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
 name = "temporalio"
-version = "0.1b3"
+version = "0.1b4"
 description = "Temporal.io Python SDK"
 category = "main"
 optional = false
@@ -518,7 +518,7 @@ python-versions = ">=3.7,<4.0"
 grpcio = ">=1.48.0,<2.0.0"
 opentelemetry-api = {version = ">=1.11.1,<2.0.0", optional = true, markers = "extra == \"opentelemetry\""}
 opentelemetry-sdk = {version = ">=1.11.1,<2.0.0", optional = true, markers = "extra == \"opentelemetry\""}
-protobuf = ">=4.21,<4.22"
+protobuf = ">=3.19"
 python-dateutil = {version = ">=2.8.2,<3.0.0", markers = "python_version < \"3.11\""}
 types-protobuf = ">=3.20,<3.21"
 typing-extensions = ">=4.2.0,<5.0.0"
@@ -623,7 +623,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "31368c8e4fee9c79feab473c6716465822c13b46228a76e810d6aec530c394d3"
+content-hash = "ad8c53c95774f95beba1d7acc1020738e3858935009ad64754fafb79fd4f520b"
 
 [metadata.files]
 aiohttp = [
@@ -1168,12 +1168,12 @@ six = [
     {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
 ]
 temporalio = [
-    {file = "temporalio-0.1b3-cp37-abi3-macosx_10_16_x86_64.whl", hash = "sha256:97cceca6b4c923c837c9f47a2ec8c345499e8653da17d7c9e244cbb68d3e8c07"},
-    {file = "temporalio-0.1b3-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:7f3ee745f2172d1716c064f3b6f06bde1e905870ccf4bb731e01293786e6396e"},
-    {file = "temporalio-0.1b3-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:a4e9c2ffc8089c6bcae78104d75db08bf75a784bee15cecba64a729013bbfef2"},
-    {file = "temporalio-0.1b3-cp37-abi3-win_amd64.whl", hash = "sha256:f694e91e06fc81a83ab722e3ca0650eb367dc14a3e7011067eaa3a5fc8c8874d"},
-    {file = "temporalio-0.1b3-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:5fab5060139afadbbdab093c61c2fcf214436781c9a8a616f42dd13be3d7b11b"},
-    {file = "temporalio-0.1b3.tar.gz", hash = "sha256:8f2ea6f32cc7fbbdb7bfd0bf9a9338715444d37c5e1a43b3b0a4b3301e3523e1"},
+    {file = "temporalio-0.1b4-cp37-abi3-macosx_10_16_x86_64.whl", hash = "sha256:d3870f5a9d829892a82a689206152aa9970a0eb7af98251ec1a2d83f4cdcd8b6"},
+    {file = "temporalio-0.1b4-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:a2e3c833b4d7d8787cf6800e2df59fe7547931d29bee8f42d846c4ec83208b13"},
+    {file = "temporalio-0.1b4-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:3b363d792c23945b58519b83e3eb50ac0a35e1e08b9b44a8d9783b3c7aa797bf"},
+    {file = "temporalio-0.1b4-cp37-abi3-win_amd64.whl", hash = "sha256:ea49e105a6f33626e38d656c3c6a810f9685674d9a6495e323425a382244ea9d"},
+    {file = "temporalio-0.1b4-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:583ab1feccef4a920a7be36602c24c4b333b15ebb43c0c58fd1fd426dcfc92ea"},
+    {file = "temporalio-0.1b4.tar.gz", hash = "sha256:fad0aa4b04083e4e40b8dc6bd468fef957b4501dc68e6e2eb3fba976f4cac547"},
 ]
 thrift = [
     {file = "thrift-0.16.0.tar.gz", hash = "sha256:2b5b6488fcded21f9d312aa23c9ff6a0195d0f6ae26ddbd5ad9e3e25dfc14408"},

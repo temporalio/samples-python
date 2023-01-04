@@ -56,6 +56,8 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
+* [fast_api](fast_api) - Use a FastAPI project with the Temporal Python SDK.
+* [flask_api](flask_api/) - Use a Flask API project with the Temporal Python SDK.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [sentry](sentry) - Report errors to Sentry.

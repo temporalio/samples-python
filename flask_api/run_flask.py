@@ -3,7 +3,6 @@ import asyncio
 from flask import Flask
 from temporalio.client import Client
 
-# Import the workflow from the previous code
 from flask_api.run_worker import SayHello
 
 app = Flask(__name__)

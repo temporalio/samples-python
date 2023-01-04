@@ -1,0 +1,9 @@
+uvicorn
+uvicorn/_handlers
+uvicorn/lifespan
+uvicorn/loops
+uvicorn/middleware
+uvicorn/protocols
+uvicorn/protocols/http
+uvicorn/protocols/websockets
+uvicorn/supervisors

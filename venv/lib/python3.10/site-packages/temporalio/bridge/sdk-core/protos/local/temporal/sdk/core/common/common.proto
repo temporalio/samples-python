@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package coresdk.common;
+
+import "google/protobuf/duration.proto";
+
+// Identifying information about a particular workflow execution, including namespace
+message NamespacedWorkflowExecution {
+    // Namespace the workflow run is located in
+    string namespace = 1;
+    // Can never be empty
+    string workflow_id = 2;
+    // May be empty if the most recent run of the workflow with the given ID is being targeted
+    string run_id = 3;
+}

@@ -1,0 +1,16 @@
+# Build files
+/target/
+
+# sdk-core is a library we allow consumers pin specific versions.
+Cargo.lock
+
+/.idea/
+*.iml
+
+# Ignore generated protobuf files
+src/protos/*.rs
+!src/protos/mod.rs
+/tarpaulin-report.html
+/machine_coverage/
+/bindings/
+/core/machine_coverage/

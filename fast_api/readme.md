@@ -1,36 +1,10 @@
 # FastAPI Temporal Workflow Template
 
-This repository provides settings for FastAPI and the Temporal Python SDK for durable workflows.
-
-## Prerequisites
-
-Before using this template, make sure you have the following tools installed:
-
-- [Python](https://www.python.org/downloads/) (3.6 or later)
-- [Temporal CLI](https://github.com/temporalio/temporal)
+This repository provides settings for [FastAPI](https://fastapi.tiangolo.com) and the Temporal Python SDK for durable workflows.
 
 ## Getting Started
 
-To use this template, follow these steps:
-
-Activate the virtual environment:
-
-```bash
-python3 -m venv venv
-. venv/bin/activate
-```
-
-Install the dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Start the Temporal server:
-
-```bash
-temporal server start-dev
-```
+To use this template, follow these steps.
 
 Start the Worker:
 
@@ -42,18 +16,6 @@ Run the Fast API file:
 
 ```bash
 python3 run_fast.py
-```
-
-Running the tests requires poe to be installed.
-
-```bash
-python -m pip install poethepoet
-```
-
-Run tests:
-
-```bash
-poe test
 ```
 
 ## Further Reading

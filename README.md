@@ -10,12 +10,20 @@ The Python SDK is under development. There are no compatibility guarantees nor p
 
 Prerequisites:
 
-* Python >= 3.7
+* [Python](https://www.python.org/downloads/) >= 3.7
 * [Poetry](https://python-poetry.org)
-* [Local Temporal server running](https://docs.temporal.io/clusters/quick-install/)
+* [Local Temporal server running](https://github.com/temporalio/temporal)
 
-With this repository cloned, run the following at the root of the directory:
+## Get started
 
+Start the Temporal server:
+
+    temporal server start-dev
+
+With this repository cloned: create and activate a virtual environment, and install dependencies at the root of the directory:
+
+    python3 -m venv venv
+    . venv/bin/activate
     poetry install
 
 That loads all required dependencies. Then to run a sample, usually you just run it in Python. For example:
@@ -56,9 +64,9 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
-* [fast_api](fast_api) - Use a FastAPI project with the Temporal Python SDK.
-* [flask_api](flask_api/) - Use a Flask API project with the Temporal Python SDK.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
+* [fast_api](fast_api) - Use a FastAPI project with the Temporal Python SDK.
+* [flask_api](flask_api) - Use a Flask API project with the Temporal Python SDK.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [sentry](sentry) - Report errors to Sentry.
 

@@ -1,0 +1,116 @@
+[package]
+name = "temporal-sdk-core"
+version = "0.1.0"
+authors = ["Spencer Judge <spencer@temporal.io>", "Vitaly Arbuzov <vitaly@temporal.io>"]
+edition = "2021"
+license-file = "LICENSE.txt"
+description = "Library for building new Temporal SDKs"
+homepage = "https://temporal.io/"
+repository = "https://github.com/temporalio/sdk-core"
+keywords = ["temporal", "workflow"]
+categories = ["development-tools"]
+
+[lib]
+
+[dependencies]
+anyhow = "1.0"
+arc-swap = "1.3"
+async-channel = "1.6"
+async-trait = "0.1"
+base64 = "0.13"
+crossbeam = "0.8"
+dashmap = "5.0"
+derive_builder = "0.12"
+derive_more = "0.99"
+enum_dispatch = "0.3"
+flate2 = "1.0"
+futures = "0.3"
+futures-util = "0.3"
+governor = "0.5"
+http = "0.2"
+hyper = "0.14"
+itertools = "0.10"
+lazy_static = "1.4"
+log = "0.4"
+lru = "0.8"
+mockall = "0.11"
+nix = "0.26"
+once_cell = "1.5"
+opentelemetry = { version = "0.18", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.11", features = ["tokio", "metrics"] }
+opentelemetry-prometheus = "0.11"
+parking_lot = { version = "0.12", features = ["send_guard"] }
+prometheus = "0.13"
+prost = "0.11"
+prost-types = "0.11"
+rand = "0.8.3"
+reqwest = { version = "0.11", features = ["json", "stream", "rustls-tls", "tokio-rustls"], default-features = false }
+ringbuf = "0.3"
+serde = "1.0"
+serde_json = "1.0"
+siphasher = "0.3"
+slotmap = "1.0"
+tar = "0.4"
+thiserror = "1.0"
+tokio = { version = "1.1", features = ["rt", "rt-multi-thread", "parking_lot", "time", "fs", "process"] }
+tokio-util = { version = "0.7", features = ["io", "io-util"] }
+tokio-stream = "0.1"
+tonic = { version = "0.8", features = ["tls", "tls-roots"] }
+tracing = { version = "0.1", features = ["log-always"] }
+tracing-futures = "0.2"
+tracing-opentelemetry = "0.18"
+tracing-subscriber = { version = "0.3", features = ["parking_lot", "env-filter", "registry"] }
+url = "2.2"
+uuid = { version = "1.1", features = ["v4"] }
+zip = "0.6"
+
+# 1st party local deps
+[dependencies.temporal-sdk-core-api]
+path = "../core-api"
+version = "0.1"
+
+[dependencies.temporal-sdk-core-protos]
+path = "../sdk-core-protos"
+version = "0.1"
+features = ["history_builders"]
+
+[dependencies.temporal-client]
+path = "../client"
+version = "0.1"
+
+[dependencies.rustfsm]
+path = "../fsm"
+version = "0.1"
+
+[dev-dependencies]
+assert_matches = "1.4"
+bimap = "0.6.1"
+criterion = "0.4"
+rstest = "0.16"
+temporal-sdk-core-test-utils = { path = "../test-utils" }
+temporal-sdk = { path = "../sdk" }
+
+[build-dependencies]
+tonic-build = "0.8"
+
+[[test]]
+name = "integ_tests"
+path = "../tests/main.rs"
+# Prevents autodiscovery, and hence these getting run with `cargo test`. Run with
+# `cargo test --test integ_tests`
+test = false
+
+[[test]]
+name = "load_tests"
+path = "../tests/load_tests.rs"
+test = false
+
+[[bench]]
+name = "workflow_replay"
+harness = false
+
+# This is maybe a bit hacky, but we call the runner an "example" because that gets it compiling with
+# the dev-dependencies, which we want.
+[[example]]
+name = "integ_runner"
+path = "../tests/runner.rs"

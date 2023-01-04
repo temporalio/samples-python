@@ -1,0 +1,59 @@
+steps:
+  - label: "fmt & doc"
+    agents:
+      queue: "default"
+      docker: "*"
+    command: "cargo fmt --all -- --check && cargo doc --workspace --all-features --no-deps"
+    timeout_in_minutes: 15
+    plugins:
+      - docker-compose#v3.0.0:
+          run: unit-test
+          config:
+            - .buildkite/docker/docker-compose.yaml
+            - .buildkite/docker/docker-compose-ci.yaml
+          env:
+            - RUSTDOCFLAGS=-Dwarnings
+  - label: "lint"
+    agents:
+      queue: "default"
+      docker: "*"
+    command: "cargo clippy --workspace --all-features --all-targets -- -D warnings && cargo clippy --test integ_tests --test load_tests --all-features -- --D warnings"
+    timeout_in_minutes: 15
+    plugins:
+      - docker-compose#v3.0.0:
+          run: unit-test
+          config:
+            - .buildkite/docker/docker-compose.yaml
+            - .buildkite/docker/docker-compose-ci.yaml
+          env:
+            - TEMPORAL_SDK_CORE_BRIDGE_FFI_DISABLE_HEADER_CHANGE=true
+  - label: "test"
+    agents:
+      queue: "default"
+      docker: "*"
+    command: "cargo tarpaulin --out Html --workspace && cargo test -- --include-ignored"
+    artifact_paths:
+      - "tarpaulin-report.html"
+      - "machine_coverage/*"
+    timeout_in_minutes: 15
+    plugins:
+      - docker-compose#v3.0.0:
+          run: unit-test
+          config:
+            - .buildkite/docker/docker-compose.yaml
+            - .buildkite/docker/docker-compose-ci.yaml
+  - label: "integ-test"
+    agents:
+      queue: "default"
+      docker: "*"
+    env:
+      INTEG_SERVER_TYPE: docker
+    command: "cargo test --test integ_tests"
+    timeout_in_minutes: 15
+    plugins:
+      - docker-compose#v3.0.0:
+          run: integ-test
+          config:
+            - .buildkite/docker/docker-compose.yaml
+            - .buildkite/docker/docker-compose-ci.yaml
+  - wait

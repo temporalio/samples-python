@@ -12,18 +12,12 @@ Prerequisites:
 
 * [Python](https://www.python.org/downloads/) >= 3.7
 * [Poetry](https://python-poetry.org)
-* [Local Temporal server running](https://github.com/temporalio/temporal)
+* [Local Temporal server running](https://docs.temporal.io/clusters/quick-install/)
 
 ## Get started
 
-Start the Temporal server:
+With this repository cloned, install dependencies at the root of the directory:
 
-    temporal server start-dev
-
-With this repository cloned: create and activate a virtual environment, and install dependencies at the root of the directory:
-
-    python3 -m venv venv
-    . venv/bin/activate
     poetry install
 
 That loads all required dependencies. Then to run a sample, usually you just run it in Python. For example:

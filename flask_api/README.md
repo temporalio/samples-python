@@ -4,18 +4,22 @@ This repository provides settings for [Flask](https://flask.palletsprojects.com/
 
 ## Getting Started
 
-To use this template, follow these steps.
+For this sample, the optional `flask_api` dependency group must be included. To include, run:
+
+```bash
+poetry install --with flask_api
+```
 
 Start the Worker:
 
 ```bash
-python3 run_worker.py
+poetry run python run_worker.py
 ```
 
 Run the Flask file:
 
 ```bash
-python3 run_flask.py
+poetry run python run_flask.py
 ```
 
 ## Further Reading

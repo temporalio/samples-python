@@ -33,6 +33,14 @@ pytest-asyncio = "^0.18.3"
 optional = true
 dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 
+[tool.poetry.group.fast_api]
+optional = true
+dependencies = { fastapi = "^0.88.0", uvicorn = "^0.15.0", httpx = "^0.23.3" }
+
+[tool.poetry.group.flask_api]
+optional = true
+dependencies = { flask = "^2.0.2" }
+
 [tool.poetry.group.open_telemetry]
 optional = true
 [tool.poetry.group.open_telemetry.dependencies]
@@ -43,13 +51,7 @@ opentelemetry-exporter-jaeger-thrift = "^1.13.0"
 optional = true
 dependencies = { sentry-sdk = "^1.11.0" }
 
-[tool.poetry.group.flask_api]
-optional = true
-dependencies = { flask = "^2.0.2" }
 
-[tool.poetry.group.fast_api]
-optional = true
-dependencies = { fastapi = "^0.88.0", uvicorn = "^0.15.0", httpx = "^0.23.3" }
 
 [tool.poe.tasks]
 format = [{cmd = "black ."}, {cmd = "isort ."}]

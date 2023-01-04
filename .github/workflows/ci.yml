@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python -m pip install --upgrade wheel poetry poethepoet
-      - run: poetry install
+      - run: poetry install --with fast_api,flask_api
       - run: poe lint
       - run: poe test -s -o log_cli_level=DEBUG
       - run: poe test -s -o log_cli_level=DEBUG --workflow-environment time-skipping

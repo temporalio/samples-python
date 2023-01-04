@@ -4,18 +4,22 @@ This repository provides settings for [FastAPI](https://fastapi.tiangolo.com) an
 
 ## Getting Started
 
-To use this template, follow these steps.
+For this sample, the optional `fast_api` dependency group must be included. To include, run:
+
+```bash
+poetry install --with fast_api
+```
 
 Start the Worker:
 
 ```bash
-python3 run_worker.py
+poetry run python run_worker.py
 ```
 
 Run the Fast API file:
 
 ```bash
-python3 run_fast.py
+poetry run python run_fast.py
 ```
 
 ## Further Reading

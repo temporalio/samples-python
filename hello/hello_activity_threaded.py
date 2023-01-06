@@ -8,7 +8,6 @@ from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-# TODO(cretz): https://github.com/temporalio/sdk-python/issues/201
 with workflow.unsafe.sandbox_unrestricted():
     from concurrent.futures import ThreadPoolExecutor
 

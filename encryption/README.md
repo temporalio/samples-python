@@ -8,7 +8,7 @@ For this sample, the optional `encryption` dependency group must be included. To
 
     poetry install --with encryption
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README#usage) for prerequisites. Then, run the following from this directory to start the
 worker:
 
     poetry run python worker.py
@@ -17,7 +17,7 @@ This will start the worker. Then, in another terminal, run the following to exec
 
     poetry run python starter.py
 
-The workflow should complete with the hello result. To view the workflow, use [tctl](https://docs.temporal.io/tctl/):
+The workflow should complete with the hello result. To view the workflow, use [tctl](https://docs.temporal.io/tctl-v1/):
 
     tctl workflow show --workflow_id encryption-workflow-id
 

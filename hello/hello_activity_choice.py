@@ -58,8 +58,7 @@ class PurchaseFruitsWorkflow:
         # Order each thing on the list
         ordered: List[str] = []
         for item in list.items:
-            # TODO(cretz): Use "is" instead of "==" after
-            # https://github.com/temporalio/sdk-python/issues/200 is fixed
+            
             if item.fruit == Fruit.APPLE:
                 ordered.append(
                     await workflow.execute_activity(

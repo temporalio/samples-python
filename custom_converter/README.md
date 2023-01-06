@@ -2,7 +2,7 @@
 
 This sample shows how to make a custom payload converter for a type not natively supported by Temporal.
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README#usage) for prerequisites. Then, run the following from this directory to start the
 worker:
 
     poetry run python worker.py

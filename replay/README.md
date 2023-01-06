@@ -3,7 +3,7 @@
 This sample shows you how you can verify changes to workflow code are compatible with existing
 workflow histories.
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README#usage) for prerequisites. Then, run the following from this directory to start the
 worker:
 
     poetry run python worker.py

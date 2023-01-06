@@ -3,7 +3,7 @@
 This sample shows a custom decorator can help with Temporal code reuse. Specifically, this makes a `@auto_heartbeater`
 decorator that automatically configures an activity to heartbeat twice as frequently as the heartbeat timeout is set to.
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README#usage) for prerequisites. Then, run the following from this directory to start the
 worker:
 
     poetry run python worker.py

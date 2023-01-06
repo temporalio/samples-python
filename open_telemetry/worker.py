@@ -10,14 +10,9 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import activity, workflow
-from temporalio.bridge.runtime import (
-    MetricsConfig,
-    OpenTelemetryConfig,
-    Runtime,
-    TelemetryConfig,
-)
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import TracingInterceptor
+from temporalio.runtime import OpenTelemetryConfig, Runtime, TelemetryConfig
 from temporalio.worker import Worker
 
 
@@ -49,13 +44,7 @@ def init_runtime_with_telemetry() -> Runtime:
     # Setup SDK metrics to OTel endpoint
     return Runtime(
         telemetry=TelemetryConfig(
-            # TODO(cretz): Remove type ignore when
-            # https://github.com/temporalio/sdk-python/issues/198 fixed
-            metrics=MetricsConfig(  # type: ignore
-                opentelemetry=OpenTelemetryConfig(
-                    url="http://localhost:4317", headers={}
-                )
-            )
+            metrics=OpenTelemetryConfig(url="http://localhost:4317")
         )
     )
 

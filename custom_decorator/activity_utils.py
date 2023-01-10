@@ -28,9 +28,7 @@ def auto_heartbeater(fn: F) -> F:
     return cast(F, wrapper)
 
 
-async def heartbeat_every(
-    delay: float, *details: Any
-) -> None:
+async def heartbeat_every(delay: float, *details: Any) -> None:
     # Heartbeat every so often while not cancelled
     while True:
         await asyncio.sleep(delay)

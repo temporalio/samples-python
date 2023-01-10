@@ -1,33 +1,15 @@
-import pytest
-from fastapi.testclient import TestClient
-from temporalio.client import Client
+import asyncio
 
-from fast_api.run_fast import app
-
-client = TestClient(app)
+import aiohttp
 
 
-class ServerAddress:
-    def get_address(self) -> str:
-        raise NotImplementedError
+def test_read_main(client):
+    async def test_async():
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"http://{client.service_client.config.target_host}/"
+            ) as resp:
+                assert resp.status == 200
+                assert await resp.text() == "Hello, World!"
 
-
-class RealServerAddress(ServerAddress):
-    def get_address(self) -> str:
-        return "localhost:7233"
-
-
-class MockServerAddress(ServerAddress):
-    def get_address(self) -> str:
-        return "mock_server:1234"
-
-
-@pytest.fixture
-def server_address():
-    return MockServerAddress()
-
-
-def test_read_main(server_address):
-    response = client.get("/")
-    assert response.status_code == 200
-    assert response.json() == "Hello, World!"
+        await test_async()

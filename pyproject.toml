@@ -35,7 +35,7 @@ dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 
 [tool.poetry.group.fast_api]
 optional = true
-dependencies = { fastapi = "^0.88.0", uvicorn = "^0.15.0", httpx = "^0.23.3" }
+dependencies = { fastapi = "^0.88.0", uvicorn = "^0.15.0", httpx = "^0.23.3", aiohttp = "^3.8.1" }
 
 [tool.poetry.group.flask_api]
 optional = true

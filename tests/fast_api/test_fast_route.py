@@ -1,15 +1,8 @@
-import asyncio
+from fastapi.testclient import TestClient
 
-import aiohttp
+from fast_api.run_fast import app
 
-
-def test_read_main(client):
-    async def test_async():
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"http://{client.service_client.config.target_host}/"
-            ) as resp:
-                assert resp.status == 200
-                assert await resp.text() == "Hello, World!"
-
-        await test_async()
+def test_main():
+    response = TestClient(app).get("/")
+    assert response.status_code == 200
+    assert response.json() == "Hello, World!"

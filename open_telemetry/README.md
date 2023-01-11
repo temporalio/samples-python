@@ -6,7 +6,7 @@ For this sample, the optional `open_telemetry` dependency group must be included
 
     poetry install --with open_telemetry
 
-To run, first see [README.md](../README#usage) for prerequisites. Then run the following to start a Jaeger container to
+To run, first see [README.md](../README) for prerequisites. Then run the following to start a Jaeger container to
 view the trace results:
 
     docker run -d --name jaeger \

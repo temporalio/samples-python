@@ -22,7 +22,7 @@ class GreetingComposer:
         # Schedule a task to complete this asynchronously. This could be done in
         # a completely different process or system.
         print("Completing activity asynchronously")
-        asyncio.create_task(self.complete_greeting(activity.info().task_token, input))
+        _ = asyncio.create_task(self.complete_greeting(activity.info().task_token, input))
 
         # Raise the complete-async error which will complete this function but
         # does not consider the activity complete from the workflow perspective

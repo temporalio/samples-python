@@ -58,7 +58,7 @@ class PurchaseFruitsWorkflow:
         # Order each thing on the list
         ordered: List[str] = []
         for item in list.items:
-            
+
             if item.fruit == Fruit.APPLE:
                 ordered.append(
                     await workflow.execute_activity(

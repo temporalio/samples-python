@@ -22,6 +22,11 @@ class GreetingComposer:
         # Schedule a task to complete this asynchronously. This could be done in
         # a completely different process or system.
         print("Completing activity asynchronously")
+        # Tasks stored by asyncio are weak references and therefore can get GC'd
+        # which can cause warnings like "Task was destroyed but it is pending!".
+        # So we store the tasks ourselves.
+        # See https://docs.python.org/3/library/asyncio-task.html#creating-tasks,
+        # https://bugs.python.org/issue21163 and others.
         _ = asyncio.create_task(
             self.complete_greeting(activity.info().task_token, input)
         )

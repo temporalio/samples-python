@@ -16,7 +16,9 @@ from pydantic_converter.worker import (
 
 async def test_workflow_with_pydantic_model(client: Client):
     # Replace data converter in client
-    client = Client(**(client.config() | {"data_converter": pydantic_data_converter}))  # type: ignore
+    new_config = client.config()
+    new_config["data_converter"] = pydantic_data_converter
+    client = Client(**new_config)
     task_queue_name = str(uuid.uuid4())
 
     orig_models = [

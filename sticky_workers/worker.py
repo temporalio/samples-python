@@ -20,9 +20,7 @@ async def main():
     random.seed(667)
 
     # Create random task queues and create parameterised workflow
-
     task_queues: List[str] = [str(UUID(int=random.getrandbits(128))) for _ in range(5)]
-
     get_available_task_queue = tasks.build_nonsticky_activity(task_queues)
 
     # Start client
@@ -37,7 +35,6 @@ async def main():
         activities=[get_available_task_queue],
     )
     run_futures.append(handle.run())
-    # Wait until interrupted
     print("Base worker started")
 
     # Run the workers for the individual task queues

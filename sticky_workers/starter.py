@@ -15,9 +15,7 @@ async def main():
     futures = []
     for _ in range(10):
         handle = client.execute_workflow(
-            FileProcessing.run,
-            id=str(uuid4()),
-            task_queue="distribution-queue",
+            FileProcessing.run, id=str(uuid4()), task_queue="distribution-queue"
         )
         await asyncio.sleep(0.1)
         futures.append(handle)

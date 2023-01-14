@@ -25,6 +25,7 @@ async def _get_available_task_queue(available_queues: List[str]) -> str:
 
 @activity.defn
 async def download_file_to_worker_filesystem(details: DownloadObj):
+    """Simulates downloading a file to a local filesystem"""
     activity.logger.info(f"Downloading ${details.url} and saving to ${details.path}")
     # Here is where the real download code goes
     Path(details.path).parent.mkdir(parents=True, exist_ok=True)
@@ -36,6 +37,7 @@ async def download_file_to_worker_filesystem(details: DownloadObj):
 
 @activity.defn
 async def work_on_file_in_worker_filesystem(path: str):
+    """Processing the file, in this case identical MD5 hashes"""
     with open(path, "rb") as handle:
         content = handle.read()
     checksum = md5(content).hexdigest()
@@ -46,12 +48,15 @@ async def work_on_file_in_worker_filesystem(path: str):
 
 @activity.defn
 async def clean_up_file_from_worker_filesystem(path: str):
+    """Deletes the file created in the first activity, but leaves the folder"""
     await asyncio.sleep(TIME_DELAY)
     activity.logger.info(f"Removing {path}")
     Path(path).unlink()
 
 
 def build_nonsticky_activity(task_queue: List[str]) -> Callable[[List[str]], str]:
+    """Closure to allow injection of the queue names"""
+
     @activity.defn
     async def get_available_task_queue() -> str:
         return await _get_available_task_queue(task_queue)
@@ -63,6 +68,12 @@ def build_nonsticky_activity(task_queue: List[str]) -> Callable[[List[str]], str
 class FileProcessing:
     @workflow.run
     async def run(self):
+        """Workflow implementing the basic file processing example.
+
+        First, a worker is selected randomly. This is the "sticky worker" on which
+        the workflow runs. This consists of a file download and some processing task,
+        with a file cleanup if an error occurs.
+        """
         workflow.logger.info("Searching for available worker")
         unique_worker_task_queue = await workflow.execute_activity(
             activity="get_available_task_queue",

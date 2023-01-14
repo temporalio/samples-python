@@ -1,10 +1,9 @@
 import asyncio
-from tabnanny import check
 from uuid import uuid4
 
 from temporalio.client import Client
 
-from sticky_workers.tasks import FileProcessing
+from activities_sticky_queues.tasks import FileProcessing
 
 
 async def main():

@@ -13,17 +13,17 @@ It doesn't matter where the `get_available_task_queue` activity is run, so it ca
 
 Activities have been artificially slowed with `time.sleep(3)` to simulate slow activities.
 
-### Running this sample
+### Running This Sample
 
 1. `temporal server start-dev` to start [Temporal Server](https://github.com/temporalio/cli/#installation).
 1. `poetry install` to install dependencies (if you haven't already as part of initialising the repo).
 1. `poetry run python worker.py` to start the Worker.
 1. In another shell, `poetry run python starter.py` to initiate the Workflow.
 
-Example output:
+#### Example output:
 
 ```bash
-(temporalio-samples-py3.10) user@machine:~/samples-python/sticky_workers$ poetry run python starter.py 
+(temporalio-samples-py3.10) user@machine:~/samples-python/activities_sticky_queues$ poetry run python starter.py 
 Output checksums:
 b3fc767460efa514753a75e6f3d7af97
 b3fc767460efa514753a75e6f3d7af97

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from hashlib import md5
 from pathlib import Path
-from typing import Callable, List
+from typing import Any, Callable, Coroutine, List
 
 from temporalio import activity, workflow
 
@@ -54,7 +54,9 @@ async def clean_up_file_from_worker_filesystem(path: str):
     Path(path).unlink()
 
 
-def build_nonsticky_activity(task_queue: List[str]) -> Callable[[List[str]], str]:
+def build_nonsticky_activity(
+    task_queue: List[str],
+) -> Callable[[], Coroutine[Any, Any, str]]:
     """Closure to allow injection of the queue names"""
 
     @activity.defn

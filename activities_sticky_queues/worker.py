@@ -4,6 +4,7 @@ import random
 from typing import List
 from uuid import UUID
 
+from temporalio import activity
 from temporalio.client import Client
 from temporalio.worker import Worker
 
@@ -20,8 +21,15 @@ async def main():
     random.seed(667)
 
     # Create random task queues and create parameterised workflow
-    task_queues: List[str] = [str(UUID(int=random.getrandbits(128))) for _ in range(5)]
-    get_available_task_queue = tasks.build_nonsticky_activity(task_queues)
+    task_queues: List[str] = [
+        f"activity_sticky_queue-host-{UUID(int=random.getrandbits(128))}"
+        for _ in range(5)
+    ]
+
+    @activity.defn
+    async def get_available_task_queue() -> str:
+        """Randomly assign the job to a queue"""
+        return random.choice(task_queues)
 
     # Start client
     client = await Client.connect("localhost:7233")

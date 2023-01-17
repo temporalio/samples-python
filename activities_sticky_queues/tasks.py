@@ -18,16 +18,21 @@ class DownloadObj:
     path: str
 
 
-async def _get_available_task_queue(available_queues: List[str]) -> str:
-    """Randomly assign the job to a queue"""
-    return random.choice(available_queues)
+@activity.defn
+async def get_available_task_queue() -> str:
+    """Just a stub for typedworkflow invocation."""
+    raise NotImplementedError
 
 
 @activity.defn
 async def download_file_to_worker_filesystem(details: DownloadObj):
     """Simulates downloading a file to a local filesystem"""
     activity.logger.info(f"Downloading ${details.url} and saving to ${details.path}")
-    # Here is where the real download code goes
+    # Here is where the real download code goes. Developers should be careful
+    # not to block an async activity. If there are concerns about blocking download
+    # or disk IO, developers should use loop.run_in_executor or change this activity
+    # to be synchronous. Also like for all non-immediate activities, be sure to
+    # heartbeat during download.
     Path(details.path).parent.mkdir(parents=True, exist_ok=True)
     body = "downloaded body"
     await asyncio.sleep(TIME_DELAY)

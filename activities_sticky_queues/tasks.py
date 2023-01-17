@@ -1,10 +1,8 @@
 import asyncio
-import random
 from dataclasses import dataclass
 from datetime import timedelta
-from hashlib import md5
+from hashlib import sha256
 from pathlib import Path
-from typing import Any, Callable, Coroutine, List
 
 from temporalio import activity, workflow
 
@@ -54,7 +52,7 @@ async def work_on_file_in_worker_filesystem(path: str) -> str:
     """Processing the file, in this case identical MD5 hashes"""
     with open(path, "rb") as handle:
         content = handle.read()
-    checksum = md5(content).hexdigest()
+    checksum = sha256(content).hexdigest()
     await asyncio.sleep(TIME_DELAY)
     activity.logger.info(f"Did some work on {path}, checksum {checksum}")
     return checksum

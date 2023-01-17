@@ -12,14 +12,14 @@ async def main():
 
     # Start 10 concurrent workflows
     futures = []
-    for _ in range(10):
-        coro = client.execute_workflow(
+    for idx in range(10):
+        result = client.execute_workflow(
             FileProcessing.run,
-            id=f"activity_sticky_queue-workflow-id-{i}",
+            id=f"activity_sticky_queue-workflow-id-{idx}",
             task_queue="activity_sticky_queue-distribution-queue",
         )
         await asyncio.sleep(0.1)
-        futures.append(handle)
+        futures.append(result)
 
     checksums = await asyncio.gather(*futures)
     print("\n".join([f"Output checksums:"] + checksums))

@@ -38,7 +38,7 @@ async def main():
     run_futures = []
     handle = Worker(
         client,
-        task_queue="distribution-queue",
+        task_queue="activity_sticky_queue-distribution-queue",
         workflows=[tasks.FileProcessing],
         activities=[get_available_task_queue],
     )
@@ -46,10 +46,10 @@ async def main():
     print("Base worker started")
 
     # Run the workers for the individual task queues
-    for uuid in task_queues:
+    for queue_id in task_queues:
         handle = Worker(
             client,
-            task_queue=uuid,
+            task_queue=queue_id,
             activities=[
                 tasks.download_file_to_worker_filesystem,
                 tasks.work_on_file_in_worker_filesystem,
@@ -58,7 +58,7 @@ async def main():
         )
         run_futures.append(handle.run())
         # Wait until interrupted
-        print(f"Worker {uuid} started")
+        print(f"Worker {queue_id} started")
 
     print("All workers started, ctrl+c to exit")
     await asyncio.gather(*run_futures)

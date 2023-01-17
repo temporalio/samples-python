@@ -15,10 +15,14 @@ Activities have been artificially slowed with `time.sleep(3)` to simulate slow a
 
 ### Running This Sample
 
-1. `temporal server start-dev` to start [Temporal Server](https://github.com/temporalio/cli/#installation).
-1. `poetry install` to install dependencies (if you haven't already as part of initialising the repo).
-1. `poetry run python worker.py` to start the Worker.
-1. In another shell, `poetry run python starter.py` to initiate the Workflow.
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+worker:
+
+    poetry run python worker.py
+
+This will start the worker. Then, in another terminal, run the following to execute the workflow:
+
+    poetry run python starter.py
 
 #### Example output:
 

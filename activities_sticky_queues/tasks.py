@@ -15,7 +15,8 @@ LOCAL_PATH = Path(__file__).parent / "demo_fs"
 @dataclass
 class DownloadObj:
     url: str
-    path: str
+    unique_worker_id: str
+    workflow_uuid: str
 
 
 @activity.defn
@@ -25,19 +26,27 @@ async def get_available_task_queue() -> str:
 
 
 @activity.defn
-async def download_file_to_worker_filesystem(details: DownloadObj):
+async def download_file_to_worker_filesystem(details: DownloadObj) -> str:
     """Simulates downloading a file to a local filesystem"""
-    activity.logger.info(f"Downloading ${details.url} and saving to ${details.path}")
+    # FS ops
+    directory = LOCAL_PATH / details.unique_worker_id
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / details.workflow_uuid
+
+    activity.logger.info(f"Downloading ${details.url} and saving to ${path}")
+
     # Here is where the real download code goes. Developers should be careful
     # not to block an async activity. If there are concerns about blocking download
     # or disk IO, developers should use loop.run_in_executor or change this activity
     # to be synchronous. Also like for all non-immediate activities, be sure to
     # heartbeat during download.
-    Path(details.path).parent.mkdir(parents=True, exist_ok=True)
-    body = "downloaded body"
+
     await asyncio.sleep(TIME_DELAY)
-    with open(details.path, "w") as handle:
+    body = "downloaded body"
+
+    with open(path, "w") as handle:
         handle.write(body)
+    return str(path)
 
 
 @activity.defn
@@ -59,18 +68,6 @@ async def clean_up_file_from_worker_filesystem(path: str):
     Path(path).unlink()
 
 
-def build_nonsticky_activity(
-    task_queue: List[str],
-) -> Callable[[], Coroutine[Any, Any, str]]:
-    """Closure to allow injection of the queue names"""
-
-    @activity.defn
-    async def get_available_task_queue() -> str:
-        return await _get_available_task_queue(task_queue)
-
-    return get_available_task_queue
-
-
 @workflow.defn
 class FileProcessing:
     @workflow.run
@@ -88,17 +85,20 @@ class FileProcessing:
         )
         workflow.logger.info(f"Matching workflow to worker {unique_worker_task_queue}")
 
-        filename = str(workflow.uuid4())
-        download_path = str(LOCAL_PATH / unique_worker_task_queue / filename)
-        download_params = DownloadObj(url="http://temporal.io", path=download_path)
+        download_params = DownloadObj(
+            url="http://temporal.io",
+            unique_worker_id=unique_worker_task_queue,
+            workflow_uuid=str(workflow.uuid4()),
+        )
 
-        checksum = "failed execution"
-        await workflow.execute_activity(
+        download_path = await workflow.execute_activity(
             download_file_to_worker_filesystem,
             download_params,
             start_to_close_timeout=timedelta(seconds=10),
             task_queue=unique_worker_task_queue,
         )
+
+        checksum = "failed execution"  # Sentinel value
         try:
             checksum = await workflow.execute_activity(
                 work_on_file_in_worker_filesystem,

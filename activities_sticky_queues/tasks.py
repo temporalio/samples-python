@@ -7,16 +7,12 @@ from pathlib import Path
 from temporalio import activity, workflow
 
 
-class ConfigServiceProvider:
-    """Uses shared class attributes to inject mocking config"""
+def _get_delay_secs() -> float:
+    return 3
 
-    TIME_DELAY: float = 3.0
-    LOCAL_PATH: Path = Path(__file__).parent / "demo_fs"
 
-    @classmethod
-    def update_config(cls, time_delay: float, local_path: Path) -> None:
-        cls.TIME_DELAY = time_delay
-        cls.LOCAL_PATH = local_path
+def _get_local_path() -> Path:
+    return Path(__file__).parent / "demo_fs"
 
 
 def write_file(path: Path, body: str) -> None:
@@ -38,7 +34,7 @@ def delete_file(path) -> None:
 
 def create_filepath(unique_worker_id: str, workflow_uuid: str) -> Path:
     """Creates required folders and builds filepath"""
-    directory = ConfigServiceProvider.LOCAL_PATH / unique_worker_id
+    directory = _get_local_path() / unique_worker_id
     directory.mkdir(parents=True, exist_ok=True)
     filepath = directory / workflow_uuid
     return filepath
@@ -74,8 +70,7 @@ async def download_file_to_worker_filesystem(details: DownloadObj) -> str:
     # or disk IO, developers should use loop.run_in_executor or change this activity
     # to be synchronous. Also like for all non-immediate activities, be sure to
     # heartbeat during download.
-
-    await asyncio.sleep(ConfigServiceProvider.TIME_DELAY)
+    await asyncio.sleep(_get_delay_secs())
     body = "downloaded body"
     write_file(path, body)
     return str(path)
@@ -86,7 +81,7 @@ async def work_on_file_in_worker_filesystem(path: str) -> str:
     """Processing the file, in this case identical MD5 hashes"""
     content = read_file(path)
     checksum = process_file_contents(content)
-    await asyncio.sleep(ConfigServiceProvider.TIME_DELAY)
+    await asyncio.sleep(_get_delay_secs())
     activity.logger.info(f"Did some work on {path}, checksum {checksum}")
     return checksum
 
@@ -94,7 +89,7 @@ async def work_on_file_in_worker_filesystem(path: str) -> str:
 @activity.defn
 async def clean_up_file_from_worker_filesystem(path: str) -> None:
     """Deletes the file created in the first activity, but leaves the folder"""
-    await asyncio.sleep(ConfigServiceProvider.TIME_DELAY)
+    await asyncio.sleep(_get_delay_secs())
     activity.logger.info(f"Removing {path}")
     delete_file(path)
 

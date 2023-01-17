@@ -21,9 +21,9 @@ def write_file(path: Path, body: str) -> None:
         handle.write(body)
 
 
-def read_file(path) -> str:
+def read_file(path) -> bytes:
     """Convenience read wrapper for mocking FS"""
-    with open(path, "r") as handle:
+    with open(path, "rb") as handle:
         return handle.read()
 
 
@@ -40,9 +40,9 @@ def create_filepath(unique_worker_id: str, workflow_uuid: str) -> Path:
     return filepath
 
 
-def process_file_contents(file_content: str) -> str:
+def process_file_contents(file_content: bytes) -> str:
     """Returns hash of file string"""
-    return sha256(file_content.encode("utf-8")).hexdigest()
+    return sha256(file_content).hexdigest()
 
 
 @dataclass

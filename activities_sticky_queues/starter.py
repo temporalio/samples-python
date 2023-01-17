@@ -13,7 +13,7 @@ async def main():
     # Start 10 concurrent workflows
     futures = []
     for _ in range(10):
-        handle = client.execute_workflow(
+        coro = client.execute_workflow(
             FileProcessing.run,
             id=f"activity_sticky_queue-workflow-id-{i}",
             task_queue="activity_sticky_queue-distribution-queue",

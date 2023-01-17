@@ -20,14 +20,14 @@ async def main():
     # Comment line to see non-deterministic functionality
     random.seed(667)
 
-    # Create random task queues and create parameterised workflow
+    # Create random task queues and build task queue selection function
     task_queues: List[str] = [
         f"activity_sticky_queue-host-{UUID(int=random.getrandbits(128))}"
         for _ in range(5)
     ]
 
-    @activity.defn
-    async def get_available_task_queue() -> str:
+    @activity.defn(name="get_available_task_queue")
+    async def select_task_queue_random() -> str:
         """Randomly assign the job to a queue"""
         return random.choice(task_queues)
 
@@ -40,7 +40,7 @@ async def main():
         client,
         task_queue="activity_sticky_queue-distribution-queue",
         workflows=[tasks.FileProcessing],
-        activities=[get_available_task_queue],
+        activities=[select_task_queue_random],
     )
     run_futures.append(handle.run())
     print("Base worker started")

@@ -6,8 +6,47 @@ from pathlib import Path
 
 from temporalio import activity, workflow
 
-TIME_DELAY = 3.0
-LOCAL_PATH = Path(__file__).parent / "demo_fs"
+
+class ConfigServiceProvider:
+    """Uses shared class attributes to inject mocking config"""
+
+    TIME_DELAY: float = 3.0
+    LOCAL_PATH: Path = Path(__file__).parent / "demo_fs"
+
+    @classmethod
+    def update_config(cls, time_delay: float, local_path: Path) -> None:
+        cls.TIME_DELAY = time_delay
+        cls.LOCAL_PATH = local_path
+
+
+def write_file(path: Path, body: str) -> None:
+    """Convenience write wrapper for mocking FS"""
+    with open(path, "w") as handle:
+        handle.write(body)
+
+
+def read_file(path) -> str:
+    """Convenience read wrapper for mocking FS"""
+    with open(path, "rb") as handle:
+        return handle.read()
+
+
+def delete_file(path) -> None:
+    """Convenience delete wrapper for mocking FS"""
+    Path(path).unlink()
+
+
+def create_filepath(unique_worker_id: str, workflow_uuid: str) -> Path:
+    """Creates required folders and builds filepath"""
+    directory = ConfigServiceProvider.LOCAL_PATH / unique_worker_id
+    directory.mkdir(parents=True, exist_ok=True)
+    filepath = directory / workflow_uuid
+    return filepath
+
+
+def process_file_contents(file_content: str) -> str:
+    """Returns hash of file string"""
+    return sha256(file_content).hexdigest()
 
 
 @dataclass
@@ -27,10 +66,7 @@ async def get_available_task_queue() -> str:
 async def download_file_to_worker_filesystem(details: DownloadObj) -> str:
     """Simulates downloading a file to a local filesystem"""
     # FS ops
-    directory = LOCAL_PATH / details.unique_worker_id
-    directory.mkdir(parents=True, exist_ok=True)
-    path = directory / details.workflow_uuid
-
+    path = create_filepath(details.unique_worker_id, details.workflow_uuid)
     activity.logger.info(f"Downloading ${details.url} and saving to ${path}")
 
     # Here is where the real download code goes. Developers should be careful
@@ -39,21 +75,18 @@ async def download_file_to_worker_filesystem(details: DownloadObj) -> str:
     # to be synchronous. Also like for all non-immediate activities, be sure to
     # heartbeat during download.
 
-    await asyncio.sleep(TIME_DELAY)
+    await asyncio.sleep(ConfigServiceProvider.TIME_DELAY)
     body = "downloaded body"
-
-    with open(path, "w") as handle:
-        handle.write(body)
+    write_file(path, body)
     return str(path)
 
 
 @activity.defn
 async def work_on_file_in_worker_filesystem(path: str) -> str:
     """Processing the file, in this case identical MD5 hashes"""
-    with open(path, "rb") as handle:
-        content = handle.read()
-    checksum = sha256(content).hexdigest()
-    await asyncio.sleep(TIME_DELAY)
+    content = read_file(path)
+    checksum = process_file_contents(content)
+    await asyncio.sleep(ConfigServiceProvider.TIME_DELAY)
     activity.logger.info(f"Did some work on {path}, checksum {checksum}")
     return checksum
 
@@ -61,9 +94,9 @@ async def work_on_file_in_worker_filesystem(path: str) -> str:
 @activity.defn
 async def clean_up_file_from_worker_filesystem(path: str) -> None:
     """Deletes the file created in the first activity, but leaves the folder"""
-    await asyncio.sleep(TIME_DELAY)
+    await asyncio.sleep(ConfigServiceProvider.TIME_DELAY)
     activity.logger.info(f"Removing {path}")
-    Path(path).unlink()
+    delete_file(path)
 
 
 @workflow.defn

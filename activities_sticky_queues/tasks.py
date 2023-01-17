@@ -50,7 +50,7 @@ async def download_file_to_worker_filesystem(details: DownloadObj) -> str:
 
 
 @activity.defn
-async def work_on_file_in_worker_filesystem(path: str):
+async def work_on_file_in_worker_filesystem(path: str) -> None:
     """Processing the file, in this case identical MD5 hashes"""
     with open(path, "rb") as handle:
         content = handle.read()
@@ -61,7 +61,7 @@ async def work_on_file_in_worker_filesystem(path: str):
 
 
 @activity.defn
-async def clean_up_file_from_worker_filesystem(path: str):
+async def clean_up_file_from_worker_filesystem(path: str) -> None:
     """Deletes the file created in the first activity, but leaves the folder"""
     await asyncio.sleep(TIME_DELAY)
     activity.logger.info(f"Removing {path}")
@@ -71,7 +71,7 @@ async def clean_up_file_from_worker_filesystem(path: str):
 @workflow.defn
 class FileProcessing:
     @workflow.run
-    async def run(self):
+    async def run(self) -> str:
         """Workflow implementing the basic file processing example.
 
         First, a worker is selected randomly. This is the "sticky worker" on which

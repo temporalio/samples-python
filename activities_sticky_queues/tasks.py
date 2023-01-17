@@ -50,7 +50,7 @@ async def download_file_to_worker_filesystem(details: DownloadObj) -> str:
 
 
 @activity.defn
-async def work_on_file_in_worker_filesystem(path: str) -> None:
+async def work_on_file_in_worker_filesystem(path: str) -> str:
     """Processing the file, in this case identical MD5 hashes"""
     with open(path, "rb") as handle:
         content = handle.read()

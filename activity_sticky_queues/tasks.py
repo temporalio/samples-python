@@ -106,7 +106,7 @@ class FileProcessing:
         """
         workflow.logger.info("Searching for available worker")
         unique_worker_task_queue = await workflow.execute_activity(
-            activity="get_available_task_queue",
+            activity=get_available_task_queue,
             start_to_close_timeout=timedelta(seconds=10),
         )
         workflow.logger.info(f"Matching workflow to worker {unique_worker_task_queue}")

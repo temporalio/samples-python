@@ -6,7 +6,7 @@ For this sample, the optional `sentry` dependency group must be included. To inc
 
     poetry install --with sentry
 
-To run, first see [README.md](../README) for prerequisites. Set `SENTRY_DSN` environment variable to the Sentry DSN.
+To run, first see [README.md](../README.md) for prerequisites. Set `SENTRY_DSN` environment variable to the Sentry DSN.
 Then, run the following from this directory to start the worker:
 
     poetry run python worker.py

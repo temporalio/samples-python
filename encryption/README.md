@@ -8,7 +8,7 @@ For this sample, the optional `encryption` dependency group must be included. To
 
     poetry install --with encryption
 
-To run, first see [README.md](../README) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:
 
     poetry run python worker.py

@@ -1,11 +1,5 @@
-import uuid
 from pathlib import Path
 from unittest import mock
-
-import pytest
-from temporalio import activity
-from temporalio.client import Client
-from temporalio.worker import Worker
 
 from activity_sticky_queues import tasks
 

@@ -7,7 +7,7 @@ from temporalio import activity
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from activities_sticky_queues import tasks
+from activity_sticky_queues import tasks
 
 RETURNED_PATH = "valid/path"
 tasks._get_delay_secs = mock.MagicMock(return_value=0.0001)

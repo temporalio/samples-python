@@ -8,7 +8,7 @@ from temporalio import activity
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from activities_sticky_queues import tasks
+from activity_sticky_queues import tasks
 
 interrupt_event = asyncio.Event()
 

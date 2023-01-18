@@ -148,12 +148,13 @@ async def test_worker_runs(client: Client):
     workflow_ids = [str(uuid.uuid4()) for _ in range(5)]
     async with worker_distribution, worker_1, worker_2, worker_3:
         for workflow_id in workflow_ids:
-            await client.execute_workflow(
+            result = await client.execute_workflow(
                 tasks.FileProcessing.run,
                 id=workflow_id,
                 task_queue=task_queue_name_distribution,
                 **retry_args
             )
+            assert result == CHECKSUM
     # Check all events take place on the same random worker
     workflow_executions = {
         check_sticky_activity_count(

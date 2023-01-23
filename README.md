@@ -54,6 +54,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
+* [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [sentry](sentry) - Report errors to Sentry.
 
 ## Test

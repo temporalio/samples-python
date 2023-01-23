@@ -49,7 +49,7 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
         # https://docs.sentry.io/platforms/python/troubleshooting/#addressing-concurrency-issues
         with Hub(Hub.current):
             set_tag("temporal.execution_type", "workflow")
-            set_tag("module", input.fn.__module__ + "." + input.fn.__qualname__)
+            set_tag("module", input.run_fn.__module__ + "." + input.run_fn.__qualname__)
             workflow_info = workflow.info()
             _set_common_workflow_tags(workflow_info)
             set_tag("temporal.workflow.task_queue", workflow_info.task_queue)

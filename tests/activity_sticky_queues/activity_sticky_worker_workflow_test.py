@@ -15,12 +15,6 @@ from activity_sticky_queues import tasks
 CHECKSUM = "a checksum"
 RETURNED_PATH = "valid/path"
 
-# Used to limit failed executions
-retry_policy = RetryPolicy(
-    maximum_attempts=1, maximum_interval=timedelta(milliseconds=50)
-)
-run_timeout = timedelta(seconds=2)
-
 
 def check_sticky_activity_count(history: List[Dict], nonsticky_queue: str):
     outputs = set()
@@ -74,8 +68,6 @@ async def test_workflow_fails_without_task_queue_fn(client: Client):
                 tasks.FileProcessing.run,
                 id=str(uuid.uuid4()),
                 task_queue=task_queue_name,
-                retry_policy=retry_policy,
-                run_timeout=run_timeout,
             )
 
 
@@ -151,8 +143,6 @@ async def test_worker_runs(client: Client):
                 tasks.FileProcessing.run,
                 id=workflow_id,
                 task_queue=task_queue_name_distribution,
-                retry_policy=retry_policy,
-                run_timeout=run_timeout,
             )
             assert result == CHECKSUM
     # Check all events take place on the same random worker

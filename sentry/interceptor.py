@@ -63,7 +63,8 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
                 set_context("temporal.workflow.info", workflow.info().__dict__)
 
                 if not workflow.unsafe.is_replaying():
-                    capture_exception()
+                    with workflow.unsafe.sandbox_unrestricted():
+                        capture_exception()
                 raise e
 
 

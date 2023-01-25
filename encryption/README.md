@@ -17,7 +17,7 @@ This will start the worker. Then, in another terminal, run the following to exec
 
     poetry run python starter.py
 
-The workflow should complete with the hello result. To view the workflow, use [tctl](https://docs.temporal.io/tctl/):
+The workflow should complete with the hello result. To view the workflow, use [tctl](https://docs.temporal.io/tctl-v1/):
 
     tctl workflow show --workflow_id encryption-workflow-id
 

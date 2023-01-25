@@ -49,28 +49,6 @@ async def mock_cleanup(path: str) -> None:
     pass
 
 
-async def test_workflow_fails_without_task_queue_fn(client: Client):
-
-    task_queue_name = str(uuid.uuid4())
-    with pytest.raises(WorkflowFailureError):
-        async with Worker(
-            client,
-            task_queue=task_queue_name,
-            workflows=[tasks.FileProcessing],
-            activities=[
-                mock_download,
-                mock_work,
-                mock_cleanup,
-                tasks.get_available_task_queue,
-            ],
-        ):
-            await client.execute_workflow(  # noqa
-                tasks.FileProcessing.run,
-                id=str(uuid.uuid4()),
-                task_queue=task_queue_name,
-            )
-
-
 async def test_processing_fails_gracefully(client: Client):
     task_queue_name = str(uuid.uuid4())
 

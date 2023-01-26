@@ -41,7 +41,7 @@ async def mock_work(path: str) -> str:
 
 @activity.defn(name="work_on_file_in_worker_filesystem")
 async def mock_work_fail(path: str) -> str:
-    raise exceptions.ApplicationError("testing graceful failure")
+    raise exceptions.ActivityError("testing graceful failure")
 
 
 @activity.defn(name="clean_up_file_from_worker_filesystem")
@@ -80,7 +80,6 @@ async def test_processing_fails_gracefully(client: Client):
                 run_timeout=timedelta(milliseconds=50),
             )
         mock_del.assert_called_once()
-        # assert output == sentinel_value
 
 
 async def test_worker_runs(client: Client):

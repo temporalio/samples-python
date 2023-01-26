@@ -1,13 +1,11 @@
 import random
 import uuid
-from datetime import timedelta
 from typing import Dict, List
 from unittest import mock
 
 import pytest
 from temporalio import activity, exceptions
 from temporalio.client import Client, WorkflowFailureError
-from temporalio.common import RetryPolicy
 from temporalio.worker import Worker
 
 from activity_sticky_queues import tasks

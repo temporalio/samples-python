@@ -5,6 +5,7 @@ from hashlib import sha256
 from pathlib import Path
 
 from temporalio import activity, workflow
+from temporalio.common import RetryPolicy
 
 
 def _get_delay_secs() -> float:
@@ -130,6 +131,10 @@ class FileProcessing:
                 work_on_file_in_worker_filesystem,
                 download_path,
                 start_to_close_timeout=timedelta(seconds=10),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=1,
+                    # maximum_interval=timedelta(milliseconds=500),
+                ),
                 task_queue=unique_worker_task_queue,
             )
         finally:

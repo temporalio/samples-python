@@ -41,7 +41,7 @@ async def mock_work(path: str) -> str:
 
 @activity.defn(name="work_on_file_in_worker_filesystem")
 async def mock_work_fail(path: str) -> str:
-    raise exceptions.ActivityError("testing graceful failure")
+    raise exceptions.ApplicationError("testing graceful failure")
 
 
 @activity.defn(name="clean_up_file_from_worker_filesystem")
@@ -73,11 +73,6 @@ async def test_processing_fails_gracefully(client: Client):
                 tasks.FileProcessing.run,
                 id=str(uuid.uuid4()),
                 task_queue=task_queue_name,
-                retry_policy=RetryPolicy(
-                    maximum_attempts=1,
-                    maximum_interval=timedelta(milliseconds=50),
-                ),
-                run_timeout=timedelta(milliseconds=50),
             )
         mock_del.assert_called_once()
 

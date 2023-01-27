@@ -6,6 +6,7 @@ from unittest import mock
 import pytest
 from temporalio import activity, exceptions
 from temporalio.client import Client, WorkflowFailureError
+from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 from activity_sticky_queues import tasks
@@ -75,7 +76,9 @@ async def test_processing_fails_gracefully(client: Client):
         mock_del.assert_called_once()
 
 
-async def test_worker_runs(client: Client):
+async def test_worker_runs(client: Client, env: WorkflowEnvironment):
+    if env.supports_time_skipping:
+        pytest.skip("Test server doesn't support listing workflows")
     task_queue_name_distribution = str(uuid.uuid4())
     task_queue_workers = [str(uuid.uuid4()) for _ in range(3)]
 

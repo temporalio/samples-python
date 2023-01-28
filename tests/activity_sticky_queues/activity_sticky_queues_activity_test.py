@@ -11,7 +11,7 @@ tasks._get_local_path = mock.MagicMock(return_value=Path(RETURNED_PATH))
 async def test_download_activity():
     worker_id = "an-id"
     workflow_uuid = "uuid"
-    want = "/".join([RETURNED_PATH, worker_id, workflow_uuid])
+    want = Path(RETURNED_PATH) / worker_id / workflow_uuid
 
     details = tasks.DownloadObj("tdd.com", worker_id, workflow_uuid)
     with mock.patch.object(tasks, "write_file") as mock_write:

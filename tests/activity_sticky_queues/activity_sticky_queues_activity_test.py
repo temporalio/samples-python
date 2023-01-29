@@ -16,7 +16,7 @@ async def test_download_activity():
     details = tasks.DownloadObj("tdd.com", worker_id, workflow_uuid)
     with mock.patch.object(tasks, "write_file") as mock_write:
         response = await tasks.download_file_to_worker_filesystem(details)
-    assert response == want
+    assert Path(response) == want
     mock_write.assert_called_once()
 
 

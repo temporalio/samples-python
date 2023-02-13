@@ -24,6 +24,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 
 * [hello](hello) - All of the basic features.
   <!-- Keep this list in alphabetical order and in sync on hello/README.md and root README.md -->
+  * [hello_activity_cancel](hello/hello_activity_cancel.py) - Cancel an activity from inside of a workflow.
   * [hello_activity](hello/hello_activity.py) - Execute an activity from a workflow.
   * [hello_activity_choice](hello/hello_activity_choice.py) - Execute certain activities inside a workflow based on
     dynamic input.
@@ -34,6 +35,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_activity_threaded](hello/hello_activity_threaded.py) - Execute a synchronous activity on a thread pool.
   * [hello_async_activity_completion](hello/hello_async_activity_completion.py) - Complete an activity outside of the
     function that was called.
+
   * [hello_cancellation](hello/hello_cancellation.py) - Manually react to cancellation inside workflows and activities.
   * [hello_child_workflow](hello/hello_child_workflow.py) - Execute a child workflow from a workflow.
   * [hello_continue_as_new](hello/hello_continue_as_new.py) - Use continue as new to restart a workflow.

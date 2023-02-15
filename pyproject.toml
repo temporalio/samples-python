@@ -47,6 +47,10 @@ dependencies = { pydantic = "^1.10.4" }
 optional = true
 dependencies = { sentry-sdk = "^1.11.0" }
 
+[tool.poetry.group.starlette]
+optional = true
+dependencies = { starlette = {extras = ["full"], version = "^0.25.0"}, uvicorn = "^0.20.0" }
+
 [tool.poe.tasks]
 format = [{cmd = "black ."}, {cmd = "isort ."}]
 lint = [{cmd = "black --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]
@@ -78,3 +82,4 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "opentelemetry.*"
 ignore_errors = true
+

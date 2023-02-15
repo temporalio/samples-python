@@ -57,6 +57,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [sentry](sentry) - Report errors to Sentry.
+* [starlette](starlette) - Use a Starlette project with the Temporal Python SDK.
 
 ## Test
 

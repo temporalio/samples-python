@@ -1,6 +1,6 @@
 # Starlette Temporal Workflow Template
 
-This repository provides settings for [Starelette](https://www.starlette.io/) and the Temporal Python SDK for durable workflows.
+This repository provides settings for [Starlette](https://www.starlette.io/) and the Temporal Python SDK for durable workflows.
 
 ## Getting Started
 
@@ -38,5 +38,5 @@ Expected output:
 
 ## Further Reading
 
-- [Starelette documentation](https://www.starlette.io/)
+- [Starlette documentation](https://www.starlette.io/)
 - [Temporal documentation](https://docs.temporal.io)

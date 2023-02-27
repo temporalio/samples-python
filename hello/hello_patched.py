@@ -24,10 +24,6 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
     return f"{input.greeting}, {input.name}!"
 
 
-async def timer(time: int) -> int:
-    asyncio.sleep(time)
-
-
 # Basic workflow that execute a activity and fires a timer. Demonstrates how to version a workflow using patched.
 # Steps
 # 1) First run the workflow

@@ -3,7 +3,7 @@ import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
-from temporalio import activity, workflow, exceptions
+from temporalio import activity, exceptions, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 
@@ -23,11 +23,12 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
     activity.logger.info("Running activity with parameter %s" % input)
     return f"{input.greeting}, {input.name}!"
 
+
 async def timer(time: int) -> int:
-    asyncio.sleep(time) 
+    asyncio.sleep(time)
 
 
-# Basic workflow that execute a activity and fires a timer. Demonstrates how to version a workflow using patched. 
+# Basic workflow that execute a activity and fires a timer. Demonstrates how to version a workflow using patched.
 # Steps
 # 1) First run the workflow
 # 2) Ctrl-C and interrupt workflow
@@ -35,33 +36,34 @@ async def timer(time: int) -> int:
 # 4) Re-run the workflow, it will detect a workflow is running and pickup the execution following the old code path
 # 5) Re-run the workflow again, since a workflow isn't running it will pickup execution following the new code path
 
+
 @workflow.defn
 class PatchedWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:
-       workflow.logger.info("Running workflow with parameter %s" % name)        
-       greeting = await workflow.execute_activity(
+        workflow.logger.info("Running workflow with parameter %s" % name)
+        greeting = await workflow.execute_activity(
             compose_greeting,
             ComposeGreetingInput("Hello", name),
             start_to_close_timeout=timedelta(seconds=60),
-        )      
-       await asyncio.sleep(120)       
-       return greeting          
-   
-     
+        )
+        await asyncio.sleep(120)
+        return greeting
+
+
 #    async def run(self, name: str) -> str:
 #        if workflow.patched('my-patch-v1'):
-#            print(f"Running new version of workflow")    
+#            print(f"Running new version of workflow")
 #            workflow.logger.info("Running new v1 workflow with parameter %s" % name)
 #            greeting = await workflow.execute_activity(
 #                compose_greeting,
 #                ComposeGreetingInput("Hello-v1", name),
 #                start_to_close_timeout=timedelta(seconds=60),
 #            )
-#            await asyncio.sleep(120) 
+#            await asyncio.sleep(120)
 #            return greeting
 #        else:
-#            print(f"Running old version of workflow")   
+#            print(f"Running old version of workflow")
 #            workflow.logger.info("Running original workflow with parameter %s" % name)
 #            greeting = await workflow.execute_activity(
 #                compose_greeting,
@@ -69,7 +71,8 @@ class PatchedWorkflow:
 #                start_to_close_timeout=timedelta(seconds=60),
 #            )
 #            await asyncio.sleep(120)
-#            return greeting    
+#            return greeting
+
 
 async def main():
     # Uncomment the line below to see logging
@@ -98,16 +101,16 @@ async def main():
                 task_queue="hello-patched-task-queue",
             )
             print(f"Result: {result}")
-        except exceptions.WorkflowAlreadyStartedError: 
+        except exceptions.WorkflowAlreadyStartedError:
             print(f"Workflow already running")
-            workflow_result = await client.get_workflow_handle("hello-patched-workflow-id").result()
+            workflow_result = await client.get_workflow_handle(
+                "hello-patched-workflow-id"
+            ).result()
             print(f"Successful workflow result: {workflow_result}")
-        
-       # while(True):
-       #     await asyncio.sleep(30)
-       #     print(f"Working waiting on tasks...")
 
-
+    # while(True):
+    #     await asyncio.sleep(30)
+    #     print(f"Working waiting on tasks...")
 
 
 if __name__ == "__main__":

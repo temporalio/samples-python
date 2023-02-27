@@ -16,11 +16,13 @@ class ComposeGreetingInput:
     greeting: str
     name: str
 
+
 # Basic activity that logs and does string concatenation
 @activity.defn
 async def compose_greeting(input: ComposeGreetingInput) -> str:
     activity.logger.info("Running activity with parameter %s" % input)
     return f"{input.greeting}, {input.name}!"
+
 
 @workflow.defn
 class PatchedWorkflow:
@@ -34,6 +36,7 @@ class PatchedWorkflow:
         )
         await asyncio.sleep(60)
         return greeting
+
 
 async def main():
     # Uncomment the line below to see logging
@@ -68,6 +71,7 @@ async def main():
                 "hello-patched-workflow-id"
             ).result()
             print(f"Successful workflow result: {workflow_result}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

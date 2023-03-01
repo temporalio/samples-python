@@ -30,7 +30,6 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
 class MyWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:
-        print(f"Running patch-workflow with parameter %s" % name)
         workflow.logger.info("Running patch-workflow with parameter %s" % name)
         greeting = await workflow.execute_activity(
             compose_greeting,
@@ -46,7 +45,6 @@ class MyWorkflow:
 class MyWorkflowPatched:
     @workflow.run
     async def run(self, name: str) -> str:
-        print(f"Running patch-workflow with parameter %s" % name)
         workflow.logger.info("Running patch-workflow with parameter %s" % name)
         if workflow.patched("my-patch-v2"):
             greeting = await workflow.execute_activity(
@@ -55,7 +53,6 @@ class MyWorkflowPatched:
                 start_to_close_timeout=timedelta(seconds=70),
             )
 
-            print(f"Fire a timer and sleep for 10 seconds")
             await asyncio.sleep(10)
             return greeting
         else:
@@ -73,7 +70,6 @@ class MyWorkflowPatched:
 class MyWorkflowPatchDeprecated:
     @workflow.run
     async def run(self, name: str) -> str:
-        print(f"Running patch-workflow with parameter %s" % name)
         workflow.logger.info("Running patch-workflow with parameter %s" % name)
         workflow.deprecate_patch("my-patch-v2")
         greeting = await workflow.execute_activity(
@@ -82,7 +78,6 @@ class MyWorkflowPatchDeprecated:
             start_to_close_timeout=timedelta(seconds=70),
         )
 
-        print(f"Fire a timer and sleep for 10 seconds")
         await asyncio.sleep(10)
         return greeting
 

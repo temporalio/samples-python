@@ -10,17 +10,13 @@ async def main():
         "workflow-schedule-id",
     )
     now = datetime.utcnow()
-    if now.second == 0:
-        now += timedelta(seconds=1)
     await handle.backfill(
         ScheduleBackfill(
-            start_at=now,
-            end_at=now,
+            start_at=now - timedelta(minutes=10),
+            end_at=now - timedelta(minutes=9),
             overlap=ScheduleOverlapPolicy.ALLOW_ALL,
         ),
-    )
-
-    print(f"Result: {handle}")
+    ),
 
 
 if __name__ == "__main__":

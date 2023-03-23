@@ -10,7 +10,7 @@ async def main():
     client = await Client.connect("localhost:7233")
     worker = Worker(
         client,
-        task_queue="my-task-queue",
+        task_queue="schedules-task-queue",
         workflows=[YourSchedulesWorkflow],
         activities=[your_activity],
     )

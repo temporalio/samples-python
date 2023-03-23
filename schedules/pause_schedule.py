@@ -13,7 +13,7 @@ async def main():
 
     desc = await handle.describe()
 
-    print(f"Describe the schedule's state: {desc.schedule.state}")
+    print(f"Describes the schedule's state: {desc.schedule.state}")
 
 
 if __name__ == "__main__":

@@ -11,7 +11,7 @@ async def main():
 
     desc = await handle.describe()
 
-    print(f"Returns the memo: {desc.schedule.state.note}")
+    print(f"Returns the note: {desc.schedule.state.note}")
 
 
 if __name__ == "__main__":

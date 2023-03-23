@@ -10,22 +10,13 @@ async def main():
         "workflow-schedule-id",
     )
 
-    async def update_schedule_simple(
-        input: ScheduleUpdateInput, timeout_minutes: int = 7
-    ) -> ScheduleUpdate:
+    async def update_schedule_simple(input: ScheduleUpdateInput) -> ScheduleUpdate:
         schedule_action = input.description.schedule.action
-        schedule_action.task_timeout = timedelta(minutes=timeout_minutes)
         schedule_action.args = ["my new schedule arg"]
 
         return ScheduleUpdate(schedule=input.description.schedule)
 
     await handle.update(update_schedule_simple)
-    await handle.trigger()
-
-    async def schedule_count() -> int:
-        return len([i async for i in await client.list_schedules()])
-
-    print(f"Schedule count: {await schedule_count()}")
 
 
 if __name__ == "__main__":

@@ -8,11 +8,9 @@ async def main():
     handle = client.get_schedule_handle(
         "workflow-schedule-id",
     )
-    desc_handle = await handle.describe()
-    print(f"{desc_handle.schedule}")
 
     await handle.delete()
-    print(f"State: {desc_handle.schedule.state}")
+    print(f"Schedule deleted.")
 
 
 if __name__ == "__main__":

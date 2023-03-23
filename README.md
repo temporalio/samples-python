@@ -56,6 +56,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
+* [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
 
 ## Test

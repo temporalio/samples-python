@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from temporalio import workflow
-
 from your_dataobject import YourParams
 
 with workflow.unsafe.imports_passed_through():

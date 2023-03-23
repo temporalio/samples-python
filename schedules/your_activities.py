@@ -1,5 +1,4 @@
 from temporalio import activity
-
 from your_dataobject import YourParams
 
 

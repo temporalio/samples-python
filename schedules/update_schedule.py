@@ -1,11 +1,7 @@
 import asyncio
 from datetime import timedelta
 
-from temporalio.client import (
-    Client,
-    ScheduleUpdate,
-    ScheduleUpdateInput,
-)
+from temporalio.client import Client, ScheduleUpdate, ScheduleUpdateInput
 
 
 async def main():

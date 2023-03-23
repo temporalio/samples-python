@@ -1,8 +1,6 @@
 import asyncio
 
-from temporalio.client import (
-    Client,
-)
+from temporalio.client import Client
 
 
 async def main():

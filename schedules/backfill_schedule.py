@@ -1,11 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 
-from temporalio.client import (
-    Client,
-    ScheduleBackfill,
-    ScheduleOverlapPolicy,
-)
+from temporalio.client import Client, ScheduleBackfill, ScheduleOverlapPolicy
 
 
 async def main():

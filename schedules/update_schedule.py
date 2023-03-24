@@ -1,7 +1,12 @@
 import asyncio
 from datetime import timedelta
 
-from temporalio.client import Client, ScheduleUpdate, ScheduleUpdateInput
+from temporalio.client import (
+    Client,
+    ScheduleActionStartWorkflow,
+    ScheduleUpdate,
+    ScheduleUpdateInput,
+)
 
 
 async def main():
@@ -12,8 +17,9 @@ async def main():
 
     async def update_schedule_simple(input: ScheduleUpdateInput) -> ScheduleUpdate:
         schedule_action = input.description.schedule.action
-        schedule_action.args = ["my new schedule arg"]
 
+        if isinstance(schedule_action, ScheduleActionStartWorkflow):
+            schedule_action.args = ["my new schedule arg"]
         return ScheduleUpdate(schedule=input.description.schedule)
 
     await handle.update(update_schedule_simple)

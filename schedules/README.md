@@ -13,6 +13,7 @@ Replace `start_schedule.py` in the command with any other example filename to ru
     poetry run python backfill_schedule.py
     poetry run python delete_schedule.py
     poetry run python describe_schedule.py
+    poetry run python list_schedule.py
     poetry run python pause_schedule.py
     poetry run python update_schedule.py
 
@@ -20,6 +21,7 @@ Replace `start_schedule.py` in the command with any other example filename to ru
 - [x] backfill: Executes Actions ahead of their specified time range.
 - [x] delete: Deletes a Schedule. Deleting a Schedule does not affect any Workflows started by the Schedule.
 - [x] describe: Shows the current Schedule configuration. This command also provides information about past, current, and future Workflow Runs.
+- [x] list: Lists Schedules.
 - [x] pause: Pause and unpause a Schedule.
 - [x] trigger: Triggers an immediate action with a given Schedule. By default, this action is subject to the Overlap Policy of the Schedule.
 - [x] update: Updates an existing Schedule.

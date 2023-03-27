@@ -26,32 +26,11 @@ async def main():
                 task_queue="schedules-task-queue",
             ),
             spec=ScheduleSpec(
-                calendars=[
-                    ScheduleCalendarSpec(
-                        second=(ScheduleRange(1, step=1),),
-                        minute=(ScheduleRange(2, 3),),
-                        hour=(ScheduleRange(4, 5, 6),),
-                        day_of_month=(ScheduleRange(7),),
-                        month=(ScheduleRange(9),),
-                        year=(ScheduleRange(2080),),
-                        day_of_week=[ScheduleRange(1)],
-                        comment="spec comment 1",
-                    )
-                ],
-                intervals=[
-                    ScheduleIntervalSpec(
-                        every=timedelta(days=10),
-                        offset=timedelta(days=2),
-                    )
-                ],
-                cron_expressions=["0 12 * * MON"],
-                skip=[ScheduleCalendarSpec(year=(ScheduleRange(2050),))],
-                start_at=datetime(2060, 7, 8, 9, 10, 11, tzinfo=timezone.utc),
-                jitter=timedelta(seconds=80),
+                intervals=[ScheduleIntervalSpec(every=timedelta(minutes=2))]
             ),
-            state=ScheduleState(note="Here's a note on my Schedule"),
+            state=ScheduleState(note="Here's a note on my Schedule."),
         ),
-    ),
+    )
 
 
 if __name__ == "__main__":

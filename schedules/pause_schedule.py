@@ -11,10 +11,6 @@ async def main():
 
     await handle.pause(note="Pausing the schedule for now")
 
-    desc = await handle.describe()
-
-    print(f"Describes the schedule's state: {desc.schedule.state}")
-
 
 if __name__ == "__main__":
     asyncio.run(main())

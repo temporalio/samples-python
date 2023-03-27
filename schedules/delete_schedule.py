@@ -10,7 +10,6 @@ async def main():
     )
 
     await handle.delete()
-    print(f"Schedule deleted.")
 
 
 if __name__ == "__main__":

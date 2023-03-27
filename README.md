@@ -57,6 +57,8 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
+* [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
+* [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [sentry](sentry) - Report errors to Sentry.
 

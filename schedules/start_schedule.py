@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 
 from temporalio.client import (
     Client,

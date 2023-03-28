@@ -5,9 +5,7 @@ from temporalio.client import (
     Client,
     Schedule,
     ScheduleActionStartWorkflow,
-    ScheduleCalendarSpec,
     ScheduleIntervalSpec,
-    ScheduleRange,
     ScheduleSpec,
     ScheduleState,
 )

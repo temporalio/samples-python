@@ -27,6 +27,8 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_activity](hello/hello_activity.py) - Execute an activity from a workflow.
   * [hello_activity_choice](hello/hello_activity_choice.py) - Execute certain activities inside a workflow based on
     dynamic input.
+  * [hello_activity_method](hello/hello_activity_method.py) - Demonstrate an activity that is an instance method on a
+    class and can access class state.
   * [hello_activity_multiprocess](hello/hello_activity_multiprocess.py) - Execute a synchronous activity on a process
     pool.
   * [hello_activity_retry](hello/hello_activity_retry.py) - Demonstrate activity retry by failing until a certain number
@@ -55,6 +57,8 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
+* [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
+* [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [sentry](sentry) - Report errors to Sentry.
 

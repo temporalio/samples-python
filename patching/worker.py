@@ -4,6 +4,8 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
+from patching.activities import post_patch_activity, pre_patch_activity
+
 interrupt_event = asyncio.Event()
 
 
@@ -17,13 +19,13 @@ async def main():
     )
     args = parser.parse_args()
     if args.workflow == "initial":
-        from workflow_1_initial import MyWorkflow
+        from patching.workflow_1_initial import MyWorkflow
     elif args.workflow == "patched":
-        from workflow_2_patched import MyWorkflow
+        from patching.workflow_2_patched import MyWorkflow  # type: ignore
     elif args.workflow == "patch-deprecated":
-        from workflow_3_patch_deprecated import MyWorkflow
+        from patching.workflow_3_patch_deprecated import MyWorkflow  # type: ignore
     elif args.workflow == "patch-complete":
-        from workflow_4_patch_complete import MyWorkflow
+        from patching.workflow_4_patch_complete import MyWorkflow  # type: ignore
     else:
         raise RuntimeError("Unrecognized workflow")
 
@@ -35,6 +37,7 @@ async def main():
         client,
         task_queue="patching-task-queue",
         workflows=[MyWorkflow],
+        activities=[pre_patch_activity, post_patch_activity],
     ):
         # Wait until interrupted
         print("Worker started")

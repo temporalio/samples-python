@@ -5,7 +5,7 @@ from temporalio.client import Client
 
 # Since it's just used for typing purposes, it doesn't matter which one we
 # import
-from workflow_1_initial import MyWorkflow
+from patching.workflow_1_initial import MyWorkflow
 
 
 async def main():

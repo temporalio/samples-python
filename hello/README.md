@@ -19,7 +19,7 @@ Replace `hello_activity.py` in the command with any other example filename to ru
 * [hello_activity](hello_activity.py) - Execute an activity from a workflow.
 * [hello_activity_choice](hello_activity_choice.py) - Execute certain activities inside a workflow based on dynamic
   input.
-* [hello_activity_method](hello/hello_activity_method.py) - Demonstrate an activity that is an instance method on a
+* [hello_activity_method](hello_activity_method.py) - Demonstrate an activity that is an instance method on a
   class and can access class state.
 * [hello_activity_multiprocess](hello_activity_multiprocess.py) - Execute a synchronous activity on a process pool.
 * [hello_activity_retry](hello_activity_retry.py) - Demonstrate activity retry by failing until a certain number of

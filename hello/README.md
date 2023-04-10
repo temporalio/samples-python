@@ -11,7 +11,7 @@ The result will be:
 
     Result: Hello, World!
 
-Replace `hello_activity.py`  in the command with any other example filename to run it instead.
+Replace `hello_activity.py` in the command with any other example filename to run it instead.
 
 ## Samples
 

@@ -60,6 +60,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
+* [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
 
 ## Test

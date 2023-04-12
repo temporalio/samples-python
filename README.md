@@ -58,6 +58,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
+* [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.

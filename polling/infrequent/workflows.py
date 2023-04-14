@@ -4,8 +4,7 @@ from temporalio import workflow
 from temporalio.common import RetryPolicy
 
 with workflow.unsafe.imports_passed_through():
-    from activities import compose_greeting
-    from obj import ComposeGreetingInput
+    from activities import ComposeGreetingInput, compose_greeting
 
 
 @workflow.defn

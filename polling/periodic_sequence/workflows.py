@@ -23,7 +23,6 @@ class GreetingWorkflow:
 class ChildWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:
-        attempt = 0
         for i in range(10):
             try:
                 polling_activities = await workflow.execute_activity(
@@ -34,13 +33,12 @@ class ChildWorkflow:
                         maximum_attempts=1,
                     ),
                 )
-                attempt += 1
+
                 return polling_activities
 
             except ActivityError:
                 workflow.logger.error("Activity failed, retrying in 5 seconds")
             await asyncio.sleep(5)
-
             workflow.continue_as_new(name)
-        # If we've reached here, it means all attempts failed
+
         raise Exception("Polling failed after all attempts")

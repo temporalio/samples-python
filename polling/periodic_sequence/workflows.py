@@ -38,7 +38,7 @@ class ChildWorkflow:
 
             except ActivityError:
                 workflow.logger.error("Activity failed, retrying in 5 seconds")
-            await asyncio.sleep(5)
+            await asyncio.sleep(1)
             workflow.continue_as_new(name)
 
         raise Exception("Polling failed after all attempts")

@@ -25,7 +25,7 @@ class ChildWorkflow:
     async def run(self, name: str) -> str:
         for i in range(10):
             try:
-                polling_activities = await workflow.execute_activity(
+                return await workflow.execute_activity(
                     compose_greeting,
                     ComposeGreetingInput("Hello", name),
                     start_to_close_timeout=timedelta(seconds=4),
@@ -34,10 +34,8 @@ class ChildWorkflow:
                     ),
                 )
 
-                return polling_activities
-
             except ActivityError:
-                workflow.logger.error("Activity failed, retrying in 5 seconds")
+                workflow.logger.error("Activity failed, retrying in 1 seconds")
             await asyncio.sleep(1)
             workflow.continue_as_new(name)
 

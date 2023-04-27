@@ -1,6 +1,9 @@
+import asyncio
 from dataclasses import dataclass
 
 from temporalio import activity
+
+from polling.test_service import TestService
 
 
 @dataclass
@@ -11,8 +14,10 @@ class ComposeGreetingInput:
 
 @activity.defn
 async def compose_greeting(input: ComposeGreetingInput) -> str:
-    print(f"Invoking activity, attempt number {activity.info().attempt}")
-    # Fail the first 4 attempts, succeed the 5th
-    if activity.info().attempt < 5:
-        raise RuntimeError("Service is down")
-    return f"{input.greeting}, {input.name}!"
+    test_service = TestService()
+    while True:
+        try:
+            result = test_service.get_service_result(input)
+            return result
+        except Exception:
+            activity.heartbeat("Invoking activity")

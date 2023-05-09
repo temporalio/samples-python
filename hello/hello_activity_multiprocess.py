@@ -2,14 +2,13 @@ import asyncio
 import multiprocessing
 import os
 import time
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import SharedStateManager, Worker
-
-from concurrent.futures import ProcessPoolExecutor
 
 
 @dataclass

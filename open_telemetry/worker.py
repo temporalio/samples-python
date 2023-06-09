@@ -3,9 +3,7 @@ from datetime import timedelta
 
 import opentelemetry.context
 from opentelemetry import trace
-
-# See note in README about why Thrift
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -38,7 +36,8 @@ interrupt_event = asyncio.Event()
 def init_runtime_with_telemetry() -> Runtime:
     # Setup global tracer for workflow traces
     provider = TracerProvider(resource=Resource.create({SERVICE_NAME: "my-service"}))
-    provider.add_span_processor(BatchSpanProcessor(JaegerExporter()))
+    exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
+    provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
 
     # Setup SDK metrics to OTel endpoint
@@ -51,9 +50,6 @@ def init_runtime_with_telemetry() -> Runtime:
 
 async def main():
     runtime = init_runtime_with_telemetry()
-
-    # See https://github.com/temporalio/sdk-python/issues/199
-    opentelemetry.context.get_current()
 
     # Connect client
     client = await Client.connect(

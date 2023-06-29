@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest import mock
 
-from activity_sticky_queues import tasks
+from worker_specific_task_queues import tasks
 
 RETURNED_PATH = "valid/path"
 tasks._get_delay_secs = mock.MagicMock(return_value=0.0001)

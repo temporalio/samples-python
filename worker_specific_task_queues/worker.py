@@ -8,7 +8,7 @@ from temporalio import activity
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from activity_sticky_queues import tasks
+from worker_specific_task_queues import tasks
 
 interrupt_event = asyncio.Event()
 
@@ -21,7 +21,7 @@ async def main():
     random.seed(667)
 
     # Create random task queues and build task queue selection function
-    task_queue: str = f"activity_sticky_queue-host-{UUID(int=random.getrandbits(128))}"
+    task_queue: str = f"worker_specific_task_queue-host-{UUID(int=random.getrandbits(128))}"
 
     @activity.defn(name="get_available_task_queue")
     async def select_task_queue() -> str:
@@ -35,7 +35,7 @@ async def main():
     run_futures = []
     handle = Worker(
         client,
-        task_queue="activity_sticky_queue-distribution-queue",
+        task_queue="worker_specific_task_queue-distribution-queue",
         workflows=[tasks.FileProcessing],
         activities=[select_task_queue],
     )

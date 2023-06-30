@@ -21,7 +21,9 @@ async def main():
     random.seed(667)
 
     # Create random task queues and build task queue selection function
-    task_queue: str = f"worker_specific_task_queue-host-{UUID(int=random.getrandbits(128))}"
+    task_queue: str = (
+        f"worker_specific_task_queue-host-{UUID(int=random.getrandbits(128))}"
+    )
 
     @activity.defn(name="get_available_task_queue")
     async def select_task_queue() -> str:

@@ -102,10 +102,10 @@ class FileProcessing:
     async def run(self) -> str:
         """Workflow implementing the basic file processing example.
 
-        First, a task queue is selected randomly. A single worker is listening on 
+        First, a task queue is selected randomly. A single worker is listening on
         this queue, so when we execute all the file processing activities on this
-        queue, they will all be run on the same worker, and all be able to access 
-        the same file on disk. The activities download the file, do some processing 
+        queue, they will all be run on the same worker, and all be able to access
+        the same file on disk. The activities download the file, do some processing
         task on the file, and clean up the file.
         """
         workflow.logger.info("Searching for available worker")

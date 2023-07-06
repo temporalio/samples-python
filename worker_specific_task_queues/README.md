@@ -1,6 +1,6 @@
 # Worker-Specific Task Queues
 
-Use a unique Task Queue for each Worker in order to have certain Activities run on a specific Worker. In the Go and Java SDKs, this is explicitly supported via the Session option, but in other SDKs a different approach is required.
+Use a unique Task Queue for each Worker in order to have certain Activities run on a specific Worker. In the Go SDK, this is explicitly supported via the Session option, but in other SDKs a different approach is required.
 
 Typical use cases include tasks where interaction with a filesystem is required, such as data processing or interacting with legacy access structures. This example will write text files to folders corresponding to each worker, located in the `demo_fs` folder. In production, these folders would typically be independent machines in a worker cluster.
 

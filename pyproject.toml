@@ -17,7 +17,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-temporalio = "^1.0.0"
+temporalio = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"
@@ -37,7 +37,7 @@ dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 optional = true
 [tool.poetry.group.open_telemetry.dependencies]
 temporalio = { version = "*", extras = ["opentelemetry"] }
-opentelemetry-exporter-jaeger-thrift = "^1.13.0"
+opentelemetry-exporter-otlp-proto-grpc = "1.18.0"
 
 [tool.poetry.group.pydantic]
 optional = true

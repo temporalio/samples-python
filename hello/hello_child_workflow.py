@@ -13,7 +13,7 @@ class ComposeGreetingInput:
 
 
 @workflow.defn
-class ComposeGreeting:
+class ComposeGreetingWorkflow:
     @workflow.run
     async def run(self, input: ComposeGreetingInput) -> str:
         return f"{input.greeting}, {input.name}!"
@@ -24,7 +24,7 @@ class GreetingWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:
         return await workflow.execute_child_workflow(
-            ComposeGreeting.run,
+            ComposeGreetingWorkflow.run,
             ComposeGreetingInput("Hello", name),
             id="hello-child-workflow-workflow-child-id",
         )
@@ -38,7 +38,7 @@ async def main():
     async with Worker(
         client,
         task_queue="hello-child-workflow-task-queue",
-        workflows=[GreetingWorkflow, ComposeGreeting],
+        workflows=[GreetingWorkflow, ComposeGreetingWorkflow],
     ):
 
         # While the worker is running, use the client to run the workflow and

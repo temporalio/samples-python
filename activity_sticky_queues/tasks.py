@@ -63,6 +63,7 @@ async def get_available_task_queue() -> str:
 async def download_file_to_worker_filesystem(details: DownloadObj) -> str:
     """Simulates downloading a file to a local filesystem"""
     # FS ops
+    print(details.unique_worker_id, details.workflow_uuid)
     path = create_filepath(details.unique_worker_id, details.workflow_uuid)
     activity.logger.info(f"Downloading ${details.url} and saving to ${path}")
 

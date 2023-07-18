@@ -23,7 +23,7 @@ async def main():
         GreetingWorkflow.run,
         "Temporal",
         id=f"encryption-workflow-id",
-        task_queue="encryption",
+        task_queue="encryption-task-queue",
     )
     print(f"Workflow result: {result}")
 

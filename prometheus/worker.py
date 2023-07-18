@@ -1,16 +1,9 @@
 import asyncio
 from datetime import timedelta
 
-import opentelemetry.context
-from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.contrib.opentelemetry import TracingInterceptor
-from temporalio.runtime import OpenTelemetryConfig, Runtime, TelemetryConfig
+from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 from temporalio.worker import Worker
 
 
@@ -33,41 +26,36 @@ async def compose_greeting(name: str) -> str:
 interrupt_event = asyncio.Event()
 
 
-def init_runtime_with_telemetry() -> Runtime:
-    # Setup global tracer for workflow traces
-    provider = TracerProvider(resource=Resource.create({SERVICE_NAME: "my-service"}))
-    exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
-    provider.add_span_processor(BatchSpanProcessor(exporter))
-    trace.set_tracer_provider(provider)
-
-    # Setup SDK metrics to OTel endpoint
+def init_runtime_with_prometheus(port: int) -> Runtime:
+    # Create runtime for use with Prometheus metrics
     return Runtime(
         telemetry=TelemetryConfig(
-            metrics=OpenTelemetryConfig(url="http://localhost:4317")
+            metrics=PrometheusConfig(bind_address=f"127.0.0.1:{port}")
         )
     )
 
 
 async def main():
-    runtime = init_runtime_with_telemetry()
+    runtime = init_runtime_with_prometheus(9000)
 
     # Connect client
     client = await Client.connect(
         "localhost:7233",
-        # Use OpenTelemetry interceptor
-        interceptors=[TracingInterceptor()],
         runtime=runtime,
     )
 
     # Run a worker for the workflow
     async with Worker(
         client,
-        task_queue="open_telemetry-task-queue",
+        task_queue="prometheus-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
     ):
         # Wait until interrupted
-        print("Worker started, ctrl+c to exit")
+        print("Worker started")
+        print(
+            "Prometheus metrics available at http://127.0.0.1:9000/metrics, ctrl+c to exit"
+        )
         await interrupt_event.wait()
         print("Shutting down")
 

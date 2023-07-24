@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
@@ -24,14 +26,20 @@ class MyWorkflow:
         return "Concluded workflow on V1.1"
 
     @workflow.signal
-    def proceeder(self, inp: str):
+    async def proceeder(self, inp: str):
         if workflow.patched("different-activity"):
-            await workflow.execute_activity(super_greet, ["V1.1", 100])
+            await workflow.execute_activity(
+                super_greet,
+                args=["V1.1", 100],
+                start_to_close_timeout=timedelta(seconds=5),
+            )
         else:
             # Note it is a valid compatible change to alter the input to an activity. However, because
             # we're using the patched API, this branch would only be taken if the workflow was started on
             # a v1 worker.
-            await workflow.execute_activity(greet, "V1.1")
+            await workflow.execute_activity(
+                greet, "V1.1", start_to_close_timeout=timedelta(seconds=5)
+            )
 
         if inp == "finish":
             self.should_finish = True

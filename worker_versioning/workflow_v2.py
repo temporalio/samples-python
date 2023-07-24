@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timedelta
 
 from temporalio import workflow
 
@@ -22,10 +23,14 @@ class MyWorkflow:
         return "Concluded workflow on V2"
 
     @workflow.signal
-    def proceeder(self, inp: str):
+    async def proceeder(self, inp: str):
         await asyncio.sleep(1)
-        await workflow.execute_activity(greet, "V2")
-        await workflow.execute_activity(greet, "V2")
+        await workflow.execute_activity(
+            greet, "V2", start_to_close_timeout=timedelta(seconds=5)
+        )
+        await workflow.execute_activity(
+            greet, "V2", start_to_close_timeout=timedelta(seconds=5)
+        )
 
         if inp == "finish":
             self.should_finish = True

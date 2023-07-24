@@ -1,7 +1,10 @@
+from datetime import timedelta
+
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from worker_versioning.activities import greet
+
 
 @workflow.defn
 class MyWorkflow:
@@ -16,7 +19,9 @@ class MyWorkflow:
         return "Concluded workflow on V1"
 
     @workflow.signal
-    def proceeder(self, inp: str):
-        await workflow.execute_activity(greet, "V1")
+    async def proceeder(self, inp: str):
+        await workflow.execute_activity(
+            greet, "V1", start_to_close_timeout=timedelta(seconds=5)
+        )
         if inp == "finish":
             self.should_finish = True

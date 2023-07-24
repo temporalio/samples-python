@@ -1,7 +1,9 @@
 from temporalio import activity, workflow
 from dataclasses import dataclass
 from datetime import timedelta
-from sentry.activities import ComposeGreetingInput, compose_greeting
+# Import our activity and param class, passing it through the sandbox
+with workflow.unsafe.imports_passed_through():
+    from sentry.activities import ComposeGreetingInput, compose_greeting
 
 
 @workflow.defn

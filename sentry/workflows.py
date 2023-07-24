@@ -1,17 +1,7 @@
 from temporalio import activity, workflow
 from dataclasses import dataclass
 from datetime import timedelta
-
-@dataclass
-class ComposeGreetingInput:
-    greeting: str
-    name: str
-
-
-@activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
-    activity.logger.info("Running activity with parameter %s" % input)
-    return f"{input.greeting}, {input.name}!"
+from sentry.activities import ComposeGreetingInput, compose_greeting
 
 
 @workflow.defn

@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 import sentry_sdk
-from sentry.workflows import compose_greeting, GreetingWorkflow
+from sentry.activities import compose_greeting
+from sentry.workflows import GreetingWorkflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 

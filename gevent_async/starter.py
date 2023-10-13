@@ -30,7 +30,7 @@ async def async_main():
     result = await client.execute_workflow(
         workflow.GreetingWorkflow.run,
         "Temporal",
-        id=f"gevent_async-workflow-id",
+        id="gevent_async-workflow-id",
         task_queue="gevent_async-task-queue",
     )
     logging.info(f"Workflow result: {result}")

@@ -33,6 +33,10 @@ pytest-asyncio = "^0.18.3"
 optional = true
 dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 
+[tool.poetry.group.gevent]
+optional = true
+dependencies = { gevent = { version = "^23.9.1", python = ">=3.8" } }
+
 [tool.poetry.group.open_telemetry]
 optional = true
 [tool.poetry.group.open_telemetry.dependencies]

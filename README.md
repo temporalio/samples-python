@@ -55,6 +55,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
+* [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.

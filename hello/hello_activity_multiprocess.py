@@ -65,7 +65,6 @@ async def main():
             multiprocessing.Manager()
         ),
     ):
-
         # While the worker is running, use the client to run the workflow and
         # print out its result. Note, in many production setups, the client
         # would be in a completely separate process from the worker.

@@ -30,7 +30,6 @@ async def main():
         task_queue="hello-continue-as-new-task-queue",
         workflows=[LoopingWorkflow],
     ):
-
         # While the worker is running, use the client to run the workflow. Note,
         # in many production setups, the client would be in a completely
         # separate process from the worker.

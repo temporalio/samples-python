@@ -106,7 +106,6 @@ async def main():
         workflows=[PurchaseFruitsWorkflow],
         activities=[order_apples, order_bananas, order_cherries, order_oranges],
     ):
-
         # While the worker is running, use the client to run the workflow and
         # print out its result. Note, in many production setups, the client
         # would be in a completely separate process from the worker.

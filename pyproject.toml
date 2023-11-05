@@ -21,7 +21,6 @@ temporalio = "^1.3.0"
 
 [tool.poetry.dev-dependencies]
 ruff = "^0.1.3"
-isort = "^5.10.1"
 mypy = "^0.961"
 pytest = "^7.1.2"
 pytest-asyncio = "^0.18.3"
@@ -56,8 +55,8 @@ optional = true
 dependencies = { sentry-sdk = "^1.11.0" }
 
 [tool.poe.tasks]
-format = [{cmd = "ruff format ."}, {cmd = "isort ."}]
-lint = [{cmd = "ruff format --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]
+format = [{cmd = "ruff format ."}]
+lint = [{cmd = "ruff format --check ."}, {ref = "lint-types" }]
 lint-types = "mypy --check-untyped-defs --namespace-packages ."
 test = "pytest"
 
@@ -70,10 +69,6 @@ asyncio_mode = "auto"
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
-
-[tool.isort]
-profile = "black"
-skip_gitignore = true
 
 [tool.mypy]
 ignore_missing_imports = true

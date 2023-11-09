@@ -1373,17 +1373,17 @@ files = [
 
 [[package]]
 name = "temporalio"
-version = "1.3.0"
+version = "1.4.0"
 description = "Temporal.io Python SDK"
 optional = false
 python-versions = ">=3.7,<4.0"
 files = [
-    {file = "temporalio-1.3.0-cp37-abi3-macosx_10_9_x86_64.whl", hash = "sha256:174c4bd116df56ad9e07f7ca12fc4153af48df0bf95ae7de9753169af7db7ac7"},
-    {file = "temporalio-1.3.0-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:5d169e0a82f014d59b628a9a51a24baed78c770ebb6abe85bdd17ca50a9abffe"},
-    {file = "temporalio-1.3.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:3ba8ab00b1a7a9444220f19e49557659901a00901a11eb9787886f2a19539699"},
-    {file = "temporalio-1.3.0-cp37-abi3-win_amd64.whl", hash = "sha256:6f98de2414167e341cf16d7d9aab4ef3fe6ea5381867cd2dfa85564a5109d17b"},
-    {file = "temporalio-1.3.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:8dd07c5e6bd3b5c8ef211b6761d9a00f647481b703b43931e8ff161e4a59e23d"},
-    {file = "temporalio-1.3.0.tar.gz", hash = "sha256:0eab4916ec9383d59364ab764e6b7e1aa7df8189c5ade969de4bac4e121c95fd"},
+    {file = "temporalio-1.4.0-cp37-abi3-macosx_10_9_x86_64.whl", hash = "sha256:344a75f559d9a0aabde59da0072688523a0c344e8c916d5b5597e6a618696dd4"},
+    {file = "temporalio-1.4.0-cp37-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:f39b7977d1f7f2e3938172980764ec5c50755653fd986d6e68c6b4db242594d6"},
+    {file = "temporalio-1.4.0-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:58e29300bdb586160b8d8f2208106ff9e9d9f740bfb3385b82a509fa38d9a743"},
+    {file = "temporalio-1.4.0-cp37-abi3-win_amd64.whl", hash = "sha256:16bc76cb4d57e633f9e26381d941e3c251a42b5bef6b3668cc4cc2fc08ad6696"},
+    {file = "temporalio-1.4.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:209369da8e529838a238fc6ec464727f7c922d9314ec0ab8f4c19be6dddf0339"},
+    {file = "temporalio-1.4.0.tar.gz", hash = "sha256:56ef81b4b57e709e8f52d49e16b5c7a77d4b63cb697b1d991dd9eaa7fbbda591"},
 ]
 
 [package.dependencies]
@@ -1395,7 +1395,7 @@ types-protobuf = ">=3.20"
 typing-extensions = ">=4.2.0,<5.0.0"
 
 [package.extras]
-grpc = ["grpcio (>=1.48.0,<2.0.0)"]
+grpc = ["grpcio (>=1.53.0,<2.0.0)"]
 opentelemetry = ["opentelemetry-api (>=1.11.1,<2.0.0)", "opentelemetry-sdk (>=1.11.1,<2.0.0)"]
 
 [[package]]
@@ -1770,4 +1770,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.7"
-content-hash = "fc0942909b481f9310f4ae1a6fb392d284d130a49e55aa5fee1c16a59bd3f9b2"
+content-hash = "dcb786f0025f760892e7a168c58da2d1d984857cf86ce3e825559fbeef1fa7d8"

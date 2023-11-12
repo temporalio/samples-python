@@ -9,7 +9,7 @@ from temporalio.client import Client, WorkflowFailureError
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
-from activity_sticky_queues import tasks
+from worker_specific_task_queues import tasks
 
 CHECKSUM = "a checksum"
 RETURNED_PATH = "valid/path"

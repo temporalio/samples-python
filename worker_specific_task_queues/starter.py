@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from temporalio.client import Client
 
-from activity_sticky_queues.tasks import FileProcessing
+from worker_specific_task_queues.tasks import FileProcessing
 
 
 async def main():
@@ -15,8 +15,8 @@ async def main():
     for idx in range(10):
         result = client.execute_workflow(
             FileProcessing.run,
-            id=f"activity_sticky_queue-workflow-id-{idx}",
-            task_queue="activity_sticky_queue-distribution-queue",
+            id=f"worker_specific_task_queue-workflow-id-{idx}",
+            task_queue="worker_specific_task_queue-distribution-queue",
         )
         await asyncio.sleep(0.1)
         futures.append(result)

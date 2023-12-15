@@ -16,7 +16,7 @@ packages = [
 "Bug Tracker" = "https://github.com/temporalio/samples-python/issues"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.8.1,<4.0"
 temporalio = "^1.4.0"
 
 [tool.poetry.dev-dependencies]
@@ -40,6 +40,10 @@ dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 [tool.poetry.group.gevent]
 optional = true
 dependencies = { gevent = { version = "^23.9.1", python = ">=3.8" } }
+
+[tool.poetry.group.langchain]
+optional = true
+dependencies = { langchain =  "^0.0.350", openai = "^1.4.0", fastapi = "^0.105.0", uvicorn = { version = "^0.24.0.post1", extras = ["standard"]} }
 
 [tool.poetry.group.open_telemetry]
 optional = true

@@ -1,2 +1,3 @@
+# isort: skip_file
 .venv
 __pycache__

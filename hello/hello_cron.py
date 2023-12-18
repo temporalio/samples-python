@@ -41,7 +41,6 @@ async def main():
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
     ):
-
         print("Running workflow once a minute")
 
         # While the worker is running, use the client to start the workflow.

@@ -6,7 +6,7 @@ This is the set of Python samples for the [Python SDK](https://github.com/tempor
 
 Prerequisites:
 
-* Python >= 3.7
+* Python >= 3.8
 * [Poetry](https://python-poetry.org)
 * [Local Temporal server running](https://docs.temporal.io/application-development/foundations#run-a-development-cluster)
 

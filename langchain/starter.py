@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
 import uvicorn
 from activities import TranslateParams
@@ -23,7 +24,7 @@ async def translate(phrase: str, language: str):
         result = await client.execute_workflow(
             LangChainWorkflow.run,
             TranslateParams(phrase, language),
-            id=f"langchain-translation-{language.lower()}-{phrase.replace(' ', '-')}",
+            id=f"langchain-translation-{uuid4()}",
             task_queue="langchain-task-queue",
         )
         translation_content = result.get("content", "Translation not available")

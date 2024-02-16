@@ -43,7 +43,11 @@ dependencies = { gevent = { version = "^23.9.1", python = ">=3.8" } }
 
 [tool.poetry.group.langchain]
 optional = true
-dependencies = { langchain =  "^0.0.350", openai = "^1.4.0", fastapi = "^0.105.0", uvicorn = { version = "^0.24.0.post1", extras = ["standard"]} }
+[tool.poetry.group.langchain.dependencies]
+langchain =  "^0.0.350"
+openai = "^1.4.0"
+fastapi = "^0.105.0"
+uvicorn = { version = "^0.24.0.post1", extras = ["standard"]}
 
 [tool.poetry.group.open_telemetry]
 optional = true

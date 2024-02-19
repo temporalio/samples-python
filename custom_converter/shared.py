@@ -54,8 +54,7 @@ class GreetingPayloadConverter(CompositePayloadConverter):
         # Just add ours as first before the defaults
         super().__init__(
             GreetingEncodingPayloadConverter(),
-            # TODO(cretz): Make this list available without instantiation - https://github.com/temporalio/sdk-python/issues/139
-            *DefaultPayloadConverter().converters.values(),
+            *DefaultPayloadConverter.default_encoding_payload_converters
         )
 
 

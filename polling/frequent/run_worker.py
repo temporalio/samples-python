@@ -1,9 +1,10 @@
 import asyncio
 
-from activities import compose_greeting
 from temporalio.client import Client
 from temporalio.worker import Worker
-from workflows import GreetingWorkflow
+
+from polling.frequent.activities import compose_greeting
+from polling.frequent.workflows import GreetingWorkflow
 
 
 async def main():

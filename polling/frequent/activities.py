@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import dataclass
 
 from temporalio import activity

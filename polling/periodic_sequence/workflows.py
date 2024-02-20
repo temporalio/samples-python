@@ -6,7 +6,10 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
-    from activities import ComposeGreetingInput, compose_greeting
+    from polling.periodic_sequence.activities import (
+        ComposeGreetingInput,
+        compose_greeting,
+    )
 
 
 @workflow.defn

@@ -57,6 +57,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
+* [langchain](langchain) - Orchestrate workflows for LangChain.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.

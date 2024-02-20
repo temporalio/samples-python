@@ -41,6 +41,16 @@ dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 optional = true
 dependencies = { gevent = { version = "^23.9.1", python = ">=3.8" } }
 
+[tool.poetry.group.langchain]
+optional = true
+[tool.poetry.group.langchain.dependencies]
+langchain =  {version = "^0.1.7", python = ">=3.8.1,<4.0"}
+langchain-openai = {version = "^0.0.6", python = ">=3.8.1,<4.0"}
+openai = "^1.4.0"
+fastapi = "^0.105.0"
+tqdm = "^4.62.0"
+uvicorn = { version = "^0.24.0.post1", extras = ["standard"]}
+
 [tool.poetry.group.open_telemetry]
 optional = true
 [tool.poetry.group.open_telemetry.dependencies]

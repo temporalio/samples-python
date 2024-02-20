@@ -3,7 +3,7 @@ from datetime import timedelta
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from activities import ComposeGreetingInput, compose_greeting
+    from polling.frequent.activities import ComposeGreetingInput, compose_greeting
 
 
 @workflow.defn

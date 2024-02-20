@@ -1,7 +1,8 @@
 import asyncio
 
 from temporalio.client import Client
-from workflows import GreetingWorkflow
+
+from polling.periodic_sequence.workflows import GreetingWorkflow
 
 
 async def main():

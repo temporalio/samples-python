@@ -27,7 +27,7 @@ jobs:
       # Using fixed Poetry version until
       # https://github.com/python-poetry/poetry/pull/7694 is fixed
       - run: python -m pip install --upgrade wheel "poetry==1.4.0" poethepoet
-      - run: poetry install --with pydantic --with dsl
+      - run: poetry install --with pydantic --with dsl --with encryption
       - run: poe lint
       - run: poe test -s -o log_cli_level=DEBUG
       - run: poe test -s -o log_cli_level=DEBUG --workflow-environment time-skipping

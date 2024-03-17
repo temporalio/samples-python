@@ -23,8 +23,8 @@ RunId = str
 WORKFLOW_ID = uuid4().hex
 TASK_QUEUE = __file__
 
-N_UPDATES = 1
-REPLAY = True
+N_UPDATES = 2
+REPLAY = False
 
 
 @activity.defn
@@ -60,7 +60,7 @@ async def app(client: Client):
     )
 
     log(
-        f"sent start workflow request http://{server()}/namespaces/default/workflows/{WORKFLOW_ID}"
+        f"sent start workflow request http://localhost:3000/namespaces/default/workflows/{WORKFLOW_ID}"
     )
 
     for i in range(N_UPDATES):
@@ -82,7 +82,7 @@ async def app(client: Client):
         run_id = get_first_execution_run_id(history)
         new_run_id = await reset_workflow(run_id, reset_to, client)
         log(
-            f"did reset: http://localhost:8080/namespaces/default/workflows/{WORKFLOW_ID}/{new_run_id}"
+            f"did reset: http://localhost:3000/namespaces/default/workflows/{WORKFLOW_ID}/{new_run_id}"
         )
 
         new_handle = client.get_workflow_handle(WORKFLOW_ID, run_id=new_run_id)

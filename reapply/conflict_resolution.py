@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from datetime import timedelta
 
 import temporalio.api.common.v1
@@ -17,8 +18,9 @@ except ImportError:
 
 RunId = str
 
+NAMESPACE = "ns1"
 WORKFLOW_ID = "my-workflow-id"
-TASK_QUEUE = __file__
+TASK_QUEUE = "my-task-queue"
 N_SIGNALS = 1
 N_UPDATES = 0
 REPLAY = False
@@ -29,8 +31,8 @@ async def my_activity(arg: str) -> str:
     return f"activity-result-{arg}"
 
 
-@workflow.defn(sandboxed=False)
-class WorkflowWithUpdateHandler:
+@workflow.defn(name="my-workflow", sandboxed=False)
+class MyWorkflow:
     def __init__(self) -> None:
         self.done = False
         self.signal_results = []
@@ -43,7 +45,7 @@ class WorkflowWithUpdateHandler:
         else:
             self.signal_results.append(arg)
 
-    @workflow.update
+    @workflow.update(name="my-update")
     async def my_update(self, arg: str):
         r = await workflow.execute_activity(
             my_activity, arg, start_to_close_timeout=timedelta(seconds=10)
@@ -60,9 +62,9 @@ class WorkflowWithUpdateHandler:
         }
 
 
-async def app(client: Client):
+async def execute_workflow(client: Client):
     handle = await client.start_workflow(
-        WorkflowWithUpdateHandler.run,
+        MyWorkflow.run,
         id=WORKFLOW_ID,
         task_queue=TASK_QUEUE,
         id_reuse_policy=temporalio.common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
@@ -75,18 +77,19 @@ async def app(client: Client):
     print(f"wf result: {wf_result}")
 
 
-async def main():
-    client = await Client.connect("localhost:7233")
+async def main(address: str):
+    client = await Client.connect(address, namespace=NAMESPACE)
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[WorkflowWithUpdateHandler],
+        workflows=[MyWorkflow],
         activities=[my_activity],
         sticky_queue_schedule_to_start_timeout=timedelta(hours=1),
         max_cached_workflows=0 if REPLAY else 100,
     ):
-        await app(client)
+        await asyncio.sleep(0xFFFFFF)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    [address] = sys.argv[1:]
+    asyncio.run(main(address))

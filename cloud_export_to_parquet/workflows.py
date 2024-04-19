@@ -1,18 +1,25 @@
-"""Module defines workflows convert exported workflow history file from proto to parquet format."""
-
 from datetime import timedelta
 
-from dataobject import ProtoToParquetWorkflowInput
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
-    from export_proto_to_parquet.data_trans_activities import (
-        DataTransAndLandActivitiyInput,
-        ExportS3Activities,
+    from cloud_export_to_parquet.data_trans_activities import (
+        DataTransAndLandActivityInput,
+        data_trans_and_land,
+        get_object_keys,
         GetObjectKeysActivityInput,
     )
+from dataclasses import dataclass
+
+
+@dataclass
+class ProtoToParquetWorkflowInput:
+    num_delay_hour: int
+    export_s3_bucket: str
+    namespace: str
+    output_s3_bucket: str
 
 
 @workflow.defn
@@ -36,7 +43,7 @@ class ProtoToParquet:
 
         # Read Input File
         object_keys_output = await workflow.execute_activity_method(
-            ExportS3Activities.get_object_keys,
+            get_object_keys,
             get_object_keys_input,
             start_to_close_timeout=timedelta(minutes=5),
             retry_policy=retry_policy,
@@ -47,7 +54,7 @@ class ProtoToParquet:
         try:
             # Could spin up multiple threads to process files in parallel
             for key in object_keys_output:
-                data_trans_and_land_input = DataTransAndLandActivitiyInput(
+                data_trans_and_land_input = DataTransAndLandActivityInput(
                     workflow_input.export_s3_bucket,
                     key,
                     workflow_input.output_s3_bucket,
@@ -55,7 +62,7 @@ class ProtoToParquet:
                 )
                 # Convert proto to parquet and save to S3
                 await workflow.execute_activity_method(
-                    ExportS3Activities.data_trans_and_land,
+                    data_trans_and_land,
                     data_trans_and_land_input,
                     start_to_close_timeout=timedelta(minutes=10),
                     retry_policy=retry_policy,

@@ -5,7 +5,7 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
-    from cloud_export_to_parquet.data_trans_activities import (
+    from data_trans_activities import (
         DataTransAndLandActivityInput,
         data_trans_and_land,
         get_object_keys,
@@ -42,7 +42,7 @@ class ProtoToParquet:
         )
 
         # Read Input File
-        object_keys_output = await workflow.execute_activity_method(
+        object_keys_output = await workflow.execute_activity(
             get_object_keys,
             get_object_keys_input,
             start_to_close_timeout=timedelta(minutes=5),
@@ -61,7 +61,7 @@ class ProtoToParquet:
                     write_path,
                 )
                 # Convert proto to parquet and save to S3
-                await workflow.execute_activity_method(
+                await workflow.execute_activity(
                     data_trans_and_land,
                     data_trans_and_land_input,
                     start_to_close_timeout=timedelta(minutes=10),

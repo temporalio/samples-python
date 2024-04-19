@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "cloud-export-to-parquet"
+version = "0.1.0"
+description = ""
+authors = ["alice.yin <alice.yin@temporal.io>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.2.2"
+pyarrow = "^15.0.2"
+aioboto3 = "^12.4.0"
+temporalio = "^1.5.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

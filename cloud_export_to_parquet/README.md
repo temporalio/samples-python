@@ -2,9 +2,9 @@
 
 This is an example workflow to convert exported file from proto to parquet file. The workflow is an hourly schedule. 
 
-For this sample, the optional `cloud_export_to_parquet` dependency group must be included. To include, run:
+Please make sure your python is 3.9 above. For this sample, run:
 
-    poetry install --with cloud_export_to_parquet
+    poetry install 
 
 Before you start, please modify workflow input in `create_schedule.py` with your s3 bucket and namespace. Also make sure you've the right AWS permission set up in your environment to allow this workflow read and write to your s3 bucket. 
 

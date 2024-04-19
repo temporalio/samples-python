@@ -28,18 +28,20 @@ class DataTransAndLandActivityInput:
 async def get_object_keys(activity_input: GetObjectKeysActivityInput) -> List[str]:
     """Function that list objects by key."""
     session = aioboto3.Session()
+    object_keys = []
     async with session.client("s3") as s3:
         response = await s3.list_objects_v2(
             Bucket=activity_input.bucket, Prefix=activity_input.path
         )
-        object_keys = []
+
         for obj in response.get("Contents", []):
             object_keys.append(obj["Key"])
         if len(object_keys) == 0:
             raise FileNotFoundError(
                 f"No files found in {activity_input.bucket}/{activity_input.path}"
             )
-        return object_keys
+
+    return object_keys
 
 
 @activity.defn

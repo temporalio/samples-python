@@ -1,5 +1,6 @@
 import asyncio
 
+from data_trans_activities import data_trans_and_land, get_object_keys
 from temporalio.client import Client
 from temporalio.worker import Worker
 from temporalio.worker.workflow_sandbox import (
@@ -7,11 +8,6 @@ from temporalio.worker.workflow_sandbox import (
     SandboxRestrictions,
 )
 from workflows import ProtoToParquet
-
-from cloud_export_to_parquet.data_trans_activities import (
-    data_trans_and_land,
-    get_object_keys,
-)
 
 
 async def main() -> None:

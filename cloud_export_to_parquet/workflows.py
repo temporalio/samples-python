@@ -52,7 +52,7 @@ class ProtoToParquet:
         write_path = f"temporal-workflow-history/parquet/{common_path}"
 
         try:
-            # Could spin up multiple threads to process files in parallel
+            # Could create a list of corountine objects to process files in parallel
             for key in object_keys_output:
                 data_trans_and_land_input = DataTransAndLandActivityInput(
                     workflow_input.export_s3_bucket,
@@ -64,7 +64,7 @@ class ProtoToParquet:
                 await workflow.execute_activity(
                     data_trans_and_land,
                     data_trans_and_land_input,
-                    start_to_close_timeout=timedelta(minutes=10),
+                    start_to_close_timeout=timedelta(minutes=15),
                     retry_policy=retry_policy,
                 )
         except ActivityError as output_err:

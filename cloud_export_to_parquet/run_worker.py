@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from data_trans_activities import data_trans_and_land, get_object_keys
 from temporalio.client import Client
@@ -24,6 +25,7 @@ async def main() -> None:
         workflow_runner=SandboxedWorkflowRunner(
             restrictions=SandboxRestrictions.default.with_passthrough_modules("boto3")
         ),
+        activity_executor=ThreadPoolExecutor(5),
     )
     await worker.run()
 

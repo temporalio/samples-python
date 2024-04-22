@@ -3,7 +3,7 @@ import uuid
 from dataclasses import dataclass
 from typing import List
 
-import aioboto3
+import boto3
 import pandas as pd
 import temporalio.api.export.v1 as export
 from google.protobuf.json_format import MessageToJson
@@ -25,55 +25,50 @@ class DataTransAndLandActivityInput:
 
 
 @activity.defn
-async def get_object_keys(activity_input: GetObjectKeysActivityInput) -> List[str]:
+def get_object_keys(activity_input: GetObjectKeysActivityInput) -> List[str]:
     """Function that list objects by key."""
-    session = aioboto3.Session()
     object_keys = []
-    async with session.client("s3") as s3:
-        response = await s3.list_objects_v2(
-            Bucket=activity_input.bucket, Prefix=activity_input.path
+    s3 = boto3.client("s3")
+    response = s3.list_objects_v2(
+        Bucket=activity_input.bucket, Prefix=activity_input.path
+    )
+    for obj in response.get("Contents", []):
+        object_keys.append(obj["Key"])
+    if len(object_keys) == 0:
+        raise FileNotFoundError(
+            f"No files found in {activity_input.bucket}/{activity_input.path}"
         )
-
-        for obj in response.get("Contents", []):
-            object_keys.append(obj["Key"])
-        if len(object_keys) == 0:
-            raise FileNotFoundError(
-                f"No files found in {activity_input.bucket}/{activity_input.path}"
-            )
 
     return object_keys
 
 
 @activity.defn
-async def data_trans_and_land(activity_input: DataTransAndLandActivityInput) -> str:
+def data_trans_and_land(activity_input: DataTransAndLandActivityInput) -> str:
     """Function that convert proto to parquet and save to S3."""
     key = activity_input.object_key
-    data = await get_data_from_object_key(activity_input.export_s3_bucket, key)
+    data = get_data_from_object_key(activity_input.export_s3_bucket, key)
     activity.logger.info("Convert proto to parquet for file: %s", key)
     parquet_data = convert_proto_to_parquet_flatten(data)
     activity.logger.info("Finish transformation for file: %s", key)
-    return await save_to_sink(
+    return save_to_sink(
         parquet_data, activity_input.output_s3_bucket, activity_input.write_path
     )
 
 
-async def get_data_from_object_key(
+def get_data_from_object_key(
     bucket_name: str, object_key: str
 ) -> export.WorkflowExecutions:
     """Function that get object by key."""
     v = export.WorkflowExecutions()
 
-    session = aioboto3.Session()
-    async with session.client("s3") as s3:
-        try:
-            get_object = await s3.get_object(Bucket=bucket_name, Key=object_key)
-            data = await get_object["Body"].read()
-        except Exception as e:
-            activity.logger.error(f"Error reading object: {e}")
-            raise e
-
-        v.ParseFromString(data)
-        return v
+    s3 = boto3.client("s3")
+    try:
+        data = s3.get_object(Bucket=bucket_name, Key=object_key)["Body"].read()
+    except Exception as e:
+        activity.logger.error(f"Error reading object: {e}")
+        raise e
+    v.ParseFromString(data)
+    return v
 
 
 def convert_proto_to_parquet_flatten(wfs: export.WorkflowExecutions) -> pd.DataFrame:
@@ -111,19 +106,18 @@ def convert_proto_to_parquet_flatten(wfs: export.WorkflowExecutions) -> pd.DataF
     return df_flatten
 
 
-async def save_to_sink(data: pd.DataFrame, s3_bucket: str, write_path: str) -> str:
+def save_to_sink(data: pd.DataFrame, s3_bucket: str, write_path: str) -> str:
     """Function that save object to s3 bucket."""
     write_bytes = data.to_parquet(None, compression="snappy", index=False)
     uuid_name = uuid.uuid1()
     file_name = f"{uuid_name}.parquet"
     activity.logger.info("Writing to S3 bucket: %s", file_name)
 
-    session = aioboto3.Session()
-    async with session.client("s3") as s3:
-        try:
-            key = f"{write_path}/{file_name}"
-            await s3.put_object(Bucket=s3_bucket, Key=key, Body=write_bytes)
-            return key
-        except Exception as e:
-            activity.logger.error(f"Error saving to sink: {e}")
-            raise e
+    s3 = boto3.client("s3")
+    try:
+        key = f"{write_path}/{file_name}"
+        s3.put_object(Bucket=s3_bucket, Key=key, Body=write_bytes)
+        return key
+    except Exception as e:
+        activity.logger.error(f"Error saving to sink: {e}")
+        raise e

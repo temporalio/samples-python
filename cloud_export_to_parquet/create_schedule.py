@@ -10,7 +10,11 @@ from temporalio.client import (
     ScheduleSpec,
     WorkflowFailureError,
 )
-from workflows import ProtoToParquet, ProtoToParquetWorkflowInput
+
+from cloud_export_to_parquet.workflows import (
+    ProtoToParquet,
+    ProtoToParquetWorkflowInput,
+)
 
 
 async def main() -> None:

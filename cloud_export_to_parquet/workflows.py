@@ -5,7 +5,7 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
-    from data_trans_activities import (
+    from cloud_export_to_parquet.data_trans_activities import (
         DataTransAndLandActivityInput,
         data_trans_and_land,
         get_object_keys,

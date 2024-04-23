@@ -16,7 +16,7 @@ async def main():
             end_at=now - timedelta(minutes=9),
             overlap=ScheduleOverlapPolicy.ALLOW_ALL,
         ),
-    ),
+    )
 
 
 if __name__ == "__main__":

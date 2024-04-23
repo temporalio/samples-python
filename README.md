@@ -52,6 +52,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
+* [cloud_export_to_parquet](cloud_export_to_parquet) - Set up schedule workflow to process exported files on an hourly basis
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
@@ -67,7 +68,6 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [sentry](sentry) - Report errors to Sentry.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
-
 
 ## Test
 

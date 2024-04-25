@@ -11,9 +11,10 @@ from temporalio.client import (
     WorkflowFailureError,
 )
 
-from batch.workflows import (
-    DailyBatch,
-    DailyBatchWorkflowInput,
+from batch_daily.workflows import (
+    RecordBatchProcessor,
+    RecordBatchProcessorWorkflowInput,
+    TASK_QUEUE_NAME,
 )
 
 
@@ -21,22 +22,16 @@ async def main() -> None:
     """Main function to run temporal workflow."""
     client = await Client.connect("localhost:7233")
 
-    wf_input = DailyBatchWorkflowInput(
-        record_filter="taste=yummy",
-        # XXX: how do we get the current day in a way that works with the schedule?
-        start_day=datetime.now().date().strftime("%Y-%m-%d"),
-        end_day=((datetime.now().date()) + timedelta(days=1)).strftime("%Y-%m-%d"),
-    )
-
     try:
+        wf_input = RecordBatchProcessorWorkflowInput(record_filter="taste=yummy")
         await client.create_schedule(
             "daily-batch-wf-schedule",
             Schedule(
                 action=ScheduleActionStartWorkflow(
-                    DailyBatch.run,
+                    RecordBatchProcessor.run,
                     wf_input,
-                    id=f"daily-batch-{wf_input.record_filter}",
-                    task_queue="TASK_QUEUE",
+                    id=f"record-filter-{wf_input.record_filter}",
+                    task_queue=TASK_QUEUE_NAME,
                 ),
                 spec=ScheduleSpec(
                     intervals=[ScheduleIntervalSpec(every=timedelta(hours=1))]

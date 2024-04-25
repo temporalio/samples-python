@@ -1,7 +1,15 @@
 # Batch sample
 
-This is an example workflow to process batches of records matching a particular
-query criteria, in daily windows of time.
+This is an example workflow that solves the following use-case.
+
+You have a series of records that are divided into daily batches (think a days
+worth of telemetry coming from an application).
+Every day you would like to run a batch to process a days worth of records, but
+you would also like to have the ability to backfill the records from a previous
+window of time.
+
+Backfilling might be run as a schedule or it might be run as a directly
+triggered workflow.
 
 Please make sure your python is 3.9 above. For this sample, run:
 
@@ -15,7 +23,13 @@ To run, first see [README.md](../README.md) for prerequisites. Then, run the fol
 poetry run python run_worker.py
 ```
 
-This will start the worker. Then, in another terminal, run the following to execute the schedule:
+This will start the worker. Then, in another terminal, run the following to start the workflow:
+
+```bash
+poetry run python starter.py
+```
+
+Optionally, you can schedule the workflow with:
 
 ```bash
 poetry run python create_schedule.py

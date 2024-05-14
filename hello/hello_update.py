@@ -1,6 +1,6 @@
 import asyncio
 
-from temporalio import workflow
+from temporalio import common, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 
@@ -37,6 +37,7 @@ async def main():
             GreetingWorkflow.run,
             id="hello-update-workflow-id",
             task_queue="update-workflow-task-queue",
+            id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
         )
 
         # Perform the update for GreetingWorkflow

@@ -1,0 +1,22 @@
+import asyncio
+import sys
+from temporalio.client import Client
+from workflows import EntityBedrockWorkflow
+
+
+async def main(prompt):
+    # brew install temporal
+    # temporal server start-dev
+    client = await Client.connect("localhost:7233")
+
+    workflow_id = "simple-bedrock-workflow-1"
+    inactivity_timeout_minutes = 1
+
+    handle = client.get_workflow_handle(workflow_id=workflow_id)
+
+    # sends a signal to the workflow (and starts it if needed)
+    await handle.signal(EntityBedrockWorkflow.end_chat)
+
+if __name__ == "__main__":
+    print("Sending signal to end chat.")
+    asyncio.run(main(sys.argv))

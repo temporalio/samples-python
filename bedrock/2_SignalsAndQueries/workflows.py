@@ -19,56 +19,64 @@ class SignalQueryBedrockWorkflow:
 
     @workflow.run
     async def run(self, inactivity_timeout_minutes: int) -> str:
-
         while True:
-            try:
-                workflow.logger.info(
-                    f"\nWaiting for prompts... or closing chat after "
-                    + "%d minute(s)" % inactivity_timeout_minutes
-                )
+            workflow.logger.info(
+                "Waiting for prompts... or closing chat after " +
+                f"{inactivity_timeout_minutes} minute(s)"
+            )
 
+            try:
                 # Wait for a chat message (signal) or timeout
                 await workflow.wait_condition(
-                    lambda: bool(self.prompt_queue),
-                    timeout=timedelta(minutes=inactivity_timeout_minutes),
+                    lambda:
+                        bool(self.prompt_queue),
+                        timeout=timedelta(minutes=inactivity_timeout_minutes),
                 )
-
-                prompt = self.prompt_queue.popleft()  # done with current prompt
-                workflow.logger.info("\nPrompt: " + prompt)
-                self.conversation_history.append(
-                    ("user", prompt)
-                )  # Log user prompt to conversation history
-
-                # If a prompt is given, send to Amazon Bedrock
-                response = await workflow.execute_activity(
-                    prompt_bedrock,
-                    self.prompt_with_history(prompt),
-                    schedule_to_close_timeout=timedelta(seconds=20),
-                )
-
-                workflow.logger.info(response)
-
-                # Append the response to the conversation history
-                self.conversation_history.append(("response", response))
-
-                # summarize the conversation to date using Amazon Bedrock
-                # uses start_activity with a callback
-                # so it doesn't block new messages being sent to Amazon Bedrock
-                summary_activity_task = workflow.start_activity(
-                    prompt_bedrock,
-                    self.prompt_summary_from_history(),
-                    schedule_to_close_timeout=timedelta(seconds=20),
-                )
-                summary_activity_task.add_done_callback(self.summary_complete)
-
             # if timeout was reached
             except asyncio.TimeoutError:
-                workflow.logger.info("\n*** Chat closed due to inactivity ***")
-                # ensure a summary has been generated before ending the workflow
-                await workflow.wait_condition(lambda: summary_activity_task.done())
-                workflow.logger.info("\nConversation summary:")
+                workflow.logger.info("Chat closed due to inactivity")
+
+                # ensure a summary has been generated
+                # before ending the workflow
+                await workflow.wait_condition(
+                    lambda: summary_activity_task.done()
+                )
+
+                workflow.logger.info("Conversation summary:")
                 workflow.logger.info(self.conversation_summary)
+
                 return "{}".format(self.conversation_history)
+
+            prompt = self.prompt_queue.popleft()
+
+            workflow.logger.info(f"Prompt: {prompt}")
+
+            # Log user prompt to conversation history
+            self.conversation_history.append(
+                ("user", prompt)
+            )
+
+            # Send the prompt to Amazon Bedrock
+            response = await workflow.execute_activity(
+                prompt_bedrock,
+                self.prompt_with_history(prompt),
+                schedule_to_close_timeout=timedelta(seconds=20),
+            )
+
+            workflow.logger.info(response)
+
+            # Append the response to the conversation history
+            self.conversation_history.append(("response", response))
+
+            # summarize the conversation to date using Amazon Bedrock
+            # uses start_activity with a callback so it doesn't block
+            # new messages being sent to Amazon Bedrock
+            summary_activity_task = workflow.start_activity(
+                prompt_bedrock,
+                self.prompt_summary_from_history(),
+                schedule_to_close_timeout=timedelta(seconds=20),
+            )
+            summary_activity_task.add_done_callback(self.summary_complete)
 
     @workflow.signal
     async def user_prompt(self, prompt: str) -> None:
@@ -90,15 +98,13 @@ class SignalQueryBedrockWorkflow:
     def prompt_with_history(self, prompt: str) -> str:
         history_string = self.format_history()
         return (
-            "Here is the conversation history:"
-            + history_string
-            + " Please add a few sentence response to the prompt "
-            + "in plain text sentences. Don't editorialize or add metadata like "
-            + "response. Keep the text a plain explanation based on the history. Prompt: "
-            + prompt
+            f"Here is the conversation history: {history_string} Please add " +
+            "a few sentence response to the prompt in plain text sentences. " +
+            "Don't editorialize or add metadata like response. Keep the " +
+            f"text a plain explanation based on the history. Prompt: {prompt}"
         )
 
-    # Create the prompt given to Amazon Bedrock to summarize the conversation history
+    # Create the prompt to Amazon Bedrock to summarize the conversation history
     def prompt_summary_from_history(self) -> str:
         history_string = self.format_history()
         return (

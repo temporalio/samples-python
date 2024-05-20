@@ -1,4 +1,3 @@
-import sys
 import asyncio
 import concurrent.futures
 import logging

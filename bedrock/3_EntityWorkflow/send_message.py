@@ -11,8 +11,6 @@ async def main(prompt):
 
     workflow_id = "simple-bedrock-workflow-1"
 
-    handle = client.get_workflow_handle(workflow_id=workflow_id)
-
     # sends a signal to the workflow (and starts it if needed)
     await client.start_workflow(
         EntityBedrockWorkflow.run,

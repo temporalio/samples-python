@@ -10,12 +10,12 @@ async def main(prompt):
     client = await Client.connect("localhost:7233")
 
     workflow_id = "simple-bedrock-workflow-1"
-    inactivity_timeout_minutes = 1
 
     handle = client.get_workflow_handle(workflow_id=workflow_id)
 
     # sends a signal to the workflow (and starts it if needed)
     await handle.signal(EntityBedrockWorkflow.end_chat)
+
 
 if __name__ == "__main__":
     print("Sending signal to end chat.")

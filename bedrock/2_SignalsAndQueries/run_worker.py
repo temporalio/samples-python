@@ -1,4 +1,3 @@
-import sys
 import asyncio
 import concurrent.futures
 import logging
@@ -29,9 +28,7 @@ async def main():
 
     await run_worker(client)
 
-
 if __name__ == "__main__":
-
     print("Starting worker")
     print("Then run 'python send_message.py \"<prompt>\"'")
     asyncio.run(main())

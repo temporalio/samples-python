@@ -1,8 +1,8 @@
 import asyncio
 from datetime import timedelta
 from temporalio import workflow
-
 from collections import deque
+from typing import List, Tuple, Deque, Optional
 
 with workflow.unsafe.imports_passed_through():
     from activities import prompt_bedrock
@@ -11,17 +11,17 @@ with workflow.unsafe.imports_passed_through():
 @workflow.defn
 class EntityBedrockWorkflow:
     def __init__(self) -> None:
-        self.conversation_history = []  # List to store prompt history
-        self.prompt_queue = deque()
-        self.conversation_summary = None
-        self.continue_as_new_per_turns = 6 
-        self.end_chat = False
+        self.conversation_history: List[Tuple[str, str]] = []  # List to store prompt history
+        self.prompt_queue: Deque[str] = deque()
+        self.conversation_summary: Optional[str] = None
+        self.continue_as_new_per_turns: int = 6
+        self.chat_ended: bool = False  # Renamed attribute to avoid conflict
 
     @workflow.run
     async def run(
         self,
-        conversation_summary: str = None,
-        prompt_queue: deque = None,
+        conversation_summary: Optional[str] = None,
+        prompt_queue: Optional[Deque[str]] = None,
     ) -> str:
 
         if conversation_summary:
@@ -32,18 +32,18 @@ class EntityBedrockWorkflow:
         if prompt_queue:
             self.prompt_queue = prompt_queue
 
-        summary_activity_task = None
+        summary_activity_task: Optional[asyncio.Task] = None
 
         while True:
             workflow.logger.info(f"\nWaiting for prompts...")
 
             # Wait for a chat message (signal) or timeout
-            await workflow.wait_condition(lambda: self.prompt_queue or self.end_chat)
+            await workflow.wait_condition(lambda: bool(self.prompt_queue) or self.chat_ended)
 
             # if end chat signal was sent
-            if self.end_chat:
+            if self.chat_ended:
                 # the workflow might be continued as new without any chat to summarize
-                if summary_activity_task:
+                if summary_activity_task is not None:
                     # ensure conversation summary task has finished
                     # before closing the workflow (avoid race)
                     await workflow.wait_condition(lambda: summary_activity_task.done())
@@ -90,7 +90,8 @@ class EntityBedrockWorkflow:
             if len(self.conversation_history) >= self.continue_as_new_per_turns:
                 # ensure conversation summary task has finished
                 # before continuing as new
-                await workflow.wait_condition(lambda: summary_activity_task.done())
+                if summary_activity_task is not None:
+                    await workflow.wait_condition(lambda: summary_activity_task.done())
                 workflow.logger.info(
                     "Continuing as new due to %i conversational turns."
                     % self.continue_as_new_per_turns,
@@ -108,22 +109,22 @@ class EntityBedrockWorkflow:
 
     @workflow.signal
     async def end_chat(self) -> None:
-        self.end_chat = True
+        self.chat_ended = True  # Updated to use the renamed attribute
 
     @workflow.query
-    def conversation_history(self) -> list:
+    def get_conversation_history(self) -> List[Tuple[str, str]]:
         return self.conversation_history
 
     @workflow.query
-    def summary_from_history(self) -> str:
+    def get_summary_from_history(self) -> Optional[str]:
         return self.conversation_summary
 
     # helper method used in prompts to Amazon Bedrock
-    def format_history(self):
-        return " ".join(f"{text}" for type, text in self.conversation_history)
+    def format_history(self) -> str:
+        return " ".join(f"{text}" for _, text in self.conversation_history)
 
     # Create the prompt given to Amazon Bedrock for each conversational turn
-    def prompt_with_history(self, prompt):
+    def prompt_with_history(self, prompt: str) -> str:
         history_string = self.format_history()
         return (
             "Here is the conversation history:"
@@ -135,7 +136,7 @@ class EntityBedrockWorkflow:
         )
 
     # Create the prompt given to Amazon Bedrock to summarize the conversation history
-    def prompt_summary_from_history(self):
+    def prompt_summary_from_history(self) -> str:
         history_string = self.format_history()
         return (
             "Here is the conversation history between a user and a chatbot:"
@@ -144,5 +145,5 @@ class EntityBedrockWorkflow:
         )
 
     # callback -- save the latest conversation history once generated
-    def summary_complete(self, task):
+    def summary_complete(self, task: asyncio.Task) -> None:
         self.conversation_summary = task.result()

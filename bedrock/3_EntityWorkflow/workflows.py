@@ -11,7 +11,9 @@ with workflow.unsafe.imports_passed_through():
 @workflow.defn
 class EntityBedrockWorkflow:
     def __init__(self) -> None:
-        self.conversation_history: List[Tuple[str, str]] = []  # List to store prompt history
+        self.conversation_history: List[Tuple[str, str]] = (
+            []
+        )  # List to store prompt history
         self.prompt_queue: Deque[str] = deque()
         self.conversation_summary: Optional[str] = None
         self.continue_as_new_per_turns: int = 6
@@ -38,7 +40,9 @@ class EntityBedrockWorkflow:
             workflow.logger.info(f"\nWaiting for prompts...")
 
             # Wait for a chat message (signal) or timeout
-            await workflow.wait_condition(lambda: bool(self.prompt_queue) or self.chat_ended)
+            await workflow.wait_condition(
+                lambda: bool(self.prompt_queue) or self.chat_ended
+            )
 
             # if end chat signal was sent
             if self.chat_ended:

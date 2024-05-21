@@ -11,7 +11,9 @@ with workflow.unsafe.imports_passed_through():
 @workflow.defn
 class SignalQueryBedrockWorkflow:
     def __init__(self) -> None:
-        self.conversation_history: List[Tuple[str, str]] = []  # List to store prompt history
+        self.conversation_history: List[Tuple[str, str]] = (
+            []
+        )  # List to store prompt history
         self.prompt_queue: Deque[str] = deque()
         self.conversation_summary: str = ""
 
@@ -48,7 +50,7 @@ class SignalQueryBedrockWorkflow:
 
                 # Append the response to the conversation history
                 self.conversation_history.append(("response", response))
-                
+
                 # summarize the conversation to date using Amazon Bedrock
                 # uses start_activity with a callback
                 # so it doesn't block new messages being sent to Amazon Bedrock
@@ -75,7 +77,7 @@ class SignalQueryBedrockWorkflow:
     @workflow.query
     def get_conversation_history(self) -> List[Tuple[str, str]]:
         return self.conversation_history
-    
+
     @workflow.query
     def get_summary_from_history(self) -> Optional[str]:
         return self.conversation_summary
@@ -95,7 +97,7 @@ class SignalQueryBedrockWorkflow:
             + "response. Keep the text a plain explanation based on the history. Prompt: "
             + prompt
         )
-        
+
     # Create the prompt given to Amazon Bedrock to summarize the conversation history
     def prompt_summary_from_history(self) -> str:
         history_string = self.format_history()

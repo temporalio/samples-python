@@ -8,7 +8,10 @@ config = Config(region_name="us-west-2")
 
 @activity.defn
 def prompt_bedrock(prompt: str) -> str:
-    bedrock = boto3.client(service_name="bedrock-runtime", config=config)
+    bedrock = boto3.client(
+        service_name="bedrock-runtime",
+        config=config
+    )
 
     # model params
     modelId = "meta.llama2-70b-chat-v1"
@@ -28,7 +31,10 @@ def prompt_bedrock(prompt: str) -> str:
     )
 
     response = bedrock.invoke_model(
-        body=body, modelId=modelId, accept=accept, contentType=contentType
+        body=body,
+        modelId=modelId,
+        accept=accept,
+        contentType=contentType
     )
 
     response_body = json.loads(response.get("body").read())

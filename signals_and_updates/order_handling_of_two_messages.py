@@ -1,4 +1,5 @@
 import asyncio
+from dataclasses import dataclass
 import logging
 
 from temporalio import common, workflow
@@ -6,32 +7,47 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
 
+# Shows how to make a pair of update or signal handlers run in a certain order even 
+# if they are received out of order.
 @workflow.defn
 class WashAndDryCycle:
 
+    @dataclass
+    class WashResults:
+	    num_items: int
+
+    @dataclass 
+    class DryResults:
+        num_items: int
+        moisture_level: int
+
     def __init__(self) -> None:
-        self.wash_complete = False
-        self.dry_complete = False
+        self._wash_results: WashAndDryCycle.WashResults = None
+        self._dry_results: WashAndDryCycle.DryResults = None
 
     @workflow.run
     async def run(self):
-        await workflow.wait_condition(lambda: self.dry_complete)
+        await workflow.wait_condition(lambda: self._dry_results is not None)
+        workflow.logger.info(
+            f"Finished washing and drying {self._dry_results.num_items} items, moisture level: {self._dry_results.moisture_level}"
+            )
 
     @workflow.update
-    async def wash(self):
-        self.wash_complete = True
-        workflow.logger.info("washing")
+    async def wash(self, num_items) -> WashResults:
+        self._wash_results = WashAndDryCycle.WashResults(num_items=num_items)
+        return self._wash_results
 
     @workflow.update
-    async def dry(self):
-        await workflow.wait_condition(lambda: self.wash_complete)
-        self.dry_complete = True
-        workflow.logger.info("drying")
-
-
+    async def dry(self) -> DryResults:
+        await workflow.wait_condition(lambda: self._wash_results is not None)
+        
+        self._dry_results = WashAndDryCycle.DryResults(num_items=self._wash_results.num_items, moisture_level=3)
+        return self._dry_results
+    
 async def app(wf: WorkflowHandle):
+    # In normal operation, wash comes before dry, but here we simulate out-of-order receipt of messages
     await asyncio.gather(
-        wf.execute_update(WashAndDryCycle.dry), wf.execute_update(WashAndDryCycle.wash)
+        wf.execute_update(WashAndDryCycle.dry), wf.execute_update(WashAndDryCycle.wash, 10)
     )
 
 

@@ -5,7 +5,8 @@ from datetime import timedelta
 from typing import Optional
 
 from temporalio import activity, workflow
-from temporalio.client import Client, TLSConfig
+from temporalio.client import Client
+from temporalio.service import TLSConfig
 from temporalio.worker import Worker
 
 

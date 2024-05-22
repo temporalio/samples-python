@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import sys
 from dataclasses import dataclass
 from datetime import timedelta
@@ -96,7 +95,8 @@ async def main():
 
     version = sys.argv[1]
 
-    # Uncomment the line below to see logging
+    # Uncomment the lines below to see logging output
+    # import logging
     # logging.basicConfig(level=logging.INFO)
 
     # Start client

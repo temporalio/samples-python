@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -38,7 +37,8 @@ class GreetingWorkflow:
 
 
 async def main():
-    # Uncomment the line below to see logging
+    # Uncomment the lines below to see logging output
+    # import logging
     # logging.basicConfig(level=logging.INFO)
 
     # Start client

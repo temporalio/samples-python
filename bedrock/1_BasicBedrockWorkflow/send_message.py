@@ -11,18 +11,18 @@ async def main(prompt):
 
     # Start the workflow
     workflow_id = "simple-bedrock-workflow-1"
-    await client.start_workflow(
+    handle = await client.start_workflow(
         SimpleBedrockWorkflow.run,
         prompt,  # Initial prompt
         id=workflow_id,
         task_queue="bedrock-task-queue"
     )
-    print("Chat started. Workflow ID: {workflow_id}\n")
-
+    return await handle.result()
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python send_message.py '<prompt>'")
         print("Example: python send_message.py 'What animals are marsupials?'")
     else:
-        asyncio.run(main(sys.argv[1]))
+        result = asyncio.run(main(sys.argv[1]))
+        print(result)

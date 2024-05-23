@@ -1,22 +1,22 @@
 import asyncio
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from temporalio import common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
 
-# Shows how to make a pair of update or signal handlers run in a certain order even 
+# Shows how to make a pair of update or signal handlers run in a certain order even
 # if they are received out of order.
 @workflow.defn
 class WashAndDryCycle:
 
     @dataclass
     class WashResults:
-	    num_items: int
+        num_items: int
 
-    @dataclass 
+    @dataclass
     class DryResults:
         num_items: int
         moisture_level: int
@@ -30,7 +30,7 @@ class WashAndDryCycle:
         await workflow.wait_condition(lambda: self._dry_results is not None)
         workflow.logger.info(
             f"Finished washing and drying {self._dry_results.num_items} items, moisture level: {self._dry_results.moisture_level}"
-            )
+        )
 
     @workflow.update
     async def wash(self, num_items) -> WashResults:
@@ -40,14 +40,18 @@ class WashAndDryCycle:
     @workflow.update
     async def dry(self) -> DryResults:
         await workflow.wait_condition(lambda: self._wash_results is not None)
-        
-        self._dry_results = WashAndDryCycle.DryResults(num_items=self._wash_results.num_items, moisture_level=3)
+
+        self._dry_results = WashAndDryCycle.DryResults(
+            num_items=self._wash_results.num_items, moisture_level=3
+        )
         return self._dry_results
-    
+
+
 async def app(wf: WorkflowHandle):
     # In normal operation, wash comes before dry, but here we simulate out-of-order receipt of messages
     await asyncio.gather(
-        wf.execute_update(WashAndDryCycle.dry), wf.execute_update(WashAndDryCycle.wash, 10)
+        wf.execute_update(WashAndDryCycle.dry),
+        wf.execute_update(WashAndDryCycle.wash, 10),
     )
 
 

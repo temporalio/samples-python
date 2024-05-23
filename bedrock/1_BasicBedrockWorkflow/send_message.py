@@ -5,8 +5,6 @@ from workflows import SimpleBedrockWorkflow
 
 
 async def main(prompt):
-    # brew install temporal
-    # temporal server start-dev
     client = await Client.connect("localhost:7233")
 
     # Start the workflow
@@ -18,6 +16,7 @@ async def main(prompt):
         task_queue="bedrock-task-queue"
     )
     return await handle.result()
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

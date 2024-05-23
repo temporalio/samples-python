@@ -10,7 +10,7 @@ class SimpleBedrockWorkflow:
     @workflow.run
     async def run(self, prompt: str) -> str:
 
-        workflow.logger.info("\nPrompt: %s" % prompt)
+        workflow.logger.info("Prompt: %s" % prompt)
 
         response = await workflow.execute_activity(
             prompt_bedrock, prompt,

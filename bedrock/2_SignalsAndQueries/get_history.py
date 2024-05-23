@@ -4,10 +4,7 @@ from workflows import SignalQueryBedrockWorkflow
 
 
 async def main():
-    # brew install temporal
-    # temporal server start-dev
     client = await Client.connect("localhost:7233")
-
     workflow_id = "simple-bedrock-workflow-1"
 
     handle = client.get_workflow_handle(workflow_id=workflow_id)

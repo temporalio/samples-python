@@ -11,9 +11,10 @@ with workflow.unsafe.imports_passed_through():
 @workflow.defn
 class SignalQueryBedrockWorkflow:
     def __init__(self) -> None:
+        # List to store prompt history
         self.conversation_history: List[Tuple[str, str]] = (
             []
-        )  # List to store prompt history
+        )
         self.prompt_queue: Deque[str] = deque()
         self.conversation_summary: str = ""
 
@@ -42,10 +43,11 @@ class SignalQueryBedrockWorkflow:
                     lambda: summary_activity_task.done()
                 )
 
-                workflow.logger.info("Conversation summary:")
-                workflow.logger.info(self.conversation_summary)
+                workflow.logger.info(
+                    f"Conversation summary:\n{self.conversation_summary}"
+                )
 
-                return "{}".format(self.conversation_history)
+                return f"{self.conversation_history}"
 
             prompt = self.prompt_queue.popleft()
 
@@ -108,9 +110,9 @@ class SignalQueryBedrockWorkflow:
     def prompt_summary_from_history(self) -> str:
         history_string = self.format_history()
         return (
-            "Here is the conversation history between a user and a chatbot:"
-            + history_string
-            + " -- Please produce a two sentence summary of this conversation."
+            "Here is the conversation history between a user and a chatbot: " +
+            f"{history_string}  -- Please produce a two sentence summary of " +
+            "this conversation."
         )
 
     # callback -- save the latest conversation history once generated

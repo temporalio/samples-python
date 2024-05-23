@@ -154,14 +154,13 @@ class EntityBedrockWorkflow:
             f"text a plain explanation based on the history. Prompt: {prompt}"
         )
 
-    # Create the prompt given to Amazon Bedrock to summarize
-    # the conversation history
+    # Create the prompt to Amazon Bedrock to summarize the conversation history
     def prompt_summary_from_history(self) -> str:
         history_string = self.format_history()
         return (
-            "Here is the conversation history between a user and a chatbot:"
-            + history_string
-            + " -- Please produce a two sentence summary of this conversation."
+            "Here is the conversation history between a user and a chatbot: " +
+            f"{history_string}  -- Please produce a two sentence summary of " +
+            "this conversation."
         )
 
     # callback -- save the latest conversation history once generated

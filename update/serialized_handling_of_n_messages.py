@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from asyncio import Future
 from collections import deque
 from datetime import timedelta
 
@@ -34,7 +35,7 @@ class MessageProcessor:
 
     @workflow.run
     async def run(self):
-        self.queue = deque[tuple[Arg, asyncio.Future[Result]]]()
+        self.queue = deque[tuple[Arg, Future[Result]]]()
         while True:
             await workflow.wait_condition(lambda: len(self.queue) > 0)
             while self.queue:
@@ -55,7 +56,7 @@ class MessageProcessor:
         # Footgun: handler must wait for workflow initialization
         # See https://github.com/temporalio/features/issues/400
         await workflow.wait_condition(lambda: hasattr(self, "queue"))
-        fut = asyncio.Future[Result]()
+        fut = Future[Result]()
         self.queue.append((arg, fut))  # Note: update validation gates enqueue
         return await fut
 

@@ -18,7 +18,7 @@ class WorkflowBase:
     def __init__(self) -> None:
         self.letters = []
 
-    async def get_letters(self, text: str):
+    async def do_multiple_async_tasks_that_mutate_workflow_state(self, text: str):
         for i in range(len(text)):
             letter = await workflow.execute_activity(
                 get_letter,
@@ -38,60 +38,79 @@ class AccumulateLettersIncorrect(WorkflowBase):
     def __init__(self) -> None:
         super().__init__()
         self.handler_started = False
+        self.handler_finished = False
 
     @workflow.run
     async def run(self) -> str:
         await workflow.wait_condition(lambda: self.handler_started)
-        await self.get_letters(
+        await self.do_multiple_async_tasks_that_mutate_workflow_state(
             "world!"
         )  # Bug: handler and main wf are now interleaving
 
-        await workflow.wait_condition(lambda: len(self.letters) == len("Hello world!"))
+        await workflow.wait_condition(lambda: self.handler_finished)
         return "".join(self.letters)
 
     @workflow.update
-    async def put_letters(self, text: str):
+    async def update_that_does_multiple_async_tasks_that_mutate_workflow_state(
+        self, text: str
+    ):
         self.handler_started = True
-        await self.get_letters(text)
+        await self.do_multiple_async_tasks_that_mutate_workflow_state(text)
+        self.handler_finished = True
 
 
 @workflow.defn
 class AccumulateLettersCorrect1(WorkflowBase):
+    """
+    Solution 1: sync handler enqueues work; splice work into the main wf coroutine so that it cannot
+    interleave with work of main wf coroutine.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self.handler_text = asyncio.Future[str]()
+        self.handler_finished = False
 
     @workflow.run
     async def run(self) -> str:
-        handler_text = await self.handler_text
-        await self.get_letters(handler_text)
-        await self.get_letters("world!")
-        await workflow.wait_condition(lambda: len(self.letters) == len("Hello world!"))
+        handler_input = await self.handler_text
+        await self.do_multiple_async_tasks_that_mutate_workflow_state(handler_input)
+        await self.do_multiple_async_tasks_that_mutate_workflow_state("world!")
+        await workflow.wait_condition(lambda: self.handler_finished)
         return "".join(self.letters)
 
     # Note: sync handler
     @workflow.update
-    def put_letters(self, text: str):
+    def update_that_does_multiple_async_tasks_that_mutate_workflow_state(
+        self, text: str
+    ):
         self.handler_text.set_result(text)
+        self.handler_finished = True
 
 
 @workflow.defn
 class AccumulateLettersCorrect2(WorkflowBase):
+    """
+    Solution 2: async handler notifies when complete; main wf coroutine waits for this to avoid
+    interleaving its own work.
+    """
+
     def __init__(self) -> None:
         super().__init__()
-        self.handler_complete = False
+        self.handler_finished = False
 
     @workflow.run
     async def run(self) -> str:
-        await workflow.wait_condition(lambda: self.handler_complete)
-        await self.get_letters("world!")
-        await workflow.wait_condition(lambda: len(self.letters) == len("Hello world!"))
+        await workflow.wait_condition(lambda: self.handler_finished)
+        await self.do_multiple_async_tasks_that_mutate_workflow_state("world!")
         return "".join(self.letters)
 
     @workflow.update
-    async def put_letters(self, text: str):
-        await self.get_letters(text)
-        self.handler_complete = True
+    async def update_that_does_multiple_async_tasks_that_mutate_workflow_state(
+        self, text: str
+    ):
+        await self.do_multiple_async_tasks_that_mutate_workflow_state(text)
+        self.handler_finished = True
 
 
 @activity.defn
@@ -100,7 +119,10 @@ async def get_letter(text: str, i: int) -> str:
 
 
 async def app(wf: WorkflowHandle):
-    await wf.execute_update(AccumulateLettersCorrect1.put_letters, args=["Hello "])
+    await wf.execute_update(
+        AccumulateLettersCorrect1.update_that_does_multiple_async_tasks_that_mutate_workflow_state,
+        args=["Hello "],
+    )
     print(await wf.result())
 
 

@@ -29,7 +29,7 @@ class WorkflowBase:
 
 
 @workflow.defn
-class AccumulateLettersIncorrect(WorkflowBase):
+class AvoidHandlerAndWorkflowInterleavingIncorrect(WorkflowBase):
     """
     This workflow implementation is incorrect: the handler execution interleaves with the main
     workflow coroutine.
@@ -60,7 +60,7 @@ class AccumulateLettersIncorrect(WorkflowBase):
 
 
 @workflow.defn
-class AccumulateLettersCorrect1(WorkflowBase):
+class AvoidHandlerAndWorkflowInterleavingCorrect1(WorkflowBase):
     """
     Solution 1: sync handler enqueues work; splice work into the main wf coroutine so that it cannot
     interleave with work of main wf coroutine.
@@ -89,7 +89,7 @@ class AccumulateLettersCorrect1(WorkflowBase):
 
 
 @workflow.defn
-class AccumulateLettersCorrect2(WorkflowBase):
+class AvoidHandlerAndWorkflowInterleavingCorrect2(WorkflowBase):
     """
     Solution 2: async handler notifies when complete; main wf coroutine waits for this to avoid
     interleaving its own work.
@@ -120,7 +120,7 @@ async def get_letter(text: str, i: int) -> str:
 
 async def app(wf: WorkflowHandle):
     await wf.execute_update(
-        AccumulateLettersCorrect1.update_that_does_multiple_async_tasks_that_mutate_workflow_state,
+        AvoidHandlerAndWorkflowInterleavingCorrect1.update_that_does_multiple_async_tasks_that_mutate_workflow_state,
         args=["Hello "],
     )
     print(await wf.result())
@@ -133,16 +133,16 @@ async def main():
         client,
         task_queue="tq",
         workflows=[
-            AccumulateLettersIncorrect,
-            AccumulateLettersCorrect1,
-            AccumulateLettersCorrect2,
+            AvoidHandlerAndWorkflowInterleavingIncorrect,
+            AvoidHandlerAndWorkflowInterleavingCorrect1,
+            AvoidHandlerAndWorkflowInterleavingCorrect2,
         ],
         activities=[get_letter],
     ):
         for wf in [
-            AccumulateLettersIncorrect,
-            AccumulateLettersCorrect1,
-            AccumulateLettersCorrect2,
+            AvoidHandlerAndWorkflowInterleavingIncorrect,
+            AvoidHandlerAndWorkflowInterleavingCorrect1,
+            AvoidHandlerAndWorkflowInterleavingCorrect2,
         ]:
             handle = await client.start_workflow(
                 wf.run,

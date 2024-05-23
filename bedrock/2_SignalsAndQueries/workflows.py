@@ -26,8 +26,8 @@ class SignalQueryBedrockWorkflow:
                 f"{inactivity_timeout_minutes} minute(s)"
             )
 
+            # Wait for a chat message (signal) or timeout
             try:
-                # Wait for a chat message (signal) or timeout
                 await workflow.wait_condition(
                     lambda:
                         bool(self.prompt_queue),
@@ -36,27 +36,14 @@ class SignalQueryBedrockWorkflow:
             # if timeout was reached
             except asyncio.TimeoutError:
                 workflow.logger.info("Chat closed due to inactivity")
+                # End the workflow
+                break
 
-                # ensure a summary has been generated
-                # before ending the workflow
-                await workflow.wait_condition(
-                    lambda: summary_activity_task.done()
-                )
-
-                workflow.logger.info(
-                    f"Conversation summary:\n{self.conversation_summary}"
-                )
-
-                return f"{self.conversation_history}"
-
+            # Fetch next user prompt and add to conversation history
             prompt = self.prompt_queue.popleft()
+            self.conversation_history.append(("user", prompt))
 
             workflow.logger.info(f"Prompt: {prompt}")
-
-            # Log user prompt to conversation history
-            self.conversation_history.append(
-                ("user", prompt)
-            )
 
             # Send the prompt to Amazon Bedrock
             response = await workflow.execute_activity(
@@ -65,20 +52,23 @@ class SignalQueryBedrockWorkflow:
                 schedule_to_close_timeout=timedelta(seconds=20),
             )
 
-            workflow.logger.info(response)
+            workflow.logger.info(f"{response}")
 
             # Append the response to the conversation history
             self.conversation_history.append(("response", response))
 
-            # summarize the conversation to date using Amazon Bedrock
-            # uses start_activity with a callback so it doesn't block
-            # new messages being sent to Amazon Bedrock
-            summary_activity_task = workflow.start_activity(
-                prompt_bedrock,
-                self.prompt_summary_from_history(),
-                schedule_to_close_timeout=timedelta(seconds=20),
-            )
-            summary_activity_task.add_done_callback(self.summary_complete)
+        # generate a summary before ending the workflow
+        self.conversation_summary = await workflow.start_activity(
+            prompt_bedrock,
+            self.prompt_summary_from_history(),
+            schedule_to_close_timeout=timedelta(seconds=20),
+        )
+
+        workflow.logger.info(
+            f"Conversation summary:\n{self.conversation_summary}"
+        )
+
+        return f"{self.conversation_history}"
 
     @workflow.signal
     async def user_prompt(self, prompt: str) -> None:

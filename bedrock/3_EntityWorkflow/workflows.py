@@ -1,3 +1,4 @@
+import asyncio
 from datetime import timedelta
 from temporalio import workflow
 from collections import deque
@@ -17,13 +18,14 @@ class BedrockParams:
 @workflow.defn
 class EntityBedrockWorkflow:
     def __init__(self) -> None:
+        # List to store prompt history
         self.conversation_history: List[Tuple[str, str]] = (
             []
-        )  # List to store prompt history
+        )
         self.prompt_queue: Deque[str] = deque()
         self.conversation_summary: Optional[str] = None
         self.continue_as_new_per_turns: int = 6
-        self.chat_ended: bool = False  # Renamed attribute to avoid conflict
+        self.chat_ended: bool = False
 
     @workflow.run
     async def run(
@@ -37,8 +39,8 @@ class EntityBedrockWorkflow:
             )
 
         if params and params.prompt_queue:
-            for p in params.prompt_queue:
-                self.prompt_queue.append(p)
+            for prompt in params.prompt_queue:
+                self.prompt_queue.append(prompt)
 
         summary_activity_task: Optional[asyncio.Task] = None
 
@@ -52,7 +54,8 @@ class EntityBedrockWorkflow:
 
             # if end chat signal was sent
             if self.chat_ended:
-                # the workflow might be continued as new without any chat to summarize
+                # the workflow might be continued as new without any
+                # chat to summarize
                 if summary_activity_task is not None:
                     # ensure conversation summary task has finished
                     # before closing the workflow (avoid race)
@@ -63,17 +66,18 @@ class EntityBedrockWorkflow:
                     # conversation history from previous workflow
                     self.conversation_summary = params.conversation_summary
 
-                workflow.logger.info("Chat ended. Conversation summary:")
-                workflow.logger.info(self.conversation_summary)
+                workflow.logger.info(
+                    "Chat ended. Conversation summary:\n" +
+                    f"{self.conversation_summary}"
+                )
 
-                return "{}".format(self.conversation_history)
+                return f"{self.conversation_history}"
 
-            prompt = self.prompt_queue.popleft()  # done with current prompt
+            # Fetch next user prompt and add to conversation history
+            prompt = self.prompt_queue.popleft()
+            self.conversation_history.append(("user", prompt))
+
             workflow.logger.info("Prompt: " + prompt)
-            # Log user prompt to conversation history
-            self.conversation_history.append(
-                ("user", prompt)
-            )
 
             # Send prompt to Amazon Bedrock
             response = await workflow.execute_activity(
@@ -82,7 +86,7 @@ class EntityBedrockWorkflow:
                 schedule_to_close_timeout=timedelta(seconds=20),
             )
 
-            workflow.logger.info(response)
+            workflow.logger.info(f"{response}")
 
             # Append the response to the conversation history
             self.conversation_history.append(("response", response))
@@ -108,7 +112,9 @@ class EntityBedrockWorkflow:
                 # ensure conversation summary task has finished
                 # before continuing as new
                 if summary_activity_task is not None:
-                    await workflow.wait_condition(lambda: summary_activity_task.done())
+                    await workflow.wait_condition(
+                        lambda: summary_activity_task.done()
+                    )
 
                 workflow.logger.info(
                     "Continuing as new due to %i conversational turns."
@@ -130,7 +136,7 @@ class EntityBedrockWorkflow:
 
     @workflow.signal
     async def end_chat(self) -> None:
-        self.chat_ended = True  # Updated to use the renamed attribute
+        self.chat_ended = True
 
     @workflow.query
     def get_conversation_history(self) -> List[Tuple[str, str]]:

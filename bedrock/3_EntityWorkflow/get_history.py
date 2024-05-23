@@ -11,7 +11,7 @@ async def main():
 
     # queries the workflow for the conversation history
     history = await handle.query(
-        EntityBedrockWorkflow.conversation_history
+        EntityBedrockWorkflow.get_conversation_history
     )
 
     print("Conversation History")
@@ -22,7 +22,7 @@ async def main():
 
     # queries the workflow for the conversation summary
     summary = await handle.query(
-        EntityBedrockWorkflow.summary_from_history
+        EntityBedrockWorkflow.get_summary_from_history
     )
 
     print("Conversation Summary:")

@@ -42,7 +42,7 @@ class MessageProcessor:
             await workflow.wait_condition(lambda: len(self.queue) > 0)
             while self.queue:
                 arg, fut = self.queue.popleft()
-                fut.set_result(await self.process_task(arg))
+                fut.set_result(await self.execute_processing_task(arg))
             if workflow.info().is_continue_as_new_suggested():
                 # Footgun: If we don't let the event loop tick, then CAN will end the workflow
                 # before the update handler is notified that the result future has completed.
@@ -54,7 +54,7 @@ class MessageProcessor:
     # Note: handler must be async if we are both enqueuing, and returning an update result
     # => We could add SDK APIs to manually complete updates.
     @workflow.update
-    async def add_task(self, arg: Arg) -> Result:
+    async def process_message(self, arg: Arg) -> Result:
         # Footgun: handler may need to wait for workflow initialization after CAN
         # See https://github.com/temporalio/features/issues/400
         # await workflow.wait_condition(lambda: hasattr(self, "queue"))
@@ -62,7 +62,9 @@ class MessageProcessor:
         self.queue.append((arg, fut))  # Note: update validation gates enqueue
         return await fut
 
-    async def process_task(self, arg):
+    async def execute_processing_task(self, arg):
+        # The purpose of the two activities and the result string format is to permit checks that
+        # the activities of different tasks do not interleave.
         t1, t2 = [
             await workflow.execute_activity(
                 get_current_time, start_to_close_timeout=timedelta(seconds=10)
@@ -85,7 +87,7 @@ async def get_current_time() -> int:
 async def app(wf: WorkflowHandle):
     for i in range(20):
         print(f"app(): sending update {i}")
-        result = await wf.execute_update(MessageProcessor.add_task, f"arg {i}")
+        result = await wf.execute_update(MessageProcessor.process_message, f"arg {i}")
         print(f"app(): {result}")
 
 

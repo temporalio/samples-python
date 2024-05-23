@@ -28,7 +28,7 @@ async def test_continue_as_new_doesnt_lose_updates(client: Client):
             MessageProcessor.run, id=str(uuid.uuid4()), task_queue=tq
         )
         update_requests = [
-            UpdateRequest(wf, MessageProcessor.add_task, i) for i in range(10)
+            UpdateRequest(wf, MessageProcessor.process_message, i) for i in range(10)
         ]
         for req in update_requests:
             await req.wait_until_admitted()

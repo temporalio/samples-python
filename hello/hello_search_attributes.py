@@ -1,10 +1,7 @@
 import asyncio
-from typing import List
 
 from temporalio import workflow
-from temporalio.client import Client, WorkflowExecutionDescription
-from temporalio.common import SearchAttributeValues
-from temporalio.converter import default as default_converter
+from temporalio.client import Client
 from temporalio.worker import Worker
 
 

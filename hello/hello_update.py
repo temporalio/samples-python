@@ -7,7 +7,8 @@ from temporalio.worker import Worker
 
 @workflow.defn
 class GreetingWorkflow:
-    is_complete = False
+    def __init__(self):
+        self.is_complete = False
 
     @workflow.run
     async def run(self) -> str:

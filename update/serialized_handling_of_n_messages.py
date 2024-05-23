@@ -33,9 +33,11 @@ Result = str
 @workflow.defn
 class MessageProcessor:
 
+    def __init__(self):
+        self.queue = deque[tuple[Arg, Future[Result]]]()
+
     @workflow.run
     async def run(self):
-        self.queue = deque[tuple[Arg, Future[Result]]]()
         while True:
             await workflow.wait_condition(lambda: len(self.queue) > 0)
             while self.queue:
@@ -53,9 +55,9 @@ class MessageProcessor:
     # => We could add SDK APIs to manually complete updates.
     @workflow.update
     async def add_task(self, arg: Arg) -> Result:
-        # Footgun: handler must wait for workflow initialization
+        # Footgun: handler may need to wait for workflow initialization after CAN
         # See https://github.com/temporalio/features/issues/400
-        await workflow.wait_condition(lambda: hasattr(self, "queue"))
+        # await workflow.wait_condition(lambda: hasattr(self, "queue"))
         fut = Future[Result]()
         self.queue.append((arg, fut))  # Note: update validation gates enqueue
         return await fut

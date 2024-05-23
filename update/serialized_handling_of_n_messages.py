@@ -1,7 +1,7 @@
 import asyncio
 import logging
+from collections import deque
 from datetime import timedelta
-from typing import Optional
 
 from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
@@ -29,37 +29,24 @@ Result = str
 # need to process in an order other than arrival.
 
 
-class Queue(asyncio.Queue[tuple[Arg, asyncio.Future[Result]]]):
-    def __init__(self, serialized_queue_state: list[Arg]) -> None:
-        super().__init__()
-        for arg in serialized_queue_state:
-            self.put_nowait((arg, asyncio.Future()))
-
-    def serialize(self) -> list[Arg]:
-        args = []
-        while True:
-            try:
-                args.append(self.get_nowait())
-            except asyncio.QueueEmpty:
-                return args
-
-
 @workflow.defn
 class MessageProcessor:
 
     @workflow.run
-    async def run(self, serialized_queue_state: Optional[list[Arg]] = None):
-        self.queue = Queue(serialized_queue_state or [])
+    async def run(self):
+        self.queue = deque[tuple[Arg, asyncio.Future[Result]]]()
         while True:
-            arg, fut = await self.queue.get()
-            fut.set_result(await self.process_task(arg))
+            await workflow.wait_condition(lambda: len(self.queue) > 0)
+            while self.queue:
+                arg, fut = self.queue.popleft()
+                fut.set_result(await self.process_task(arg))
             if workflow.info().is_continue_as_new_suggested():
                 # Footgun: If we don't let the event loop tick, then CAN will end the workflow
                 # before the update handler is notified that the result future has completed.
                 # See https://github.com/temporalio/features/issues/481
                 await asyncio.sleep(0)  # Let update handler complete
                 print("CAN")
-                return workflow.continue_as_new(args=[self.queue.serialize()])
+                return workflow.continue_as_new()
 
     # Note: handler must be async if we are both enqueuing, and returning an update result
     # => We could add SDK APIs to manually complete updates.
@@ -69,7 +56,7 @@ class MessageProcessor:
         # See https://github.com/temporalio/features/issues/400
         await workflow.wait_condition(lambda: hasattr(self, "queue"))
         fut = asyncio.Future[Result]()
-        self.queue.put_nowait((arg, fut))  # Note: update validation gates enqueue
+        self.queue.append((arg, fut))  # Note: update validation gates enqueue
         return await fut
 
     async def process_task(self, arg):

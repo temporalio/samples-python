@@ -62,7 +62,7 @@ class MessageProcessor:
         self.queue.append((arg, fut))  # Note: update validation gates enqueue
         return await fut
 
-    async def execute_processing_task(self, arg):
+    async def execute_processing_task(self, arg: Arg) -> Result:
         # The purpose of the two activities and the result string format is to permit checks that
         # the activities of different tasks do not interleave.
         t1, t2 = [

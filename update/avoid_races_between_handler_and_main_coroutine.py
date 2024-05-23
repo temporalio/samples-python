@@ -6,6 +6,13 @@ from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
+# Problem: You have the buggy workflow below. You need to fix it so that the workflow state is no
+# longer garbled due to interleaving of the handler with the main workflow.
+#
+# Solution 1: Use a sync handler and process the message in the main workflow coroutine.
+#
+# Solution 2: Await a custom “handler complete” condition.
+
 
 class WorkflowBase:
     def __init__(self) -> None:

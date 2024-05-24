@@ -8,12 +8,12 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
 @activity.defn
-async def allocate_nodes_to_job(nodes: List[int], job_name: str) -> List[int]:
+async def allocate_nodes_to_job(nodes: List[int], job_name: str):
     print(f"Assigning nodes {nodes} to job {job_name}")
     await asyncio.sleep(0.1)
 
 @activity.defn
-async def deallocate_nodes_for_job(nodes: List[int], job_name: str) -> List[int]:
+async def deallocate_nodes_for_job(nodes: List[int], job_name: str):
     print(f"Deallocating nodes {nodes} from job {job_name}")
     await asyncio.sleep(0.1)
 
@@ -40,7 +40,7 @@ class ClusterManager:
     @workflow.signal
     async def start_cluster(self):
         self.cluster_started = True
-        self.nodes : Dict[Optional[str]] = dict([(k, None) for k in range(25)])
+        self.nodes : Dict[int, Optional[str]] = dict([(k, None) for k in range(25)])
         workflow.logger.info("Cluster started")
 
     @workflow.signal
@@ -66,7 +66,7 @@ class ClusterManager:
             self.nodes_lock.release()
 
 
-    async def _allocate_nodes_to_job(self, assigned_nodes: List[int], job_name: str) -> List[int]:
+    async def _allocate_nodes_to_job(self, assigned_nodes: List[int], job_name: str):
         await workflow.execute_activity(
             allocate_nodes_to_job, args=[assigned_nodes, job_name], start_to_close_timeout=timedelta(seconds=10)
         )
@@ -86,7 +86,7 @@ class ClusterManager:
         finally:
             self.nodes_lock.release()
 
-    async def _deallocate_nodes_for_job(self, nodes_to_free: List[int], job_name: str) -> List[int]:
+    async def _deallocate_nodes_for_job(self, nodes_to_free: List[int], job_name: str):
         await workflow.execute_activity(
             deallocate_nodes_for_job, args=[nodes_to_free, job_name], start_to_close_timeout=timedelta(seconds=10)
         )

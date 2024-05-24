@@ -8,13 +8,13 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
 @activity.defn
-async def allocate_nodes_to_job(nodes: List[int], task_name: str) -> List[int]:
-    print(f"Assigning nodes {nodes} to job {task_name}")
+async def allocate_nodes_to_job(nodes: List[int], job_name: str) -> List[int]:
+    print(f"Assigning nodes {nodes} to job {job_name}")
     await asyncio.sleep(0.1)
 
 @activity.defn
-async def deallocate_nodes_for_job(nodes: List[int], task_name: str) -> List[int]:
-    print(f"Deallocating nodes {nodes} from job {task_name}")
+async def deallocate_nodes_for_job(nodes: List[int], job_name: str) -> List[int]:
+    print(f"Deallocating nodes {nodes} from job {job_name}")
     await asyncio.sleep(0.1)
 
 @activity.defn
@@ -50,7 +50,7 @@ class ClusterManager:
         workflow.logger.info("Cluster shut down")
 
     @workflow.update
-    async def allocate_n_nodes_to_job(self, task_name: str, num_nodes: int, ) -> List[int]:
+    async def allocate_n_nodes_to_job(self, job_name: str, num_nodes: int, ) -> List[int]:
         await workflow.wait_condition(lambda: self.cluster_started)
         assert not self.cluster_shutdown
 
@@ -60,47 +60,47 @@ class ClusterManager:
             if len(unassigned_nodes) < num_nodes:
                 raise ValueError(f"Cannot allocate {num_nodes} nodes; have only {len(unassigned_nodes)} available")
             assigned_nodes = unassigned_nodes[:num_nodes]
-            await self._allocate_nodes_to_job(assigned_nodes, task_name)
+            await self._allocate_nodes_to_job(assigned_nodes, job_name)
             return assigned_nodes
         finally:
             self.nodes_lock.release()
 
-    
-    async def _allocate_nodes_to_job(self, assigned_nodes: List[int], task_name: str) -> List[int]:
+
+    async def _allocate_nodes_to_job(self, assigned_nodes: List[int], job_name: str) -> List[int]:
         await workflow.execute_activity(
-            allocate_nodes_to_job, args=[assigned_nodes, task_name], start_to_close_timeout=timedelta(seconds=10)
+            allocate_nodes_to_job, args=[assigned_nodes, job_name], start_to_close_timeout=timedelta(seconds=10)
         )
         for node in assigned_nodes:
-            self.nodes[node] = task_name
+            self.nodes[node] = job_name
 
 
     @workflow.update
-    async def delete_job(self, task_name: str) -> str:
+    async def delete_job(self, job_name: str) -> str:
         await workflow.wait_condition(lambda: self.cluster_started)
         assert not self.cluster_shutdown
         await self.nodes_lock.acquire()
         try:
-            nodes_to_free = [k for k, v in self.nodes.items() if v == task_name]
-            await self._deallocate_nodes_for_job(nodes_to_free, task_name) 
+            nodes_to_free = [k for k, v in self.nodes.items() if v == job_name]
+            await self._deallocate_nodes_for_job(nodes_to_free, job_name)
             return "Done"
         finally:
             self.nodes_lock.release()
 
-    async def _deallocate_nodes_for_job(self, nodes_to_free: List[int], task_name: str) -> List[int]:
+    async def _deallocate_nodes_for_job(self, nodes_to_free: List[int], job_name: str) -> List[int]:
         await workflow.execute_activity(
-            deallocate_nodes_for_job, args=[nodes_to_free, task_name], start_to_close_timeout=timedelta(seconds=10)
+            deallocate_nodes_for_job, args=[nodes_to_free, job_name], start_to_close_timeout=timedelta(seconds=10)
         )
         for node in nodes_to_free:
             self.nodes[node] = None
 
 
     @workflow.update
-    async def resize_job(self, task_name: str, new_size: int) -> List[int]:
+    async def resize_job(self, job_name: str, new_size: int) -> List[int]:
         await workflow.wait_condition(lambda: self.cluster_started)
         assert not self.cluster_shutdown
         await self.nodes_lock.acquire()
         try:
-            allocated_nodes = [k for k, v in self.nodes.items() if v == task_name]
+            allocated_nodes = [k for k, v in self.nodes.items() if v == job_name]
             delta = new_size - len(allocated_nodes)
             if delta == 0:
                 return allocated_nodes
@@ -109,11 +109,11 @@ class ClusterManager:
                 if len(unassigned_nodes) < delta:
                     raise ValueError(f"Cannot allocate {delta} nodes; have only {len(unassigned_nodes)} available")
                 nodes_to_assign = unassigned_nodes[:delta]
-                await self._allocate_nodes_to_job(nodes_to_assign, task_name)
+                await self._allocate_nodes_to_job(nodes_to_assign, job_name)
                 return allocated_nodes + nodes_to_assign
             else:
                 nodes_to_deallocate = allocated_nodes[delta:]
-                await self._deallocate_nodes_for_job(nodes_to_deallocate, task_name)
+                await self._deallocate_nodes_for_job(nodes_to_deallocate, job_name)
                 return list(filter(lambda x: x not in nodes_to_deallocate, allocated_nodes))
         finally:
             self.nodes_lock.release()
@@ -147,17 +147,17 @@ async def do_cluster_lifecycle(wf: WorkflowHandle):
 
     allocation_updates = []
     for i in range(6):
-        allocation_updates.append(wf.execute_update(ClusterManager.allocate_n_nodes_to_job, args=[f"task-{i}", 2]))
-    await asyncio.gather(*allocation_updates)        
     
+        allocation_updates.append(wf.execute_update(ClusterManager.allocate_n_nodes_to_job, args=[f"job-{i}", 2]))
+    await asyncio.gather(*allocation_updates)
     resize_updates = []
     for i in range(6):
-        resize_updates.append(wf.execute_update(ClusterManager.resize_job, args=[f"task-{i}", 4]))
+        resize_updates.append(wf.execute_update(ClusterManager.resize_job, args=[f"job-{i}", 4]))
     await asyncio.gather(*resize_updates)
 
     deletion_updates = []
     for i in range(6):
-        deletion_updates.append(wf.execute_update(ClusterManager.delete_job, f"task-{i}"))
+        deletion_updates.append(wf.execute_update(ClusterManager.delete_job, f"job-{i}"))
     await asyncio.gather(*deletion_updates)
         
     await wf.signal(ClusterManager.shutdown_cluster)

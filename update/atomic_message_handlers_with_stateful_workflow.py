@@ -32,6 +32,26 @@ async def find_bad_nodes(nodes: List[int]) -> List[int]:
 #   - Running start_workflow with an initializer signal that you want to run before anything else.
 @workflow.defn
 class ClusterManager:
+    """
+    A workflow to manage a cluster of compute nodes.
+
+    The cluster is transitioned between operational and non-operational states by two signals:
+    `start_cluster` and `shutdown_cluster`.
+
+    While it is active, the workflow maintains a mapping of nodes to assigned job, and exposes the
+    following API (implemented as updates):
+
+    - allocate_n_nodes_to_job: attempt to find n free nodes, assign them to the job; return assigned node IDs
+    - delete_job:              unassign any nodes assigned to job; return a success acknowledgement
+    - resize_job:              assign or unassign nodes as needed; return assigned node IDs
+
+    An API call made while the cluster is non-operational will block until the cluster is
+    operational.
+
+    If an API call is made while another is in progress, it will block until all other thus-enqueued
+    requests are complete.
+    """
+
     def __init__(self) -> None:
         self.cluster_started = False
         self.cluster_shutdown = False
@@ -51,6 +71,9 @@ class ClusterManager:
 
     @workflow.update
     async def allocate_n_nodes_to_job(self, job_name: str, num_nodes: int, ) -> List[int]:
+        """
+        Attempt to find n free nodes, assign them to the job, return assigned node IDs.
+        """
         await workflow.wait_condition(lambda: self.cluster_started)
         assert not self.cluster_shutdown
 
@@ -76,6 +99,9 @@ class ClusterManager:
 
     @workflow.update
     async def delete_job(self, job_name: str) -> str:
+        """
+        Unassign any nodes assigned to job; return a success acknowledgement.
+        """
         await workflow.wait_condition(lambda: self.cluster_started)
         assert not self.cluster_shutdown
         await self.nodes_lock.acquire()
@@ -96,6 +122,9 @@ class ClusterManager:
 
     @workflow.update
     async def resize_job(self, job_name: str, new_size: int) -> List[int]:
+        """
+        Assign or unassign nodes as needed; return assigned node IDs.
+        """
         await workflow.wait_condition(lambda: self.cluster_started)
         assert not self.cluster_shutdown
         await self.nodes_lock.acquire()

@@ -13,15 +13,27 @@ jobs:
       fail-fast: true
       matrix:
         python: ["3.8", "3.12"]
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+        os: [ubuntu-latest, macos-intel, macos-arm, windows-latest]
+        include:
+          - os: macos-intel
+            runsOn: macos-12
+          - os: macos-arm
+            runsOn: macos-14
+        # macOS ARM 3.8 does not have an available Python build at
+        # https://raw.githubusercontent.com/actions/python-versions/main/versions-manifest.json.
+        # See https://github.com/actions/setup-python/issues/808 and
+        # https://github.com/actions/python-versions/pull/259.
+        exclude:
+          - os: macos-arm
+            python: "3.8"
+    runs-on: ${{ matrix.runsOn || matrix.os }}
     steps:
       - name: Print build information
         run: "echo head_ref: ${{ github.head_ref }}, ref: ${{ github.ref }}, os: ${{ matrix.os }}, python: ${{ matrix.python }}"
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       # Using fixed Poetry version until

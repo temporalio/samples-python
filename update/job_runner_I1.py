@@ -36,42 +36,79 @@ class JobRunner:
     not before `job.after_time`.
     """
 
+    def __init__(self) -> None:
+        self._pending_tasks = 0
+        self.completed_tasks = set[JobID]()
+        self.handler_mutex = asyncio.Lock()
+
+    def all_handlers_completed(self) -> bool:
+        # We are considering adding an API like `all_handlers_completed` to SDKs. We've added
+        # self._pending tasks to this workflow in lieu of it being built into the SDKs.
+        return not self._pending_tasks
+
     @workflow.run
     async def run(self):
         await workflow.wait_condition(
-            lambda: workflow.info().is_continue_as_new_suggested()
+            lambda: (
+                workflow.info().is_continue_as_new_suggested()
+                and self.all_handlers_completed()
+            )
         )
         workflow.continue_as_new()
 
+    def ready_to_execute(self, job: Job) -> bool:
+        if not set(job.depends_on) <= self.completed_tasks:
+            return False
+        if after_time := job.after_time:
+            if float(after_time) > workflow.now().timestamp():
+                return False
+        return True
+
     @workflow.update
     async def run_shell_script_job(self, job: Job) -> JobOutput:
-        if security_errors := await workflow.execute_activity(
-            run_shell_script_security_linter,
-            args=[job.run],
-            start_to_close_timeout=timedelta(seconds=10),
-        ):
-            return JobOutput(status=1, stdout="", stderr=security_errors)
-        job_output = await workflow.execute_activity(
-            run_job, args=[job], start_to_close_timeout=timedelta(seconds=10)
-        )
-        return job_output
+        self._pending_tasks += 1
+        await workflow.wait_condition(lambda: self.ready_to_execute(job))
+        await self.handler_mutex.acquire()
+
+        try:
+            if security_errors := await workflow.execute_activity(
+                run_shell_script_security_linter,
+                args=[job.run],
+                start_to_close_timeout=timedelta(seconds=10),
+            ):
+                return JobOutput(status=1, stdout="", stderr=security_errors)
+            job_output = await workflow.execute_activity(
+                run_job, args=[job], start_to_close_timeout=timedelta(seconds=10)
+            )
+            return job_output
+        finally:
+            # FIXME: unbounded memory usage
+            self.completed_tasks.add(job.id)
+            self.handler_mutex.release()
+            self._pending_tasks -= 1
 
     @workflow.update
     async def run_python_job(self, job: Job) -> JobOutput:
-        if not await workflow.execute_activity(
-            check_python_interpreter_version,
-            args=[job.python_interpreter_version],
-            start_to_close_timeout=timedelta(seconds=10),
-        ):
-            return JobOutput(
-                status=1,
-                stdout="",
-                stderr=f"Python interpreter version {job.python_interpreter_version} is not available",
+        await workflow.wait_condition(lambda: self.ready_to_execute(job))
+        await self.handler_mutex.acquire()
+
+        try:
+            if not await workflow.execute_activity(
+                check_python_interpreter_version,
+                args=[job.python_interpreter_version],
+                start_to_close_timeout=timedelta(seconds=10),
+            ):
+                return JobOutput(
+                    status=1,
+                    stdout="",
+                    stderr=f"Python interpreter version {job.python_interpreter_version} is not available",
+                )
+            job_output = await workflow.execute_activity(
+                run_job, args=[job], start_to_close_timeout=timedelta(seconds=10)
             )
-        job_output = await workflow.execute_activity(
-            run_job, args=[job], start_to_close_timeout=timedelta(seconds=10)
-        )
-        return job_output
+            return job_output
+        finally:
+            self.handler_mutex.release()
 
 
 @activity.defn

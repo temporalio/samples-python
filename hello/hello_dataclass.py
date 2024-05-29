@@ -1,8 +1,8 @@
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from attr import dataclass
 from temporalio import common, workflow, activity
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
@@ -17,7 +17,7 @@ class MyDataclass:
 class MyWorkflow:
     @workflow.run
     async def run(self, arg: MyDataclass) -> MyDataclass:
-        if False:
+        if True:
             return await workflow.execute_activity(
                 my_activity,
                 arg=MyDataclass(1),
@@ -28,7 +28,7 @@ class MyWorkflow:
 
 @activity.defn
 async def my_activity(arg: MyDataclass) -> MyDataclass:
-    return MyDataclass(arg.my_field + 1)
+    return MyDataclass(arg.my_field + 2)
 
 
 async def app(wf: WorkflowHandle):

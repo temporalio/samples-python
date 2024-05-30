@@ -14,6 +14,11 @@ from temporalio.worker import Worker
 JobID = str
 
 
+class JobStatus(Enum):
+    BLOCKED = 1
+    UNBLOCKED = 2
+
+
 @dataclass
 class Job:
     id: JobID
@@ -22,6 +27,16 @@ class Job:
     name: str
     run: str
     python_interpreter_version: Optional[str]
+    # TODO: How to handle enums in dataclasses with Temporal's ser/de.
+    status_value: int = JobStatus.BLOCKED.value
+
+    @property
+    def status(self):
+        return JobStatus(self.status_value)
+
+    @status.setter
+    def status(self, status: JobStatus):
+        self.status_value = status.value
 
 
 @dataclass
@@ -31,16 +46,10 @@ class JobOutput:
     stderr: str
 
 
-class TaskStatus(Enum):
-    BLOCKED = 1
-    UNBLOCKED = 2
-
-
 @dataclass
 class Task:
     input: Job
     handler: Callable[["JobRunner", Job], Awaitable[JobOutput]]
-    status: TaskStatus = TaskStatus.BLOCKED
     output: Optional[JobOutput] = None
 
 
@@ -80,15 +89,14 @@ class JobRunner:
         ):
             await workflow.wait_condition(lambda: bool(self.task_queue))
             for id, task in list(self.task_queue.items()):
-                if task.status == TaskStatus.UNBLOCKED:
-                    await task.handler(self, task.input)
+                job = task.input
+                if job.status == JobStatus.UNBLOCKED:
+                    await task.handler(self, job)
                     del self.task_queue[id]
                     self.completed_tasks.add(id)
             for id, task in self.task_queue.items():
-                if task.status == TaskStatus.BLOCKED and self.ready_to_execute(
-                    task.input
-                ):
-                    task.status = TaskStatus.UNBLOCKED
+                if job.status == JobStatus.BLOCKED and self.ready_to_execute(job):
+                    job.status = JobStatus.UNBLOCKED
         workflow.continue_as_new()
 
     def ready_to_execute(self, job: Job) -> bool:

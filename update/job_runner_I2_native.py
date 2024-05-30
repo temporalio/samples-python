@@ -3,12 +3,18 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+import inspect
 import logging
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable, Optional, Type
 
 from temporalio import common, workflow, activity
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
+
+
+##
+## user code
+##
 
 
 JobID = str
@@ -46,35 +52,90 @@ class JobOutput:
     stderr: str
 
 
+##
+## SDK internals toy prototype
+##
+
+# TODO: use generics to satisfy serializable interface. Faking for now by using user-defined classes.
+I = Job
+O = JobOutput
+
+UpdateID = str
+Workflow = Type
+
+
 @dataclass
-class Task:
-    input: Job
-    handler: Callable[["JobRunner", Job], Awaitable[JobOutput]]
-    output: Optional[JobOutput] = None
+class Update:
+    arg: I  # real implementation will support multiple args
+    handler: Callable[[Workflow, I], Awaitable[O]]
+    output: Optional[O] = None
+
+    @property
+    def id(self):
+        # In our real implementation the SDK will have native access to the update ID. Currently
+        # this example is assuming the user passes it in the update arg.
+        return self.arg.id
+
+    async def handle(self, wf: Workflow) -> O:
+        # TODO: error-handling
+        # TODO: prevent handling an update twice
+        update_result = await self.handler(wf, self.arg)
+        del workflow.update_queue[self.id]
+        return update_result
+
+
+async def _sdk_internals_enqueue_job_and_wait_for_result(
+    arg: I, handler: Callable[[Type, I], Awaitable[O]]
+) -> O:
+    update = Update(arg, handler)
+    workflow.update_queue[update.id] = update
+    await workflow.wait_condition(lambda: update.output is not None)
+    assert update.output
+    return update.output
+
+
+class SDKInternals:
+    # Here, the SDK is wrapping the user's update handlers with the required enqueue-and-wait
+    # functionality. This is a fake implementation: the real implementation will automatically
+    # inspect and wrap the user's declared update handlers.
+
+    @workflow.update
+    async def run_shell_script_job(self, arg: I) -> O:
+        handler = getattr(self.__class__, "_" + inspect.currentframe().f_code.co_name)
+        return await _sdk_internals_enqueue_job_and_wait_for_result(arg, handler)
+
+    @workflow.update
+    async def run_python_job(self, arg: I) -> O:
+        handler = getattr(self.__class__, "_" + inspect.currentframe().f_code.co_name)
+        return await _sdk_internals_enqueue_job_and_wait_for_result(arg, handler)
+
+
+# Monkey-patch proposed new public API
+setattr(workflow, "update_queue", OrderedDict[UpdateID, Update]())
+# The queue-processing style doesn't need an `all_handlers_completed` API: this condition is true
+# iff workflow.update_queue is empty.
+
+##
+## END SDK internals prototype
+##
 
 
 @workflow.defn
-class JobRunner:
+class JobRunner(SDKInternals):
     """
     Jobs must be executed in order dictated by job dependency graph (see `job.depends_on`) and
     not before `job.after_time`.
     """
 
     def __init__(self) -> None:
-        self.task_queue = OrderedDict[JobID, Task]()
+        super().__init__()
         self.completed_tasks = set[JobID]()
 
-    def all_handlers_completed(self):
-        # We are considering adding an API like `all_handlers_completed` to SDKs. In this particular
-        # case, the user doesn't actually need the new API, since they are forced to track pending
-        # tasks in their queue implementation.
-        return not self.task_queue
+    # Note some desirable things:
+    # 1. The update handler functions are now "real" handler functions
 
     # Note some undesirable things:
-    # 1. The update handler functions have become generic enqueuers; the "real" handler functions
-    #    are some other methods that don't have the @workflow.update decorator.
-    # 2. The update handler functions have to store a reference to the real handler in the queue.
-    # 3. The workflow `run` method is *much* more complicated and bug-prone here, compared to
+    # 1. The workflow `run` method is still *much* more complicated and bug-prone here, compared to
     #    I1:WaitUntilReadyToExecuteHandler
 
     @workflow.run
@@ -82,19 +143,30 @@ class JobRunner:
         """
         Process all tasks in the queue serially, in the main workflow coroutine.
         """
-        # Note: there are many mistakes a user will make while trying to implement this workflow.
-        while not (
-            workflow.info().is_continue_as_new_suggested()
-            and self.all_handlers_completed()
+        # Note: a user will make mistakes while trying to implement this workflow, due to the
+        # unblocking algorithm that this particular example seems to require when implemented via
+        # queue-processing in the main workflow coroutine (this example is simpler to implement by
+        # making each handler invocation wait until it should execute, and allowing the execution to
+        # take place in the handler coroutine, with a mutex held. See job_runner_I1.py and
+        # job_runner_I1_native.py)
+        while (
+            workflow.update_queue or not workflow.info().is_continue_as_new_suggested()
         ):
-            await workflow.wait_condition(lambda: bool(self.task_queue))
-            for id, task in list(self.task_queue.items()):
-                job = task.input
+            await workflow.wait_condition(lambda: bool(workflow.update_queue))
+            for id, update in list(workflow.update_queue.items()):
+                job = update.arg
                 if job.status == JobStatus.UNBLOCKED:
-                    await task.handler(self, job)
-                    del self.task_queue[id]
+                    # This is how a user manually handles an update. Note that it takes a reference
+                    # to the workflow instance, since an update handler has access to the workflow
+                    # instance.
+                    await update.handle(self)
+
+                    # FIXME: unbounded memory usage; this example use-case needs to know which
+                    # updates have completed. Perhaps the real problem here lies with the example,
+                    # i.e. the example needs to be made more realistic.
                     self.completed_tasks.add(id)
-            for id, task in self.task_queue.items():
+            for id, update in workflow.update_queue.items():
+                job = update.arg
                 if job.status == JobStatus.BLOCKED and self.ready_to_execute(job):
                     job.status = JobStatus.UNBLOCKED
         workflow.continue_as_new()
@@ -107,25 +179,17 @@ class JobRunner:
                 return False
         return True
 
-    async def _enqueue_job_and_wait_for_result(
-        self, job: Job, handler: Callable[["JobRunner", Job], Awaitable[JobOutput]]
-    ) -> JobOutput:
-        task = Task(job, handler)
-        self.task_queue[job.id] = task
-        await workflow.wait_condition(lambda: task.output is not None)
-        # Footgun: a user might well think that they can record task completion here, but in fact it
-        # deadlocks.
-        # self.completed_tasks.add(job.id)
-        assert task.output
-        return task.output
+    # These are the real handler functions. When we implement SDK support, these will use the
+    # @workflow.update decorator and will not use an underscore prefix.
+    # TBD update decorator argument name:
+    # queue=True
+    # enqueue=True
+    # auto=False
+    # auto_handle=False
+    # manual=True
 
-    @workflow.update
-    async def run_shell_script_job(self, job: Job) -> JobOutput:
-        return await self._enqueue_job_and_wait_for_result(
-            job, JobRunner._actually_run_shell_script_job
-        )
-
-    async def _actually_run_shell_script_job(self, job: Job) -> JobOutput:
+    # @workflow.update(queue=True)
+    async def _run_shell_script_job(self, job: Job) -> JobOutput:
         if security_errors := await workflow.execute_activity(
             run_shell_script_security_linter,
             args=[job.run],
@@ -137,13 +201,8 @@ class JobRunner:
         )
         return job_output
 
-    @workflow.update
-    async def run_python_job(self, job: Job) -> JobOutput:
-        return await self._enqueue_job_and_wait_for_result(
-            job, JobRunner._actually_run_python_job
-        )
-
-    async def _actually_run_python_job(self, job: Job) -> JobOutput:
+    # @workflow.update(queue=True)
+    async def _run_python_job(self, job: Job) -> JobOutput:
         if not await workflow.execute_activity(
             check_python_interpreter_version,
             args=[job.python_interpreter_version],

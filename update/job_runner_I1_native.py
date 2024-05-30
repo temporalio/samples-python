@@ -10,6 +10,10 @@ from temporalio import common, workflow, activity
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
+# This file contains a proposal for how the Python SDK could provide I1:WaitUntilReadyToExecute
+# functionality to help users defer processing, control interleaving of handler coroutines, and
+# ensure processing is complete before workflow completion.
+
 
 JobID = str
 

@@ -2,13 +2,13 @@ import asyncio
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import inspect
 import logging
 from typing import Callable, Optional, Type
 
 from temporalio import common, workflow, activity
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
-from temporalio.workflow import UpdateMethodMultiParam, _UpdateDefinition
 
 
 JobID = str
@@ -42,13 +42,6 @@ O = JobOutput
 UpdateID = str
 Workflow = Type
 
-
-@dataclass
-class Update:
-    id: UpdateID
-    arg: I
-
-
 _sdk_internals_pending_tasks_count = 0
 _sdk_internals_handler_mutex = asyncio.Lock()
 
@@ -74,51 +67,41 @@ async def _sdk_internals__track_pending__wait_until_ready__serialize_execution(
         _sdk_internals_pending_tasks_count -= 1
 
 
-_original_workflow_update_decorator = workflow.update
+class SDKInternals:
+    # Here, the SDK is wrapping the user's update handlers with the required wait-until-ready,
+    # pending tasks tracking, and synchronization functionality. This is a fake implementation: the
+    # real implementation will automatically inspect and wrap the user's declared update handlers.
 
+    def ready_to_execute(self, arg: I) -> bool:
+        # Implemented by user
+        return True
 
-def _new_workflow_update_decorator(
-    execute_condition: Callable[[Workflow, Update], bool], **kwargs
-) -> Callable[
-    [Callable[[Workflow, I], Awaitable[O]]],
-    UpdateMethodMultiParam[[Workflow, I], O],
-]:
-    def decorator(
-        handler: Callable[[Workflow, I], Awaitable[O]]
-    ) -> UpdateMethodMultiParam:
-        async def wrapped_handler(self: Workflow, arg: I):
-            async with _sdk_internals__track_pending__wait_until_ready__serialize_execution(
-                lambda: execute_condition(self, Update(arg.id, arg))
-            ):
-                return await handler(self, arg)
+    @workflow.update
+    async def run_shell_script_job(self, arg: I) -> O:
+        handler = getattr(self, "_" + inspect.currentframe().f_code.co_name)
+        async with _sdk_internals__track_pending__wait_until_ready__serialize_execution(
+            lambda: self.ready_to_execute(arg)
+        ):
+            return await handler(arg)
 
-        dec = (
-            _original_workflow_update_decorator(**kwargs)
-            if kwargs
-            else _original_workflow_update_decorator
-        )
-        wrapped_handler.__name__ = handler.__name__
-        fn = dec(wrapped_handler)
-        setattr(
-            fn,
-            "_defn",
-            _UpdateDefinition(name=handler.__name__, fn=fn, is_method=True),
-        )
-        return fn
-
-    return decorator
+    @workflow.update
+    async def run_python_job(self, arg: I) -> O:
+        handler = getattr(self, "_" + inspect.currentframe().f_code.co_name)
+        async with _sdk_internals__track_pending__wait_until_ready__serialize_execution(
+            lambda: self.ready_to_execute(arg)
+        ):
+            return await handler(arg)
 
 
 # Monkey-patch proposed new public API
 setattr(workflow, "all_handlers_completed", _sdk_internals_all_handlers_completed)
-setattr(workflow, "update", _new_workflow_update_decorator)
 ##
 ## END SDK internals prototype
 ##
 
 
 @workflow.defn
-class JobRunner:
+class JobRunner(SDKInternals):
     """
     Jobs must be executed in order dictated by job dependency graph (see `job.depends_on`) and
     not before `job.after_time`.
@@ -132,13 +115,12 @@ class JobRunner:
         await workflow.wait_condition(
             lambda: (
                 workflow.info().is_continue_as_new_suggested()
-                and workflow.all_handlers_completed()
+                and self.all_handlers_completed()
             )
         )
         workflow.continue_as_new()
 
-    def ready_to_execute(self, update: Update) -> bool:
-        job = update.arg
+    def ready_to_execute(self, job: Job) -> bool:
         if not set(job.depends_on) <= self.completed_tasks:
             return False
         if after_time := job.after_time:
@@ -146,10 +128,11 @@ class JobRunner:
                 return False
         return True
 
-    # These are the real handler functions.
+    # These are the real handler functions. When we implement SDK support, these will use the
+    # @workflow.update decorator and will not use an underscore prefix.
 
-    @workflow.update(execute_condition=ready_to_execute)
-    async def run_shell_script_job(self, job: Job) -> JobOutput:
+    # @workflow.update
+    async def _run_shell_script_job(self, job: Job) -> JobOutput:
         try:
             if security_errors := await workflow.execute_activity(
                 run_shell_script_security_linter,
@@ -165,8 +148,8 @@ class JobRunner:
             # FIXME: unbounded memory usage
             self.completed_tasks.add(job.id)
 
-    @workflow.update(execute_condition=ready_to_execute)
-    async def run_python_job(self, job: Job) -> JobOutput:
+    # @workflow.update
+    async def _run_python_job(self, job: Job) -> JobOutput:
         try:
             if not await workflow.execute_activity(
                 check_python_interpreter_version,

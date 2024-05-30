@@ -64,12 +64,13 @@ def _sdk_internals_all_handlers_completed(self) -> bool:
 
 
 @asynccontextmanager
-async def _sdk_internals__track_pending__wait_until_ready__serialize_execution(
+async def _sdk_internals__track_pending__wait_until_ready__synchronize(
     execute_condition: Callable[[], bool]
 ):
     global _sdk_internals_pending_tasks_count
     _sdk_internals_pending_tasks_count += 1
     await workflow.wait_condition(execute_condition)
+    # TODO: honor max_concurrent, using a semaphore (if not None).
     await _sdk_internals_handler_mutex.acquire()
     try:
         yield
@@ -90,7 +91,7 @@ class SDKInternals:
     @workflow.update
     async def run_shell_script_job(self, arg: I) -> O:
         handler = getattr(self, "_" + inspect.currentframe().f_code.co_name)
-        async with _sdk_internals__track_pending__wait_until_ready__serialize_execution(
+        async with _sdk_internals__track_pending__wait_until_ready__synchronize(
             lambda: self.ready_to_execute(Update(arg.id, arg))
         ):
             return await handler(arg)
@@ -98,7 +99,7 @@ class SDKInternals:
     @workflow.update
     async def run_python_job(self, arg: I) -> O:
         handler = getattr(self, "_" + inspect.currentframe().f_code.co_name)
-        async with _sdk_internals__track_pending__wait_until_ready__serialize_execution(
+        async with _sdk_internals__track_pending__wait_until_ready__synchronize(
             lambda: self.ready_to_execute(Update(arg.id, arg))
         ):
             return await handler(arg)
@@ -144,7 +145,7 @@ class JobRunner(SDKInternals):
     # These are the real handler functions. When we implement SDK support, these will use the
     # decorator form commented out below, and will not use an underscore prefix.
 
-    # @workflow.update(execute_condition=ready_to_execute)
+    # @workflow.update(max_concurrent=1, execute_condition=ready_to_execute)
     async def _run_shell_script_job(self, job: Job) -> JobOutput:
         if security_errors := await workflow.execute_activity(
             run_shell_script_security_linter,
@@ -159,7 +160,7 @@ class JobRunner(SDKInternals):
         self.completed_tasks.add(job.id)
         return job_output
 
-    # @workflow.update(execute_condition=ready_to_execute)
+    # @workflow.update(max_concurrent=1, execute_condition=ready_to_execute)
     async def _run_python_job(self, job: Job) -> JobOutput:
         if not await workflow.execute_activity(
             check_python_interpreter_version,

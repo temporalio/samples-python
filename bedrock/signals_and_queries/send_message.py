@@ -1,5 +1,6 @@
 import asyncio
 import sys
+
 from temporalio.client import Client
 from workflows import SignalQueryBedrockWorkflow
 
@@ -7,7 +8,7 @@ from workflows import SignalQueryBedrockWorkflow
 async def main(prompt):
     client = await Client.connect("localhost:7233")
 
-    workflow_id = "simple-bedrock-workflow-1"
+    workflow_id = "bedrock-workflow-with-signals"
     inactivity_timeout_minutes = 1
 
     # sends a signal to the workflow (and starts it if needed)

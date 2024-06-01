@@ -8,5 +8,3 @@ To run, first see [README.md](../README.md) for prerequisites. Then, run the fol
 2. In another terminal run the client with a prompt:
 
     e.g. `poetry run python send_message.py 'What animals are marsupials?'`
-
-3. View the worker's output for the response.

@@ -1,23 +1,21 @@
 import asyncio
+
 from temporalio.client import Client
 from workflows import SignalQueryBedrockWorkflow
 
 
 async def main():
     client = await Client.connect("localhost:7233")
-    workflow_id = "simple-bedrock-workflow-1"
+    workflow_id = "bedrock-workflow-with-signals"
 
     handle = client.get_workflow_handle(workflow_id=workflow_id)
 
     # queries the workflow for the conversation history
-    history = await handle.query(
-        SignalQueryBedrockWorkflow.get_conversation_history
-    )
+    history = await handle.query(SignalQueryBedrockWorkflow.get_conversation_history)
 
     print("Conversation History")
     print(
-        *(f"{speaker.title()}: {message}\n" for speaker, message in history),
-        sep="\n"
+        *(f"{speaker.title()}: {message}\n" for speaker, message in history), sep="\n"
     )
 
 

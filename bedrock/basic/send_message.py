@@ -1,19 +1,20 @@
 import asyncio
 import sys
+
 from temporalio.client import Client
-from workflows import SimpleBedrockWorkflow
+from workflows import BasicBedrockWorkflow
 
 
 async def main(prompt):
     client = await Client.connect("localhost:7233")
 
     # Start the workflow
-    workflow_id = "simple-bedrock-workflow-1"
+    workflow_id = "basic-bedrock-workflow"
     handle = await client.start_workflow(
-        SimpleBedrockWorkflow.run,
+        BasicBedrockWorkflow.run,
         prompt,  # Initial prompt
         id=workflow_id,
-        task_queue="bedrock-task-queue"
+        task_queue="bedrock-task-queue",
     )
     return await handle.result()
 

@@ -1,20 +1,19 @@
 import asyncio
-from datetime import timedelta
-from temporalio import workflow
 from collections import deque
-from typing import List, Tuple, Deque, Optional
+from datetime import timedelta
+from typing import Deque, List, Optional, Tuple
+
+from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from activities import prompt_bedrock
+    from bedrock.shared.activities import BedrockActivities
 
 
 @workflow.defn
 class SignalQueryBedrockWorkflow:
     def __init__(self) -> None:
         # List to store prompt history
-        self.conversation_history: List[Tuple[str, str]] = (
-            []
-        )
+        self.conversation_history: List[Tuple[str, str]] = []
         self.prompt_queue: Deque[str] = deque()
         self.conversation_summary: str = ""
 
@@ -22,16 +21,15 @@ class SignalQueryBedrockWorkflow:
     async def run(self, inactivity_timeout_minutes: int) -> str:
         while True:
             workflow.logger.info(
-                "Waiting for prompts... or closing chat after " +
-                f"{inactivity_timeout_minutes} minute(s)"
+                "Waiting for prompts... or closing chat after "
+                + f"{inactivity_timeout_minutes} minute(s)"
             )
 
             # Wait for a chat message (signal) or timeout
             try:
                 await workflow.wait_condition(
-                    lambda:
-                        bool(self.prompt_queue),
-                        timeout=timedelta(minutes=inactivity_timeout_minutes),
+                    lambda: bool(self.prompt_queue),
+                    timeout=timedelta(minutes=inactivity_timeout_minutes),
                 )
             # if timeout was reached
             except asyncio.TimeoutError:
@@ -46,8 +44,8 @@ class SignalQueryBedrockWorkflow:
             workflow.logger.info(f"Prompt: {prompt}")
 
             # Send the prompt to Amazon Bedrock
-            response = await workflow.execute_activity(
-                prompt_bedrock,
+            response = await workflow.execute_activity_method(
+                BedrockActivities.prompt_bedrock,
                 self.prompt_with_history(prompt),
                 schedule_to_close_timeout=timedelta(seconds=20),
             )
@@ -58,15 +56,13 @@ class SignalQueryBedrockWorkflow:
             self.conversation_history.append(("response", response))
 
         # generate a summary before ending the workflow
-        self.conversation_summary = await workflow.start_activity(
-            prompt_bedrock,
+        self.conversation_summary = await workflow.start_activity_method(
+            BedrockActivities.prompt_bedrock,
             self.prompt_summary_from_history(),
             schedule_to_close_timeout=timedelta(seconds=20),
         )
 
-        workflow.logger.info(
-            f"Conversation summary:\n{self.conversation_summary}"
-        )
+        workflow.logger.info(f"Conversation summary:\n{self.conversation_summary}")
 
         return f"{self.conversation_history}"
 
@@ -90,19 +86,19 @@ class SignalQueryBedrockWorkflow:
     def prompt_with_history(self, prompt: str) -> str:
         history_string = self.format_history()
         return (
-            f"Here is the conversation history: {history_string} Please add " +
-            "a few sentence response to the prompt in plain text sentences. " +
-            "Don't editorialize or add metadata like response. Keep the " +
-            f"text a plain explanation based on the history. Prompt: {prompt}"
+            f"Here is the conversation history: {history_string} Please add "
+            + "a few sentence response to the prompt in plain text sentences. "
+            + "Don't editorialize or add metadata like response. Keep the "
+            + f"text a plain explanation based on the history. Prompt: {prompt}"
         )
 
     # Create the prompt to Amazon Bedrock to summarize the conversation history
     def prompt_summary_from_history(self) -> str:
         history_string = self.format_history()
         return (
-            "Here is the conversation history between a user and a chatbot: " +
-            f"{history_string}  -- Please produce a two sentence summary of " +
-            "this conversation."
+            "Here is the conversation history between a user and a chatbot: "
+            + f"{history_string}  -- Please produce a two sentence summary of "
+            + "this conversation."
         )
 
     # callback -- save the latest conversation history once generated

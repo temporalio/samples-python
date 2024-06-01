@@ -8,9 +8,9 @@ from workflows import EntityBedrockWorkflow
 async def main(prompt):
     client = await Client.connect("localhost:7233")
 
-    workflow_id = "simple-bedrock-workflow-1"
+    workflow_id = "entity-bedrock-workflow"
 
-    handle = client.get_workflow_handle(workflow_id=workflow_id)
+    handle = client.get_workflow_handle(workflow_id)
 
     # sends a signal to the workflow (and starts it if needed)
     await handle.signal(EntityBedrockWorkflow.end_chat)

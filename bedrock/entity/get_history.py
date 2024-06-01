@@ -8,7 +8,7 @@ async def main():
     client = await Client.connect("localhost:7233")
     workflow_id = "entity-bedrock-workflow"
 
-    handle = client.get_workflow_handle(workflow_id=workflow_id)
+    handle = client.get_workflow_handle(workflow_id)
 
     # queries the workflow for the conversation history
     history = await handle.query(EntityBedrockWorkflow.get_conversation_history)

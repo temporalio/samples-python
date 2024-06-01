@@ -1,4 +1,4 @@
-AI Chatbot example using Amazon Bedrock
+# AI Chatbot example using Amazon Bedrock
 
 Demonstrates how Temporal and Amazon Bedrock can be used to quickly build bulletproof AI applications.
 
@@ -8,8 +8,12 @@ Demonstrates how Temporal and Amazon Bedrock can be used to quickly build bullet
 2. A machine that has access to Bedrock.
 3. A local Temporal server running on the same machine. See [Temporal's dev server docs](https://docs.temporal.io/cli#start-dev-server) for more information.
 
-A simple way of setting up your environment is to create an AWS EC2 instance with the `AmazonBedrockFullAccess` policy attached. A simple way to access the code and the Temporal server UI running on the EC2 instance is via the [Remote SSH: Connect to Host...](https://code.visualstudio.com/docs/remote/ssh) command in Visual Studio Code.
+These examples use Amazon's Python SDK (Boto3). To configure Boto3 to use your AWS credentials, follow the instructions in [the Boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
 
-## Running the example
+## Running the samples
 
-The example is split into 3 sections. See README.md in each sub-directory for instructions on running each.
+For these sample, the optional `bedrock` dependency group must be included. To include, run:
+
+    poetry install --with bedrock
+
+There are 3 Bedrock samples, see the README.md in each sub-directory for instructions on running each.

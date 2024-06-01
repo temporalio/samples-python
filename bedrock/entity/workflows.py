@@ -40,8 +40,6 @@ class EntityBedrockWorkflow:
         if params and params.prompt_queue:
             self.prompt_queue.extend(params.prompt_queue)
 
-        summary_activity_task: Optional[asyncio.Task] = None
-
         while True:
             workflow.logger.info("Waiting for prompts...")
 
@@ -78,7 +76,7 @@ class EntityBedrockWorkflow:
                 # new workflow
                 if len(self.conversation_history) >= self.continue_as_new_per_turns:
                     # Summarize the conversation to date using Amazon Bedrock
-                    self.conversation_summary = workflow.start_activity_method(
+                    self.conversation_summary = await workflow.start_activity_method(
                         BedrockActivities.prompt_bedrock,
                         self.prompt_summary_from_history(),
                         schedule_to_close_timeout=timedelta(seconds=20),
@@ -103,11 +101,15 @@ class EntityBedrockWorkflow:
             # If end chat signal was sent
             if self.chat_ended:
                 # The workflow might be continued as new without any
-                # chat to summarize
-                if summary_activity_task is not None:
-                    # Ensure conversation summary task has finished
-                    # before closing the workflow (avoid race)
-                    await workflow.wait_condition(lambda: summary_activity_task is not None and summary_activity_task.done())
+                # chat to summarize, so only call Bedrock if there
+                # is more than the previous summary in the history.
+                if len(self.conversation_history) > 1:
+                    # Summarize the conversation to date using Amazon Bedrock
+                    self.conversation_summary = await workflow.start_activity_method(
+                        BedrockActivities.prompt_bedrock,
+                        self.prompt_summary_from_history(),
+                        schedule_to_close_timeout=timedelta(seconds=20),
+                    )
                 else:
                     # Conversation history from previous workflow
                     self.conversation_summary = params.conversation_summary

@@ -57,7 +57,7 @@ class EntityBedrockWorkflow:
                 if summary_activity_task is not None:
                     # Ensure conversation summary task has finished
                     # before closing the workflow (avoid race)
-                    await workflow.wait_condition(lambda: summary_activity_task.done())
+                    await workflow.wait_condition(lambda: summary_activity_task is not None and summary_activity_task.done())
                 else:
                     # Conversation history from previous workflow
                     self.conversation_summary = params.conversation_summary
@@ -108,7 +108,7 @@ class EntityBedrockWorkflow:
                 # Ensure conversation summary task has finished
                 # before continuing as new
                 if summary_activity_task is not None:
-                    await workflow.wait_condition(lambda: summary_activity_task.done())
+                    await workflow.wait_condition(lambda: summary_activity_task is not None and summary_activity_task.done())
 
                 workflow.logger.info(
                     "Continuing as new due to %i conversational turns."

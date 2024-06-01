@@ -5,14 +5,15 @@ from temporalio.client import Client
 from workflows import EntityBedrockWorkflow
 
 
-async def main(prompt):
+async def main():
+    # Create client connected to server at the given address
     client = await Client.connect("localhost:7233")
 
     workflow_id = "entity-bedrock-workflow"
 
     handle = client.get_workflow_handle(workflow_id)
 
-    # sends a signal to the workflow (and starts it if needed)
+    # Sends a signal to the workflow
     await handle.signal(EntityBedrockWorkflow.end_chat)
 
 

@@ -29,7 +29,7 @@ class EntityBedrockWorkflow:
     @workflow.run
     async def run(
         self,
-        params: BedrockParams = None,
+        params: BedrockParams,
     ) -> str:
 
         if params and params.conversation_summary:
@@ -38,8 +38,7 @@ class EntityBedrockWorkflow:
             )
 
         if params and params.prompt_queue:
-            for prompt in params.prompt_queue:
-                self.prompt_queue.append(prompt)
+            self.prompt_queue.extend(params.prompt_queue)
 
         summary_activity_task: Optional[asyncio.Task] = None
 
@@ -51,16 +50,16 @@ class EntityBedrockWorkflow:
                 lambda: bool(self.prompt_queue) or self.chat_ended
             )
 
-            # if end chat signal was sent
+            # If end chat signal was sent
             if self.chat_ended:
-                # the workflow might be continued as new without any
+                # The workflow might be continued as new without any
                 # chat to summarize
                 if summary_activity_task is not None:
-                    # ensure conversation summary task has finished
+                    # Ensure conversation summary task has finished
                     # before closing the workflow (avoid race)
                     await workflow.wait_condition(lambda: summary_activity_task.done())
                 else:
-                    # conversation history from previous workflow
+                    # Conversation history from previous workflow
                     self.conversation_summary = params.conversation_summary
 
                 workflow.logger.info(
@@ -88,9 +87,9 @@ class EntityBedrockWorkflow:
             # Append the response to the conversation history
             self.conversation_history.append(("response", response))
 
-            # summarize the conversation to date using Amazon Bedrock
-            # uses start_activity with a callback
-            # so it doesn't block new messages being sent to Amazon Bedrock
+            # Summarize the conversation to date using Amazon Bedrock
+            # uses start_activity with a callback so it doesn't block
+            # new messages being sent to Amazon Bedrock
             summary_activity_task = workflow.start_activity_method(
                 BedrockActivities.prompt_bedrock,
                 self.prompt_summary_from_history(),
@@ -106,7 +105,7 @@ class EntityBedrockWorkflow:
             # We summarize the chat to date and use that as input to the
             # new workflow
             if len(self.conversation_history) >= self.continue_as_new_per_turns:
-                # ensure conversation summary task has finished
+                # Ensure conversation summary task has finished
                 # before continuing as new
                 if summary_activity_task is not None:
                     await workflow.wait_condition(lambda: summary_activity_task.done())
@@ -141,7 +140,7 @@ class EntityBedrockWorkflow:
     def get_summary_from_history(self) -> Optional[str]:
         return self.conversation_summary
 
-    # helper method used in prompts to Amazon Bedrock
+    # Helper method used in prompts to Amazon Bedrock
     def format_history(self) -> str:
         return " ".join(f"{text}" for _, text in self.conversation_history)
 
@@ -164,6 +163,6 @@ class EntityBedrockWorkflow:
             + "this conversation."
         )
 
-    # callback -- save the latest conversation history once generated
+    # Callback -- save the latest conversation history once generated
     def summary_complete(self, task: asyncio.Task) -> None:
         self.conversation_summary = task.result()

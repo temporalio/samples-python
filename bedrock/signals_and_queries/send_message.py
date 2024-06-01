@@ -6,12 +6,13 @@ from workflows import SignalQueryBedrockWorkflow
 
 
 async def main(prompt):
+    # Create client connected to server at the given address
     client = await Client.connect("localhost:7233")
 
     workflow_id = "bedrock-workflow-with-signals"
     inactivity_timeout_minutes = 1
 
-    # sends a signal to the workflow (and starts it if needed)
+    # Sends a signal to the workflow (and starts it if needed)
     await client.start_workflow(
         SignalQueryBedrockWorkflow.run,
         inactivity_timeout_minutes,

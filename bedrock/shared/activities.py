@@ -13,7 +13,7 @@ class BedrockActivities:
 
     @activity.defn
     def prompt_bedrock(self, prompt: str) -> str:
-        # model params
+        # Model params
         modelId = "meta.llama2-70b-chat-v1"
         accept = "application/json"
         contentType = "application/json"

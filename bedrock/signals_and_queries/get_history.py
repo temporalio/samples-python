@@ -5,12 +5,13 @@ from workflows import SignalQueryBedrockWorkflow
 
 
 async def main():
+    # Create client connected to server at the given address
     client = await Client.connect("localhost:7233")
     workflow_id = "bedrock-workflow-with-signals"
 
     handle = client.get_workflow_handle(workflow_id)
 
-    # queries the workflow for the conversation history
+    # Queries the workflow for the conversation history
     history = await handle.query(SignalQueryBedrockWorkflow.get_conversation_history)
 
     print("Conversation History")

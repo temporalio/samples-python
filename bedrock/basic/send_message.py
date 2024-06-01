@@ -6,6 +6,7 @@ from workflows import BasicBedrockWorkflow
 
 
 async def main(prompt):
+    # Create client connected to server at the given address
     client = await Client.connect("localhost:7233")
 
     # Start the workflow

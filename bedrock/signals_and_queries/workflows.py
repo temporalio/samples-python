@@ -15,7 +15,7 @@ class SignalQueryBedrockWorkflow:
         # List to store prompt history
         self.conversation_history: List[Tuple[str, str]] = []
         self.prompt_queue: Deque[str] = deque()
-        self.conversation_summary: str = ""
+        self.conversation_summary = ""
 
     @workflow.run
     async def run(self, inactivity_timeout_minutes: int) -> str:
@@ -31,7 +31,7 @@ class SignalQueryBedrockWorkflow:
                     lambda: bool(self.prompt_queue),
                     timeout=timedelta(minutes=inactivity_timeout_minutes),
                 )
-            # if timeout was reached
+            # If timeout was reached
             except asyncio.TimeoutError:
                 workflow.logger.info("Chat closed due to inactivity")
                 # End the workflow
@@ -55,7 +55,7 @@ class SignalQueryBedrockWorkflow:
             # Append the response to the conversation history
             self.conversation_history.append(("response", response))
 
-        # generate a summary before ending the workflow
+        # Generate a summary before ending the workflow
         self.conversation_summary = await workflow.start_activity_method(
             BedrockActivities.prompt_bedrock,
             self.prompt_summary_from_history(),
@@ -75,10 +75,10 @@ class SignalQueryBedrockWorkflow:
         return self.conversation_history
 
     @workflow.query
-    def get_summary_from_history(self) -> Optional[str]:
+    def get_summary_from_history(self) -> str:
         return self.conversation_summary
 
-    # helper method used in prompts to Amazon Bedrock
+    # Helper method used in prompts to Amazon Bedrock
     def format_history(self) -> str:
         return " ".join(f"{text}" for _, text in self.conversation_history)
 
@@ -100,7 +100,3 @@ class SignalQueryBedrockWorkflow:
             + f"{history_string}  -- Please produce a two sentence summary of "
             + "this conversation."
         )
-
-    # callback -- save the latest conversation history once generated
-    def summary_complete(self, task) -> None:
-        self.conversation_summary = task.result()

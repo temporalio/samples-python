@@ -2,6 +2,12 @@
 
 Demonstrates how Temporal and Amazon Bedrock can be used to quickly build bulletproof AI applications.
 
+## Samples
+
+* [basic](basic) - A basic Bedrock workflow to process a single prompt.
+* [signals_and_queries](signals_and_queries) - Extension to the basic workflow to allow multiple prompts through signals & queries.
+* [entity](entity) - Full multi-Turn chat using an entity workflow..
+
 ## Pre-requisites
 
 1. An AWS account with Bedrock enabled.

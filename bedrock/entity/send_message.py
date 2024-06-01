@@ -2,7 +2,7 @@ import asyncio
 import sys
 
 from temporalio.client import Client
-from workflows import EntityBedrockWorkflow, BedrockParams
+from workflows import BedrockParams, EntityBedrockWorkflow
 
 
 async def main(prompt):

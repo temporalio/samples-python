@@ -2,10 +2,11 @@ import asyncio
 import concurrent.futures
 import logging
 
-from bedrock.shared.activities import BedrockActivities
 from temporalio.client import Client
 from temporalio.worker import Worker
 from workflows import EntityBedrockWorkflow
+
+from bedrock.shared.activities import BedrockActivities
 
 
 async def main():

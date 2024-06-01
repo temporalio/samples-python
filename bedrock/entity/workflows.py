@@ -95,9 +95,9 @@ class EntityBedrockWorkflow:
                             )
                         ]
                     )
-                
+
                 continue
-            
+
             # If end chat signal was sent
             if self.chat_ended:
                 # The workflow might be continued as new without any

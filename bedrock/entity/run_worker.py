@@ -2,7 +2,7 @@ import asyncio
 import concurrent.futures
 import logging
 
-from shared.activities import BedrockActivities
+from bedrock.shared.activities import BedrockActivities
 from temporalio.client import Client
 from temporalio.worker import Worker
 from workflows import EntityBedrockWorkflow

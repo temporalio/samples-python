@@ -19,4 +19,4 @@ async def main():
 
 if __name__ == "__main__":
     print("Sending signal to end chat.")
-    asyncio.run(main(sys.argv))
+    asyncio.run(main())

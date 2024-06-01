@@ -50,6 +50,56 @@ class EntityBedrockWorkflow:
                 lambda: bool(self.prompt_queue) or self.chat_ended
             )
 
+            if bool(self.prompt_queue):
+                # Fetch next user prompt and add to conversation history
+                prompt = self.prompt_queue.popleft()
+                self.conversation_history.append(("user", prompt))
+
+                workflow.logger.info("Prompt: " + prompt)
+
+                # Send prompt to Amazon Bedrock
+                response = await workflow.execute_activity_method(
+                    BedrockActivities.prompt_bedrock,
+                    self.prompt_with_history(prompt),
+                    schedule_to_close_timeout=timedelta(seconds=20),
+                )
+
+                workflow.logger.info(f"{response}")
+
+                # Append the response to the conversation history
+                self.conversation_history.append(("response", response))
+
+                # Continue as new every x conversational turns to avoid event
+                # history size getting too large. This is also to avoid the
+                # prompt (with conversational history) getting too large for
+                # AWS Bedrock.
+
+                # We summarize the chat to date and use that as input to the
+                # new workflow
+                if len(self.conversation_history) >= self.continue_as_new_per_turns:
+                    # Summarize the conversation to date using Amazon Bedrock
+                    self.conversation_summary = workflow.start_activity_method(
+                        BedrockActivities.prompt_bedrock,
+                        self.prompt_summary_from_history(),
+                        schedule_to_close_timeout=timedelta(seconds=20),
+                    )
+
+                    workflow.logger.info(
+                        "Continuing as new due to %i conversational turns."
+                        % self.continue_as_new_per_turns,
+                    )
+
+                    workflow.continue_as_new(
+                        args=[
+                            BedrockParams(
+                                self.conversation_summary,
+                                self.prompt_queue,
+                            )
+                        ]
+                    )
+                
+                continue
+            
             # If end chat signal was sent
             if self.chat_ended:
                 # The workflow might be continued as new without any
@@ -68,61 +118,6 @@ class EntityBedrockWorkflow:
                 )
 
                 return f"{self.conversation_history}"
-
-            # Fetch next user prompt and add to conversation history
-            prompt = self.prompt_queue.popleft()
-            self.conversation_history.append(("user", prompt))
-
-            workflow.logger.info("Prompt: " + prompt)
-
-            # Send prompt to Amazon Bedrock
-            response = await workflow.execute_activity_method(
-                BedrockActivities.prompt_bedrock,
-                self.prompt_with_history(prompt),
-                schedule_to_close_timeout=timedelta(seconds=20),
-            )
-
-            workflow.logger.info(f"{response}")
-
-            # Append the response to the conversation history
-            self.conversation_history.append(("response", response))
-
-            # Summarize the conversation to date using Amazon Bedrock
-            # uses start_activity with a callback so it doesn't block
-            # new messages being sent to Amazon Bedrock
-            summary_activity_task = workflow.start_activity_method(
-                BedrockActivities.prompt_bedrock,
-                self.prompt_summary_from_history(),
-                schedule_to_close_timeout=timedelta(seconds=20),
-            )
-            summary_activity_task.add_done_callback(self.summary_complete)
-
-            # Continue as new every x conversational turns to avoid event
-            # history size getting too large. This is also to avoid the
-            # prompt (with conversational history) getting too large for
-            # AWS Bedrock.
-
-            # We summarize the chat to date and use that as input to the
-            # new workflow
-            if len(self.conversation_history) >= self.continue_as_new_per_turns:
-                # Ensure conversation summary task has finished
-                # before continuing as new
-                if summary_activity_task is not None:
-                    await workflow.wait_condition(lambda: summary_activity_task is not None and summary_activity_task.done())
-
-                workflow.logger.info(
-                    "Continuing as new due to %i conversational turns."
-                    % self.continue_as_new_per_turns,
-                )
-
-                workflow.continue_as_new(
-                    args=[
-                        BedrockParams(
-                            self.conversation_summary,
-                            self.prompt_queue,
-                        )
-                    ]
-                )
 
     @workflow.signal
     async def user_prompt(self, prompt: str) -> None:

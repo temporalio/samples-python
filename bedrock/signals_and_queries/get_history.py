@@ -18,6 +18,13 @@ async def main():
     print(
         *(f"{speaker.title()}: {message}\n" for speaker, message in history), sep="\n"
     )
+    
+    # Queries the workflow for the conversation summary
+    summary = await handle.query(SignalQueryBedrockWorkflow.get_summary_from_history)
+
+    if summary is not None:
+        print("Conversation Summary:")
+        print(summary)
 
 
 if __name__ == "__main__":

@@ -22,8 +22,9 @@ async def main():
     # Queries the workflow for the conversation summary
     summary = await handle.query(EntityBedrockWorkflow.get_summary_from_history)
 
-    print("Conversation Summary:")
-    print(summary)
+    if summary is not None:
+        print("Conversation Summary:")
+        print(summary)
 
 
 if __name__ == "__main__":

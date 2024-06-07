@@ -16,6 +16,7 @@ class SignalQueryBedrockWorkflow:
         self.conversation_history: List[Tuple[str, str]] = []
         self.prompt_queue: Deque[str] = deque()
         self.conversation_summary = ""
+        self.chat_timeout: bool = False
 
     @workflow.run
     async def run(self, inactivity_timeout_minutes: int) -> str:
@@ -33,6 +34,7 @@ class SignalQueryBedrockWorkflow:
                 )
             # If timeout was reached
             except asyncio.TimeoutError:
+                self.chat_timeout = True
                 workflow.logger.info("Chat closed due to inactivity")
                 # End the workflow
                 break
@@ -68,6 +70,11 @@ class SignalQueryBedrockWorkflow:
 
     @workflow.signal
     async def user_prompt(self, prompt: str) -> None:
+        # Chat timed out but the workflow is waiting for a chat summary to be generated
+        if self.chat_timeout:
+            workflow.logger.warn(f"Message dropped due to chat closed: {prompt}")
+            return
+
         self.prompt_queue.append(prompt)
 
     @workflow.query

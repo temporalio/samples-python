@@ -24,7 +24,7 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
                 return result
             except Exception as e:
                 # swallow exception since service is down
-                activity.logger.error(e)
+                activity.logger.debug("Failed, trying again shortly", exc_info=True)
 
             activity.heartbeat("Invoking activity")
             await asyncio.sleep(1)

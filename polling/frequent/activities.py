@@ -19,7 +19,7 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
     while True:
         try:
             try:
-                result = test_service.get_service_result(input)
+                result = await test_service.get_service_result(input)
                 activity.logger.info(f"Exiting activity ${result}")
                 return result
             except Exception as e:

@@ -18,18 +18,19 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
     test_service = TestService()
     while True:
         try:
-            result = test_service.get_service_result(input)
-            activity.logger.info(f"Exiting activity ${result}")
-            return result
-        except Exception as e:
-            # swallow exception since service is down
-            activity.logger.error(e)
+            try:
+                result = test_service.get_service_result(input)
+                activity.logger.info(f"Exiting activity ${result}")
+                return result
+            except Exception as e:
+                # swallow exception since service is down
+                activity.logger.error(e)
 
-        try:
             activity.heartbeat("Invoking activity")
-        except asyncio.CancelledError as exception:
+            await asyncio.sleep(1)
+        except asyncio.CancelledError:
             # activity was either cancelled or workflow was completed or worker shut down
-            # if you need to clean up you can catch this. Here we are just reraising exception
+            # if you need to clean up you can catch this.
+            # Here we are just reraising the exception
             raise
 
-        await asyncio.sleep(1)

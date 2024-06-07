@@ -122,6 +122,11 @@ class EntityBedrockWorkflow:
 
     @workflow.signal
     async def user_prompt(self, prompt: str) -> None:
+        # Chat ended but the workflow is waiting for a chat summary to be generated
+        if self.chat_ended:
+            workflow.logger.warn(f"Message dropped due to chat closed: {prompt}")
+            return
+
         self.prompt_queue.append(prompt)
 
     @workflow.signal

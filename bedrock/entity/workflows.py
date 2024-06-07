@@ -37,6 +37,8 @@ class EntityBedrockWorkflow:
                 ("conversation_summary", params.conversation_summary)
             )
 
+            self.conversation_summary = params.conversation_summary
+
         if params and params.prompt_queue:
             self.prompt_queue.extend(params.prompt_queue)
 
@@ -110,9 +112,6 @@ class EntityBedrockWorkflow:
                         self.prompt_summary_from_history(),
                         schedule_to_close_timeout=timedelta(seconds=20),
                     )
-                else:
-                    # Conversation history from previous workflow
-                    self.conversation_summary = params.conversation_summary
 
                 workflow.logger.info(
                     "Chat ended. Conversation summary:\n"

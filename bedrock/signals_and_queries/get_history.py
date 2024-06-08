@@ -18,7 +18,7 @@ async def main():
     print(
         *(f"{speaker.title()}: {message}\n" for speaker, message in history), sep="\n"
     )
-    
+
     # Queries the workflow for the conversation summary
     summary = await handle.query(SignalQueryBedrockWorkflow.get_summary_from_history)
 

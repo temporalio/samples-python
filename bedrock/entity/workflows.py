@@ -50,7 +50,7 @@ class EntityBedrockWorkflow:
                 lambda: bool(self.prompt_queue) or self.chat_ended
             )
 
-            if bool(self.prompt_queue):
+            if self.prompt_queue:
                 # Fetch next user prompt and add to conversation history
                 prompt = self.prompt_queue.popleft()
                 self.conversation_history.append(("user", prompt))

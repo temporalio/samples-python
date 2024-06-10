@@ -39,23 +39,24 @@ class SignalQueryBedrockWorkflow:
                 # End the workflow
                 break
 
-            # Fetch next user prompt and add to conversation history
-            prompt = self.prompt_queue.popleft()
-            self.conversation_history.append(("user", prompt))
+            while self.prompt_queue:
+                # Fetch next user prompt and add to conversation history
+                prompt = self.prompt_queue.popleft()
+                self.conversation_history.append(("user", prompt))
 
-            workflow.logger.info(f"Prompt: {prompt}")
+                workflow.logger.info(f"Prompt: {prompt}")
 
-            # Send the prompt to Amazon Bedrock
-            response = await workflow.execute_activity_method(
-                BedrockActivities.prompt_bedrock,
-                self.prompt_with_history(prompt),
-                schedule_to_close_timeout=timedelta(seconds=20),
-            )
+                # Send the prompt to Amazon Bedrock
+                response = await workflow.execute_activity_method(
+                    BedrockActivities.prompt_bedrock,
+                    self.prompt_with_history(prompt),
+                    schedule_to_close_timeout=timedelta(seconds=20),
+                )
 
-            workflow.logger.info(f"{response}")
+                workflow.logger.info(f"{response}")
 
-            # Append the response to the conversation history
-            self.conversation_history.append(("response", response))
+                # Append the response to the conversation history
+                self.conversation_history.append(("response", response))
 
         # Generate a summary before ending the workflow
         self.conversation_summary = await workflow.start_activity_method(

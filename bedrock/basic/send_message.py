@@ -5,7 +5,7 @@ from temporalio.client import Client
 from workflows import BasicBedrockWorkflow
 
 
-async def main(prompt):
+async def main(prompt: str) -> str:
     # Create client connected to server at the given address
     client = await Client.connect("localhost:7233")
 

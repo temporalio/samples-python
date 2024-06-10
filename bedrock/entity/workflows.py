@@ -164,6 +164,3 @@ class EntityBedrockWorkflow:
             + "this conversation."
         )
 
-    # Callback -- save the latest conversation history once generated
-    def summary_complete(self, task: asyncio.Task) -> None:
-        self.conversation_summary = task.result()

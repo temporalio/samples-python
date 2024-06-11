@@ -33,4 +33,3 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
             # if you need to clean up you can catch this.
             # Here we are just reraising the exception
             raise
-

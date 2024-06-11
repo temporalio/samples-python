@@ -163,4 +163,3 @@ class EntityBedrockWorkflow:
             + f"{history_string}  -- Please produce a two sentence summary of "
             + "this conversation."
         )
-

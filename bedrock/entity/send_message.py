@@ -14,7 +14,7 @@ async def main(prompt):
     # Sends a signal to the workflow (and starts it if needed)
     await client.start_workflow(
         EntityBedrockWorkflow.run,
-        arg=BedrockParams(None, None),
+        BedrockParams(None, None),
         id=workflow_id,
         task_queue="bedrock-task-queue",
         start_signal="user_prompt",

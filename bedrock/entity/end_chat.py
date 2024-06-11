@@ -11,7 +11,7 @@ async def main():
 
     workflow_id = "entity-bedrock-workflow"
 
-    handle = client.get_workflow_handle(workflow_id)
+    handle = client.get_workflow_handle_for(EntityBedrockWorkflow.run, workflow_id)
 
     # Sends a signal to the workflow
     await handle.signal(EntityBedrockWorkflow.end_chat)

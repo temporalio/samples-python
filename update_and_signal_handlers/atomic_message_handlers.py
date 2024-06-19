@@ -46,6 +46,7 @@ class ClusterManager:
         self.cluster_shutdown = False
         # Protects workflow state from interleaved access
         self.nodes_lock = asyncio.Lock()
+        self.max_assigned_nodes = 0
 
     @workflow.signal
     async def start_cluster(self):
@@ -72,6 +73,9 @@ class ClusterManager:
             assigned_nodes = unassigned_nodes[:num_nodes]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
             await self._allocate_nodes_to_job(assigned_nodes, task_name)
+            self.max_assigned_nodes = max(
+                self.max_assigned_nodes, 
+                len([k for k, v in self.nodes.items() if v is not None]))
             return assigned_nodes
         finally:
             self.nodes_lock.release()
@@ -112,6 +116,7 @@ class ClusterManager:
             bad_nodes = await workflow.execute_activity(find_bad_nodes, assigned_nodes, start_to_close_timeout=timedelta(seconds=10))
             for node in bad_nodes:
                 self.nodes[node] = "BAD!"
+            self.num_assigned_nodes = len(assigned_nodes)
         finally:
             self.nodes_lock.release()
 
@@ -131,6 +136,7 @@ class ClusterManager:
 
         # Now we can start allocating jobs to nodes
         await workflow.wait_condition(lambda: self.cluster_shutdown)
+        return self.max_assigned_nodes
 
 async def do_cluster_lifecycle(wf: WorkflowHandle):
     allocation_updates = []
@@ -144,7 +150,6 @@ async def do_cluster_lifecycle(wf: WorkflowHandle):
     await asyncio.gather(*deletion_updates)
         
     await wf.signal(ClusterManager.shutdown_cluster)
-    print("Cluster shut down")
 
 async def main():
     client = await Client.connect("localhost:7233")
@@ -164,7 +169,8 @@ async def main():
 
         )
         await do_cluster_lifecycle(cluster_manager_handle)
-        await cluster_manager_handle.result()
+        max_assigned_nodes = await cluster_manager_handle.result()
+        print(f"Cluster shut down successfully.  It peaked at {max_assigned_nodes} assigned nodes.")
 
         
 

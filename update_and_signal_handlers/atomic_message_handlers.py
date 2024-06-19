@@ -2,15 +2,16 @@ import asyncio
 from datetime import timedelta
 import logging
 from typing import Dict, List, Optional
+import uuid
 
 from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
 # This samples shows off the key concurrent programming primitives for Workflows, especially 
-# useful for workflow that receive signals and updates.
+# useful for workflows that handle signals and updates.
 
-#   - Making signal and update handlers only operate when the workflow is within a certain state 
+#   - Makes signal and update handlers only operate when the workflow is within a certain state 
 #     (here between cluster_started and cluster_shutdown) using workflow.wait_condition.
 #   - Signal and update handlers can block and their actions can be interleaved with one another and with the main workflow.
 #     Here, we use a lock to protect shared state from interleaved access.
@@ -124,6 +125,8 @@ class ClusterManager:
                 await workflow.wait_condition(lambda: self.cluster_shutdown, timeout=timedelta(seconds=1))
             except asyncio.TimeoutError:
                 pass
+            if self.cluster_shutdown:
+                break
             await self.perform_health_checks()
 
         # Now we can start allocating jobs to nodes
@@ -152,15 +155,18 @@ async def main():
         workflows=[ClusterManager],
         activities=[allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes],
     ):
-        wf = await client.start_workflow(
+        cluster_manager_handle = await client.start_workflow(
             ClusterManager.run,
-            id="wid2",
+            id=f"ClusterManager-{uuid.uuid4()}",
             task_queue="tq",
             id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
             start_signal='start_cluster',
 
         )
-        await do_cluster_lifecycle(wf)
+        await do_cluster_lifecycle(cluster_manager_handle)
+        await cluster_manager_handle.result()
+
+        
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

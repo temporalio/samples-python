@@ -1,17 +1,17 @@
 import asyncio
-from datetime import timedelta
 import logging
-from typing import Dict, List, Optional
 import uuid
+from datetime import timedelta
+from typing import Dict, List, Optional
 
 from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
-# This samples shows off the key concurrent programming primitives for Workflows, especially 
+# This samples shows off the key concurrent programming primitives for Workflows, especially
 # useful for workflows that handle signals and updates.
 
-#   - Makes signal and update handlers only operate when the workflow is within a certain state 
+#   - Makes signal and update handlers only operate when the workflow is within a certain state
 #     (here between cluster_started and cluster_shutdown) using workflow.wait_condition.
 #   - Signal and update handlers can block and their actions can be interleaved with one another and with the main workflow.
 #     Here, we use a lock to protect shared state from interleaved access.
@@ -22,10 +22,12 @@ async def allocate_nodes_to_job(nodes: List[int], task_name: str) -> List[int]:
     print(f"Assigning nodes {nodes} to job {task_name}")
     await asyncio.sleep(0.1)
 
+
 @activity.defn
 async def deallocate_nodes_for_job(nodes: List[int], task_name: str) -> List[int]:
     print(f"Deallocating nodes {nodes} from job {task_name}")
     await asyncio.sleep(0.1)
+
 
 @activity.defn
 async def find_bad_nodes(nodes: List[int]) -> List[int]:
@@ -35,7 +37,8 @@ async def find_bad_nodes(nodes: List[int]) -> List[int]:
         print(f"Found bad nodes: {bad_nodes}")
     return bad_nodes
 
-# ClusterManager keeps track of the allocations of a cluster of nodes. 
+
+# ClusterManager keeps track of the allocations of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.
 # Via updates, clients can also assign jobs to nodes and delete jobs.
 # These updates must run atomically.
@@ -51,7 +54,7 @@ class ClusterManager:
     @workflow.signal
     async def start_cluster(self):
         self.cluster_started = True
-        self.nodes : Dict[Optional[str]] = dict([(k, None) for k in range(25)])
+        self.nodes: Dict[Optional[str]] = dict([(k, None) for k in range(25)])
         workflow.logger.info("Cluster started")
 
     @workflow.signal
@@ -61,7 +64,11 @@ class ClusterManager:
         workflow.logger.info("Cluster shut down")
 
     @workflow.update
-    async def allocate_n_nodes_to_job(self, task_name: str, num_nodes: int, ) -> List[int]:
+    async def allocate_n_nodes_to_job(
+        self,
+        task_name: str,
+        num_nodes: int,
+    ) -> List[int]:
         await workflow.wait_condition(lambda: self.cluster_started)
         assert not self.cluster_shutdown
 
@@ -69,21 +76,27 @@ class ClusterManager:
         try:
             unassigned_nodes = [k for k, v in self.nodes.items() if v is None]
             if len(unassigned_nodes) < num_nodes:
-                raise ValueError(f"Cannot allocate {num_nodes} nodes; have only {len(unassigned_nodes)} available")
+                raise ValueError(
+                    f"Cannot allocate {num_nodes} nodes; have only {len(unassigned_nodes)} available"
+                )
             assigned_nodes = unassigned_nodes[:num_nodes]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
             await self._allocate_nodes_to_job(assigned_nodes, task_name)
             self.max_assigned_nodes = max(
-                self.max_assigned_nodes, 
-                len([k for k, v in self.nodes.items() if v is not None]))
+                self.max_assigned_nodes,
+                len([k for k, v in self.nodes.items() if v is not None]),
+            )
             return assigned_nodes
         finally:
             self.nodes_lock.release()
 
-    
-    async def _allocate_nodes_to_job(self, assigned_nodes: List[int], task_name: str) -> List[int]:
+    async def _allocate_nodes_to_job(
+        self, assigned_nodes: List[int], task_name: str
+    ) -> List[int]:
         await workflow.execute_activity(
-            allocate_nodes_to_job, args=[assigned_nodes, task_name], start_to_close_timeout=timedelta(seconds=10)
+            allocate_nodes_to_job,
+            args=[assigned_nodes, task_name],
+            start_to_close_timeout=timedelta(seconds=10),
         )
         for node in assigned_nodes:
             self.nodes[node] = task_name
@@ -96,14 +109,18 @@ class ClusterManager:
         try:
             nodes_to_free = [k for k, v in self.nodes.items() if v == task_name]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
-            await self._deallocate_nodes_for_job(nodes_to_free, task_name) 
+            await self._deallocate_nodes_for_job(nodes_to_free, task_name)
             return "Done"
         finally:
             self.nodes_lock.release()
 
-    async def _deallocate_nodes_for_job(self, nodes_to_free: List[int], task_name: str) -> List[int]:
+    async def _deallocate_nodes_for_job(
+        self, nodes_to_free: List[int], task_name: str
+    ) -> List[int]:
         await workflow.execute_activity(
-            deallocate_nodes_for_job, args=[nodes_to_free, task_name], start_to_close_timeout=timedelta(seconds=10)
+            deallocate_nodes_for_job,
+            args=[nodes_to_free, task_name],
+            start_to_close_timeout=timedelta(seconds=10),
         )
         for node in nodes_to_free:
             self.nodes[node] = None
@@ -113,7 +130,11 @@ class ClusterManager:
         try:
             assigned_nodes = [k for k, v in self.nodes.items() if v is not None]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
-            bad_nodes = await workflow.execute_activity(find_bad_nodes, assigned_nodes, start_to_close_timeout=timedelta(seconds=10))
+            bad_nodes = await workflow.execute_activity(
+                find_bad_nodes,
+                assigned_nodes,
+                start_to_close_timeout=timedelta(seconds=10),
+            )
             for node in bad_nodes:
                 self.nodes[node] = "BAD!"
             self.num_assigned_nodes = len(assigned_nodes)
@@ -127,7 +148,9 @@ class ClusterManager:
         # Perform health checks at intervals
         while True:
             try:
-                await workflow.wait_condition(lambda: self.cluster_shutdown, timeout=timedelta(seconds=1))
+                await workflow.wait_condition(
+                    lambda: self.cluster_shutdown, timeout=timedelta(seconds=1)
+                )
             except asyncio.TimeoutError:
                 pass
             if self.cluster_shutdown:
@@ -138,18 +161,26 @@ class ClusterManager:
         await workflow.wait_condition(lambda: self.cluster_shutdown)
         return self.max_assigned_nodes
 
+
 async def do_cluster_lifecycle(wf: WorkflowHandle):
     allocation_updates = []
     for i in range(6):
-        allocation_updates.append(wf.execute_update(ClusterManager.allocate_n_nodes_to_job, args=[f"task-{i}", 2]))
-    await asyncio.gather(*allocation_updates)        
-    
+        allocation_updates.append(
+            wf.execute_update(
+                ClusterManager.allocate_n_nodes_to_job, args=[f"task-{i}", 2]
+            )
+        )
+    await asyncio.gather(*allocation_updates)
+
     deletion_updates = []
     for i in range(6):
-        deletion_updates.append(wf.execute_update(ClusterManager.delete_job, f"task-{i}"))
+        deletion_updates.append(
+            wf.execute_update(ClusterManager.delete_job, f"task-{i}")
+        )
     await asyncio.gather(*deletion_updates)
-        
+
     await wf.signal(ClusterManager.shutdown_cluster)
+
 
 async def main():
     client = await Client.connect("localhost:7233")
@@ -165,14 +196,14 @@ async def main():
             id=f"ClusterManager-{uuid.uuid4()}",
             task_queue="tq",
             id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
-            start_signal='start_cluster',
-
+            start_signal="start_cluster",
         )
         await do_cluster_lifecycle(cluster_manager_handle)
         max_assigned_nodes = await cluster_manager_handle.result()
-        print(f"Cluster shut down successfully.  It peaked at {max_assigned_nodes} assigned nodes.")
+        print(
+            f"Cluster shut down successfully.  It peaked at {max_assigned_nodes} assigned nodes."
+        )
 
-        
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

@@ -36,7 +36,7 @@ async def find_bad_nodes(nodes: List[int]) -> List[int]:
 
 # ClusterManager keeps track of the allocations of a cluster of nodes. 
 # Via signals, the cluster can be started and shutdown.
-# Via updates, clients can also assign jobs to nodes, resize jobs, and delete jobs.
+# Via updates, clients can also assign jobs to nodes and delete jobs.
 # These updates must run atomically.
 @workflow.defn
 class ClusterManager:
@@ -103,34 +103,11 @@ class ClusterManager:
         for node in nodes_to_free:
             self.nodes[node] = None
 
-    @workflow.update
-    async def resize_job(self, task_name: str, new_size: int) -> List[int]:
-        await workflow.wait_condition(lambda: self.cluster_started)
-        assert not self.cluster_shutdown
-        await self.nodes_lock.acquire()
-        try:
-            allocated_nodes = [k for k, v in self.nodes.items() if v == task_name]
-            delta = new_size - len(allocated_nodes)
-            if delta == 0:
-                return allocated_nodes
-            elif delta > 0:
-                unassigned_nodes = [k for k, v in self.nodes.items() if v is None]
-                if len(unassigned_nodes) < delta:
-                    raise ValueError(f"Cannot allocate {delta} nodes; have only {len(unassigned_nodes)} available")
-                nodes_to_assign = unassigned_nodes[:delta]
-                await self._allocate_nodes_to_job(nodes_to_assign, task_name)
-                return allocated_nodes + nodes_to_assign
-            else:
-                nodes_to_deallocate = allocated_nodes[delta:]
-                await self._deallocate_nodes_for_job(nodes_to_deallocate, task_name)
-                return list(filter(lambda x: x not in nodes_to_deallocate, allocated_nodes))
-        finally:
-            self.nodes_lock.release()
-
     async def perform_health_checks(self):
         await self.nodes_lock.acquire()
         try:
             assigned_nodes = [k for k, v in self.nodes.items() if v is not None]
+            # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
             bad_nodes = await workflow.execute_activity(find_bad_nodes, assigned_nodes, start_to_close_timeout=timedelta(seconds=10))
             for node in bad_nodes:
                 self.nodes[node] = "BAD!"
@@ -158,11 +135,6 @@ async def do_cluster_lifecycle(wf: WorkflowHandle):
         allocation_updates.append(wf.execute_update(ClusterManager.allocate_n_nodes_to_job, args=[f"task-{i}", 2]))
     await asyncio.gather(*allocation_updates)        
     
-    resize_updates = []
-    for i in range(6):
-        resize_updates.append(wf.execute_update(ClusterManager.resize_job, args=[f"task-{i}", 4]))
-    await asyncio.gather(*resize_updates)
-
     deletion_updates = []
     for i in range(6):
         deletion_updates.append(wf.execute_update(ClusterManager.delete_job, f"task-{i}"))

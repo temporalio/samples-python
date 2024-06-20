@@ -26,7 +26,9 @@ async def test_atomic_message_handlers(client: Client):
             task_queue="tq",
             id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
             start_signal="start_cluster",
+            args=[None, None]
         )
-        await do_cluster_lifecycle(cluster_manager_handle)
-        max_assigned_nodes = await cluster_manager_handle.result()
-        assert max_assigned_nodes == 12
+        await do_cluster_lifecycle(cluster_manager_handle, delay=1)
+        result = await cluster_manager_handle.result()
+        assert result.max_assigned_nodes == 12
+        assert result.num_assigned_nodes == 0

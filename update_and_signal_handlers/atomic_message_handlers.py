@@ -1,7 +1,7 @@
 import asyncio
-from dataclasses import dataclass
 import logging
 import uuid
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Dict, List, Optional
 
@@ -42,6 +42,7 @@ async def find_bad_nodes(nodes: List[str]) -> List[str]:
         print("No new bad nodes found.")
     return bad_nodes
 
+
 # In workflows that continue-as-new, it's convenient to store all your state in one serializable structure
 # to make it easier to pass between runs
 @dataclass(kw_only=True)
@@ -52,10 +53,12 @@ class ClusterManagerState:
     max_assigned_nodes: int = 0
     num_assigned_nodes: int = 0
 
+
 @dataclass
 class ClusterManagerResult:
     max_assigned_nodes: int
     num_assigned_nodes: int
+
 
 # ClusterManager keeps track of the allocations of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.
@@ -145,7 +148,9 @@ class ClusterManager:
     async def perform_health_checks(self):
         await self.nodes_lock.acquire()
         try:
-            assigned_nodes = [k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"]
+            assigned_nodes = [
+                k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"
+            ]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
             bad_nodes = await workflow.execute_activity(
                 find_bad_nodes,
@@ -158,9 +163,11 @@ class ClusterManager:
         finally:
             self.nodes_lock.release()
 
-    # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and 
+    # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and
     # continue-as-new.
-    def init_from_previous_run(self, state: Optional[ClusterManagerState], max_history_length: Optional[int]):
+    def init_from_previous_run(
+        self, state: Optional[ClusterManagerState], max_history_length: Optional[int]
+    ):
         if state:
             self.state = state
         self.max_history_length = max_history_length
@@ -172,16 +179,18 @@ class ClusterManager:
         if workflow.info().is_continue_as_new_suggested():
             return True
         # This is just for ease-of-testing.  In production, we trust temporal to tell us when to continue as new.
-        if self.max_history_length and workflow.info().get_current_history_length() > self.max_history_length:
+        if (
+            self.max_history_length
+            and workflow.info().get_current_history_length() > self.max_history_length
+        ):
             return True
         return False
 
     # max_history_size - to more conveniently test continue-as-new, not to be used in production.
     @workflow.run
     async def run(
-        self,
-        state: Optional[ClusterManagerState], 
-        max_history_length: Optional[int]) -> ClusterManagerResult:
+        self, state: Optional[ClusterManagerState], max_history_length: Optional[int]
+    ) -> ClusterManagerResult:
         self.init_from_previous_run(state, max_history_length)
         await workflow.wait_condition(lambda: self.state.cluster_started)
 
@@ -190,7 +199,9 @@ class ClusterManager:
         while True:
             try:
                 await workflow.wait_condition(
-                    lambda: self.state.cluster_shutdown or self.should_continue_as_new(), timeout=timedelta(seconds=1)
+                    lambda: self.state.cluster_shutdown
+                    or self.should_continue_as_new(),
+                    timeout=timedelta(seconds=1),
                 )
             except asyncio.TimeoutError:
                 pass
@@ -199,11 +210,15 @@ class ClusterManager:
             await self.perform_health_checks()
             if self.should_continue_as_new():
                 workflow.logger.info("Continuing as new")
-                await workflow.continue_as_new(args=[self.state, self.max_history_length])
+                await workflow.continue_as_new(
+                    args=[self.state, self.max_history_length]
+                )
 
         # Now we can start allocating jobs to nodes
         await workflow.wait_condition(lambda: self.state.cluster_shutdown)
-        return ClusterManagerResult(self.state.max_assigned_nodes, self.state.num_assigned_nodes)
+        return ClusterManagerResult(
+            self.state.max_assigned_nodes, self.state.num_assigned_nodes
+        )
 
 
 async def do_cluster_lifecycle(wf: WorkflowHandle, delay: Optional[int] = None):
@@ -240,7 +255,7 @@ async def main():
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManager.run,
-            args=[None, 150], # max_history_length to conveniently test continue-as-new
+            args=[None, 150],  # max_history_length to conveniently test continue-as-new
             id=f"ClusterManager-{uuid.uuid4()}",
             task_queue="tq",
             id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
@@ -249,7 +264,7 @@ async def main():
         await do_cluster_lifecycle(cluster_manager_handle, delay=1)
         result = await cluster_manager_handle.result()
         print(
-            f"Cluster shut down successfully.  It peaked at {result.max_assigned_nodes} assigned nodes ."\
+            f"Cluster shut down successfully.  It peaked at {result.max_assigned_nodes} assigned nodes ."
             f" It had {result.num_assigned_nodes} nodes assigned at the end."
         )
 

@@ -5,6 +5,7 @@ from temporalio.worker import Worker
 
 from custom_converter.shared import greeting_data_converter
 from custom_converter.workflow import GreetingWorkflow
+from custom_converter.workflow import compose_greeting
 
 interrupt_event = asyncio.Event()
 
@@ -23,6 +24,7 @@ async def main():
         client,
         task_queue="custom_converter-task-queue",
         workflows=[GreetingWorkflow],
+        activities=[compose_greeting],
     ):
         # Wait until interrupted
         print("Worker started, ctrl+c to exit")

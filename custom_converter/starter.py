@@ -26,8 +26,8 @@ async def main():
         id=f"custom_converter-workflow-id",
         task_queue="custom_converter-task-queue",
     )
-    assert isinstance(result, GreetingOutput)
-    print(f"Workflow result: {result.result}")
+    assert isinstance(result, GreetingInput)
+    print(f"Workflow result: {result}")
 
 
 if __name__ == "__main__":

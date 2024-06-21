@@ -1,26 +1,29 @@
 import dataclasses
 from typing import Any, Optional, Type
-
+from dataclasses import dataclass
 import temporalio.converter
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import (
     CompositePayloadConverter,
+    DataConverter,
     DefaultPayloadConverter,
-    EncodingPayloadConverter,
+    JSONPlainPayloadConverter,
 )
 
 
+@dataclass
 class GreetingInput:
     def __init__(self, name: str) -> None:
         self.name = name
 
 
+@dataclass
 class GreetingOutput:
     def __init__(self, result: str) -> None:
         self.result = result
 
 
-class GreetingEncodingPayloadConverter(EncodingPayloadConverter):
+class GreetingEncodingPayloadConverter(JSONPlainPayloadConverter):
     @property
     def encoding(self) -> str:
         return "text/my-greeting-encoding"
@@ -40,6 +43,7 @@ class GreetingEncodingPayloadConverter(EncodingPayloadConverter):
             return None
 
     def from_payload(self, payload: Payload, type_hint: Optional[Type] = None) -> Any:
+        print(f"*********** A: {type_hint}, {payload}")
         if payload.metadata.get("is_input") == b"true":
             # Confirm proper type hint if present
             assert not type_hint or type_hint is GreetingInput

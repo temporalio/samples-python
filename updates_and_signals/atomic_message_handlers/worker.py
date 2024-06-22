@@ -1,12 +1,19 @@
 import asyncio
 import logging
+
 from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
-from updates_and_signals.atomic_message_handlers.workflow import ClusterManagerWorkflow, allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes
+from updates_and_signals.atomic_message_handlers.workflow import (
+    ClusterManagerWorkflow,
+    allocate_nodes_to_job,
+    deallocate_nodes_for_job,
+    find_bad_nodes,
+)
 
 interrupt_event = asyncio.Event()
+
 
 async def main():
     # Connect client
@@ -22,6 +29,7 @@ async def main():
         logging.info("ClusterManagerWorkflow worker started, ctrl+c to exit")
         await interrupt_event.wait()
         logging.info("Shutting down")
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

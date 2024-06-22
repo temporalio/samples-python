@@ -9,7 +9,11 @@ from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
-from updates_and_signals.atomic_message_handlers.activities import allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes
+from updates_and_signals.atomic_message_handlers.activities import (
+    allocate_nodes_to_job,
+    deallocate_nodes_for_job,
+    find_bad_nodes,
+)
 
 
 # In workflows that continue-as-new, it's convenient to store all your state in one serializable structure
@@ -22,10 +26,12 @@ class ClusterManagerState:
     max_assigned_nodes: int = 0
     num_assigned_nodes: int = 0
 
+
 @dataclass
 class ClusterManagerResult:
     max_assigned_nodes: int
     num_assigned_nodes: int
+
 
 # ClusterManagerWorkflow keeps track of the allocations of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.

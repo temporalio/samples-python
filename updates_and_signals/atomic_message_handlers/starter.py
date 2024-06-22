@@ -1,11 +1,13 @@
 import asyncio
 import logging
-from typing import Optional
 import uuid
+from typing import Optional
+
 from temporalio import client, common
 from temporalio.client import Client, WorkflowHandle
 
 from updates_and_signals.atomic_message_handlers.workflow import ClusterManagerWorkflow
+
 
 async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] = None):
     allocation_updates = []
@@ -29,6 +31,7 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
 
     await wf.signal(ClusterManagerWorkflow.shutdown_cluster)
 
+
 async def main():
     # Connect to Temporal
     client = await Client.connect("localhost:7233")
@@ -47,6 +50,7 @@ async def main():
         f"Cluster shut down successfully.  It peaked at {result.max_assigned_nodes} assigned nodes ."
         f" It had {result.num_assigned_nodes} nodes assigned at the end."
     )
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

@@ -1,6 +1,8 @@
 import asyncio
 from typing import List
+
 from temporalio import activity
+
 
 @activity.defn
 async def allocate_nodes_to_job(nodes: List[str], task_name: str) -> List[str]:

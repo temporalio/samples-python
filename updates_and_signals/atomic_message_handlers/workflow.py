@@ -9,38 +9,7 @@ from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
-# This samples shows off the key concurrent programming primitives for Workflows, especially
-# useful for workflows that handle signals and updates.
-
-#   - Makes signal and update handlers only operate when the workflow is within a certain state
-#     (here between cluster_started and cluster_shutdown) using workflow.wait_condition.
-#   - Signal and update handlers can block and their actions can be interleaved with one another and with the main workflow.
-#     They should also complete before the workflow run completes.
-#     Here, we use a lock to protect shared state from interleaved access.
-#   - Running start_workflow with an initializer signal that you want to run before anything else.
-#   - An Entity workflow that periodically "continues as new".  It must do this to prevent its history from growing too large,
-#
-@activity.defn
-async def allocate_nodes_to_job(nodes: List[str], task_name: str) -> List[str]:
-    print(f"Assigning nodes {nodes} to job {task_name}")
-    await asyncio.sleep(0.1)
-
-
-@activity.defn
-async def deallocate_nodes_for_job(nodes: List[str], task_name: str) -> List[str]:
-    print(f"Deallocating nodes {nodes} from job {task_name}")
-    await asyncio.sleep(0.1)
-
-
-@activity.defn
-async def find_bad_nodes(nodes: List[str]) -> List[str]:
-    await asyncio.sleep(0.1)
-    bad_nodes = [n for n in nodes if int(n) % 5 == 0]
-    if bad_nodes:
-        print(f"Found bad nodes: {bad_nodes}")
-    else:
-        print("No new bad nodes found.")
-    return bad_nodes
+from updates_and_signals.atomic_message_handlers.activities import allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes
 
 
 # In workflows that continue-as-new, it's convenient to store all your state in one serializable structure
@@ -53,19 +22,17 @@ class ClusterManagerState:
     max_assigned_nodes: int = 0
     num_assigned_nodes: int = 0
 
-
 @dataclass
 class ClusterManagerResult:
     max_assigned_nodes: int
     num_assigned_nodes: int
 
-
-# ClusterManager keeps track of the allocations of a cluster of nodes.
+# ClusterManagerWorkflow keeps track of the allocations of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.
 # Via updates, clients can also assign jobs to nodes and delete jobs.
 # These updates must run atomically.
 @workflow.defn
-class ClusterManager:
+class ClusterManagerWorkflow:
     def __init__(self) -> None:
         self.state = ClusterManagerState()
         # Protects workflow state from interleaved access
@@ -92,8 +59,7 @@ class ClusterManager:
         await workflow.wait_condition(lambda: self.state.cluster_started)
         assert not self.state.cluster_shutdown
 
-        await self.nodes_lock.acquire()
-        try:
+        async with self.nodes_lock:
             unassigned_nodes = [k for k, v in self.state.nodes.items() if v is None]
             if len(unassigned_nodes) < num_nodes:
                 raise ValueError(
@@ -107,8 +73,6 @@ class ClusterManager:
                 len([k for k, v in self.state.nodes.items() if v is not None]),
             )
             return assigned_nodes
-        finally:
-            self.nodes_lock.release()
 
     async def _allocate_nodes_to_job(
         self, assigned_nodes: List[str], task_name: str
@@ -125,14 +89,11 @@ class ClusterManager:
     async def delete_job(self, task_name: str) -> str:
         await workflow.wait_condition(lambda: self.state.cluster_started)
         assert not self.state.cluster_shutdown
-        await self.nodes_lock.acquire()
-        try:
+        async with self.nodes_lock:
             nodes_to_free = [k for k, v in self.state.nodes.items() if v == task_name]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
             await self._deallocate_nodes_for_job(nodes_to_free, task_name)
             return "Done"
-        finally:
-            self.nodes_lock.release()
 
     async def _deallocate_nodes_for_job(
         self, nodes_to_free: List[str], task_name: str
@@ -146,8 +107,7 @@ class ClusterManager:
             self.state.nodes[node] = None
 
     async def perform_health_checks(self):
-        await self.nodes_lock.acquire()
-        try:
+        async with self.nodes_lock:
             assigned_nodes = [
                 k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"
             ]
@@ -160,8 +120,6 @@ class ClusterManager:
             for node in bad_nodes:
                 self.state.nodes[node] = "BAD!"
             self.state.num_assigned_nodes = len(assigned_nodes)
-        finally:
-            self.nodes_lock.release()
 
     # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and
     # continue-as-new.
@@ -219,56 +177,3 @@ class ClusterManager:
         return ClusterManagerResult(
             self.state.max_assigned_nodes, self.state.num_assigned_nodes
         )
-
-
-async def do_cluster_lifecycle(wf: WorkflowHandle, delay: Optional[int] = None):
-    allocation_updates = []
-    for i in range(6):
-        allocation_updates.append(
-            wf.execute_update(
-                ClusterManager.allocate_n_nodes_to_job, args=[f"task-{i}", 2]
-            )
-        )
-    await asyncio.gather(*allocation_updates)
-
-    if delay:
-        await asyncio.sleep(delay)
-
-    deletion_updates = []
-    for i in range(6):
-        deletion_updates.append(
-            wf.execute_update(ClusterManager.delete_job, f"task-{i}")
-        )
-    await asyncio.gather(*deletion_updates)
-
-    await wf.signal(ClusterManager.shutdown_cluster)
-
-
-async def main():
-    client = await Client.connect("localhost:7233")
-
-    async with Worker(
-        client,
-        task_queue="tq",
-        workflows=[ClusterManager],
-        activities=[allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes],
-    ):
-        cluster_manager_handle = await client.start_workflow(
-            ClusterManager.run,
-            args=[None, 150],  # max_history_length to conveniently test continue-as-new
-            id=f"ClusterManager-{uuid.uuid4()}",
-            task_queue="tq",
-            id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
-            start_signal="start_cluster",
-        )
-        await do_cluster_lifecycle(cluster_manager_handle, delay=1)
-        result = await cluster_manager_handle.result()
-        print(
-            f"Cluster shut down successfully.  It peaked at {result.max_assigned_nodes} assigned nodes ."
-            f" It had {result.num_assigned_nodes} nodes assigned at the end."
-        )
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(main())

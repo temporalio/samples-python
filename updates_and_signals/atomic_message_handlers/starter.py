@@ -8,17 +8,23 @@ from temporalio import client, common
 from temporalio.client import Client, WorkflowHandle
 
 from updates_and_signals.atomic_message_handlers.workflow import (
+    ClusterManagerAllocateNNodesToJobInput,
+    ClusterManagerDeleteJobInput,
     ClusterManagerInput,
     ClusterManagerWorkflow,
 )
 
 
 async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] = None):
+    
+    await wf.signal(ClusterManagerWorkflow.start_cluster)
+
     allocation_updates = []
     for i in range(6):
         allocation_updates.append(
             wf.execute_update(
-                ClusterManagerWorkflow.allocate_n_nodes_to_job, args=[f"task-{i}", 2]
+                ClusterManagerWorkflow.allocate_n_nodes_to_job, 
+                ClusterManagerAllocateNNodesToJobInput(num_nodes=2, task_name=f"task-{i}")
             )
         )
     await asyncio.gather(*allocation_updates)
@@ -29,7 +35,10 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
     deletion_updates = []
     for i in range(6):
         deletion_updates.append(
-            wf.execute_update(ClusterManagerWorkflow.delete_job, f"task-{i}")
+            wf.execute_update(
+                ClusterManagerWorkflow.delete_job, 
+                ClusterManagerDeleteJobInput(task_name=f"task-{i}")
+            )
         )
     await asyncio.gather(*deletion_updates)
 
@@ -46,14 +55,13 @@ async def main(should_test_continue_as_new: bool):
         id=f"ClusterManagerWorkflow-{uuid.uuid4()}",
         task_queue="atomic-message-handlers-task-queue",
         id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
-        start_signal="start_cluster",
     )
     delay_seconds = 10 if should_test_continue_as_new else 1
     await do_cluster_lifecycle(cluster_manager_handle, delay_seconds=delay_seconds)
     result = await cluster_manager_handle.result()
     print(
         f"Cluster shut down successfully.  It peaked at {result.max_assigned_nodes} assigned nodes ."
-        f" It had {result.num_assigned_nodes} nodes assigned at the end."
+        f" It had {result.num_currently_assigned_nodes} nodes assigned at the end."
     )
 
 

@@ -8,6 +8,7 @@ from typing import Dict, List, Optional
 from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.common import RetryPolicy
+from temporalio.exceptions import ApplicationError
 from temporalio.worker import Worker
 
 from updates_and_signals.atomic_message_handlers.activities import (
@@ -28,7 +29,6 @@ class ClusterManagerState:
     cluster_shutdown: bool = False
     nodes: Optional[Dict[str, Optional[str]]] = None
     max_assigned_nodes: int = 0
-    num_assigned_nodes: int = 0
 
 
 @dataclass(kw_only=True)
@@ -40,8 +40,16 @@ class ClusterManagerInput:
 @dataclass
 class ClusterManagerResult:
     max_assigned_nodes: int
-    num_assigned_nodes: int
+    num_currently_assigned_nodes: int
 
+@dataclass(kw_only=True)
+class ClusterManagerAllocateNNodesToJobInput:
+    num_nodes: int
+    task_name: str
+
+@dataclass(kw_only=True)
+class ClusterManagerDeleteJobInput:
+    task_name: str
 
 # ClusterManagerWorkflow keeps track of the allocations of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.
@@ -69,24 +77,29 @@ class ClusterManagerWorkflow:
     @workflow.update
     async def allocate_n_nodes_to_job(
         self,
-        task_name: str,
-        num_nodes: int,
+        input: ClusterManagerAllocateNNodesToJobInput
     ) -> List[str]:
         await workflow.wait_condition(lambda: self.state.cluster_started)
         if self.state.cluster_shutdown:
-            raise RuntimeError(
+            # If you want the client to receive a failure, either add an update validator and throw the
+            # exception from there, or raise an ApplicationError. Other exceptions in the main handler
+            # will cause the workflow to keep retrying and get it stuck.
+            raise ApplicationError(
                 "Cannot allocate nodes to a job: Cluster is already shut down"
             )
 
         async with self.nodes_lock:
             unassigned_nodes = [k for k, v in self.state.nodes.items() if v is None]
-            if len(unassigned_nodes) < num_nodes:
-                raise ValueError(
-                    f"Cannot allocate {num_nodes} nodes; have only {len(unassigned_nodes)} available"
+            if len(unassigned_nodes) < input.num_nodes:
+                # If you want the client to receive a failure, either add an update validator and throw the
+                # exception from there, or raise an ApplicationError. Other exceptions in the main handler
+                # will cause the workflow to keep retrying and get it stuck.
+                raise ApplicationError(
+                    f"Cannot allocate {input.num_nodes} nodes; have only {len(unassigned_nodes)} available"
                 )
-            assigned_nodes = unassigned_nodes[:num_nodes]
+            assigned_nodes = unassigned_nodes[:input.num_nodes]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
-            await self._allocate_nodes_to_job(assigned_nodes, task_name)
+            await self._allocate_nodes_to_job(assigned_nodes, input.task_name)
             self.state.max_assigned_nodes = max(
                 self.state.max_assigned_nodes,
                 len([k for k, v in self.state.nodes.items() if v is not None]),
@@ -103,14 +116,20 @@ class ClusterManagerWorkflow:
             self.state.nodes[node] = task_name
 
     @workflow.update
-    async def delete_job(self, task_name: str) -> str:
+    async def delete_job(self, input: ClusterManagerDeleteJobInput):
         await workflow.wait_condition(lambda: self.state.cluster_started)
-        assert not self.state.cluster_shutdown
+        if self.state.cluster_shutdown:
+            # If you want the client to receive a failure, either add an update validator and throw the
+            # exception from there, or raise an ApplicationError. Other exceptions in the main handler
+            # will cause the workflow to keep retrying and get it stuck.
+            raise ApplicationError(
+                "Cannot delete a job: Cluster is already shut down"
+            )
+
         async with self.nodes_lock:
-            nodes_to_free = [k for k, v in self.state.nodes.items() if v == task_name]
+            nodes_to_free = [k for k, v in self.state.nodes.items() if v == input.task_name]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
-            await self._deallocate_nodes_for_job(nodes_to_free, task_name)
-        return "Done"
+            await self._deallocate_nodes_for_job(nodes_to_free, input.task_name)
 
     async def _deallocate_nodes_for_job(self, nodes_to_free: List[str], task_name: str):
         await workflow.execute_activity(
@@ -181,7 +200,6 @@ class ClusterManagerWorkflow:
                 )
             except asyncio.TimeoutError:
                 pass
-            self.state.num_assigned_nodes = len(self.get_assigned_nodes())
             if self.state.cluster_shutdown:
                 break
             if self.should_continue_as_new():
@@ -194,5 +212,5 @@ class ClusterManagerWorkflow:
                 )
 
         return ClusterManagerResult(
-            self.state.max_assigned_nodes, self.state.num_assigned_nodes
+            self.state.max_assigned_nodes, len(self.get_assigned_nodes())
         )

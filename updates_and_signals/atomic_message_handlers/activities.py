@@ -1,25 +1,43 @@
 import asyncio
+from dataclasses import dataclass
 from typing import List
 
 from temporalio import activity
 
 
-@activity.defn
-async def allocate_nodes_to_job(nodes: List[str], task_name: str) -> List[str]:
-    print(f"Assigning nodes {nodes} to job {task_name}")
-    await asyncio.sleep(0.1)
+@dataclass(kw_only=True)
+class AllocateNodesToJobInput:
+    nodes: List[str]
+    task_name: str
 
 
 @activity.defn
-async def deallocate_nodes_for_job(nodes: List[str], task_name: str) -> List[str]:
-    print(f"Deallocating nodes {nodes} from job {task_name}")
+async def allocate_nodes_to_job(input: AllocateNodesToJobInput) -> List[str]:
+    print(f"Assigning nodes {input.nodes} to job {input.task_name}")
     await asyncio.sleep(0.1)
+
+
+@dataclass(kw_only=True)
+class DeallocateNodesForJobInput:
+    nodes: List[str]
+    task_name: str
 
 
 @activity.defn
-async def find_bad_nodes(nodes: List[str]) -> List[str]:
+async def deallocate_nodes_for_job(input: DeallocateNodesForJobInput) -> List[str]:
+    print(f"Deallocating nodes {input.nodes} from job {input.task_name}")
     await asyncio.sleep(0.1)
-    bad_nodes = [n for n in nodes if int(n) % 5 == 0]
+
+
+@dataclass(kw_only=True)
+class FindBadNodesInput:
+    nodes_to_check: List[str]
+
+
+@activity.defn
+async def find_bad_nodes(input: FindBadNodesInput) -> List[str]:
+    await asyncio.sleep(0.1)
+    bad_nodes = [n for n in input.nodes_to_check if int(n) % 5 == 0]
     if bad_nodes:
         print(f"Found bad nodes: {bad_nodes}")
     else:

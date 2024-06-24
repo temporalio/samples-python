@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 import logging
 import uuid
 from dataclasses import dataclass
@@ -27,7 +28,7 @@ from updates_and_signals.atomic_message_handlers.activities import (
 class ClusterManagerState:
     cluster_started: bool = False
     cluster_shutdown: bool = False
-    nodes: Optional[Dict[str, Optional[str]]] = None
+    nodes: Dict[str, Optional[str]] = dataclasses.field(default_factory=dict)
     max_assigned_nodes: int = 0
 
 
@@ -64,6 +65,8 @@ class ClusterManagerWorkflow:
         self.state = ClusterManagerState()
         # Protects workflow state from interleaved access
         self.nodes_lock = asyncio.Lock()
+        self.max_history_length: Optional[int] = None
+        self.sleep_interval_seconds: int = 600
 
     @workflow.signal
     async def start_cluster(self):
@@ -91,7 +94,7 @@ class ClusterManagerWorkflow:
             )
 
         async with self.nodes_lock:
-            unassigned_nodes = [k for k, v in self.state.nodes.items() if v is None]
+            unassigned_nodes = self.get_unassigned_nodes()
             if len(unassigned_nodes) < input.num_nodes:
                 # If you want the client to receive a failure, either add an update validator and throw the
                 # exception from there, or raise an ApplicationError. Other exceptions in the main handler
@@ -99,14 +102,14 @@ class ClusterManagerWorkflow:
                 raise ApplicationError(
                     f"Cannot allocate {input.num_nodes} nodes; have only {len(unassigned_nodes)} available"
                 )
-            assigned_nodes = unassigned_nodes[: input.num_nodes]
+            nodes_to_assign = unassigned_nodes[: input.num_nodes]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
-            await self._allocate_nodes_to_job(assigned_nodes, input.task_name)
+            await self._allocate_nodes_to_job(nodes_to_assign, input.task_name)
             self.state.max_assigned_nodes = max(
                 self.state.max_assigned_nodes,
-                len([k for k, v in self.state.nodes.items() if v is not None]),
+                len(self.get_assigned_nodes()),
             )
-            return assigned_nodes
+            return nodes_to_assign
 
     async def _allocate_nodes_to_job(self, assigned_nodes: List[str], task_name: str):
         await workflow.execute_activity(
@@ -142,6 +145,9 @@ class ClusterManagerWorkflow:
         for node in nodes_to_free:
             self.state.nodes[node] = None
 
+    def get_unassigned_nodes(self) -> List[str]:
+        return [k for k, v in self.state.nodes.items() if v is None]
+
     def get_assigned_nodes(self) -> List[str]:
         return [k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"]
 
@@ -167,9 +173,6 @@ class ClusterManagerWorkflow:
         if input.test_continue_as_new:
             self.max_history_length = 120
             self.sleep_interval_seconds = 1
-        else:
-            self.max_history_length = None
-            self.sleep_interval_seconds = 600
 
     def should_continue_as_new(self):
         # We don't want to continue-as-new if we're in the middle of an update
@@ -206,7 +209,7 @@ class ClusterManagerWorkflow:
                 break
             if self.should_continue_as_new():
                 workflow.logger.info("Continuing as new")
-                await workflow.continue_as_new(
+                workflow.continue_as_new(
                     ClusterManagerInput(
                         state=self.state,
                         test_continue_as_new=input.test_continue_as_new,

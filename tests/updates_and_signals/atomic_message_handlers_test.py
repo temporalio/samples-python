@@ -2,6 +2,7 @@ import uuid
 
 from temporalio import common, workflow
 from temporalio.client import Client, WorkflowUpdateFailedError
+from temporalio.exceptions import ApplicationError
 from temporalio.worker import Worker
 
 from updates_and_signals.atomic_message_handlers.activities import (
@@ -67,6 +68,7 @@ async def test_update_failure(client: Client):
                 ),
             )
         except WorkflowUpdateFailedError as e:
+            assert isinstance(e.cause, ApplicationError)
             assert e.cause.message == "Cannot allocate 3 nodes; have only 1 available"
         finally:
             await cluster_manager_handle.signal(ClusterManagerWorkflow.shutdown_cluster)

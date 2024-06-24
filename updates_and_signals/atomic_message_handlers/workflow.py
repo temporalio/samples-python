@@ -42,14 +42,17 @@ class ClusterManagerResult:
     max_assigned_nodes: int
     num_currently_assigned_nodes: int
 
+
 @dataclass(kw_only=True)
 class ClusterManagerAllocateNNodesToJobInput:
     num_nodes: int
     task_name: str
 
+
 @dataclass(kw_only=True)
 class ClusterManagerDeleteJobInput:
     task_name: str
+
 
 # ClusterManagerWorkflow keeps track of the allocations of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.
@@ -76,8 +79,7 @@ class ClusterManagerWorkflow:
 
     @workflow.update
     async def allocate_n_nodes_to_job(
-        self,
-        input: ClusterManagerAllocateNNodesToJobInput
+        self, input: ClusterManagerAllocateNNodesToJobInput
     ) -> List[str]:
         await workflow.wait_condition(lambda: self.state.cluster_started)
         if self.state.cluster_shutdown:
@@ -97,7 +99,7 @@ class ClusterManagerWorkflow:
                 raise ApplicationError(
                     f"Cannot allocate {input.num_nodes} nodes; have only {len(unassigned_nodes)} available"
                 )
-            assigned_nodes = unassigned_nodes[:input.num_nodes]
+            assigned_nodes = unassigned_nodes[: input.num_nodes]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
             await self._allocate_nodes_to_job(assigned_nodes, input.task_name)
             self.state.max_assigned_nodes = max(
@@ -122,12 +124,12 @@ class ClusterManagerWorkflow:
             # If you want the client to receive a failure, either add an update validator and throw the
             # exception from there, or raise an ApplicationError. Other exceptions in the main handler
             # will cause the workflow to keep retrying and get it stuck.
-            raise ApplicationError(
-                "Cannot delete a job: Cluster is already shut down"
-            )
+            raise ApplicationError("Cannot delete a job: Cluster is already shut down")
 
         async with self.nodes_lock:
-            nodes_to_free = [k for k, v in self.state.nodes.items() if v == input.task_name]
+            nodes_to_free = [
+                k for k, v in self.state.nodes.items() if v == input.task_name
+            ]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
             await self._deallocate_nodes_for_job(nodes_to_free, input.task_name)
 

@@ -16,15 +16,17 @@ from updates_and_signals.atomic_message_handlers.workflow import (
 
 
 async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] = None):
-    
+
     await wf.signal(ClusterManagerWorkflow.start_cluster)
 
     allocation_updates = []
     for i in range(6):
         allocation_updates.append(
             wf.execute_update(
-                ClusterManagerWorkflow.allocate_n_nodes_to_job, 
-                ClusterManagerAllocateNNodesToJobInput(num_nodes=2, task_name=f"task-{i}")
+                ClusterManagerWorkflow.allocate_n_nodes_to_job,
+                ClusterManagerAllocateNNodesToJobInput(
+                    num_nodes=2, task_name=f"task-{i}"
+                ),
             )
         )
     await asyncio.gather(*allocation_updates)
@@ -36,8 +38,8 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
     for i in range(6):
         deletion_updates.append(
             wf.execute_update(
-                ClusterManagerWorkflow.delete_job, 
-                ClusterManagerDeleteJobInput(task_name=f"task-{i}")
+                ClusterManagerWorkflow.delete_job,
+                ClusterManagerDeleteJobInput(task_name=f"task-{i}"),
             )
         )
     await asyncio.gather(*deletion_updates)

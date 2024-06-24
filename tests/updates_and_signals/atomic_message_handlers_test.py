@@ -29,12 +29,13 @@ async def test_atomic_message_handlers(client: Client):
             ClusterManagerWorkflow.run,
             ClusterManagerInput(),
             id=f"ClusterManagerWorkflow-{uuid.uuid4()}",
-            task_queue=task_queue
+            task_queue=task_queue,
         )
         await do_cluster_lifecycle(cluster_manager_handle, delay_seconds=1)
         result = await cluster_manager_handle.result()
         assert result.max_assigned_nodes == 12
         assert result.num_currently_assigned_nodes == 0
+
 
 async def test_update_failure(client: Client):
     task_queue = f"tq-{uuid.uuid4()}"
@@ -54,14 +55,16 @@ async def test_update_failure(client: Client):
         await cluster_manager_handle.signal(ClusterManagerWorkflow.start_cluster)
 
         await cluster_manager_handle.execute_update(
-            ClusterManagerWorkflow.allocate_n_nodes_to_job, 
-            ClusterManagerAllocateNNodesToJobInput(num_nodes=24, task_name=f"big-task")
+            ClusterManagerWorkflow.allocate_n_nodes_to_job,
+            ClusterManagerAllocateNNodesToJobInput(num_nodes=24, task_name=f"big-task"),
         )
         try:
             # Try to allocate too many nodes
             await cluster_manager_handle.execute_update(
-                ClusterManagerWorkflow.allocate_n_nodes_to_job, 
-                ClusterManagerAllocateNNodesToJobInput(num_nodes=3, task_name=f"little-task")
+                ClusterManagerWorkflow.allocate_n_nodes_to_job,
+                ClusterManagerAllocateNNodesToJobInput(
+                    num_nodes=3, task_name=f"little-task"
+                ),
             )
         except WorkflowUpdateFailedError as e:
             assert e.cause.message == "Cannot allocate 3 nodes; have only 1 available"
@@ -69,4 +72,3 @@ async def test_update_failure(client: Client):
             await cluster_manager_handle.signal(ClusterManagerWorkflow.shutdown_cluster)
             result = await cluster_manager_handle.result()
             assert result.num_currently_assigned_nodes == 24
-

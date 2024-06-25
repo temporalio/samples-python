@@ -5,7 +5,7 @@ from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
 from temporalio.worker import Worker
 
-from updates_and_signals.atomic_message_handlers.workflow import (
+from updates_and_signals.safe_message_handlers.workflow import (
     ClusterManagerWorkflow,
     allocate_nodes_to_job,
     deallocate_nodes_for_job,

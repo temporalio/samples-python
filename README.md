@@ -52,7 +52,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
-* [atomic_message_handlers](updates_and_signals/atomic_message_handlers/) - Safely handling updates and signals.
+* [safe_message_handlers](updates_and_signals/safe_message_handlers/) - Safely handling updates and signals.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
 * [cloud_export_to_parquet](cloud_export_to_parquet) - Set up schedule workflow to process exported files on an hourly basis
 * [context_propagation](context_propagation) - Context propagation through workflows/activities via interceptor.

@@ -1,6 +1,6 @@
 # Atomic message handlers
 
-This sample shows off important techniques for handling signals and updates, aka messages.  In particular, it illustrates how message handlers can interleave and how you can manage that.
+This sample shows off important techniques for handling signals and updates, aka messages.  In particular, it illustrates how message handlers can interleave or not be completed before the workflow completes, and how you can manage that.
 
 * Here, using workflow.wait_condition, signal and update handlers will only operate when the workflow is within a certain state--between cluster_started and cluster_shutdown.
 * You can run start_workflow with an initializer signal that you want to run before anything else other than the workflow's constructor.  This pattern is known as "signal-with-start."

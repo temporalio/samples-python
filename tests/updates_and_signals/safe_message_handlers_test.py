@@ -5,20 +5,20 @@ from temporalio.client import Client, WorkflowUpdateFailedError
 from temporalio.exceptions import ApplicationError
 from temporalio.worker import Worker
 
-from updates_and_signals.atomic_message_handlers.activities import (
+from updates_and_signals.safe_message_handlers.activities import (
     allocate_nodes_to_job,
     deallocate_nodes_for_job,
     find_bad_nodes,
 )
-from updates_and_signals.atomic_message_handlers.starter import do_cluster_lifecycle
-from updates_and_signals.atomic_message_handlers.workflow import (
+from updates_and_signals.safe_message_handlers.starter import do_cluster_lifecycle
+from updates_and_signals.safe_message_handlers.workflow import (
     ClusterManagerAllocateNNodesToJobInput,
     ClusterManagerInput,
     ClusterManagerWorkflow,
 )
 
 
-async def test_atomic_message_handlers(client: Client):
+async def test_safe_message_handlers(client: Client):
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
         client,

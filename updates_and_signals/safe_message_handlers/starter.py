@@ -7,7 +7,7 @@ from typing import Optional
 from temporalio import client, common
 from temporalio.client import Client, WorkflowHandle
 
-from updates_and_signals.atomic_message_handlers.workflow import (
+from updates_and_signals.safe_message_handlers.workflow import (
     ClusterManagerAllocateNNodesToJobInput,
     ClusterManagerDeleteJobInput,
     ClusterManagerInput,

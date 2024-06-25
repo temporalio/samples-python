@@ -12,7 +12,7 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ApplicationError
 from temporalio.worker import Worker
 
-from updates_and_signals.atomic_message_handlers.activities import (
+from updates_and_signals.safe_message_handlers.activities import (
     AllocateNodesToJobInput,
     DeallocateNodesForJobInput,
     FindBadNodesInput,

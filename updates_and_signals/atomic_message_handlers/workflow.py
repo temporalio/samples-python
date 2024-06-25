@@ -69,13 +69,13 @@ class ClusterManagerWorkflow:
         self.sleep_interval_seconds: int = 600
 
     @workflow.signal
-    async def start_cluster(self):
+    async def start_cluster(self) -> None:
         self.state.cluster_started = True
         self.state.nodes = {str(k): None for k in range(25)}
         workflow.logger.info("Cluster started")
 
     @workflow.signal
-    async def shutdown_cluster(self):
+    async def shutdown_cluster(self) -> None:
         await workflow.wait_condition(lambda: self.state.cluster_started)
         self.state.cluster_shutdown = True
         workflow.logger.info("Cluster shut down")
@@ -115,7 +115,9 @@ class ClusterManagerWorkflow:
             )
             return nodes_to_assign
 
-    async def _allocate_nodes_to_job(self, assigned_nodes: List[str], job_name: str):
+    async def _allocate_nodes_to_job(
+        self, assigned_nodes: List[str], job_name: str
+    ) -> None:
         await workflow.execute_activity(
             allocate_nodes_to_job,
             AllocateNodesToJobInput(nodes=assigned_nodes, job_name=job_name),
@@ -158,7 +160,7 @@ class ClusterManagerWorkflow:
     def get_assigned_nodes(self) -> List[str]:
         return [k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"]
 
-    async def perform_health_checks(self):
+    async def perform_health_checks(self) -> None:
         async with self.nodes_lock:
             assigned_nodes = self.get_assigned_nodes()
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving
@@ -175,7 +177,7 @@ class ClusterManagerWorkflow:
 
     # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and
     # continue-as-new.
-    def init(self, input: ClusterManagerInput):
+    def init(self, input: ClusterManagerInput) -> None:
         if input.state:
             self.state = input.state
         if input.test_continue_as_new:

@@ -47,12 +47,12 @@ class ClusterManagerResult:
 @dataclass(kw_only=True)
 class ClusterManagerAllocateNNodesToJobInput:
     num_nodes: int
-    task_name: str
+    job_name: str
 
 
 @dataclass(kw_only=True)
 class ClusterManagerDeleteJobInput:
-    task_name: str
+    job_name: str
 
 
 # ClusterManagerWorkflow keeps track of the allocations of a cluster of nodes.
@@ -80,6 +80,9 @@ class ClusterManagerWorkflow:
         self.state.cluster_shutdown = True
         workflow.logger.info("Cluster shut down")
 
+    # This is an update as opposed to a signal because the client may want to wait for nodes to be allocated
+    # before sending work to those nodes.
+    # Returns the list of node names that were allocated to the job.
     @workflow.update
     async def allocate_n_nodes_to_job(
         self, input: ClusterManagerAllocateNNodesToJobInput
@@ -103,25 +106,28 @@ class ClusterManagerWorkflow:
                     f"Cannot allocate {input.num_nodes} nodes; have only {len(unassigned_nodes)} available"
                 )
             nodes_to_assign = unassigned_nodes[: input.num_nodes]
-            # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
-            await self._allocate_nodes_to_job(nodes_to_assign, input.task_name)
+            # This await would be dangerous without nodes_lock because it yields control and allows interleaving
+            # with delete_job and perform_health_checks, which both touch self.state.nodes.
+            await self._allocate_nodes_to_job(nodes_to_assign, input.job_name)
             self.state.max_assigned_nodes = max(
                 self.state.max_assigned_nodes,
                 len(self.get_assigned_nodes()),
             )
             return nodes_to_assign
 
-    async def _allocate_nodes_to_job(self, assigned_nodes: List[str], task_name: str):
+    async def _allocate_nodes_to_job(self, assigned_nodes: List[str], job_name: str):
         await workflow.execute_activity(
             allocate_nodes_to_job,
-            AllocateNodesToJobInput(nodes=assigned_nodes, task_name=task_name),
+            AllocateNodesToJobInput(nodes=assigned_nodes, job_name=job_name),
             start_to_close_timeout=timedelta(seconds=10),
         )
         for node in assigned_nodes:
-            self.state.nodes[node] = task_name
+            self.state.nodes[node] = job_name
 
+    # Even though it returns nothing, this is an update because the client may want track it, for example
+    # to wait for nodes to be deallocated before reassigning them.
     @workflow.update
-    async def delete_job(self, input: ClusterManagerDeleteJobInput):
+    async def delete_job(self, input: ClusterManagerDeleteJobInput) -> None:
         await workflow.wait_condition(lambda: self.state.cluster_started)
         if self.state.cluster_shutdown:
             # If you want the client to receive a failure, either add an update validator and throw the
@@ -131,15 +137,16 @@ class ClusterManagerWorkflow:
 
         async with self.nodes_lock:
             nodes_to_free = [
-                k for k, v in self.state.nodes.items() if v == input.task_name
+                k for k, v in self.state.nodes.items() if v == input.job_name
             ]
-            # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
-            await self._deallocate_nodes_for_job(nodes_to_free, input.task_name)
+            # This await would be dangerous without nodes_lock because it yields control and allows interleaving
+            # with allocate_n_nodes_to_job and perform_health_checks, which all touch self.state.nodes.
+            await self._deallocate_nodes_for_job(nodes_to_free, input.job_name)
 
-    async def _deallocate_nodes_for_job(self, nodes_to_free: List[str], task_name: str):
+    async def _deallocate_nodes_for_job(self, nodes_to_free: List[str], job_name: str):
         await workflow.execute_activity(
             deallocate_nodes_for_job,
-            DeallocateNodesForJobInput(nodes=nodes_to_free, task_name=task_name),
+            DeallocateNodesForJobInput(nodes=nodes_to_free, job_name=job_name),
             start_to_close_timeout=timedelta(seconds=10),
         )
         for node in nodes_to_free:
@@ -154,7 +161,8 @@ class ClusterManagerWorkflow:
     async def perform_health_checks(self):
         async with self.nodes_lock:
             assigned_nodes = self.get_assigned_nodes()
-            # This await would be dangerous without nodes_lock because it yields control and allows interleaving.
+            # This await would be dangerous without nodes_lock because it yields control and allows interleaving
+            # with allocate_n_nodes_to_job and delete_job, which both touch self.state.nodes.
             bad_nodes = await workflow.execute_activity(
                 find_bad_nodes,
                 FindBadNodesInput(nodes_to_check=assigned_nodes),
@@ -174,7 +182,7 @@ class ClusterManagerWorkflow:
             self.max_history_length = 120
             self.sleep_interval_seconds = 1
 
-    def should_continue_as_new(self):
+    def should_continue_as_new(self) -> bool:
         # We don't want to continue-as-new if we're in the middle of an update
         if self.nodes_lock.locked():
             return False
@@ -188,7 +196,6 @@ class ClusterManagerWorkflow:
             return True
         return False
 
-    # max_history_size - to more conveniently test continue-as-new, not to be used in production.
     @workflow.run
     async def run(self, input: ClusterManagerInput) -> ClusterManagerResult:
         self.init(input)

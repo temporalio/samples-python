@@ -57,14 +57,14 @@ async def test_update_failure(client: Client):
 
         await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.allocate_n_nodes_to_job,
-            ClusterManagerAllocateNNodesToJobInput(num_nodes=24, task_name=f"big-task"),
+            ClusterManagerAllocateNNodesToJobInput(num_nodes=24, job_name=f"big-task"),
         )
         try:
             # Try to allocate too many nodes
             await cluster_manager_handle.execute_update(
                 ClusterManagerWorkflow.allocate_n_nodes_to_job,
                 ClusterManagerAllocateNNodesToJobInput(
-                    num_nodes=3, task_name=f"little-task"
+                    num_nodes=3, job_name=f"little-task"
                 ),
             )
         except WorkflowUpdateFailedError as e:

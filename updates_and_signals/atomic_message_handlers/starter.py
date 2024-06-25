@@ -25,7 +25,7 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
             wf.execute_update(
                 ClusterManagerWorkflow.allocate_n_nodes_to_job,
                 ClusterManagerAllocateNNodesToJobInput(
-                    num_nodes=2, task_name=f"task-{i}"
+                    num_nodes=2, job_name=f"task-{i}"
                 ),
             )
         )
@@ -39,7 +39,7 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
         deletion_updates.append(
             wf.execute_update(
                 ClusterManagerWorkflow.delete_job,
-                ClusterManagerDeleteJobInput(task_name=f"task-{i}"),
+                ClusterManagerDeleteJobInput(job_name=f"task-{i}"),
             )
         )
     await asyncio.gather(*deletion_updates)

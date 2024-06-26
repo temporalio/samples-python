@@ -4,7 +4,7 @@ import logging
 import uuid
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 from temporalio import activity, common, workflow
 from temporalio.client import Client, WorkflowHandle
@@ -29,6 +29,7 @@ class ClusterManagerState:
     cluster_started: bool = False
     cluster_shutdown: bool = False
     nodes: Dict[str, Optional[str]] = dataclasses.field(default_factory=dict)
+    jobs_added: Set[str] = dataclasses.field(default_factory=set)
     max_assigned_nodes: int = 0
 
 
@@ -42,6 +43,7 @@ class ClusterManagerInput:
 class ClusterManagerResult:
     max_assigned_nodes: int
     num_currently_assigned_nodes: int
+    num_bad_nodes: int
 
 
 @dataclass(kw_only=True)
@@ -97,6 +99,9 @@ class ClusterManagerWorkflow:
             )
 
         async with self.nodes_lock:
+            # Idempotency guard.
+            if input.job_name in self.state.jobs_added:
+                return self.get_assigned_nodes(job_name=input.job_name)
             unassigned_nodes = self.get_unassigned_nodes()
             if len(unassigned_nodes) < input.num_nodes:
                 # If you want the client to receive a failure, either add an update validator and throw the
@@ -113,7 +118,7 @@ class ClusterManagerWorkflow:
                 self.state.max_assigned_nodes,
                 len(self.get_assigned_nodes()),
             )
-            return nodes_to_assign
+            return self.get_assigned_nodes(job_name=input.job_name)
 
     async def _allocate_nodes_to_job(
         self, assigned_nodes: List[str], job_name: str
@@ -125,6 +130,7 @@ class ClusterManagerWorkflow:
         )
         for node in assigned_nodes:
             self.state.nodes[node] = job_name
+        self.state.jobs_added.add(job_name)
 
     # Even though it returns nothing, this is an update because the client may want track it, for example
     # to wait for nodes to be deallocated before reassigning them.
@@ -157,8 +163,16 @@ class ClusterManagerWorkflow:
     def get_unassigned_nodes(self) -> List[str]:
         return [k for k, v in self.state.nodes.items() if v is None]
 
-    def get_assigned_nodes(self) -> List[str]:
-        return [k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"]
+    def get_bad_nodes(self) -> List[str]:
+        return [k for k, v in self.state.nodes.items() if v == "BAD!"]
+
+    def get_assigned_nodes(self, *, job_name: Optional[str] = None) -> List[str]:
+        if job_name:
+            return [k for k, v in self.state.nodes.items() if v == job_name]
+        else:
+            return [
+                k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"
+            ]
 
     async def perform_health_checks(self) -> None:
         async with self.nodes_lock:
@@ -224,7 +238,8 @@ class ClusterManagerWorkflow:
                         test_continue_as_new=input.test_continue_as_new,
                     )
                 )
-
         return ClusterManagerResult(
-            self.state.max_assigned_nodes, len(self.get_assigned_nodes())
+            self.state.max_assigned_nodes,
+            len(self.get_assigned_nodes()),
+            len(self.get_bad_nodes()),
         )

@@ -7,6 +7,7 @@ This sample shows off important techniques for handling signals and updates, aka
 * Message handlers can block and their actions can be interleaved with one another and with the main workflow.  This can easily cause bugs, so we use a lock to protect shared state from interleaved access.
 * Message handlers should also finish before the workflow run completes.  One option is to use a lock.
 * An "Entity" workflow, i.e. a long-lived workflow, periodically "continues as new".  It must do this to prevent its history from growing too large, and it passes its state to the next workflow.  You can check `workflow.info().is_continue_as_new_suggested()` to see when it's time.  Just make sure message handlers have finished before doing so.  
+* Message handlers can be made idempotent.  See update `ClusterManager.allocate_n_nodes_to_job`.
 
 To run, first see [README.md](../../README.md) for prerequisites.
 

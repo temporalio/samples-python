@@ -38,6 +38,37 @@ async def test_safe_message_handlers(client: Client):
         assert result.num_currently_assigned_nodes == 0
 
 
+async def test_update_idempotency(client: Client):
+    task_queue = f"tq-{uuid.uuid4()}"
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[ClusterManagerWorkflow],
+        activities=[allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes],
+    ):
+        cluster_manager_handle = await client.start_workflow(
+            ClusterManagerWorkflow.run,
+            ClusterManagerInput(),
+            id=f"ClusterManagerWorkflow-{uuid.uuid4()}",
+            task_queue=task_queue,
+        )
+
+        await cluster_manager_handle.signal(ClusterManagerWorkflow.start_cluster)
+
+        nodes_1 = await cluster_manager_handle.execute_update(
+            ClusterManagerWorkflow.allocate_n_nodes_to_job,
+            ClusterManagerAllocateNNodesToJobInput(num_nodes=5, job_name=f"jobby-job"),
+        )
+        # simulate that in calling it twice, the operation is idempotent
+        nodes_2 = await cluster_manager_handle.execute_update(
+            ClusterManagerWorkflow.allocate_n_nodes_to_job,
+            ClusterManagerAllocateNNodesToJobInput(num_nodes=5, job_name=f"jobby-job"),
+        )
+        # the second call should not allocate more nodes (it may return fewer if the health check finds bad nodes
+        # in between the two signals.)
+        assert nodes_1 >= nodes_2
+
+
 async def test_update_failure(client: Client):
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
@@ -73,4 +104,4 @@ async def test_update_failure(client: Client):
         finally:
             await cluster_manager_handle.signal(ClusterManagerWorkflow.shutdown_cluster)
             result = await cluster_manager_handle.result()
-            assert result.num_currently_assigned_nodes == 24
+            assert result.num_currently_assigned_nodes + result.num_bad_nodes == 24

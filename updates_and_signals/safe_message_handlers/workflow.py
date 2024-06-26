@@ -24,7 +24,7 @@ from updates_and_signals.safe_message_handlers.activities import (
 
 # In workflows that continue-as-new, it's convenient to store all your state in one serializable structure
 # to make it easier to pass between runs
-@dataclass(kw_only=True)
+@dataclass
 class ClusterManagerState:
     cluster_started: bool = False
     cluster_shutdown: bool = False
@@ -33,7 +33,7 @@ class ClusterManagerState:
     max_assigned_nodes: int = 0
 
 
-@dataclass(kw_only=True)
+@dataclass
 class ClusterManagerInput:
     state: Optional[ClusterManagerState] = None
     test_continue_as_new: bool = False
@@ -46,13 +46,13 @@ class ClusterManagerResult:
     num_bad_nodes: int
 
 
-@dataclass(kw_only=True)
+@dataclass
 class ClusterManagerAllocateNNodesToJobInput:
     num_nodes: int
     job_name: str
 
 
-@dataclass(kw_only=True)
+@dataclass
 class ClusterManagerDeleteJobInput:
     job_name: str
 
@@ -132,7 +132,7 @@ class ClusterManagerWorkflow:
             self.state.nodes[node] = job_name
         self.state.jobs_added.add(job_name)
 
-    # Even though it returns nothing, this is an update because the client may want track it, for example
+    # Even though it returns nothing, this is an update because the client may want to track it, for example
     # to wait for nodes to be deallocated before reassigning them.
     @workflow.update
     async def delete_job(self, input: ClusterManagerDeleteJobInput) -> None:

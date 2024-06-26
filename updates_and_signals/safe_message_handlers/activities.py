@@ -5,7 +5,7 @@ from typing import List
 from temporalio import activity
 
 
-@dataclass(kw_only=True)
+@dataclass
 class AllocateNodesToJobInput:
     nodes: List[str]
     job_name: str
@@ -17,7 +17,7 @@ async def allocate_nodes_to_job(input: AllocateNodesToJobInput):
     await asyncio.sleep(0.1)
 
 
-@dataclass(kw_only=True)
+@dataclass
 class DeallocateNodesForJobInput:
     nodes: List[str]
     job_name: str
@@ -29,7 +29,7 @@ async def deallocate_nodes_for_job(input: DeallocateNodesForJobInput):
     await asyncio.sleep(0.1)
 
 
-@dataclass(kw_only=True)
+@dataclass
 class FindBadNodesInput:
     nodes_to_check: List[str]
 

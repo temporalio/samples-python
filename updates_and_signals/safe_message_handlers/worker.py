@@ -21,7 +21,7 @@ async def main():
 
     async with Worker(
         client,
-        task_queue="atomic-message-handlers-task-queue",
+        task_queue="safe-message-handlers-task-queue",
         workflows=[ClusterManagerWorkflow],
         activities=[allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes],
     ):

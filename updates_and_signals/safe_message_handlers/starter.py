@@ -55,7 +55,7 @@ async def main(should_test_continue_as_new: bool):
         ClusterManagerWorkflow.run,
         ClusterManagerInput(test_continue_as_new=should_test_continue_as_new),
         id=f"ClusterManagerWorkflow-{uuid.uuid4()}",
-        task_queue="atomic-message-handlers-task-queue",
+        task_queue="safe-message-handlers-task-queue",
         id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
     )
     delay_seconds = 10 if should_test_continue_as_new else 1

@@ -216,7 +216,6 @@ class ClusterManagerWorkflow:
     async def run(self, input: ClusterManagerInput) -> ClusterManagerResult:
         self.init(input)
         await workflow.wait_condition(lambda: self.state.cluster_started)
-
         # Perform health checks at intervals.
         while True:
             await self.perform_health_checks()

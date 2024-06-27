@@ -12,7 +12,7 @@ class AllocateNodesToJobInput:
 
 
 @activity.defn
-async def allocate_nodes_to_job(input: AllocateNodesToJobInput):
+async def allocate_nodes_to_job(input: AllocateNodesToJobInput) -> None:
     print(f"Assigning nodes {input.nodes} to job {input.job_name}")
     await asyncio.sleep(0.1)
 
@@ -24,7 +24,7 @@ class DeallocateNodesForJobInput:
 
 
 @activity.defn
-async def deallocate_nodes_for_job(input: DeallocateNodesForJobInput):
+async def deallocate_nodes_for_job(input: DeallocateNodesForJobInput) -> None:
     print(f"Deallocating nodes {input.nodes} from job {input.job_name}")
     await asyncio.sleep(0.1)
 

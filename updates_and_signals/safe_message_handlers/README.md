@@ -11,11 +11,12 @@ This sample shows off important techniques for handling signals and updates, aka
 
 To run, first see [README.md](../../README.md) for prerequisites.
 
-Then, run the following from this directory to run the sample:
+Then, run the following from this directory to run the worker:
+\
+    poetry run python worker.py
 
-```bash
-poetry run python worker.py
-poetry run python starter.py
-```
+Then, in another terminal, run the following to execute the workflow:
+
+    poetry run python starter.py
 
 This will start a worker to run your workflow and activities, then start a ClusterManagerWorkflow and put it through its paces.

@@ -34,7 +34,7 @@ async def test_safe_message_handlers(client: Client):
         )
         await do_cluster_lifecycle(cluster_manager_handle, delay_seconds=1)
         result = await cluster_manager_handle.result()
-        assert result.max_assigned_nodes == 12
+        assert result.max_assigned_nodes + result.num_bad_nodes == 12
         assert result.num_currently_assigned_nodes == 0
 
 

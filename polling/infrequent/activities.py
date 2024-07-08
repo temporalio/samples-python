@@ -11,10 +11,12 @@ class ComposeGreetingInput:
     name: str
 
 
-@activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
-    attempt = activity.info().attempt - 1
-    test_service = TestService(attempt=attempt)
-    # If this raises an exception because it's not done yet, the activity will
-    # continually be scheduled for retry
-    return await test_service.get_service_result(input)
+class ComposeGreeting:
+    def __init__(self):
+        self.test_service = TestService()
+
+    @activity.defn
+    async def compose_greeting(self, input: ComposeGreetingInput) -> str:
+        # If this raises an exception because it's not done yet, the activity will
+        # continually be scheduled for retry
+        return await self.test_service.get_service_result(input)

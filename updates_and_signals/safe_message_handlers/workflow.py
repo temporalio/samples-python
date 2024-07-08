@@ -30,7 +30,6 @@ class ClusterManagerState:
     cluster_shutdown: bool = False
     nodes: Dict[str, Optional[str]] = dataclasses.field(default_factory=dict)
     jobs_added: Set[str] = dataclasses.field(default_factory=set)
-    max_assigned_nodes: int = 0
 
 
 @dataclass
@@ -41,11 +40,11 @@ class ClusterManagerInput:
 
 @dataclass
 class ClusterManagerResult:
-    max_assigned_nodes: int
     num_currently_assigned_nodes: int
     num_bad_nodes: int
 
-
+# Be in the habit of storing message inputs and outputs in serializable structures.  
+# This makes it easier to add more over time in a backward-compatible way.
 @dataclass
 class ClusterManagerAllocateNNodesToJobInput:
     num_nodes: int
@@ -56,6 +55,9 @@ class ClusterManagerAllocateNNodesToJobInput:
 class ClusterManagerDeleteJobInput:
     job_name: str
 
+@dataclass 
+class ClusterManagerAllocateNNodesToJobResult:
+    nodes_assigned: Set[str]
 
 # ClusterManagerWorkflow keeps track of the allocations of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.
@@ -88,7 +90,7 @@ class ClusterManagerWorkflow:
     @workflow.update
     async def allocate_n_nodes_to_job(
         self, input: ClusterManagerAllocateNNodesToJobInput
-    ) -> List[str]:
+    ) -> ClusterManagerAllocateNNodesToJobResult:
         await workflow.wait_condition(lambda: self.state.cluster_started)
         if self.state.cluster_shutdown:
             # If you want the client to receive a failure, either add an update validator and throw the
@@ -101,7 +103,8 @@ class ClusterManagerWorkflow:
         async with self.nodes_lock:
             # Idempotency guard.
             if input.job_name in self.state.jobs_added:
-                return self.get_assigned_nodes(job_name=input.job_name)
+                return ClusterManagerAllocateNNodesToJobResult(
+                    self.get_assigned_nodes(job_name=input.job_name))
             unassigned_nodes = self.get_unassigned_nodes()
             if len(unassigned_nodes) < input.num_nodes:
                 # If you want the client to receive a failure, either add an update validator and throw the
@@ -114,11 +117,8 @@ class ClusterManagerWorkflow:
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving
             # with delete_job and perform_health_checks, which both touch self.state.nodes.
             await self._allocate_nodes_to_job(nodes_to_assign, input.job_name)
-            self.state.max_assigned_nodes = max(
-                self.state.max_assigned_nodes,
-                len(self.get_assigned_nodes()),
-            )
-            return self.get_assigned_nodes(job_name=input.job_name)
+            return ClusterManagerAllocateNNodesToJobResult(
+                nodes_assigned=self.get_assigned_nodes(job_name=input.job_name))
 
     async def _allocate_nodes_to_job(
         self, assigned_nodes: List[str], job_name: str
@@ -163,16 +163,16 @@ class ClusterManagerWorkflow:
     def get_unassigned_nodes(self) -> List[str]:
         return [k for k, v in self.state.nodes.items() if v is None]
 
-    def get_bad_nodes(self) -> List[str]:
-        return [k for k, v in self.state.nodes.items() if v == "BAD!"]
+    def get_bad_nodes(self) -> Set[str]:
+        return set([k for k, v in self.state.nodes.items() if v == "BAD!"])
 
-    def get_assigned_nodes(self, *, job_name: Optional[str] = None) -> List[str]:
+    def get_assigned_nodes(self, *, job_name: Optional[str] = None) -> Set[str]:
         if job_name:
-            return [k for k, v in self.state.nodes.items() if v == job_name]
+            return set([k for k, v in self.state.nodes.items() if v == job_name])
         else:
-            return [
+            return set([
                 k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"
-            ]
+            ])
 
     async def perform_health_checks(self) -> None:
         async with self.nodes_lock:
@@ -238,7 +238,6 @@ class ClusterManagerWorkflow:
                     )
                 )
         return ClusterManagerResult(
-            self.state.max_assigned_nodes,
             len(self.get_assigned_nodes()),
             len(self.get_bad_nodes()),
         )

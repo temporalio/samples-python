@@ -1,6 +1,6 @@
 import asyncio
 from dataclasses import dataclass
-from typing import List
+from typing import List, Set
 
 from temporalio import activity
 
@@ -31,13 +31,13 @@ async def deallocate_nodes_for_job(input: DeallocateNodesForJobInput) -> None:
 
 @dataclass
 class FindBadNodesInput:
-    nodes_to_check: List[str]
+    nodes_to_check: Set[str]
 
 
 @activity.defn
-async def find_bad_nodes(input: FindBadNodesInput) -> List[str]:
+async def find_bad_nodes(input: FindBadNodesInput) -> Set[str]:
     await asyncio.sleep(0.1)
-    bad_nodes = [n for n in input.nodes_to_check if int(n) % 5 == 0]
+    bad_nodes = set([n for n in input.nodes_to_check if int(n) % 5 == 0])
     if bad_nodes:
         print(f"Found bad nodes: {bad_nodes}")
     else:

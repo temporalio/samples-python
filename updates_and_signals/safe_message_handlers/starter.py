@@ -19,6 +19,7 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
 
     await wf.signal(ClusterManagerWorkflow.start_cluster)
 
+    print("Assigning jobs to nodes...")
     allocation_updates = []
     for i in range(6):
         allocation_updates.append(
@@ -31,9 +32,11 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
         )
     await asyncio.gather(*allocation_updates)
 
+    print(f"Sleeping for {delay_seconds} second(s)")
     if delay_seconds:
         await asyncio.sleep(delay_seconds)
 
+    print("Deleting jobs...")
     deletion_updates = []
     for i in range(6):
         deletion_updates.append(
@@ -51,6 +54,7 @@ async def main(should_test_continue_as_new: bool):
     # Connect to Temporal
     client = await Client.connect("localhost:7233")
 
+    print("Starting cluster")
     cluster_manager_handle = await client.start_workflow(
         ClusterManagerWorkflow.run,
         ClusterManagerInput(test_continue_as_new=should_test_continue_as_new),
@@ -62,7 +66,7 @@ async def main(should_test_continue_as_new: bool):
     await do_cluster_lifecycle(cluster_manager_handle, delay_seconds=delay_seconds)
     result = await cluster_manager_handle.result()
     print(
-        f"Cluster shut down successfully.  It peaked at {result.max_assigned_nodes} assigned nodes ."
+        f"Cluster shut down successfully."
         f" It had {result.num_currently_assigned_nodes} nodes assigned at the end."
     )
 

@@ -7,8 +7,8 @@ from temporalio.worker import Worker
 from updates_and_signals.safe_message_handlers.workflow import (
     ClusterManagerWorkflow,
     assign_nodes_to_job,
-    unassign_nodes_for_job,
     find_bad_nodes,
+    unassign_nodes_for_job,
 )
 
 interrupt_event = asyncio.Event()

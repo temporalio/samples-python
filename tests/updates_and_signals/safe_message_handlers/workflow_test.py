@@ -7,8 +7,8 @@ from temporalio.worker import Worker
 
 from updates_and_signals.safe_message_handlers.activities import (
     assign_nodes_to_job,
-    unassign_nodes_for_job,
     find_bad_nodes,
+    unassign_nodes_for_job,
 )
 from updates_and_signals.safe_message_handlers.workflow import (
     ClusterManagerAssignNodesToJobInput,
@@ -85,12 +85,16 @@ async def test_update_idempotency(client: Client):
 
         result_1 = await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.assign_nodes_to_job,
-            ClusterManagerAssignNodesToJobInput(total_num_nodes=5, job_name="jobby-job"),
+            ClusterManagerAssignNodesToJobInput(
+                total_num_nodes=5, job_name="jobby-job"
+            ),
         )
         # simulate that in calling it twice, the operation is idempotent
         result_2 = await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.assign_nodes_to_job,
-            ClusterManagerAssignNodesToJobInput(total_num_nodes=5, job_name="jobby-job"),
+            ClusterManagerAssignNodesToJobInput(
+                total_num_nodes=5, job_name="jobby-job"
+            ),
         )
         # the second call should not assign more nodes (it may return fewer if the health check finds bad nodes
         # in between the two signals.)
@@ -116,7 +120,9 @@ async def test_update_failure(client: Client):
 
         await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.assign_nodes_to_job,
-            ClusterManagerAssignNodesToJobInput(total_num_nodes=24, job_name="big-task"),
+            ClusterManagerAssignNodesToJobInput(
+                total_num_nodes=24, job_name="big-task"
+            ),
         )
         try:
             # Try to assign too many nodes

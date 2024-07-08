@@ -10,11 +10,11 @@ from temporalio.exceptions import ApplicationError
 
 from updates_and_signals.safe_message_handlers.activities import (
     AssignNodesToJobInput,
-    UnassignNodesForJobInput,
     FindBadNodesInput,
+    UnassignNodesForJobInput,
     assign_nodes_to_job,
-    unassign_nodes_for_job,
     find_bad_nodes,
+    unassign_nodes_for_job,
 )
 
 
@@ -39,7 +39,8 @@ class ClusterManagerResult:
     num_currently_assigned_nodes: int
     num_bad_nodes: int
 
-# Be in the habit of storing message inputs and outputs in serializable structures.  
+
+# Be in the habit of storing message inputs and outputs in serializable structures.
 # This makes it easier to add more over time in a backward-compatible way.
 @dataclass
 class ClusterManagerAssignNodesToJobInput:
@@ -52,9 +53,11 @@ class ClusterManagerAssignNodesToJobInput:
 class ClusterManagerDeleteJobInput:
     job_name: str
 
-@dataclass 
+
+@dataclass
 class ClusterManagerAssignNodesToJobResult:
     nodes_assigned: Set[str]
+
 
 # ClusterManagerWorkflow keeps track of the assignments of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.
@@ -101,7 +104,8 @@ class ClusterManagerWorkflow:
             # Idempotency guard.
             if input.job_name in self.state.jobs_assigned:
                 return ClusterManagerAssignNodesToJobResult(
-                    self.get_assigned_nodes(job_name=input.job_name))
+                    self.get_assigned_nodes(job_name=input.job_name)
+                )
             unassigned_nodes = self.get_unassigned_nodes()
             if len(unassigned_nodes) < input.total_num_nodes:
                 # If you want the client to receive a failure, either add an update validator and throw the
@@ -115,7 +119,8 @@ class ClusterManagerWorkflow:
             # with delete_job and perform_health_checks, which both touch self.state.nodes.
             await self._assign_nodes_to_job(nodes_to_assign, input.job_name)
             return ClusterManagerAssignNodesToJobResult(
-                nodes_assigned=self.get_assigned_nodes(job_name=input.job_name))
+                nodes_assigned=self.get_assigned_nodes(job_name=input.job_name)
+            )
 
     async def _assign_nodes_to_job(
         self, assigned_nodes: List[str], job_name: str
@@ -148,7 +153,9 @@ class ClusterManagerWorkflow:
             # with assign_nodes_to_job and perform_health_checks, which all touch self.state.nodes.
             await self._unassign_nodes_for_job(nodes_to_unassign, input.job_name)
 
-    async def _unassign_nodes_for_job(self, nodes_to_unassign: List[str], job_name: str):
+    async def _unassign_nodes_for_job(
+        self, nodes_to_unassign: List[str], job_name: str
+    ):
         await workflow.execute_activity(
             unassign_nodes_for_job,
             UnassignNodesForJobInput(nodes=nodes_to_unassign, job_name=job_name),
@@ -167,9 +174,13 @@ class ClusterManagerWorkflow:
         if job_name:
             return set([k for k, v in self.state.nodes.items() if v == job_name])
         else:
-            return set([
-                k for k, v in self.state.nodes.items() if v is not None and v != "BAD!"
-            ])
+            return set(
+                [
+                    k
+                    for k, v in self.state.nodes.items()
+                    if v is not None and v != "BAD!"
+                ]
+            )
 
     async def perform_health_checks(self) -> None:
         async with self.nodes_lock:
@@ -187,7 +198,9 @@ class ClusterManagerWorkflow:
                 for node in bad_nodes:
                     self.state.nodes[node] = "BAD!"
             except Exception as e:
-                workflow.logger.warn(f"Health check failed with error {type(e).__name__}:{e}")
+                workflow.logger.warn(
+                    f"Health check failed with error {type(e).__name__}:{e}"
+                )
 
     # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and
     # continue-as-new.

@@ -1,7 +1,7 @@
 class TestService:
-    def __init__(self):
-        self.try_attempts = 0
-        self.error_attempts = 5
+    def __init__(self, attempt=0, error_attempts=5):
+        self.try_attempts = attempt
+        self.error_attempts = error_attempts
 
     async def get_service_result(self, input):
         print(

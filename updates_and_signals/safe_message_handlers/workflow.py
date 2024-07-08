@@ -9,11 +9,11 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ApplicationError
 
 from updates_and_signals.safe_message_handlers.activities import (
-    AllocateNodesToJobInput,
-    DeallocateNodesForJobInput,
+    AssignNodesToJobInput,
+    UnassignNodesForJobInput,
     FindBadNodesInput,
-    allocate_nodes_to_job,
-    deallocate_nodes_for_job,
+    assign_nodes_to_job,
+    unassign_nodes_for_job,
     find_bad_nodes,
 )
 
@@ -25,7 +25,7 @@ class ClusterManagerState:
     cluster_started: bool = False
     cluster_shutdown: bool = False
     nodes: Dict[str, Optional[str]] = dataclasses.field(default_factory=dict)
-    jobs_added: Set[str] = dataclasses.field(default_factory=set)
+    jobs_assigned: Set[str] = dataclasses.field(default_factory=set)
 
 
 @dataclass
@@ -42,8 +42,9 @@ class ClusterManagerResult:
 # Be in the habit of storing message inputs and outputs in serializable structures.  
 # This makes it easier to add more over time in a backward-compatible way.
 @dataclass
-class ClusterManagerAllocateNNodesToJobInput:
-    num_nodes: int
+class ClusterManagerAssignNodesToJobInput:
+    # If larger or smaller than previous amounts, will resize the job.
+    total_num_nodes: int
     job_name: str
 
 
@@ -52,10 +53,10 @@ class ClusterManagerDeleteJobInput:
     job_name: str
 
 @dataclass 
-class ClusterManagerAllocateNNodesToJobResult:
+class ClusterManagerAssignNodesToJobResult:
     nodes_assigned: Set[str]
 
-# ClusterManagerWorkflow keeps track of the allocations of a cluster of nodes.
+# ClusterManagerWorkflow keeps track of the assignments of a cluster of nodes.
 # Via signals, the cluster can be started and shutdown.
 # Via updates, clients can also assign jobs to nodes and delete jobs.
 # These updates must run atomically.
@@ -84,52 +85,52 @@ class ClusterManagerWorkflow:
     # before sending work to those nodes.
     # Returns the list of node names that were allocated to the job.
     @workflow.update
-    async def allocate_n_nodes_to_job(
-        self, input: ClusterManagerAllocateNNodesToJobInput
-    ) -> ClusterManagerAllocateNNodesToJobResult:
+    async def assign_nodes_to_job(
+        self, input: ClusterManagerAssignNodesToJobInput
+    ) -> ClusterManagerAssignNodesToJobResult:
         await workflow.wait_condition(lambda: self.state.cluster_started)
         if self.state.cluster_shutdown:
             # If you want the client to receive a failure, either add an update validator and throw the
             # exception from there, or raise an ApplicationError. Other exceptions in the main handler
             # will cause the workflow to keep retrying and get it stuck.
             raise ApplicationError(
-                "Cannot allocate nodes to a job: Cluster is already shut down"
+                "Cannot assign nodes to a job: Cluster is already shut down"
             )
 
         async with self.nodes_lock:
             # Idempotency guard.
-            if input.job_name in self.state.jobs_added:
-                return ClusterManagerAllocateNNodesToJobResult(
+            if input.job_name in self.state.jobs_assigned:
+                return ClusterManagerAssignNodesToJobResult(
                     self.get_assigned_nodes(job_name=input.job_name))
             unassigned_nodes = self.get_unassigned_nodes()
-            if len(unassigned_nodes) < input.num_nodes:
+            if len(unassigned_nodes) < input.total_num_nodes:
                 # If you want the client to receive a failure, either add an update validator and throw the
                 # exception from there, or raise an ApplicationError. Other exceptions in the main handler
                 # will cause the workflow to keep retrying and get it stuck.
                 raise ApplicationError(
-                    f"Cannot allocate {input.num_nodes} nodes; have only {len(unassigned_nodes)} available"
+                    f"Cannot assign {input.total_num_nodes} nodes; have only {len(unassigned_nodes)} available"
                 )
-            nodes_to_assign = unassigned_nodes[: input.num_nodes]
+            nodes_to_assign = unassigned_nodes[: input.total_num_nodes]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving
             # with delete_job and perform_health_checks, which both touch self.state.nodes.
-            await self._allocate_nodes_to_job(nodes_to_assign, input.job_name)
-            return ClusterManagerAllocateNNodesToJobResult(
+            await self._assign_nodes_to_job(nodes_to_assign, input.job_name)
+            return ClusterManagerAssignNodesToJobResult(
                 nodes_assigned=self.get_assigned_nodes(job_name=input.job_name))
 
-    async def _allocate_nodes_to_job(
+    async def _assign_nodes_to_job(
         self, assigned_nodes: List[str], job_name: str
     ) -> None:
         await workflow.execute_activity(
-            allocate_nodes_to_job,
-            AllocateNodesToJobInput(nodes=assigned_nodes, job_name=job_name),
+            assign_nodes_to_job,
+            AssignNodesToJobInput(nodes=assigned_nodes, job_name=job_name),
             start_to_close_timeout=timedelta(seconds=10),
         )
         for node in assigned_nodes:
             self.state.nodes[node] = job_name
-        self.state.jobs_added.add(job_name)
+        self.state.jobs_assigned.add(job_name)
 
     # Even though it returns nothing, this is an update because the client may want to track it, for example
-    # to wait for nodes to be deallocated before reassigning them.
+    # to wait for nodes to be unassignd before reassigning them.
     @workflow.update
     async def delete_job(self, input: ClusterManagerDeleteJobInput) -> None:
         await workflow.wait_condition(lambda: self.state.cluster_started)
@@ -140,20 +141,20 @@ class ClusterManagerWorkflow:
             raise ApplicationError("Cannot delete a job: Cluster is already shut down")
 
         async with self.nodes_lock:
-            nodes_to_free = [
+            nodes_to_unassign = [
                 k for k, v in self.state.nodes.items() if v == input.job_name
             ]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving
-            # with allocate_n_nodes_to_job and perform_health_checks, which all touch self.state.nodes.
-            await self._deallocate_nodes_for_job(nodes_to_free, input.job_name)
+            # with assign_nodes_to_job and perform_health_checks, which all touch self.state.nodes.
+            await self._unassign_nodes_for_job(nodes_to_unassign, input.job_name)
 
-    async def _deallocate_nodes_for_job(self, nodes_to_free: List[str], job_name: str):
+    async def _unassign_nodes_for_job(self, nodes_to_unassign: List[str], job_name: str):
         await workflow.execute_activity(
-            deallocate_nodes_for_job,
-            DeallocateNodesForJobInput(nodes=nodes_to_free, job_name=job_name),
+            unassign_nodes_for_job,
+            UnassignNodesForJobInput(nodes=nodes_to_unassign, job_name=job_name),
             start_to_close_timeout=timedelta(seconds=10),
         )
-        for node in nodes_to_free:
+        for node in nodes_to_unassign:
             self.state.nodes[node] = None
 
     def get_unassigned_nodes(self) -> List[str]:
@@ -173,17 +174,20 @@ class ClusterManagerWorkflow:
     async def perform_health_checks(self) -> None:
         async with self.nodes_lock:
             assigned_nodes = self.get_assigned_nodes()
-            # This await would be dangerous without nodes_lock because it yields control and allows interleaving
-            # with allocate_n_nodes_to_job and delete_job, which both touch self.state.nodes.
-            bad_nodes = await workflow.execute_activity(
-                find_bad_nodes,
-                FindBadNodesInput(nodes_to_check=assigned_nodes),
-                start_to_close_timeout=timedelta(seconds=10),
-                # This health check is optional, and our lock would block the whole workflow if we let it retry forever.
-                retry_policy=RetryPolicy(maximum_attempts=1),
-            )
-            for node in bad_nodes:
-                self.state.nodes[node] = "BAD!"
+            try:
+                # This await would be dangerous without nodes_lock because it yields control and allows interleaving
+                # with assign_nodes_to_job and delete_job, which both touch self.state.nodes.
+                bad_nodes = await workflow.execute_activity(
+                    find_bad_nodes,
+                    FindBadNodesInput(nodes_to_check=assigned_nodes),
+                    start_to_close_timeout=timedelta(seconds=10),
+                    # This health check is optional, and our lock would block the whole workflow if we let it retry forever.
+                    retry_policy=RetryPolicy(maximum_attempts=1),
+                )
+                for node in bad_nodes:
+                    self.state.nodes[node] = "BAD!"
+            except Exception as e:
+                workflow.logger.warn(f"Health check failed with error {type(e).__name__}:{e}")
 
     # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and
     # continue-as-new.

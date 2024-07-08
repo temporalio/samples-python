@@ -6,12 +6,12 @@ from temporalio.exceptions import ApplicationError
 from temporalio.worker import Worker
 
 from updates_and_signals.safe_message_handlers.activities import (
-    allocate_nodes_to_job,
-    deallocate_nodes_for_job,
+    assign_nodes_to_job,
+    unassign_nodes_for_job,
     find_bad_nodes,
 )
 from updates_and_signals.safe_message_handlers.workflow import (
-    ClusterManagerAllocateNNodesToJobInput,
+    ClusterManagerAssignNodesToJobInput,
     ClusterManagerDeleteJobInput,
     ClusterManagerInput,
     ClusterManagerWorkflow,
@@ -24,7 +24,7 @@ async def test_safe_message_handlers(client: Client):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes],
+        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -38,9 +38,9 @@ async def test_safe_message_handlers(client: Client):
         for i in range(6):
             allocation_updates.append(
                 cluster_manager_handle.execute_update(
-                    ClusterManagerWorkflow.allocate_n_nodes_to_job,
-                    ClusterManagerAllocateNNodesToJobInput(
-                        num_nodes=2, job_name=f"task-{i}"
+                    ClusterManagerWorkflow.assign_nodes_to_job,
+                    ClusterManagerAssignNodesToJobInput(
+                        total_num_nodes=2, job_name=f"task-{i}"
                     ),
                 )
             )
@@ -72,7 +72,7 @@ async def test_update_idempotency(client: Client):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes],
+        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -84,15 +84,15 @@ async def test_update_idempotency(client: Client):
         await cluster_manager_handle.signal(ClusterManagerWorkflow.start_cluster)
 
         result_1 = await cluster_manager_handle.execute_update(
-            ClusterManagerWorkflow.allocate_n_nodes_to_job,
-            ClusterManagerAllocateNNodesToJobInput(num_nodes=5, job_name="jobby-job"),
+            ClusterManagerWorkflow.assign_nodes_to_job,
+            ClusterManagerAssignNodesToJobInput(total_num_nodes=5, job_name="jobby-job"),
         )
         # simulate that in calling it twice, the operation is idempotent
         result_2 = await cluster_manager_handle.execute_update(
-            ClusterManagerWorkflow.allocate_n_nodes_to_job,
-            ClusterManagerAllocateNNodesToJobInput(num_nodes=5, job_name="jobby-job"),
+            ClusterManagerWorkflow.assign_nodes_to_job,
+            ClusterManagerAssignNodesToJobInput(total_num_nodes=5, job_name="jobby-job"),
         )
-        # the second call should not allocate more nodes (it may return fewer if the health check finds bad nodes
+        # the second call should not assign more nodes (it may return fewer if the health check finds bad nodes
         # in between the two signals.)
         assert result_1.nodes_assigned >= result_2.nodes_assigned
 
@@ -103,7 +103,7 @@ async def test_update_failure(client: Client):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes],
+        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -115,20 +115,20 @@ async def test_update_failure(client: Client):
         await cluster_manager_handle.signal(ClusterManagerWorkflow.start_cluster)
 
         await cluster_manager_handle.execute_update(
-            ClusterManagerWorkflow.allocate_n_nodes_to_job,
-            ClusterManagerAllocateNNodesToJobInput(num_nodes=24, job_name="big-task"),
+            ClusterManagerWorkflow.assign_nodes_to_job,
+            ClusterManagerAssignNodesToJobInput(total_num_nodes=24, job_name="big-task"),
         )
         try:
-            # Try to allocate too many nodes
+            # Try to assign too many nodes
             await cluster_manager_handle.execute_update(
-                ClusterManagerWorkflow.allocate_n_nodes_to_job,
-                ClusterManagerAllocateNNodesToJobInput(
-                    num_nodes=3, job_name="little-task"
+                ClusterManagerWorkflow.assign_nodes_to_job,
+                ClusterManagerAssignNodesToJobInput(
+                    total_num_nodes=3, job_name="little-task"
                 ),
             )
         except WorkflowUpdateFailedError as e:
             assert isinstance(e.cause, ApplicationError)
-            assert e.cause.message == "Cannot allocate 3 nodes; have only 1 available"
+            assert e.cause.message == "Cannot assign 3 nodes; have only 1 available"
         finally:
             await cluster_manager_handle.signal(ClusterManagerWorkflow.shutdown_cluster)
             result = await cluster_manager_handle.result()

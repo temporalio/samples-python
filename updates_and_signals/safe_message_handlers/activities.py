@@ -6,25 +6,25 @@ from temporalio import activity
 
 
 @dataclass
-class AllocateNodesToJobInput:
+class AssignNodesToJobInput:
     nodes: List[str]
     job_name: str
 
 
 @activity.defn
-async def allocate_nodes_to_job(input: AllocateNodesToJobInput) -> None:
+async def assign_nodes_to_job(input: AssignNodesToJobInput) -> None:
     print(f"Assigning nodes {input.nodes} to job {input.job_name}")
     await asyncio.sleep(0.1)
 
 
 @dataclass
-class DeallocateNodesForJobInput:
+class UnassignNodesForJobInput:
     nodes: List[str]
     job_name: str
 
 
 @activity.defn
-async def deallocate_nodes_for_job(input: DeallocateNodesForJobInput) -> None:
+async def unassign_nodes_for_job(input: UnassignNodesForJobInput) -> None:
     print(f"Deallocating nodes {input.nodes} from job {input.job_name}")
     await asyncio.sleep(0.1)
 

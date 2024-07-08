@@ -1,14 +1,13 @@
 import asyncio
 import logging
 
-from temporalio import activity, common, workflow
-from temporalio.client import Client, WorkflowHandle
+from temporalio.client import Client
 from temporalio.worker import Worker
 
 from updates_and_signals.safe_message_handlers.workflow import (
     ClusterManagerWorkflow,
-    allocate_nodes_to_job,
-    deallocate_nodes_for_job,
+    assign_nodes_to_job,
+    unassign_nodes_for_job,
     find_bad_nodes,
 )
 
@@ -23,7 +22,7 @@ async def main():
         client,
         task_queue="safe-message-handlers-task-queue",
         workflows=[ClusterManagerWorkflow],
-        activities=[allocate_nodes_to_job, deallocate_nodes_for_job, find_bad_nodes],
+        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
     ):
         # Wait until interrupted
         logging.info("ClusterManagerWorkflow worker started, ctrl+c to exit")

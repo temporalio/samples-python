@@ -4,11 +4,11 @@ import logging
 import uuid
 from typing import Optional
 
-from temporalio import client, common
+from temporalio import common
 from temporalio.client import Client, WorkflowHandle
 
 from updates_and_signals.safe_message_handlers.workflow import (
-    ClusterManagerAllocateNNodesToJobInput,
+    ClusterManagerAssignNodesToJobInput,
     ClusterManagerDeleteJobInput,
     ClusterManagerInput,
     ClusterManagerWorkflow,
@@ -23,9 +23,9 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
     for i in range(6):
         allocation_updates.append(
             wf.execute_update(
-                ClusterManagerWorkflow.allocate_n_nodes_to_job,
-                ClusterManagerAllocateNNodesToJobInput(
-                    num_nodes=2, job_name=f"task-{i}"
+                ClusterManagerWorkflow.assign_nodes_to_job,
+                ClusterManagerAssignNodesToJobInput(
+                    total_num_nodes=2, job_name=f"task-{i}"
                 ),
             )
         )

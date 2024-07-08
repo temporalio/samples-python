@@ -1,16 +1,12 @@
 import asyncio
 import dataclasses
-import logging
-import uuid
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Dict, List, Optional, Set
 
-from temporalio import activity, common, workflow
-from temporalio.client import Client, WorkflowHandle
+from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ApplicationError
-from temporalio.worker import Worker
 
 from updates_and_signals.safe_message_handlers.activities import (
     AllocateNodesToJobInput,

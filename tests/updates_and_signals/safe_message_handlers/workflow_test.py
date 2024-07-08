@@ -1,7 +1,6 @@
 import asyncio
 import uuid
 
-from temporalio import common, workflow
 from temporalio.client import Client, WorkflowUpdateFailedError
 from temporalio.exceptions import ApplicationError
 from temporalio.worker import Worker
@@ -11,7 +10,6 @@ from updates_and_signals.safe_message_handlers.activities import (
     deallocate_nodes_for_job,
     find_bad_nodes,
 )
-from updates_and_signals.safe_message_handlers.starter import do_cluster_lifecycle
 from updates_and_signals.safe_message_handlers.workflow import (
     ClusterManagerAllocateNNodesToJobInput,
     ClusterManagerDeleteJobInput,
@@ -87,12 +85,12 @@ async def test_update_idempotency(client: Client):
 
         result_1 = await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.allocate_n_nodes_to_job,
-            ClusterManagerAllocateNNodesToJobInput(num_nodes=5, job_name=f"jobby-job"),
+            ClusterManagerAllocateNNodesToJobInput(num_nodes=5, job_name="jobby-job"),
         )
         # simulate that in calling it twice, the operation is idempotent
         result_2 = await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.allocate_n_nodes_to_job,
-            ClusterManagerAllocateNNodesToJobInput(num_nodes=5, job_name=f"jobby-job"),
+            ClusterManagerAllocateNNodesToJobInput(num_nodes=5, job_name="jobby-job"),
         )
         # the second call should not allocate more nodes (it may return fewer if the health check finds bad nodes
         # in between the two signals.)
@@ -118,14 +116,14 @@ async def test_update_failure(client: Client):
 
         await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.allocate_n_nodes_to_job,
-            ClusterManagerAllocateNNodesToJobInput(num_nodes=24, job_name=f"big-task"),
+            ClusterManagerAllocateNNodesToJobInput(num_nodes=24, job_name="big-task"),
         )
         try:
             # Try to allocate too many nodes
             await cluster_manager_handle.execute_update(
                 ClusterManagerWorkflow.allocate_n_nodes_to_job,
                 ClusterManagerAllocateNNodesToJobInput(
-                    num_nodes=3, job_name=f"little-task"
+                    num_nodes=3, job_name="little-task"
                 ),
             )
         except WorkflowUpdateFailedError as e:

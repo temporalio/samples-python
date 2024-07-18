@@ -3,7 +3,7 @@ class TestService:
         self.try_attempts = 0
         self.error_attempts = 5
 
-    def get_service_result(self, input):
+    async def get_service_result(self, input):
         print(
             f"Attempt {self.try_attempts}"
             f" of {self.error_attempts} to invoke service"

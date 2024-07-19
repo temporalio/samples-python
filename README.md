@@ -8,7 +8,8 @@ Prerequisites:
 
 * Python >= 3.8
 * [Poetry](https://python-poetry.org)
-* [Local Temporal server running](https://docs.temporal.io/application-development/foundations#run-a-development-cluster)
+* [Temporal CLI installed](https://docs.temporal.io/cli#install)
+* [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
 
 With this repository cloned, run the following at the root of the directory:
 

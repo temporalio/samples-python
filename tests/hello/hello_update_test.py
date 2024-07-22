@@ -6,7 +6,9 @@ from temporalio.worker import Worker
 from hello.hello_update import GreetingWorkflow
 
 
-async def test_update_workflow(client: Client):
+async def test_update_workflow(client: Client, env: WorkflowEnvironment):
+    if env.supports_time_skipping:
+        pytest.skip("Time-skipping test server currently has issue with update: https://github.com/temporalio/sdk-java/issues/1903")
     task_queue_name = str(uuid.uuid4())
     async with Worker(client, task_queue=task_queue_name, workflows=[GreetingWorkflow]):
         handle = await client.start_workflow(

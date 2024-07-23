@@ -12,8 +12,8 @@ def build_codec_server() -> web.Application:
     # Cors handler
     async def cors_options(req: web.Request) -> web.Response:
         resp = web.Response()
-        if req.headers.get(hdrs.ORIGIN) == "http://localhost:8080":
-            resp.headers[hdrs.ACCESS_CONTROL_ALLOW_ORIGIN] = "http://localhost:8080"
+        if req.headers.get(hdrs.ORIGIN) == "http://localhost:8233":
+            resp.headers[hdrs.ACCESS_CONTROL_ALLOW_ORIGIN] = "http://localhost:8233"
             resp.headers[hdrs.ACCESS_CONTROL_ALLOW_METHODS] = "POST"
             resp.headers[hdrs.ACCESS_CONTROL_ALLOW_HEADERS] = "content-type,x-namespace"
         return resp

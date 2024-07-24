@@ -9,7 +9,6 @@ from temporalio.worker import Worker
 
 from updates_and_signals.safe_message_handlers.activities import (
     assign_nodes_to_job,
-    find_bad_nodes,
     unassign_nodes_for_job,
 )
 from updates_and_signals.safe_message_handlers.workflow import (
@@ -30,7 +29,7 @@ async def test_safe_message_handlers(client: Client, env: WorkflowEnvironment):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
+        activities=[assign_nodes_to_job, unassign_nodes_for_job],
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -82,7 +81,7 @@ async def test_update_idempotency(client: Client, env: WorkflowEnvironment):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
+        activities=[assign_nodes_to_job, unassign_nodes_for_job],
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -106,8 +105,7 @@ async def test_update_idempotency(client: Client, env: WorkflowEnvironment):
                 total_num_nodes=5, job_name="jobby-job"
             ),
         )
-        # the second call should not assign more nodes (it may return fewer if the health check finds bad nodes
-        # in between the two signals.)
+        # the second call should not assign more nodes
         assert result_1.nodes_assigned >= result_2.nodes_assigned
 
 
@@ -121,7 +119,7 @@ async def test_update_failure(client: Client, env: WorkflowEnvironment):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
+        activities=[assign_nodes_to_job, unassign_nodes_for_job],
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -152,4 +150,4 @@ async def test_update_failure(client: Client, env: WorkflowEnvironment):
         finally:
             await cluster_manager_handle.signal(ClusterManagerWorkflow.shutdown_cluster)
             result = await cluster_manager_handle.result()
-            assert result.num_currently_assigned_nodes + result.num_bad_nodes == 24
+            assert result.num_currently_assigned_nodes == 24

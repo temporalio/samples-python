@@ -7,9 +7,11 @@ from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
     from polling.periodic_sequence.activities import (
+        ComposeGreeting,
         ComposeGreetingInput,
-        compose_greeting,
     )
+
+MAX_RETRY_PER_CHILD_FLOW = 10
 
 
 @workflow.defn
@@ -26,10 +28,10 @@ class GreetingWorkflow:
 class ChildWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:
-        for i in range(10):
+        for i in range(MAX_RETRY_PER_CHILD_FLOW):
             try:
-                return await workflow.execute_activity(
-                    compose_greeting,
+                return await workflow.execute_activity_method(
+                    ComposeGreeting.compose_greeting,
                     ComposeGreetingInput("Hello", name),
                     start_to_close_timeout=timedelta(seconds=4),
                     retry_policy=RetryPolicy(
@@ -38,8 +40,10 @@ class ChildWorkflow:
                 )
 
             except ActivityError:
-                workflow.logger.error("Activity failed, retrying in 1 seconds")
+                workflow.logger.error(
+                    f"Activity failed ({i}/{MAX_RETRY_PER_CHILD_FLOW}), retrying in 1 seconds"
+                )
             await asyncio.sleep(1)
-            workflow.continue_as_new(name)
+        workflow.continue_as_new(name)
 
         raise Exception("Polling failed after all attempts")

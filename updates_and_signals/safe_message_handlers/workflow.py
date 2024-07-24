@@ -200,6 +200,7 @@ class ClusterManagerWorkflow:
             if self.state.cluster_shutdown:
                 break
             if self.should_continue_as_new():
+                await workflow.wait_condition(lambda: workflow.all_handlers_finished())
                 workflow.logger.info("Continuing as new")
                 workflow.continue_as_new(
                     ClusterManagerInput(

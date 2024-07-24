@@ -5,15 +5,12 @@ from datetime import timedelta
 from typing import Dict, List, Optional, Set
 
 from temporalio import workflow
-from temporalio.common import RetryPolicy
 from temporalio.exceptions import ApplicationError
 
 from updates_and_signals.safe_message_handlers.activities import (
     AssignNodesToJobInput,
-    FindBadNodesInput,
     UnassignNodesForJobInput,
     assign_nodes_to_job,
-    find_bad_nodes,
     unassign_nodes_for_job,
 )
 
@@ -37,7 +34,6 @@ class ClusterManagerInput:
 @dataclass
 class ClusterManagerResult:
     num_currently_assigned_nodes: int
-    num_bad_nodes: int
 
 
 # Be in the habit of storing message inputs and outputs in serializable structures.
@@ -116,7 +112,7 @@ class ClusterManagerWorkflow:
                 )
             nodes_to_assign = unassigned_nodes[: input.total_num_nodes]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving
-            # with delete_job and perform_health_checks, which both touch self.state.nodes.
+            # with delete_job, which touches self.state.nodes.
             await self._assign_nodes_to_job(nodes_to_assign, input.job_name)
             return ClusterManagerAssignNodesToJobResult(
                 nodes_assigned=self.get_assigned_nodes(job_name=input.job_name)
@@ -150,7 +146,7 @@ class ClusterManagerWorkflow:
                 k for k, v in self.state.nodes.items() if v == input.job_name
             ]
             # This await would be dangerous without nodes_lock because it yields control and allows interleaving
-            # with assign_nodes_to_job and perform_health_checks, which all touch self.state.nodes.
+            # with assign_nodes_to_job, which touches self.state.nodes.
             await self._unassign_nodes_for_job(nodes_to_unassign, input.job_name)
 
     async def _unassign_nodes_for_job(
@@ -167,40 +163,11 @@ class ClusterManagerWorkflow:
     def get_unassigned_nodes(self) -> List[str]:
         return [k for k, v in self.state.nodes.items() if v is None]
 
-    def get_bad_nodes(self) -> Set[str]:
-        return set([k for k, v in self.state.nodes.items() if v == "BAD!"])
-
     def get_assigned_nodes(self, *, job_name: Optional[str] = None) -> Set[str]:
         if job_name:
             return set([k for k, v in self.state.nodes.items() if v == job_name])
         else:
-            return set(
-                [
-                    k
-                    for k, v in self.state.nodes.items()
-                    if v is not None and v != "BAD!"
-                ]
-            )
-
-    async def perform_health_checks(self) -> None:
-        async with self.nodes_lock:
-            assigned_nodes = self.get_assigned_nodes()
-            try:
-                # This await would be dangerous without nodes_lock because it yields control and allows interleaving
-                # with assign_nodes_to_job and delete_job, which both touch self.state.nodes.
-                bad_nodes = await workflow.execute_activity(
-                    find_bad_nodes,
-                    FindBadNodesInput(nodes_to_check=assigned_nodes),
-                    start_to_close_timeout=timedelta(seconds=10),
-                    # This health check is optional, and our lock would block the whole workflow if we let it retry forever.
-                    retry_policy=RetryPolicy(maximum_attempts=1),
-                )
-                for node in bad_nodes:
-                    self.state.nodes[node] = "BAD!"
-            except Exception as e:
-                workflow.logger.warn(
-                    f"Health check failed with error {type(e).__name__}:{e}"
-                )
+            return set([k for k, v in self.state.nodes.items() if v is not None])
 
     # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and
     # continue-as-new.
@@ -229,9 +196,7 @@ class ClusterManagerWorkflow:
     async def run(self, input: ClusterManagerInput) -> ClusterManagerResult:
         self.init(input)
         await workflow.wait_condition(lambda: self.state.cluster_started)
-        # Perform health checks at intervals.
         while True:
-            await self.perform_health_checks()
             try:
                 await workflow.wait_condition(
                     lambda: self.state.cluster_shutdown
@@ -250,7 +215,4 @@ class ClusterManagerWorkflow:
                         test_continue_as_new=input.test_continue_as_new,
                     )
                 )
-        return ClusterManagerResult(
-            len(self.get_assigned_nodes()),
-            len(self.get_bad_nodes()),
-        )
+        return ClusterManagerResult(len(self.get_assigned_nodes()))

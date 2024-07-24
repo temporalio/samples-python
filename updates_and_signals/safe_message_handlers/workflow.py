@@ -193,16 +193,18 @@ class ClusterManagerWorkflow:
     @workflow.run
     async def run(self, input: ClusterManagerInput) -> ClusterManagerResult:
         self.init(input)
-        await workflow.wait_condition(
-            lambda: self.state.cluster_shutdown or self.should_continue_as_new()
-        )
-        if self.should_continue_as_new():
-            workflow.logger.info("Continuing as new")
-            workflow.continue_as_new(
-                ClusterManagerInput(
-                    state=self.state,
-                    test_continue_as_new=input.test_continue_as_new,
-                )
+        while True:
+            await workflow.wait_condition(
+                lambda: self.state.cluster_shutdown or self.should_continue_as_new()
             )
-        else:
-            return ClusterManagerResult(len(self.get_assigned_nodes()))
+            if self.state.cluster_shutdown:
+                break
+            if self.should_continue_as_new():
+                workflow.logger.info("Continuing as new")
+                workflow.continue_as_new(
+                    ClusterManagerInput(
+                        state=self.state,
+                        test_continue_as_new=input.test_continue_as_new,
+                    )
+                )
+        return ClusterManagerResult(len(self.get_assigned_nodes()))

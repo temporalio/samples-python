@@ -4,10 +4,6 @@ This sample shows how to make an encryption codec for end-to-end encryption. It 
 samples [in TypeScript](https://github.com/temporalio/samples-typescript/tree/main/encryption) and
 [in Go](https://github.com/temporalio/samples-go/tree/main/encryption).
 
-Ensure you have an environment variable set to the Namespace your Workflows are in:
-
-
-    export TEMPORAL_NAMESPACE=<Namespace Name>
 
 For this sample, the optional `encryption` dependency group must be included. To include, run:
 

@@ -115,42 +115,57 @@ async def main():
             HelloWorldInput("World"),
         )
         update_result = await update_handle.result()
-        print(f"handle.result(): {update_result}")
+        print(f"start_update: handle.result(): {update_result}")
 
         # start_update: rejected
+        update_handle = await handle.start_update(
+            HelloWorldWorkflow.set_greeting,
+            HelloWorldInput("mars"),
+        )
+        print(f"start_update: rejected: got handle: {update_handle}")
         try:
-            update_handle = await handle.start_update(
-                HelloWorldWorkflow.set_greeting,
-                HelloWorldInput("mars"),
-            )
+            update_result = await update_handle.result()
         except temporalio.client.WorkflowUpdateFailedError as err:
-            print(f"start_update: rejected: {err.__class__}({err})")
+            print(f"start_update: rejected: handle.result(): {err.__class__}({err})")
 
         # start_update: failed
+        update_handle = await handle.start_update(
+            HelloWorldWorkflow.set_greeting,
+            HelloWorldInput("<fail-update>"),
+        )
+        print(f"start_update: failed: got handle: {update_handle}")
         try:
-            update_handle = await handle.start_update(
-                HelloWorldWorkflow.set_greeting,
-                HelloWorldInput("<fail-update>"),
-            )
+            update_result = await update_handle.result()
         except temporalio.client.WorkflowUpdateFailedError as err:
-            print(f"start_update: failed: {err.__class__}({err})")
+            print(f"start_update: failed: handle.result(): {err.__class__}({err})")
 
         #
         # Workflow exit
         #
 
         # execute_update: fail workflow
-        try:
-            update_result = await handle.execute_update(
+        if False:
+            try:
+                update_result = await handle.execute_update(
+                    HelloWorldWorkflow.set_greeting,
+                    HelloWorldInput("<fail-workflow>"),
+                )
+            except Exception as err:
+                print(f"execute_update: workflow failed: {err.__class__}({err})")
+        else:
+            update_handle = await handle.start_update(
                 HelloWorldWorkflow.set_greeting,
                 HelloWorldInput("<fail-workflow>"),
             )
-        except Exception as err:
-            print(f"execute_update: workflow failed: {err.__class__}({err})")
+            print(f"start_update: failed wf: got handle: {update_handle}")
+            try:
+                update_result = await update_handle.result()
+            except temporalio.service.RPCError as err:
+                print(
+                    f"start_update: failed wf: handle.result(): {err.__class__}({err})"
+                )
 
         print("waiting for workflow to end...")
-        # result = await handle.result()
-        # print(f"Workflow Result: {result}")
 
         # execute_update: workflow doesn't exist
         try:
@@ -171,6 +186,28 @@ async def main():
         except temporalio.service.RPCError as err:
             # The update was rejected
             print(f"start_update: workflow doesn't exist: {err.__class__}({err})")
+
+        invalid_handle = client.get_workflow_handle("non-existent-workflow-id")
+        # invalid handle
+        try:
+            update_result = await invalid_handle.execute_update(
+                HelloWorldWorkflow.set_greeting,
+                HelloWorldInput("world"),
+            )
+        except Exception as err:
+            print(
+                f"execute update: invalid handle: otherwise good request: {err.__class__}({err})"
+            )
+        # invalid handle
+        try:
+            update_handle = await invalid_handle.start_update(
+                HelloWorldWorkflow.set_greeting,
+                HelloWorldInput("world"),
+            )
+        except Exception as err:
+            print(
+                f"start update: invalid handle: otherwise good request: {err.__class__}({err})"
+            )
 
 
 if __name__ == "__main__":

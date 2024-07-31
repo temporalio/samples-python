@@ -86,7 +86,7 @@ class ScheduleCheckInWorkflow:
             duration_until_check_in = (check_in_date_utc - current_time).total_seconds()
 
             try:
-                await workflow.wait_condition(
+                condition_met = await workflow.wait_condition(
                     lambda: (
                         self.manual_check_in_triggered
                         or self.delay_hours > 0
@@ -95,8 +95,8 @@ class ScheduleCheckInWorkflow:
                     ),
                     timeout=duration_until_check_in,
                 )
-                # print("🟦 condition met")
-                break  # Condition was met, exit the waiting loop
+                if condition_met:
+                    break  # Condition was met, exit the waiting loop
             except asyncio.TimeoutError:
                 # Time for check-in has arrived
                 pass

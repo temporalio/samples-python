@@ -3,8 +3,9 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta, timezone
 from enum import Enum
 from typing import Optional
+from uuid import uuid4
 
-from temporalio import common, workflow
+from temporalio import workflow
 from temporalio.client import Client
 from temporalio.common import RetryPolicy
 from temporalio.worker import Worker
@@ -72,43 +73,7 @@ class ScheduleCheckInWorkflow:
         while True:
             await workflow.wait_condition(lambda: True)
             current_time = workflow.now()
-
-            if self.user_state == UserState.INJURED.value:
-                await self.handle_injured_state(check_in_user, current_time)
-            elif self.user_state == UserState.VACATION.value:
-                await self.handle_vacation_state()
-            else:  # Normal state
-                await self.handle_normal_state(check_in_user, current_time)
-
-    async def handle_injured_state(
-        self, check_in_user: UserTrainerIds, current_time: datetime
-    ):
-        print("handle_injured_state")
-        if (
-            self.last_injured_check_in_date is None
-            or current_time - self.last_injured_check_in_date >= timedelta(days=7)
-        ):
-            await self._process_check_in(check_in_user)
-            self.last_injured_check_in_date = current_time
-
-        # Wait for a state change or the next weekly check-in
-        next_check_in = self.last_injured_check_in_date + timedelta(days=7)
-        try:
-            await workflow.wait_condition(
-                lambda: self.user_state != UserState.INJURED.value,
-                timeout=(next_check_in - current_time).total_seconds(),
-            )
-        except asyncio.TimeoutError:
-            pass  # Weekly check-in time has arrived
-
-    async def handle_vacation_state(self):
-        # Wait indefinitely until the state changes or a check-in is triggered
-        await workflow.wait_condition(
-            lambda: (
-                self.user_state != UserState.VACATION.value
-                or self.trigger_immediate_check_in
-            )
-        )
+            await self.handle_normal_state(check_in_user, current_time)
 
     async def handle_normal_state(
         self, check_in_user: UserTrainerIds, current_time: datetime
@@ -208,31 +173,7 @@ class ScheduleCheckInWorkflow:
     @workflow.signal
     async def set_user_state(self, state: str):
         print("set_user_state")
-        previous_state = self.user_state
         self.user_state = state
-
-        # if self.user_state != UserState.NORMAL.value:
-        #     self.progress = CheckInStatus.IDLE.value
-        # elif previous_state != UserState.NORMAL.value and self.user_state == UserState.NORMAL.value:
-        #     # Reset progress when returning to NORMAL state
-        #     self.progress = CheckInStatus.IDLE.value
-
-    @workflow.query
-    async def get_workflow_state(self) -> WorkflowState:
-        print("get_workflow_state")
-        return WorkflowState(
-            user_state=self.user_state,
-            check_in_state=self.state.value,
-            progress_state=self.progress,
-            last_check_in_date=self.last_check_in_date.isoformat()
-            if self.last_check_in_date
-            else None,
-            next_check_in_date=self.calculate_next_check_in_date(
-                workflow.now()
-            ).isoformat()
-            if self.user_state == UserState.NORMAL.value
-            else None,
-        )
 
     async def check_plan_status_periodically(self) -> None:
         print("check_plan_status_periodically")

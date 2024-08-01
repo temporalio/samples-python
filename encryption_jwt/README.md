@@ -49,3 +49,12 @@ Same case with the web UI. If you go to the web UI, you'll only see encrypted in
 is at `http://localhost:8233` (this is the default for the local dev server), if you set the "Remote Codec Endpoint" in the web UI to `http://localhost:8081` you can
 then see the unencrypted results. This is possible because CORS settings in the codec server allow the browser to access
 the codec server directly over localhost. They can be changed to suit Temporal cloud web UI instead if necessary.
+
+
+## Connection to Temporal Cloud
+
+Set the following environment variables when starting a worker or running the starter:
+- `TEMPORAL_NAMESPACE="your.namespace"`
+- `TEMPORAL_ADDRESS="your.namespace.tmprl.cloud:7233"`
+- `TEMPORAL_TLS_CERT="/path/to/your.crt"`
+- `TEMPORAL_TLS_KEY="/path/to/your.key"`

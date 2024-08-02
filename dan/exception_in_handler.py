@@ -29,9 +29,12 @@ class HelloWorldWorkflow:
     async def my_update(self) -> str:
         await workflow.wait_condition(lambda: self.workflow_has_started)
         self.update_has_started = True
-        raise temporalio.exceptions.ApplicationError(
-            "Workflow author raised Exception in update handler"
-        )
+        if False:
+            raise temporalio.exceptions.ApplicationError(
+                "Workflow author raised Exception in update handler"
+            )
+        else:
+            raise Exception("Unexpected Exception in update handler")
 
 
 async def main():
@@ -48,12 +51,16 @@ async def main():
             id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
         )
         try:
+            with open("/tmp/client", "a") as f:
+                print("[orange]executing update...[/orange]", file=f)
             await handle.execute_update(HelloWorldWorkflow.my_update)
         except temporalio.client.WorkflowUpdateFailedError as err:
-            print(f"[red]Got error: {err}[/red]")
+            with open("/tmp/client", "a") as f:
+                print(f"[red]Got error: {err}[/red]", file=f)
 
         # Failed update does not fail workflows
-        print(f"[green]wf-result: {await handle.result()}[/green]")
+        with open("/tmp/client", "a") as f:
+            print(f"[green]wf-result: {await handle.result()}[/green]", file=f)
 
 
 if __name__ == "__main__":

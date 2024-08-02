@@ -26,9 +26,12 @@ class HelloWorldWorkflow:
         return self.greeting()
 
     @workflow.update
-    def set_greeting(self, input: HelloWorldInput) -> str:
-        self.entity_to_be_greeted = input.entity_to_be_greeted
-        return self.greeting()
+    def set_greeting(self, input: HelloWorldInput) -> Optional[str]:
+        previous_entity_to_be_greeted, self.entity_to_be_greeted = (
+            self.entity_to_be_greeted,
+            input.entity_to_be_greeted,
+        )
+        return previous_entity_to_be_greeted
 
     @set_greeting.validator
     def set_greeting_validator(self, input: HelloWorldInput) -> None:

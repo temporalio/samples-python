@@ -12,34 +12,28 @@ tq = "tq"
 
 @dataclass
 class HelloWorldInput:
-    entity_to_be_greeted: str
+    greeting: str
 
 
 @workflow.defn
 class HelloWorldWorkflow:
     def __init__(self):
-        self.entity_to_be_greeted: Optional[str] = None
+        self.greeting: Optional[str] = None
 
     @workflow.run
     async def run(self) -> str:
-        await workflow.wait_condition(lambda: self.entity_to_be_greeted is not None)
-        return self.greeting()
+        await workflow.wait_condition(lambda: self.greeting is not None)
+        return f"{self.greeting}, world!"
 
     @workflow.update
     def set_greeting(self, input: HelloWorldInput) -> Optional[str]:
-        previous_entity_to_be_greeted, self.entity_to_be_greeted = (
-            self.entity_to_be_greeted,
-            input.entity_to_be_greeted,
-        )
-        return previous_entity_to_be_greeted
+        previous_greeting, self.greeting = self.greeting, input.greeting
+        return previous_greeting
 
     @set_greeting.validator
     def set_greeting_validator(self, input: HelloWorldInput) -> None:
-        if input.entity_to_be_greeted not in {"world", "World"}:
-            raise Exception(f"invalid entity: {input.entity_to_be_greeted}")
-
-    def greeting(self) -> str:
-        return f"Hello, {self.entity_to_be_greeted}!"
+        if input.greeting.lower() not in {"hello", "hola"}:
+            raise Exception(f"invalid greeting: {input.greeting}")
 
 
 async def main():
@@ -56,7 +50,7 @@ async def main():
             id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
         )
         update_result = await handle.execute_update(
-            HelloWorldWorkflow.set_greeting, HelloWorldInput("world")
+            HelloWorldWorkflow.set_greeting, HelloWorldInput("Hola")
         )
         print(f"Update Result: {update_result}")
         result = await handle.result()

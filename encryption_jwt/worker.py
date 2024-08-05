@@ -7,7 +7,7 @@ from temporalio import workflow
 from temporalio.client import Client, TLSConfig
 from temporalio.worker import Worker
 
-from encryption.codec import EncryptionCodec
+from encryption_jwt.codec import EncryptionCodec
 
 
 temporal_address = "localhost:7233"
@@ -29,7 +29,6 @@ if os.environ.get("TEMPORAL_TLS_KEY"):
     temporal_tls_key_path = os.environ["TEMPORAL_TLS_KEY"]
     with open(temporal_tls_key_path, "rb") as f:
         temporal_tls_key = f.read()
-
 
 
 @workflow.defn(name="Workflow")
@@ -54,7 +53,7 @@ async def main():
         tls=TLSConfig(
             client_cert=temporal_tls_cert,
             client_private_key=temporal_tls_key,
-        ),
+        ) if temporal_tls_cert and temporal_tls_key else False
     )
 
     # Run a worker for the workflow

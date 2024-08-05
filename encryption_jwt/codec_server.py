@@ -5,7 +5,7 @@ from aiohttp import hdrs, web
 from google.protobuf import json_format
 from temporalio.api.common.v1 import Payload, Payloads
 
-from encryption.codec import EncryptionCodec
+from encryption_jwt.codec import EncryptionCodec
 
 import logging
 
@@ -28,7 +28,7 @@ def build_codec_server() -> web.Application:
         # common
         resp.headers[hdrs.ACCESS_CONTROL_ALLOW_METHODS] = "POST"
         resp.headers[hdrs.ACCESS_CONTROL_ALLOW_HEADERS] = "content-type,x-namespace"
-        
+
         return resp
 
     # General purpose payloads-to-payloads

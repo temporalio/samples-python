@@ -2,3 +2,6 @@
 __pycache__
 .env
 _certs/*
+
+# protobuf support
+encryption_jwt/google

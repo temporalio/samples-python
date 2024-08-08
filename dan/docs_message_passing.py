@@ -16,7 +16,7 @@ class Language(IntEnum):
 
 @dataclass
 class GetLanguagesInput:
-    supported_only: bool
+    include_unsupported: bool
 
 
 @dataclass
@@ -31,8 +31,8 @@ class GreetingWorkflow:
         self.approver_name: Optional[str] = None
         self.language = Language.English
         self.greetings = {
-            Language.English: "Hello, world!",
-            Language.Chinese: "你好，世界!",
+            Language.English: "Hello, world",
+            Language.Chinese: "你好，世界",
         }
 
     @workflow.run
@@ -42,28 +42,28 @@ class GreetingWorkflow:
 
     @workflow.query
     def get_languages(self, input: GetLanguagesInput) -> list[Language]:
-        # A Query handler returns a value but must not mutate the Workflow state.
-        if input.supported_only:
-            return [lang for lang in Language if lang in self.greetings]
-        else:
+        # 👉 A Query handler returns a value: it can inspect but must not mutate the Workflow state.
+        if input.include_unsupported:
             return list(Language)
+        else:
+            return [lang for lang in Language if lang in self.greetings]
 
     @workflow.signal
     def approve(self, input: ApproveInput) -> None:
-        # A Signal handler mutates the Workflow state but cannot return a value.
+        # 👉 A Signal handler mutates the Workflow state but cannot return a value.
         self.approved_for_release = True
         self.approver_name = input.name
 
     @workflow.update
     def set_language(self, language: Language) -> Language:
-        # An Update handler can mutate the Workflow state and return a value.
+        # 👉 An Update handler can mutate the Workflow state and return a value.
         previous_language, self.language = self.language, language
         return previous_language
 
     @set_language.validator
     def validate_language(self, language: Language) -> None:
         if language not in self.greetings:
-            # In an Update validator you raise any exception to reject the Update.
+            # 👉 In an Update validator you raise any exception to reject the Update.
             raise ValueError(f"{language.name} is not supported")
 
     @workflow.query

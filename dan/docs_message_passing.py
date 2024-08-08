@@ -7,11 +7,11 @@ from temporalio import workflow
 
 
 class Language(IntEnum):
-    Chinese = 1
-    English = 2
-    French = 3
-    Spanish = 4
-    Portuguese = 5
+    CHINESE = 1
+    ENGLISH = 2
+    FRENCH = 3
+    SPANISH = 4
+    PORTUGUESE = 5
 
 
 @dataclass
@@ -29,10 +29,10 @@ class GreetingWorkflow:
     def __init__(self) -> None:
         self.approved_for_release = False
         self.approver_name: Optional[str] = None
-        self.language = Language.English
+        self.language = Language.ENGLISH
         self.greetings = {
-            Language.English: "Hello, world",
-            Language.Chinese: "你好，世界",
+            Language.ENGLISH: "Hello, world",
+            Language.CHINESE: "你好，世界",
         }
 
     @workflow.run
@@ -93,14 +93,14 @@ async def main():
         print(f"supported languages: {supported_languages}")
 
         previous_language = await wf_handle.execute_update(
-            GreetingWorkflow.set_language, Language.Chinese
+            GreetingWorkflow.set_language, Language.CHINESE
         )
         current_language = await wf_handle.query(GreetingWorkflow.get_language)
         print(f"language changed: {previous_language.name} -> {current_language.name}")
 
         update_handle = await wf_handle.start_update(
             GreetingWorkflow.set_language,
-            Language.English,
+            Language.ENGLISH,
             wait_for_stage=WorkflowUpdateStage.ACCEPTED,
         )
         previous_language = await update_handle.result()

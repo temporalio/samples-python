@@ -46,7 +46,7 @@ class GreetingWorkflow:
         if input.include_unsupported:
             return list(Language)
         else:
-            return [lang for lang in Language if lang in self.greetings]
+            return list(self.greetings)
 
     @workflow.signal
     def approve(self, input: ApproveInput) -> None:
@@ -88,7 +88,7 @@ async def main():
             task_queue="my-task-queue",
         )
         supported_languages = await wf_handle.query(
-            GreetingWorkflow.get_languages, GetLanguagesInput(supported_only=True)
+            GreetingWorkflow.get_languages, GetLanguagesInput(include_unsupported=False)
         )
         print(f"supported languages: {supported_languages}")
 

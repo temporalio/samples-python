@@ -13,6 +13,9 @@ from temporal.api.cloud.cloudservice.v1 import request_response_pb2, service_pb2
 from encryption_jwt.codec import EncryptionCodec
 
 
+DECRYPT_ROLES = ["admin"]
+
+
 temporal_namespace = "default"
 if os.environ.get("TEMPORAL_NAMESPACE"):
     temporal_namespace = os.environ["TEMPORAL_NAMESPACE"]
@@ -91,7 +94,7 @@ def build_codec_server() -> web.Application:
         # Use the email to determine if the payload should be decrypted.
         role = request_user_role(
             decoded["https://saas-api.tmprl.cloud/user/email"])
-        if role == "admin":
+        if role.lower() in DECRYPT_ROLES:
             # `fn` = `code.encode` or `codec.decode`
             payloads = Payloads(payloads=await fn(payloads.payloads))
 

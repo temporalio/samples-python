@@ -5,7 +5,7 @@ This sample demonstrates:
 - CORS settings to allow connections to a codec server
 - using a KMS key to encrypt/decrypt payloads
 - extracting data from a JWT
-- controlling decyption based on a user's Temporal role
+- controlling decyption based on a user's Temporal Cloud role
 
 ## Install
 
@@ -18,42 +18,43 @@ poetry install --with encryption,bedrock
 ## Setup
 
 > [!WARNING]
-> You must connect your Worker(s) to Temporal Cloud to see the decryption working in the Web UI.
+> You must connect your Worker(s) to Temporal Cloud to see decryption working in the Web UI.
 
 ### Key management
 
-This example uses the AWS Key Management Service (KMS). You will need to create a "Customer managed
-key" then provide the ARN ID as the value of the `AWS_KMS_CMK_ARN` environment variable. Alternately
-replace the key management portion with your own implementation.
+This example uses the [AWS Key Management Service](https://aws.amazon.com/kms/) (KMS). You will need
+to create a "Customer managed key" then provide the ARN ID as the value of the `AWS_KMS_CMK_ARN`
+environment variable. Alternately replace the key management portion with your own implementation.
 
-### Self-signed certs
+### Self-signed certificates
 
-To run the codec server using HTTPS use "openssl." Run the following command in a `_certs` directory
-off the repository root; it will create certificate files that are good for 10 years.
+The codec server will need to use HTTPS, self-signed certificates will work in the development
+environment. Run the following command in a `_certs` directory that's a subdirectory of the
+repository root, it will create certificate files that are good for 10 years.
 
 ```sh
 openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout localhost.key -out localhost.pem -subj "/CN=localhost"
 ```
 
-You can pass the names of the files using the following environment variables.
+In the projects you can access the files using the following relative paths.
 
-- `SSL_PEM="../_certs/localhost.pem"`
-- `SSL_KEY="../_certs/localhost.key"`
+- `../_certs/localhost.pem`
+- `../_certs/localhost.key`
 
 ## Run
 
 ### Worker
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
-worker:
+To run, first see the [repo README.md](../README.md) for prerequisites.
 
-Before starting the worker, open a terminal and add the following environment variables with values:
+Before starting the worker, open a terminal and add the following environment variables with
+appropriate values:
 
-```txt
+```sh
 export TEMPORAL_ADDRESS=<your temporal domain and port>
 export TEMPORAL_NAMESPACE=<a temporal namespace> # uses "default" if not provided
-export TEMPORAL_TLS_CERT=<path to the crt file used to generate the CA Certificate for the namespace>
-export TEMPORAL_TLS_KEY=<path to the key file used to generate the CA Certificate for the namespace>
+export TEMPORAL_TLS_CERT=<path to the crt file used to generate the CA Certificate for the temporal namespace>
+export TEMPORAL_TLS_KEY=<path to the key file used to generate the CA Certificate for the temporal namespace>
 export AWS_KMS_CMK_ARN=<ARN ID of a customer managed key that will be used to encrypt/decrypt data>
 export AWS_ACCESS_KEY_ID=<AWS account access key>
 export AWS_SECRET_ACCESS_KEY=<AWS account secret key>
@@ -68,13 +69,13 @@ poetry run python worker.py
 
 ### Codec server
 
-The codec server allows you to see encrypted payloads of the workflow. The server must be started
-for secure connections, you will need the paths to a pem (crt) and key file. Self-signed
-certificates will work just fine.
+The codec server allows you to see the encrypted payloads of workflows in the Web UI. The server
+must be started with secure connections (HTTPS), you will need the paths to a pem (crt) and key
+file. [Self-signed certificates](#self-signed-certificates) will work just fine.
 
 Open a new terminal and add the following environment variables with values:
 
-```txt
+```sh
 export TEMPORAL_NAMESPACE=<a temporal namespace> # uses "default" if not provided
 export TEMPORAL_TLS_CERT=<path to the crt file used to generate the CA Certificate for the namespace>
 export TEMPORAL_TLS_KEY=<path to the key file used to generate the CA Certificate for the namespace>
@@ -97,7 +98,7 @@ poetry run python codec_server.py
 
 ### Execute workflow
 
-In another terminal, add the environment variables:
+In a third terminal, add the environment variables:
 
 ```txt
 export TEMPORAL_ADDRESS=<your temporal domain and port>
@@ -118,7 +119,7 @@ The workflow should complete with the hello result. To view the workflow, use [t
 temporal workflow show --workflow-id encryption-workflow-id
 ```
 
-Note how the result looks like (with wrapping removed):
+Note how the result looks (with wrapping removed):
 
 ```txt
 Output:[encoding binary/encrypted: payload encoding is not supported]
@@ -128,19 +129,25 @@ This is because the data is encrypted and not visible.
 
 ## Temporal Web UI
 
-Open the Web UI and select a workflow, you'll only see encrypted input/results. To see decrypted
-results:
+Open the Web UI and select a workflow, you'll only see encrypted results. To see decrypted results:
 
-- You must have the Temporal role of admin
+- You must have the Temporal role of "admin"
+- The codec server must be running
 - Set the "Remote Codec Endpoint" in the web UI to the codec server domain: `https://localhost:8081`
   - Both the "Pass the user access token" and "Include cross-origin credentials" must be enabled
 
-After that you can then see the unencrypted results. This is possible because CORS settings in the
-codec server allow the browser to access the codec server directly over localhost. Decrypted data
-never leaves your local machine. See [Codec
+Once those requirements are met you can then see the unencrypted results. This is possible because
+CORS settings in the codec server allow the browser to access the codec server directly over
+localhost. Decrypted data never leaves your local machine. See [Codec
 Server](https://docs.temporal.io/production-deployment/data-encryption)
 
 ## Protobuf
+
+> [!WARNING]
+> You will not normally need to rebuild protobuf support; the generated files have been committed to
+> this repo. The instructions are included because:
+> - If the API changes these steps will need to be followed to get those changes
+> - A reminder of how to generate the protobuf files for python 😃
 
 To rebuild protobuf support.
 

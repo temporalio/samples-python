@@ -7,12 +7,12 @@ from temporalio.exceptions import ApplicationError
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
-from updates_and_signals.safe_message_handlers.activities import (
+from message_passing.safe_message_handlers.activities import (
     assign_nodes_to_job,
     find_bad_nodes,
     unassign_nodes_for_job,
 )
-from updates_and_signals.safe_message_handlers.workflow import (
+from message_passing.safe_message_handlers.workflow import (
     ClusterManagerAssignNodesToJobInput,
     ClusterManagerDeleteJobInput,
     ClusterManagerInput,

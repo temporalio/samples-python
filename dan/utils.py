@@ -1,11 +1,42 @@
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from typing import TypeVar
+
+import rich
+from temporalio import common, workflow
 from temporalio.api.common.v1 import WorkflowExecution
 from temporalio.api.update.v1 import UpdateRef
 from temporalio.api.workflowservice.v1 import PollWorkflowExecutionUpdateRequest
-from temporalio.client import Client
+from temporalio.client import Client, WorkflowHandle
 from temporalio.service import RPCError, RPCStatusCode
+from temporalio.types import MethodAsyncNoParam
+
+from dan.constants import TASK_QUEUE
+
+S = TypeVar("S")
+R = TypeVar("R")
 
 
-async def workflow_update_exists(
+async def start_workflow(
+    run: MethodAsyncNoParam[S, R],
+    id: str = __file__,
+    id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
+    client=None,
+    **kwargs,
+) -> WorkflowHandle[S, R]:
+    if not client:
+        client = await Client.connect("localhost:7233")
+    return await client.start_workflow(
+        run,
+        id=id,
+        task_queue=TASK_QUEUE,
+        id_reuse_policy=id_reuse_policy,
+        **kwargs,
+    )
+
+
+async def update_has_been_admitted(
     client: Client, workflow_id: str, update_id: str
 ) -> bool:
     try:
@@ -23,3 +54,26 @@ async def workflow_update_exists(
         if err.status != RPCStatusCode.NOT_FOUND:
             raise
         return False
+
+
+def print(*args, **kwargs):
+    with workflow.unsafe.imports_passed_through():
+        rich.print(*args, **kwargs)
+
+
+@contextmanager
+def catch():
+    try:
+        yield
+    except Exception as err:
+        import pdb
+
+        pdb.set_trace()
+        print(err)
+
+
+async def ainput(prompt: str = ""):
+    with ThreadPoolExecutor(1, "ainput") as executor:
+        return (
+            await asyncio.get_event_loop().run_in_executor(executor, input, prompt)
+        ).rstrip()

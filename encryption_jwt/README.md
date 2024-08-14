@@ -7,6 +7,8 @@ This sample demonstrates:
 - extracting data from a JWT
 - controlling decyption based on a user's Temporal Cloud role
 
+The Codec Server uses the [Operations API](https://docs.temporal.io/ops) to get user information. It would be helpful to be familiar with the API's requirements. This API is currently a beta relase and may change in the future.
+
 ## Install
 
 For this sample, the optional `encryption` and `bedrock` dependency groups must be included. To include, run:
@@ -72,6 +74,8 @@ poetry run python worker.py
 The codec server allows you to see the encrypted payloads of workflows in the Web UI. The server
 must be started with secure connections (HTTPS), you will need the paths to a pem (crt) and key
 file. [Self-signed certificates](#self-signed-certificates) will work just fine.
+
+You will also need a [Temporal API Key](https://docs.temporal.io/cloud/api-keys#generate-an-api-key). It's value is set using the `TEMPORAL_API_KEY` env var.
 
 Open a new terminal and add the following environment variables with values:
 

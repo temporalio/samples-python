@@ -6,7 +6,7 @@ from temporalio.worker import Worker
 from dan.constants import TASK_QUEUE
 
 # Don't commit the line importing the Workflow class
-from dan.update_deduplication import Workflow
+from dan.upsert_search_attribute_572 import Workflow
 
 interrupt_event = asyncio.Event()
 

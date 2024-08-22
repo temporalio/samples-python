@@ -71,33 +71,31 @@ def build_codec_server() -> web.Application:
 
             return ""
 
-    async def handle_encoding(req: web.Request):
-        # Read payloads as JSON
-        assert req.content_type == "application/json"
-        payloads = json_format.Parse(await req.read(), Payloads())
+    def make_handler(fn: str):
+        async def handler(req: web.Request):
+            # Read payloads as JSON
+            assert req.content_type == "application/json"
+            payloads = json_format.Parse(await req.read(), Payloads())
 
-        # Extract the email from the JWT.
-        auth_header = req.headers.get("Authorization")
-        namespace = req.headers.get("x-namespace")
-        _bearer, encoded = auth_header.split(" ")
-        decoded = jwt.decode(encoded, options={"verify_signature": False})
+            # Extract the email from the JWT.
+            auth_header = req.headers.get("Authorization")
+            namespace = req.headers.get("x-namespace")
+            _bearer, encoded = auth_header.split(" ")
+            decoded = jwt.decode(encoded, options={"verify_signature": False})
 
-        # Use the email to determine if the payload should be decrypted.
-        role = request_user_role(
-            decoded["https://saas-api.tmprl.cloud/user/email"])
-        if role.lower() in DECRYPT_ROLES:
-            route_name = req.match_info.route.name
-            codec = EncryptionCodec(namespace)
-            if route_name == 'encode':
-                payloads = Payloads(payloads=await codec.encode(payloads.payloads))
-            elif route_name == 'decode':
-                payloads = Payloads(payloads=await codec.decode(payloads.payloads))
+            # Use the email to determine if the payload should be decrypted.
+            role = request_user_role(
+                decoded["https://saas-api.tmprl.cloud/user/email"])
+            if role.lower() in DECRYPT_ROLES:
+                codec = EncryptionCodec(namespace)
+                payloads = Payloads(payloads=await codec[fn](payloads.payloads))
 
-        # Apply CORS and return JSON
-        resp = await cors_options(req)
-        resp.content_type = "application/json"
-        resp.text = json_format.MessageToJson(payloads)
-        return resp
+            # Apply CORS and return JSON
+            resp = await cors_options(req)
+            resp.content_type = "application/json"
+            resp.text = json_format.MessageToJson(payloads)
+            return resp
+        return handler
 
     # Build app
     # codec = EncryptionCodec(namespace)
@@ -107,8 +105,8 @@ def build_codec_server() -> web.Application:
     logger = logging.getLogger(__name__)
     app.add_routes(
         [
-            web.post("/encode", handle_encoding, name='encode'),
-            web.post("/decode", handle_encoding, name='decode'),
+            web.post("/encode", make_handler('encode')),
+            web.post("/decode",  make_handler('decode')),
             web.options("/decode", cors_options),
         ]
     )

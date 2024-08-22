@@ -38,7 +38,7 @@ class KMSEncryptor:
             data_key_encrypted
         )
 
-    def decrypt(self, data_key_encrypted_base64, data: bytes, namespace: str) -> bytes:
+    def decrypt(self, data_key_encrypted_base64, data: bytes) -> bytes:
         """Encrypt data using a key from KMS."""
         data_key_encrypted = base64.b64decode(data_key_encrypted_base64)
         data_key_plaintext = self.__decrypt_data_key(data_key_encrypted)
@@ -49,8 +49,9 @@ class KMSEncryptor:
         """Get a set of keys from AWS KMS that can be used to encrypt data."""
 
         # Create data key
-        cmk_prefix = os.environ["AWS_KMS_CMK_ARN_PREFIX"]
-        cmk_id = cmk_prefix + namespace
+        alias_name = 'alias/' + namespace.replace('.', '_')
+        response = self.kms_client.describe_key(KeyId=alias_name)
+        cmk_id = response['KeyMetadata']['Arn']
         key_spec = "AES_256"
         try:
             response = self.kms_client.generate_data_key(KeyId=cmk_id, KeySpec=key_spec)

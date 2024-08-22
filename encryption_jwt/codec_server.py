@@ -1,12 +1,9 @@
 import os
 import ssl
 import logging
-from functools import partial
-from typing import Awaitable, Callable, Iterable, List
 import jwt
 import grpc
 from aiohttp import hdrs, web
-import argparse
 
 from temporalio.api.common.v1 import Payload, Payloads
 from google.protobuf import json_format
@@ -15,11 +12,6 @@ from encryption_jwt.codec import EncryptionCodec
 
 
 DECRYPT_ROLES = ["admin"]
-
-
-temporal_namespace = "default"
-if os.environ.get("TEMPORAL_NAMESPACE"):
-    temporal_namespace = os.environ["TEMPORAL_NAMESPACE"]
 
 temporal_tls_cert = None
 if os.environ.get("TEMPORAL_TLS_CERT"):
@@ -38,7 +30,7 @@ if os.environ.get("TEMPORAL_OPS_ADDRESS"):
     os.environ.get("TEMPORAL_OPS_ADDRESS")
 
 
-def build_codec_server(namespace: str) -> web.Application:
+def build_codec_server() -> web.Application:
     # Cors handler
     async def cors_options(req: web.Request) -> web.Response:
         resp = web.Response()
@@ -79,10 +71,7 @@ def build_codec_server(namespace: str) -> web.Application:
 
             return ""
 
-    # General purpose payloads-to-payloads
-    async def apply(
-        fn: Callable[[Iterable[Payload]], Awaitable[List[Payload]]], req: web.Request
-    ) -> web.Response:
+    async def handle_encoding(req: web.Request):
         # Read payloads as JSON
         assert req.content_type == "application/json"
         payloads = json_format.Parse(await req.read(), Payloads())
@@ -97,8 +86,12 @@ def build_codec_server(namespace: str) -> web.Application:
         role = request_user_role(
             decoded["https://saas-api.tmprl.cloud/user/email"])
         if role.lower() in DECRYPT_ROLES:
-            # `fn` = `code.encode` or `codec.decode`
-            payloads = Payloads(payloads=await fn(payloads.payloads))
+            route_name = req.match_info.route.name
+            codec = EncryptionCodec(namespace)
+            if route_name == 'encode':
+                payloads = Payloads(payloads=await codec.encode(payloads.payloads))
+            elif route_name == 'decode':
+                payloads = Payloads(payloads=await codec.decode(payloads.payloads))
 
         # Apply CORS and return JSON
         resp = await cors_options(req)
@@ -107,15 +100,15 @@ def build_codec_server(namespace: str) -> web.Application:
         return resp
 
     # Build app
-    codec = EncryptionCodec(namespace)
+    # codec = EncryptionCodec(namespace)
     app = web.Application()
     # set up logger
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger(__name__)
     app.add_routes(
         [
-            web.post("/encode", partial(apply, codec.encode)),
-            web.post("/decode", partial(apply, codec.decode)),
+            web.post("/encode", handle_encoding, name='encode'),
+            web.post("/decode", handle_encoding, name='decode'),
             web.options("/decode", cors_options),
         ]
     )
@@ -124,9 +117,6 @@ def build_codec_server(namespace: str) -> web.Application:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run Temporal workflow with a specific namespace.")
-    parser.add_argument("namespace", type=str, help="The namespace to pass to the EncryptionCodec")
-    args = parser.parse_args()
     # pylint: disable=C0103
     ssl_context = None
     if os.environ.get("SSL_PEM") and os.environ.get("SSL_KEY"):
@@ -135,5 +125,5 @@ if __name__ == "__main__":
         ssl_context.load_cert_chain(os.environ.get(
             "SSL_PEM"), os.environ.get("SSL_KEY"))
 
-    web.run_app(build_codec_server(args.namespace), host="0.0.0.0",
+    web.run_app(build_codec_server(), host="0.0.0.0",
                 port=8081, ssl_context=ssl_context)

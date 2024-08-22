@@ -6,6 +6,7 @@ from typing import Awaitable, Callable, Iterable, List
 import jwt
 import grpc
 from aiohttp import hdrs, web
+import argparse
 
 from temporalio.api.common.v1 import Payload, Payloads
 from google.protobuf import json_format
@@ -37,7 +38,7 @@ if os.environ.get("TEMPORAL_OPS_ADDRESS"):
     os.environ.get("TEMPORAL_OPS_ADDRESS")
 
 
-def build_codec_server() -> web.Application:
+def build_codec_server(namespace: str) -> web.Application:
     # Cors handler
     async def cors_options(req: web.Request) -> web.Response:
         resp = web.Response()
@@ -88,6 +89,7 @@ def build_codec_server() -> web.Application:
 
         # Extract the email from the JWT.
         auth_header = req.headers.get("Authorization")
+        namespace = req.headers.get("x-namespace")
         _bearer, encoded = auth_header.split(" ")
         decoded = jwt.decode(encoded, options={"verify_signature": False})
 
@@ -105,7 +107,7 @@ def build_codec_server() -> web.Application:
         return resp
 
     # Build app
-    codec = EncryptionCodec()
+    codec = EncryptionCodec(namespace)
     app = web.Application()
     # set up logger
     logging.basicConfig(level=logging.DEBUG)
@@ -122,6 +124,9 @@ def build_codec_server() -> web.Application:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run Temporal workflow with a specific namespace.")
+    parser.add_argument("namespace", type=str, help="The namespace to pass to the EncryptionCodec")
+    args = parser.parse_args()
     # pylint: disable=C0103
     ssl_context = None
     if os.environ.get("SSL_PEM") and os.environ.get("SSL_KEY"):
@@ -130,5 +135,5 @@ if __name__ == "__main__":
         ssl_context.load_cert_chain(os.environ.get(
             "SSL_PEM"), os.environ.get("SSL_KEY"))
 
-    web.run_app(build_codec_server(), host="0.0.0.0",
+    web.run_app(build_codec_server(args.namespace), host="0.0.0.0",
                 port=8081, ssl_context=ssl_context)

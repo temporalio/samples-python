@@ -54,10 +54,8 @@ appropriate values:
 
 ```sh
 export TEMPORAL_ADDRESS=<your temporal domain and port>
-export TEMPORAL_NAMESPACE=<a temporal namespace> # uses "default" if not provided
 export TEMPORAL_TLS_CERT=<path to the crt file used to generate the CA Certificate for the temporal namespace>
 export TEMPORAL_TLS_KEY=<path to the key file used to generate the CA Certificate for the temporal namespace>
-export AWS_KMS_CMK_ARN=<ARN ID of a customer managed key that will be used to encrypt/decrypt data>
 export AWS_ACCESS_KEY_ID=<AWS account access key>
 export AWS_SECRET_ACCESS_KEY=<AWS account secret key>
 export AWS_SESSION_TOKEN=<AWS session token>
@@ -66,8 +64,10 @@ export AWS_SESSION_TOKEN=<AWS session token>
 In the same terminal start the worker:
 
 ```sh
-poetry run python worker.py
+poetry run python worker.py <namespace>
 ```
+
+If there's a number of workflows with different namespaces to run, open a terminal for each namespace.
 
 ### Codec server
 
@@ -80,13 +80,11 @@ You will also need a [Temporal API Key](https://docs.temporal.io/cloud/api-keys#
 Open a new terminal and add the following environment variables with values:
 
 ```sh
-export TEMPORAL_NAMESPACE=<a temporal namespace> # uses "default" if not provided
 export TEMPORAL_TLS_CERT=<path to the crt file used to generate the CA Certificate for the namespace>
 export TEMPORAL_TLS_KEY=<path to the key file used to generate the CA Certificate for the namespace>
 export TEMPORAL_API_KEY=<An API key> # see https://docs.temporal.io/cloud/tcld/apikey#create
 export TEMPORAL_OPS_ADDRESS=saas-api.tmprl.cloud:443 # uses "saas-api.tmprl.cloud:443" if not provided
 export TEMPORAL_OPS_API_VERSION=2024-05-13-00
-export AWS_KMS_CMK_ARN=<ARN ID of a customer managed key that will be used to encrypt/decrypt data>
 export AWS_ACCESS_KEY_ID=<AWS account access key>
 export AWS_SECRET_ACCESS_KEY=<AWS account secret key>
 export AWS_SESSION_TOKEN=<AWS session token>
@@ -106,7 +104,6 @@ In a third terminal, add the environment variables:
 
 ```txt
 export TEMPORAL_ADDRESS=<your temporal domain and port>
-export TEMPORAL_NAMESPACE=<a temporal namespace> # uses "default" if not provided
 export TEMPORAL_TLS_CERT=<path to the crt file used to generate the CA Certificate for the namespace>
 export TEMPORAL_TLS_KEY=<path to the key file used to generate the CA Certificate for the namespace>
 ```
@@ -114,7 +111,7 @@ export TEMPORAL_TLS_KEY=<path to the key file used to generate the CA Certificat
 Then run the command to execute the workflow:
 
 ```sh
-poetry run python starter.py
+poetry run python starter.py <namespace>
 ```
 
 The workflow should complete with the hello result. To view the workflow, use [temporal](https://docs.temporal.io/cli):

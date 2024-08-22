@@ -15,10 +15,6 @@ temporal_address = "localhost:7233"
 if os.environ.get("TEMPORAL_ADDRESS"):
     temporal_address = os.environ["TEMPORAL_ADDRESS"]
 
-temporal_namespace = "default"
-if os.environ.get("TEMPORAL_NAMESPACE"):
-    temporal_namespace = os.environ["TEMPORAL_NAMESPACE"]
-
 temporal_tls_cert = None
 if os.environ.get("TEMPORAL_TLS_CERT"):
     temporal_tls_cert_path = os.environ["TEMPORAL_TLS_CERT"]

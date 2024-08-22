@@ -12,7 +12,8 @@ with workflow.unsafe.imports_passed_through():
 class KMSEncryptor:
     """Encrypts and decrypts using keys from AWS KMS."""
 
-    def __init__(self):
+    def __init__(self, namespace: str):
+        self._namespace = namespace
         self._kms_client = None
 
     @property
@@ -26,7 +27,7 @@ class KMSEncryptor:
     def encrypt(self, data: bytes) -> tuple[bytes, bytes]:
         """Encrypt data using a key from KMS."""
         # The keys are rotated automatically by KMS, so fetch a new key to encrypt the data.
-        data_key_encrypted, data_key_plaintext = self.__create_data_key()
+        data_key_encrypted, data_key_plaintext = self.__create_data_key(self._namespace)
 
         if data_key_encrypted is None:
             raise ValueError("No data key!")
@@ -37,18 +38,19 @@ class KMSEncryptor:
             data_key_encrypted
         )
 
-    def decrypt(self, data_key_encrypted_base64, data: bytes) -> bytes:
+    def decrypt(self, data_key_encrypted_base64, data: bytes, namespace: str) -> bytes:
         """Encrypt data using a key from KMS."""
         data_key_encrypted = base64.b64decode(data_key_encrypted_base64)
         data_key_plaintext = self.__decrypt_data_key(data_key_encrypted)
         encryptor = AESGCM(data_key_plaintext)
         return encryptor.decrypt(data[:12], data[12:], None)
 
-    def __create_data_key(self):
+    def __create_data_key(self, namespace: str):
         """Get a set of keys from AWS KMS that can be used to encrypt data."""
 
         # Create data key
-        cmk_id = os.environ["AWS_KMS_CMK_ARN"]
+        cmk_prefix = os.environ["AWS_KMS_CMK_ARN_PREFIX"]
+        cmk_id = cmk_prefix + namespace
         key_spec = "AES_256"
         try:
             response = self.kms_client.generate_data_key(KeyId=cmk_id, KeySpec=key_spec)

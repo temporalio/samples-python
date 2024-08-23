@@ -75,7 +75,7 @@ def build_codec_server() -> web.Application:
                 decoded["https://saas-api.tmprl.cloud/user/email"])
             if role.lower() in DECRYPT_ROLES:
                 codec = EncryptionCodec(namespace)
-                payloads = Payloads(payloads=await codec[fn](payloads.payloads))
+                payloads = Payloads(payloads=await  getattr(codec, fn)(payloads.payloads))
 
             # Apply CORS and return JSON
             resp = await cors_options(req)

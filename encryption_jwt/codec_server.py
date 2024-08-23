@@ -13,18 +13,6 @@ from encryption_jwt.codec import EncryptionCodec
 
 DECRYPT_ROLES = ["admin"]
 
-temporal_tls_cert = None
-if os.environ.get("TEMPORAL_TLS_CERT"):
-    temporal_tls_cert_path = os.environ["TEMPORAL_TLS_CERT"]
-    with open(temporal_tls_cert_path, "rb") as f:
-        temporal_tls_cert = f.read()
-
-temporal_tls_key = None
-if os.environ.get("TEMPORAL_TLS_KEY"):
-    temporal_tls_key_path = os.environ["TEMPORAL_TLS_KEY"]
-    with open(temporal_tls_key_path, "rb") as f:
-        temporal_tls_key = f.read()
-
 temporal_ops_address = "saas-api.tmprl.cloud:443"
 if os.environ.get("TEMPORAL_OPS_ADDRESS"):
     os.environ.get("TEMPORAL_OPS_ADDRESS")

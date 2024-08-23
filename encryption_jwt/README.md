@@ -141,37 +141,3 @@ Once those requirements are met you can then see the unencrypted results. This i
 CORS settings in the codec server allow the browser to access the codec server directly over
 localhost. Decrypted data never leaves your local machine. See [Codec
 Server](https://docs.temporal.io/production-deployment/data-encryption)
-
-## Protobuf
-
-> [!WARNING]
-> You will not normally need to rebuild protobuf support; the generated files have been committed to
-> this repo. The instructions are included because:
-> - If the API changes these steps will need to be followed to get those changes
-> - A reminder of how to generate the protobuf files for python 😃
-
-To rebuild protobuf support.
-
-1. Install the python [grpc_tools](https://grpc.io/docs/languages/python/quickstart/) for protobufs.
-1. Clone the following two repositories (you need to copy files from them, they can be deleted after
-   setup):
-
-```sh
-git clone https://github.com/temporalio/api-cloud.git
-git clone https://github.com/googleapis/googleapis.git
-```
-
-3. Copy the `temporal` directory and its contents, from `api_cloud` into the root of this **project**.
-1. Copy the `google` directory and its contents, from `googleapis` into the root of this
-   **project**.
-1. From the project root generate the python wrappers for each subdirectory of `temporal/api/cloud`
-   and `google/api` like so:
-
-```sh
-python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ temporal/api/cloud/cloudservice/v1/*.proto
-python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ temporal/api/cloud/identity/v1/*.proto
-python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ temporal/api/cloud/namespace/v1/*.proto
-python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ temporal/api/cloud/operation/v1/*.proto
-python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ temporal/api/cloud/region/v1/*.proto
-python -m grpc_tools.protoc -I./ --python_out=./ --grpc_python_out=./ google/api/*.proto
-```

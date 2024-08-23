@@ -6,10 +6,9 @@ import grpc
 from aiohttp import hdrs, web
 
 from temporalio.api.common.v1 import Payload, Payloads
+from temporalio.api.cloud.cloudservice.v1 import request_response_pb2, service_pb2_grpc
 from google.protobuf import json_format
-from temporal.api.cloud.cloudservice.v1 import request_response_pb2, service_pb2_grpc
 from encryption_jwt.codec import EncryptionCodec
-
 
 DECRYPT_ROLES = ["admin"]
 

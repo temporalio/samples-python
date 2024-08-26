@@ -56,7 +56,7 @@ def build_codec_server() -> web.Application:
             authorized = False
             for user in response.users:
                 if user.spec.email.lower() == email.lower():
-                    if user.spec.access.account_access in AUTHORIZED_ACCOUNT_ACCESS_ROLES:
+                    if user.spec.access.account_access.role in AUTHORIZED_ACCOUNT_ACCESS_ROLES:
                         authorized = True
                     else:
                         if namespace in user.spec.access.namespace_accesses:

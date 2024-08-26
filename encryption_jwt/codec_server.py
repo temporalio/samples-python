@@ -14,7 +14,7 @@ DECRYPT_ROLES = ["admin"]
 
 temporal_ops_address = "saas-api.tmprl.cloud:443"
 if os.environ.get("TEMPORAL_OPS_ADDRESS"):
-    os.environ.get("TEMPORAL_OPS_ADDRESS")
+    temporal_ops_address = os.environ.get("TEMPORAL_OPS_ADDRESS")
 
 
 def build_codec_server() -> web.Application:
@@ -85,7 +85,6 @@ def build_codec_server() -> web.Application:
         return handler
 
     # Build app
-    # codec = EncryptionCodec(namespace)
     app = web.Application()
     # set up logger
     logging.basicConfig(level=logging.DEBUG)

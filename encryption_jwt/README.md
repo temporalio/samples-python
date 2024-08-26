@@ -25,8 +25,8 @@ poetry install --with encryption,bedrock
 ### Key management
 
 This example uses the [AWS Key Management Service](https://aws.amazon.com/kms/) (KMS). You will need
-to create a "Customer managed key" then provide the ARN ID as the value of the `AWS_KMS_CMK_ARN`
-environment variable. Alternately replace the key management portion with your own implementation.
+to create a "Customer managed key" with its Alias set to your Temporal Namespace (replace `.`s with `_`s).
+Alternately replace the key management portion with your own implementation.
 
 ### Self-signed certificates
 

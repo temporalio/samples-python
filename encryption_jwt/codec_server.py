@@ -10,7 +10,8 @@ from temporalio.api.cloud.cloudservice.v1 import request_response_pb2, service_p
 from google.protobuf import json_format
 from encryption_jwt.codec import EncryptionCodec
 
-DECRYPT_ROLES = ["admin"]
+AUTHORIZED_ACCOUNT_ACCESS_ROLES = ["admin"]
+AUTHORIZED_NAMESPACE_ACCESS_ROLES = ["read", "write", "admin"]
 
 temporal_ops_address = "saas-api.tmprl.cloud:443"
 if os.environ.get("TEMPORAL_OPS_ADDRESS"):
@@ -41,7 +42,7 @@ def build_codec_server() -> web.Application:
 
         return resp
 
-    def request_user_role(email: str) -> str:
+    def decryption_authorized(email: str, namespace: str) -> bool:
         credentials = grpc.composite_channel_credentials(grpc.ssl_channel_credentials(
         ), grpc.access_token_call_credentials(os.environ.get("TEMPORAL_API_KEY")))
 
@@ -52,11 +53,17 @@ def build_codec_server() -> web.Application:
             response = client.GetUsers(request, metadata=(
                 ("temporal-cloud-api-version", os.environ.get("TEMPORAL_OPS_API_VERSION")),))
 
+            authorized = False
             for user in response.users:
-                if user.spec.email == email:
-                    return user.spec.access.account_access.role
+                if user.spec.email.lower() == email.lower():
+                    if user.spec.access.account_access in AUTHORIZED_ACCOUNT_ACCESS_ROLES:
+                        authorized = True
+                    else:
+                        if namespace in user.spec.access.namespace_accesses:
+                            if user.spec.access.namespace_accesses[namespace].permission in AUTHORIZED_NAMESPACE_ACCESS_ROLES:
+                                authorized = True
 
-            return ""
+            return authorized
 
     def make_handler(fn: str):
         async def handler(req: web.Request):
@@ -71,11 +78,10 @@ def build_codec_server() -> web.Application:
             decoded = jwt.decode(encoded, options={"verify_signature": False})
 
             # Use the email to determine if the payload should be decrypted.
-            role = request_user_role(
-                decoded["https://saas-api.tmprl.cloud/user/email"])
-            if role.lower() in DECRYPT_ROLES:
-                codec = EncryptionCodec(namespace)
-                payloads = Payloads(payloads=await  getattr(codec, fn)(payloads.payloads))
+            authorized = decryption_authorized(decoded["https://saas-api.tmprl.cloud/user/email"], namespace)
+            if authorized:
+                encryptionCodec = EncryptionCodec(namespace)
+                payloads = Payloads(payloads=await  getattr(encryptionCodec, fn)(payloads.payloads))
 
             # Apply CORS and return JSON
             resp = await cors_options(req)

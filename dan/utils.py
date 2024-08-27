@@ -1,7 +1,7 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
-from typing import TypeVar
+from typing import Optional, TypeVar
 
 import rich
 from temporalio import common, workflow
@@ -12,7 +12,7 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.service import RPCError, RPCStatusCode
 from temporalio.types import MethodAsyncNoParam
 
-from dan.constants import TASK_QUEUE
+from dan.constants import NAMESPACE, TASK_QUEUE
 
 S = TypeVar("S")
 R = TypeVar("R")
@@ -20,13 +20,13 @@ R = TypeVar("R")
 
 async def start_workflow(
     run: MethodAsyncNoParam[S, R],
-    id: str = __file__,
+    id: str,
     id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
-    client=None,
+    client: Optional[Client] = None,
     **kwargs,
 ) -> WorkflowHandle[S, R]:
     if not client:
-        client = await Client.connect("localhost:7233")
+        client = await Client.connect("localhost:7233", namespace=NAMESPACE)
     return await client.start_workflow(
         run,
         id=id,

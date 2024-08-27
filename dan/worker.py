@@ -3,10 +3,10 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from dan.constants import TASK_QUEUE
+from dan.constants import NAMESPACE, TASK_QUEUE
 
 # Don't commit the line importing the Workflow class
-from dan.upsert_search_attribute_572 import Workflow
+from dan.two_updates import Workflow
 
 interrupt_event = asyncio.Event()
 
@@ -14,7 +14,7 @@ interrupt_event = asyncio.Event()
 async def main():
     print(Workflow.__module__)
 
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect("localhost:7233", namespace=NAMESPACE)
 
     async with Worker(
         client,

@@ -13,6 +13,7 @@ class Workflow:
 
 async def main():
     wf_handle = await start_workflow(Workflow.run)
+    print("workflow handle:", wf_handle)
     print("workflow result:", await wf_handle.result())
 
 

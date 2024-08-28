@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 
 from temporalio import workflow
 
@@ -22,11 +23,11 @@ class Workflow:
         return "Hello, World!"
 
     @workflow.update
-    async def update1(self) -> str:
+    async def update1(self) -> datetime:
         print("update1: starting and waiting")
         await workflow.wait_condition(lambda: self.update1_may_continue)
         self.is_complete = True
-        return "update1: complete"
+        return datetime.now()
 
     @workflow.update
     async def update2(self) -> str:
@@ -38,8 +39,8 @@ class Workflow:
 async def main():
     handle = await start_workflow(Workflow.run, id=wid)
     result = await handle.result()
-    # temporal workflow update --workflow-id wid --name update1 --namespace ns
-    # temporal workflow update execute --workflow-id wid --name update1 --task-queue tq --namespace ns
+    # temporal workflow update start --workflow-id wid --name update1 --namespace default
+    # temporal workflow update execute --workflow-id wid --name update1 --task-queue tq --namespace default
     print(f"Workflow Result: {result}")
 
 

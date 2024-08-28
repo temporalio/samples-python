@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from typing import Optional, TypeVar
@@ -20,7 +21,7 @@ R = TypeVar("R")
 
 async def start_workflow(
     run: MethodAsyncNoParam[S, R],
-    id: str,
+    id: Optional[str] = None,
     id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
     client: Optional[Client] = None,
     **kwargs,
@@ -29,7 +30,7 @@ async def start_workflow(
         client = await Client.connect("localhost:7233", namespace=NAMESPACE)
     return await client.start_workflow(
         run,
-        id=id,
+        id=id or str(uuid.uuid4()),
         task_queue=TASK_QUEUE,
         id_reuse_policy=id_reuse_policy,
         **kwargs,

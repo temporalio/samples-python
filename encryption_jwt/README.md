@@ -67,7 +67,8 @@ In the same terminal start the worker:
 poetry run python worker.py <namespace>
 ```
 
-> Note: you will need to run at least one Worker per-namespace.
+> [!Note]
+> You will need to run at least one Worker per-namespace.
 
 ### Codec server
 

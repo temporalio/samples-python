@@ -1,2 +1,2 @@
 TASK_QUEUE = "tq"
-NAMESPACE = "ns"
+NAMESPACE = "default"

@@ -31,7 +31,7 @@ interrupt_event = asyncio.Event()
 
 
 async def main():
-    print(Workflow.__module__)
+    print(NAMESPACE, Workflow.__module__)
 
     client = await Client.connect("localhost:7233", namespace=NAMESPACE)
 

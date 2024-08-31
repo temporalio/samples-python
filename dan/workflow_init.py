@@ -1,26 +1,32 @@
 import asyncio
-import traceback
 
-from temporalio import workflow
-from utils import start_workflow
+from temporalio import common, workflow
+from temporalio.client import Client
+
+from dan.constants import NAMESPACE, TASK_QUEUE
+
+wid = "wid"
 
 
 @workflow.defn
 class Workflow:
-    def __init__(self) -> None:
-        stack = traceback.extract_stack()
-        formatted_stack = traceback.format_list(stack)
-        for line in formatted_stack:
-            print(line.strip())
+    def __init__(self, arg: str) -> None:
+        pass
 
     @workflow.run
-    async def run(self) -> str:
-        return "workflow-result"
+    async def run(self, arg: str) -> str:
+        return f"workflow-result-{arg}"
 
 
 async def main():
-    wf_handle = await start_workflow(Workflow.run)
-    print("workflow handle:", wf_handle)
+    client = await Client.connect("localhost:7233", namespace=NAMESPACE)
+    wf_handle = await client.start_workflow(
+        Workflow.run,
+        "my-arg",
+        id=wid,
+        task_queue=TASK_QUEUE,
+        id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
+    )
     print("workflow result:", await wf_handle.result())
 
 

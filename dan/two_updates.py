@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime
 
 from temporalio import workflow
 
@@ -23,11 +22,11 @@ class Workflow:
         return "Hello, World!"
 
     @workflow.update
-    async def update1(self) -> datetime:
+    async def update1(self) -> str:
         print("update1: starting and waiting")
         await workflow.wait_condition(lambda: self.update1_may_continue)
         self.is_complete = True
-        return datetime.now()
+        return "update1: complete"
 
     @workflow.update
     async def update2(self) -> str:

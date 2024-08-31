@@ -1,6 +1,7 @@
 import asyncio
 
 from temporalio import workflow
+from temporalio.client import WorkflowUpdateStage
 
 from dan.utils import start_workflow
 
@@ -24,15 +25,13 @@ class Workflow:
 
 async def main():
     handle = await start_workflow(Workflow.run, id=wid)
-    print(handle)
-    print(await handle.result())
-    # update_handle = await handle.start_update(
-    #     "my_update_xxx", wait_for_stage=WorkflowUpdateStage.ACCEPTED
-    # )
-    # print("Update Handle:")
-    # from pprint import pprint
+    update_handle = await handle.start_update(
+        "my_update_xxx", wait_for_stage=WorkflowUpdateStage.ACCEPTED
+    )
+    print("Update Handle:")
+    from pprint import pprint
 
-    # pprint(update_handle.__dict__)
+    pprint(update_handle.__dict__)
 
     # update_result = await update_handle.result()
     # print(f"Update Result: {update_result}")

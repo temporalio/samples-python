@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
@@ -78,3 +79,10 @@ async def ainput(prompt: str = ""):
         return (
             await asyncio.get_event_loop().run_in_executor(executor, input, prompt)
         ).rstrip()
+
+
+def print_stack():
+    stack = traceback.extract_stack()
+    formatted_stack = traceback.format_list(stack)
+    for line in formatted_stack:
+        print(line.strip())

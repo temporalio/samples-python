@@ -14,6 +14,8 @@ def get_last_edited_workflow_module():
     workflow_files = []
     for f in dan_dir.glob("*.py"):
         if f.is_file():
+            if f.stem == "worker":
+                continue
             try:
                 module = import_module(f"dan.{f.stem}")
             except NameError:

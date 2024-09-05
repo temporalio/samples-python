@@ -5,8 +5,6 @@ from temporalio.client import WorkflowUpdateStage
 
 from dan.utils import start_workflow
 
-wid = __file__
-
 
 @workflow.defn
 class Workflow:
@@ -25,7 +23,7 @@ class Workflow:
 
 
 async def main():
-    handle = await start_workflow(Workflow.run, id=wid)
+    handle = await start_workflow(Workflow.run)
     update_handle = await handle.start_update(
         Workflow.my_update, wait_for_stage=WorkflowUpdateStage.ACCEPTED
     )

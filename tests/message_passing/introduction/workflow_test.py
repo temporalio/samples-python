@@ -9,7 +9,6 @@ from message_passing.introduction.starter import TASK_QUEUE
 from message_passing.introduction.workflows import (
     GetLanguagesInput,
     GreetingWorkflow,
-    GreetingWorkflowWithAsyncHandler,
     Language,
     call_greeting_service,
 )
@@ -107,23 +106,18 @@ async def test_set_language_that_is_only_available_via_remote_service(
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[GreetingWorkflowWithAsyncHandler],
+        workflows=[GreetingWorkflow],
         activities=[call_greeting_service],
     ):
         wf_handle = await client.start_workflow(
-            GreetingWorkflowWithAsyncHandler.run,
+            GreetingWorkflow.run,
             id=str(uuid.uuid4()),
             task_queue=TASK_QUEUE,
         )
-        assert (
-            await wf_handle.query(GreetingWorkflowWithAsyncHandler.get_language)
-            == Language.ENGLISH
-        )
+        assert await wf_handle.query(GreetingWorkflow.get_language) == Language.ENGLISH
         previous_language = await wf_handle.execute_update(
-            GreetingWorkflowWithAsyncHandler.set_language, Language.ARABIC
+            GreetingWorkflow.set_language_using_activity,
+            Language.ARABIC,
         )
         assert previous_language == Language.ENGLISH
-        assert (
-            await wf_handle.query(GreetingWorkflowWithAsyncHandler.get_language)
-            == Language.ARABIC
-        )
+        assert await wf_handle.query(GreetingWorkflow.get_language) == Language.ARABIC

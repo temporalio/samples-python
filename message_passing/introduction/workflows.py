@@ -6,8 +6,9 @@ from typing import List, Optional
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from message_passing.introduction import Language
-from message_passing.introduction.activities import call_greeting_service
+with workflow.unsafe.imports_passed_through():
+    from message_passing.introduction import Language
+    from message_passing.introduction.activities import call_greeting_service
 
 
 @dataclass

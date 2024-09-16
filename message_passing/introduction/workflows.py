@@ -1,21 +1,13 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import IntEnum
 from typing import List, Optional
 
-from temporalio import activity, workflow
+from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-
-class Language(IntEnum):
-    ARABIC = 1
-    CHINESE = 2
-    ENGLISH = 3
-    FRENCH = 4
-    HINDI = 5
-    PORTUGUESE = 6
-    SPANISH = 7
+from message_passing.introduction import Language
+from message_passing.introduction.activities import call_greeting_service
 
 
 @dataclass
@@ -120,22 +112,3 @@ class GreetingWorkflow:
     @workflow.query
     def get_language(self) -> Language:
         return self.language
-
-
-@activity.defn
-async def call_greeting_service(to_language: Language) -> Optional[str]:
-    """
-    An Activity that simulates a call to a remote greeting service.
-    The remote greeting service supports the full range of languages.
-    """
-    greetings = {
-        Language.ARABIC: "مرحبا بالعالم",
-        Language.CHINESE: "你好，世界",
-        Language.ENGLISH: "Hello, world",
-        Language.FRENCH: "Bonjour, monde",
-        Language.HINDI: "नमस्ते दुनिया",
-        Language.PORTUGUESE: "Olá mundo",
-        Language.SPANISH: "¡Hola mundo",
-    }
-    await asyncio.sleep(0.2)  # Simulate a network call
-    return greetings.get(to_language)

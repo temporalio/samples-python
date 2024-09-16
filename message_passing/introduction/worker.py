@@ -4,10 +4,9 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from message_passing.introduction.workflows import (
-    GreetingWorkflow,
-    call_greeting_service,
-)
+from message_passing.introduction import TASK_QUEUE
+from message_passing.introduction.activities import call_greeting_service
+from message_passing.introduction.workflows import GreetingWorkflow
 
 interrupt_event = asyncio.Event()
 
@@ -19,7 +18,7 @@ async def main():
 
     async with Worker(
         client,
-        task_queue="message-passing-introduction-task-queue",
+        task_queue=TASK_QUEUE,
         workflows=[GreetingWorkflow],
         activities=[call_greeting_service],
     ):

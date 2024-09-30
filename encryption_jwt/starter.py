@@ -1,7 +1,7 @@
+import argparse
 import asyncio
 import dataclasses
 import os
-import argparse
 
 import temporalio.converter
 from temporalio.client import Client, TLSConfig
@@ -38,7 +38,9 @@ async def main(namespace: str):
         tls=TLSConfig(
             client_cert=temporal_tls_cert,
             client_private_key=temporal_tls_key,
-        ) if temporal_tls_cert and temporal_tls_key else False
+        )
+        if temporal_tls_cert and temporal_tls_key
+        else False,
     )
 
     # Run workflow
@@ -52,7 +54,11 @@ async def main(namespace: str):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run Temporal workflow with a specific namespace.")
-    parser.add_argument("namespace", type=str, help="The namespace to pass to the EncryptionCodec")
+    parser = argparse.ArgumentParser(
+        description="Run Temporal workflow with a specific namespace."
+    )
+    parser.add_argument(
+        "namespace", type=str, help="The namespace to pass to the EncryptionCodec"
+    )
     args = parser.parse_args()
     asyncio.run(main(args.namespace))

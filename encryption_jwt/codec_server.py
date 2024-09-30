@@ -1,16 +1,19 @@
+import logging
 import os
 import ssl
-import logging
-import jwt
-import grpc
-from aiohttp import hdrs, web
 
-from temporalio.api.common.v1 import Payload, Payloads
-from temporalio.api.cloud.cloudservice.v1 import request_response_pb2, service_pb2_grpc
+import grpc
+import jwt
+import requests
+from aiohttp import hdrs, web
 from google.protobuf import json_format
+from jwt.algorithms import RSAAlgorithm
+from temporalio.api.cloud.cloudservice.v1 import request_response_pb2, service_pb2_grpc
+from temporalio.api.common.v1 import Payload, Payloads
+
 from encryption_jwt.codec import EncryptionCodec
 
-AUTHORIZED_ACCOUNT_ACCESS_ROLES = ["admin"]
+AUTHORIZED_ACCOUNT_ACCESS_ROLES = ["owner", "admin"]
 AUTHORIZED_NAMESPACE_ACCESS_ROLES = ["read", "write", "admin"]
 
 temporal_ops_address = "saas-api.tmprl.cloud:443"
@@ -43,51 +46,101 @@ def build_codec_server() -> web.Application:
         return resp
 
     def decryption_authorized(email: str, namespace: str) -> bool:
-        credentials = grpc.composite_channel_credentials(grpc.ssl_channel_credentials(
-        ), grpc.access_token_call_credentials(os.environ.get("TEMPORAL_API_KEY")))
+        credentials = grpc.composite_channel_credentials(
+            grpc.ssl_channel_credentials(),
+            grpc.access_token_call_credentials(os.environ.get("TEMPORAL_API_KEY")),
+        )
 
         with grpc.secure_channel(temporal_ops_address, credentials) as channel:
             client = service_pb2_grpc.CloudServiceStub(channel)
             request = request_response_pb2.GetUsersRequest()
 
-            response = client.GetUsers(request, metadata=(
-                ("temporal-cloud-api-version", os.environ.get("TEMPORAL_OPS_API_VERSION")),))
+            response = client.GetUsers(
+                request,
+                metadata=(
+                    (
+                        "temporal-cloud-api-version",
+                        os.environ.get("TEMPORAL_OPS_API_VERSION"),
+                    ),
+                ),
+            )
 
-            authorized = False
             for user in response.users:
                 if user.spec.email.lower() == email.lower():
-                    if user.spec.access.account_access.role in AUTHORIZED_ACCOUNT_ACCESS_ROLES:
-                        authorized = True
+                    if (
+                        user.spec.access.account_access.role
+                        in AUTHORIZED_ACCOUNT_ACCESS_ROLES
+                    ):
+                        return True
                     else:
                         if namespace in user.spec.access.namespace_accesses:
-                            if user.spec.access.namespace_accesses[namespace].permission in AUTHORIZED_NAMESPACE_ACCESS_ROLES:
-                                authorized = True
+                            if (
+                                user.spec.access.namespace_accesses[
+                                    namespace
+                                ].permission
+                                in AUTHORIZED_NAMESPACE_ACCESS_ROLES
+                            ):
+                                return True
 
-            return authorized
+            return False
 
     def make_handler(fn: str):
         async def handler(req: web.Request):
-            # Read payloads as JSON
-            assert req.content_type == "application/json"
-            payloads = json_format.Parse(await req.read(), Payloads())
-
-            # Extract the email from the JWT.
-            auth_header = req.headers.get("Authorization")
             namespace = req.headers.get("x-namespace")
+            auth_header = req.headers.get("Authorization")
             _bearer, encoded = auth_header.split(" ")
-            decoded = jwt.decode(encoded, options={"verify_signature": False})
 
-            # Use the email to determine if the payload should be decrypted.
-            authorized = decryption_authorized(decoded["https://saas-api.tmprl.cloud/user/email"], namespace)
+            # Extract the kid from the Auth header
+            jwt_dict = jwt.get_unverified_header(encoded)
+            kid = jwt_dict["kid"]
+            algorithm = jwt_dict["alg"]
+
+            # Fetch Temporal Cloud JWKS
+            jwks_url = "https://login.tmprl.cloud/.well-known/jwks.json"
+            jwks = requests.get(jwks_url).json()
+
+            # Extract Temporal Cloud's public key
+            public_key = None
+            for key in jwks["keys"]:
+                if key["kid"] == kid:
+                    # Convert JWKS key to PEM format
+                    public_key = RSAAlgorithm.from_jwk(key)
+                    break
+
+            if public_key is None:
+                raise ValueError("Public key not found in JWKS")
+
+            # Decode the jwt, verifying against Temporal Cloud's public key
+            decoded = jwt.decode(
+                encoded,
+                public_key,
+                algorithms=[algorithm],
+                audience=[
+                    "https://saas-api.tmprl.cloud",
+                    "https://prod-tmprl.us.auth0.com/userinfo",
+                ],
+            )
+
+            # Use the email to determine if the user is authorized to decrypt the payload
+            authorized = decryption_authorized(
+                decoded["https://saas-api.tmprl.cloud/user/email"], namespace
+            )
+
             if authorized:
+                # Read payloads as JSON
+                assert req.content_type == "application/json"
+                payloads = json_format.Parse(await req.read(), Payloads())
                 encryptionCodec = EncryptionCodec(namespace)
-                payloads = Payloads(payloads=await  getattr(encryptionCodec, fn)(payloads.payloads))
+                payloads = Payloads(
+                    payloads=await getattr(encryptionCodec, fn)(payloads.payloads)
+                )
 
             # Apply CORS and return JSON
             resp = await cors_options(req)
             resp.content_type = "application/json"
             resp.text = json_format.MessageToJson(payloads)
             return resp
+
         return handler
 
     # Build app
@@ -97,8 +150,8 @@ def build_codec_server() -> web.Application:
     logger = logging.getLogger(__name__)
     app.add_routes(
         [
-            web.post("/encode", make_handler('encode')),
-            web.post("/decode",  make_handler('decode')),
+            web.post("/encode", make_handler("encode")),
+            web.post("/decode", make_handler("decode")),
             web.options("/decode", cors_options),
         ]
     )
@@ -112,8 +165,10 @@ if __name__ == "__main__":
     if os.environ.get("SSL_PEM") and os.environ.get("SSL_KEY"):
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_context.check_hostname = False
-        ssl_context.load_cert_chain(os.environ.get(
-            "SSL_PEM"), os.environ.get("SSL_KEY"))
+        ssl_context.load_cert_chain(
+            os.environ.get("SSL_PEM"), os.environ.get("SSL_KEY")
+        )
 
-    web.run_app(build_codec_server(), host="0.0.0.0",
-                port=8081, ssl_context=ssl_context)
+    web.run_app(
+        build_codec_server(), host="0.0.0.0", port=8081, ssl_context=ssl_context
+    )

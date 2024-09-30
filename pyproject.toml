@@ -43,6 +43,10 @@ dependencies = { pyyaml = "^6.0.1", types-pyyaml = "^6.0.12", dacite = "^1.8.1" 
 optional = true
 dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1" }
 
+[tool.poetry.group.encryption_jwt]
+optional = true
+dependencies = { cryptography = "^38.0.1", aiohttp = "^3.8.1", pyjwt = "^2.9.0", grpcio = "^1.66.1", aioboto3 = "^13.1.1", "requests" = "^2.32.3" }
+
 [tool.poetry.group.gevent]
 optional = true
 dependencies = { gevent = { version = "^23.9.1", python = ">=3.8" } }

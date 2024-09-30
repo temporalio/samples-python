@@ -11,10 +11,10 @@ The Codec Server uses the [Operations API](https://docs.temporal.io/ops) to get 
 
 ## Install
 
-For this sample, the optional `encryption` and `bedrock` dependency groups must be included. To include, run:
+For this sample, the optional `encryption_jwt` and `bedrock` dependency groups must be included. To include, run:
 
 ```sh
-poetry install --with encryption,bedrock
+poetry install --with encryption_jwt,bedrock
 ```
 
 ## Setup
@@ -31,8 +31,8 @@ Alternately replace the key management portion with your own implementation.
 ### Self-signed certificates
 
 The codec server will need to use HTTPS, self-signed certificates will work in the development
-environment. Run the following command in a `_certs` directory that's a subdirectory of the
-repository root, it will create certificate files that are good for 10 years.
+environment. Run the following command in a `_certs` directory that's a subdirectory of this one.
+It will create certificate files that are good for 10 years.
 
 ```sh
 openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout localhost.key -out localhost.pem -subj "/CN=localhost"
@@ -40,8 +40,8 @@ openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -nodes -keyout localhost.k
 
 In the projects you can access the files using the following relative paths.
 
-- `../_certs/localhost.pem`
-- `../_certs/localhost.key`
+- `./_certs/localhost.pem`
+- `./_certs/localhost.key`
 
 ## Run
 

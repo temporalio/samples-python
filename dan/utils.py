@@ -1,6 +1,5 @@
 import asyncio
 import traceback
-import uuid
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from typing import Optional, TypeVar
@@ -14,7 +13,7 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.service import RPCError, RPCStatusCode
 from temporalio.types import MethodAsyncNoParam
 
-from dan.constants import NAMESPACE, TASK_QUEUE
+from dan.constants import NAMESPACE, TASK_QUEUE, WORKFLOW_ID
 
 S = TypeVar("S")
 R = TypeVar("R")
@@ -31,7 +30,7 @@ async def start_workflow(
         client = await Client.connect("localhost:7233", namespace=NAMESPACE)
     return await client.start_workflow(
         run,
-        id=id or str(uuid.uuid4()),
+        id=id or WORKFLOW_ID,
         task_queue=TASK_QUEUE,
         id_reuse_policy=id_reuse_policy,
         **kwargs,

@@ -2,17 +2,15 @@ import asyncio
 from typing import NoReturn
 
 from temporalio import workflow
-from utils import print, start_workflow
+
+from dan.utils import print, start_workflow
 
 
 @workflow.defn
 class Workflow:
     @workflow.run
     async def run(self) -> NoReturn:
-        try:
-            await workflow.wait_condition(lambda: False)
-        except asyncio.CancelledError:
-            print("[blue]caught CancelledError[/blue]")
+        await asyncio.Future()
 
 
 async def main():

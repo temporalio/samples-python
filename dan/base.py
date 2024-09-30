@@ -1,7 +1,8 @@
 import asyncio
 
 from temporalio import workflow
-from utils import start_workflow
+
+from dan.utils import start_workflow
 
 
 @workflow.defn

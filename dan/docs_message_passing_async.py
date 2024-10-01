@@ -4,8 +4,7 @@ from datetime import timedelta
 from enum import IntEnum
 from typing import Optional
 
-from docutils import ApplicationError
-from temporalio import activity, workflow
+from temporalio import activity, exceptions, workflow
 
 
 class Language(IntEnum):
@@ -95,7 +94,7 @@ class GreetingWorkflow:
                 # call_greeting_service supports the requested language. Raising ApplicationError
                 # will fail the Update, but the WorkflowExecutionUpdateAccepted event will still be
                 # added to history.
-                raise ApplicationError(
+                raise exceptions.ApplicationError(
                     f"Greeting service does not support {language.name}"
                 )
             self.greetings[language] = greeting

@@ -2,19 +2,21 @@ import logging
 import os
 import ssl
 
-import grpc
 import jwt
 import requests
 from aiohttp import hdrs, web
 from google.protobuf import json_format
 from jwt.algorithms import RSAAlgorithm
-from temporalio.api.cloud.cloudservice.v1 import request_response_pb2, service_pb2_grpc
-from temporalio.api.common.v1 import Payload, Payloads
+from temporalio.api.cloud.cloudservice.v1 import GetUsersRequest
+from temporalio.api.common.v1 import Payloads
+from temporalio.client import CloudOperationsClient
 
 from encryption_jwt.codec import EncryptionCodec
 
 AUTHORIZED_ACCOUNT_ACCESS_ROLES = ["owner", "admin"]
 AUTHORIZED_NAMESPACE_ACCESS_ROLES = ["read", "write", "admin"]
+
+TEMPORAL_CLIENT_CLOUD_API_VERSION = "2024-05-13-00"
 
 temporal_ops_address = "saas-api.tmprl.cloud:443"
 if os.environ.get("TEMPORAL_OPS_ADDRESS"):
@@ -45,44 +47,32 @@ def build_codec_server() -> web.Application:
 
         return resp
 
-    def decryption_authorized(email: str, namespace: str) -> bool:
-        credentials = grpc.composite_channel_credentials(
-            grpc.ssl_channel_credentials(),
-            grpc.access_token_call_credentials(os.environ.get("TEMPORAL_API_KEY")),
+    async def decryption_authorized(email: str, namespace: str) -> bool:
+        client = await CloudOperationsClient.connect(
+            api_key=os.environ.get("TEMPORAL_API_KEY"),
+            version=TEMPORAL_CLIENT_CLOUD_API_VERSION,
         )
 
-        with grpc.secure_channel(temporal_ops_address, credentials) as channel:
-            client = service_pb2_grpc.CloudServiceStub(channel)
-            request = request_response_pb2.GetUsersRequest()
+        response = await client.cloud_service.get_users(
+            GetUsersRequest(namespace=namespace)
+        )
 
-            response = client.GetUsers(
-                request,
-                metadata=(
-                    (
-                        "temporal-cloud-api-version",
-                        os.environ.get("TEMPORAL_OPS_API_VERSION"),
-                    ),
-                ),
-            )
+        for user in response.users:
+            if user.spec.email.lower() == email.lower():
+                if (
+                    user.spec.access.account_access.role
+                    in AUTHORIZED_ACCOUNT_ACCESS_ROLES
+                ):
+                    return True
+                else:
+                    if namespace in user.spec.access.namespace_accesses:
+                        if (
+                            user.spec.access.namespace_accesses[namespace].permission
+                            in AUTHORIZED_NAMESPACE_ACCESS_ROLES
+                        ):
+                            return True
 
-            for user in response.users:
-                if user.spec.email.lower() == email.lower():
-                    if (
-                        user.spec.access.account_access.role
-                        in AUTHORIZED_ACCOUNT_ACCESS_ROLES
-                    ):
-                        return True
-                    else:
-                        if namespace in user.spec.access.namespace_accesses:
-                            if (
-                                user.spec.access.namespace_accesses[
-                                    namespace
-                                ].permission
-                                in AUTHORIZED_NAMESPACE_ACCESS_ROLES
-                            ):
-                                return True
-
-            return False
+        return False
 
     def make_handler(fn: str):
         async def handler(req: web.Request):
@@ -122,7 +112,7 @@ def build_codec_server() -> web.Application:
             )
 
             # Use the email to determine if the user is authorized to decrypt the payload
-            authorized = decryption_authorized(
+            authorized = await decryption_authorized(
                 decoded["https://saas-api.tmprl.cloud/user/email"], namespace
             )
 

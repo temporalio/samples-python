@@ -6,6 +6,7 @@ import jwt
 import requests
 from aiohttp import hdrs, web
 from google.protobuf import json_format
+from jwt import PyJWK
 from jwt.algorithms import RSAAlgorithm
 from temporalio.api.cloud.cloudservice.v1 import GetUsersRequest
 from temporalio.api.common.v1 import Payloads
@@ -90,20 +91,20 @@ def build_codec_server() -> web.Application:
             jwks = requests.get(jwks_url).json()
 
             # Extract Temporal Cloud's public key
-            public_key = None
+            pyjwk = None
             for key in jwks["keys"]:
                 if key["kid"] == kid:
                     # Convert JWKS key to PEM format
-                    public_key = RSAAlgorithm.from_jwk(key)
+                    pyjwk = PyJWK.from_dict(key)
                     break
 
-            if public_key is None:
+            if pyjwk is None:
                 raise ValueError("Public key not found in JWKS")
 
             # Decode the jwt, verifying against Temporal Cloud's public key
             decoded = jwt.decode(
                 encoded,
-                public_key,
+                pyjwk.key,
                 algorithms=[algorithm],
                 audience=[
                     "https://saas-api.tmprl.cloud",

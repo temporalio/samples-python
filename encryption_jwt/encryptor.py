@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import logging
 import os
@@ -38,16 +39,20 @@ class KMSEncryptor:
 
         nonce = os.urandom(12)
         encryptor = AESGCM(data_key_plaintext)
-        return nonce + encryptor.encrypt(nonce, data, None), base64.b64encode(
-            data_key_encrypted
+        encrypted = asyncio.get_running_loop().run_in_executor(
+            None, encryptor.encrypt, nonce, data, None
         )
+        return nonce + await encrypted, base64.b64encode(data_key_encrypted)
 
     async def decrypt(self, data_key_encrypted_base64, data: bytes) -> bytes:
         """Encrypt data using a key from KMS."""
         data_key_encrypted = base64.b64decode(data_key_encrypted_base64)
         data_key_plaintext = await self.__decrypt_data_key(data_key_encrypted)
         encryptor = AESGCM(data_key_plaintext)
-        return encryptor.decrypt(data[:12], data[12:], None)
+        decrypted = await asyncio.get_running_loop().run_in_executor(
+            None, encryptor.decrypt, data[:12], data[12:], None
+        )
+        return decrypted
 
     async def __create_data_key(self, namespace: str):
         """Get a set of keys from AWS KMS that can be used to encrypt data."""

@@ -18,9 +18,9 @@ AUTHORIZED_NAMESPACE_ACCESS_ROLES = ["read", "write", "admin"]
 
 TEMPORAL_CLIENT_CLOUD_API_VERSION = "2024-05-13-00"
 
-temporal_ops_address = "saas-api.tmprl.cloud:443"
-if os.environ.get("TEMPORAL_OPS_ADDRESS"):
-    temporal_ops_address = os.environ.get("TEMPORAL_OPS_ADDRESS")
+temporal_ops_address = (
+    os.environ.get("TEMPORAL_OPS_ADDRESS") or "saas-api.tmprl.cloud:443"
+)
 
 
 def build_codec_server() -> web.Application:
@@ -76,8 +76,8 @@ def build_codec_server() -> web.Application:
 
     def make_handler(fn: str):
         async def handler(req: web.Request):
-            namespace = req.headers.get("x-namespace")
-            auth_header = req.headers.get("Authorization")
+            namespace = req.headers.get("x-namespace") or "default"
+            auth_header = req.headers.get("Authorization") or ""
             _bearer, encoded = auth_header.split(" ")
 
             # Extract the kid from the Auth header
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_context.check_hostname = False
         ssl_context.load_cert_chain(
-            os.environ.get("SSL_PEM"), os.environ.get("SSL_KEY")
+            os.environ.get("SSL_PEM") or "", os.environ.get("SSL_KEY") or ""
         )
 
     web.run_app(

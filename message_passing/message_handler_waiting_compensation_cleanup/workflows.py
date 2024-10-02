@@ -60,7 +60,7 @@ class MyWorkflow:
         update_task = asyncio.Task(self._my_update())
         # 👉 Always use `workflow.wait` instead of `asyncio.wait` in Workflow
         # code: asyncio's version is non-deterministic.
-        first_completed, _ = await workflow.wait(
+        first_completed, _ = await workflow.wait(  # type: ignore
             [update_task, self.workflow_exit_exception],
             return_when=asyncio.FIRST_COMPLETED,
         )

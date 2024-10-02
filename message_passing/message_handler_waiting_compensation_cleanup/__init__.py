@@ -1,15 +1,15 @@
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import IntEnum
 
 TASK_QUEUE = "my-task-queue"
 WORKFLOW_ID = "my-workflow-id"
 
 
-class WorkflowExitType(StrEnum):
-    SUCCESS = "success"
-    FAILURE = "failure"
-    CONTINUE_AS_NEW = "continue_as_new"
-    CANCELLATION = "cancellation"
+class WorkflowExitType(IntEnum):
+    SUCCESS = 0
+    FAILURE = 1
+    CONTINUE_AS_NEW = 2
+    CANCELLATION = 3
 
 
 @dataclass
@@ -17,9 +17,9 @@ class WorkflowInput:
     exit_type: WorkflowExitType
 
 
-class OnWorkflowExitAction(StrEnum):
-    CONTINUE = "continue"
-    ABORT_WITH_COMPENSATION = "abort_with_compensation"
+class OnWorkflowExitAction(IntEnum):
+    CONTINUE = 0
+    ABORT_WITH_COMPENSATION = 1
 
 
 @dataclass

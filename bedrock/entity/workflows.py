@@ -18,20 +18,15 @@ class BedrockParams:
 
 @workflow.defn
 class EntityBedrockWorkflow:
-    def __init__(self) -> None:
+
+    @workflow.init
+    def __init__(self, params: BedrockParams) -> None:
         # List to store prompt history
         self.conversation_history: List[Tuple[str, str]] = []
         self.prompt_queue: Deque[str] = deque()
         self.conversation_summary: Optional[str] = None
         self.continue_as_new_per_turns: int = 6
         self.chat_ended: bool = False
-
-    @workflow.run
-    async def run(
-        self,
-        params: BedrockParams,
-    ) -> str:
-
         if params and params.conversation_summary:
             self.conversation_history.append(
                 ("conversation_summary", params.conversation_summary)
@@ -42,6 +37,12 @@ class EntityBedrockWorkflow:
         if params and params.prompt_queue:
             self.prompt_queue.extend(params.prompt_queue)
 
+
+    @workflow.run
+    async def run(
+        self,
+        params: BedrockParams,
+    ) -> str:
         while True:
             workflow.logger.info("Waiting for prompts...")
 

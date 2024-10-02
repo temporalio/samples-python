@@ -33,7 +33,7 @@ class GreetingWorkflow:
 
     # 👉 This Workflow does not use any async handlers and so cannot use any
     # Activities. It only supports two languages, whose greetings are hardcoded
-    # in the Workflow definition. See GreetingWorkflowWithAsyncHandler below for
+    # in the Workflow definition. See ClusterManagerWorkflow for
     # a Workflow that uses an async Update handler to call an Activity.
 
     def __init__(self) -> None:

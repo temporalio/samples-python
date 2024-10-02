@@ -34,6 +34,9 @@ class Workflow:
        or fails.
     """
 
+    def __init__(self) -> None:
+        self.in_progress_message_handlers_should_abort_and_cleanup = asyncio.Event()
+
     @workflow.run
     async def run(self, input: WorkflowInput) -> str:
         try:
@@ -50,14 +53,32 @@ class Workflow:
 
     @workflow.update
     async def my_update(self) -> str:
+        self._update_started = True
+
+        update_task = asyncio.Task(self._my_update())
+        abort_task = asyncio.Task(
+            self.in_progress_message_handlers_should_abort_and_cleanup.wait()
+        )
+        done, _ = await workflow.wait(
+            [update_task, abort_task], return_when=asyncio.FIRST_COMPLETED
+        )
+        if abort_task in done:
+            await self._my_update_cleanup()
+            raise exceptions.ApplicationError(
+                "The update failed because the workflow run was aborted"
+            )
+
+    async def _my_update(self) -> str:
         """
         This handler is slow, so will result in an
         UnfinishedUpdateHandlersWarning (TMPRL1102) unless the main workflow
         task waits for it to finish.
         """
-        self._update_started = True
         await asyncio.sleep(3)
         return "update-result"
+
+    async def _my_update_cleanup(self):
+        print("performing update handler cleanup operations")
 
     async def _run(self, input: WorkflowInput) -> str:
         """

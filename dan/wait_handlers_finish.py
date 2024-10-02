@@ -2,9 +2,10 @@ import asyncio
 import sys
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import timedelta
 from enum import StrEnum
 
-from temporalio import client, common, exceptions, workflow
+from temporalio import activity, client, common, exceptions, workflow
 
 TASK_QUEUE = "tq"
 WORKFLOW_ID = "wid"
@@ -25,21 +26,25 @@ class WorkflowInput:
 @workflow.defn
 class Workflow:
     """
-    This Workflow satisfies the following, all of which are recommended:
+    This Workflow upholds the following recommended practices:
 
     1. The main workflow method ensures that all signal and update handlers are
        finished before a successful return, and on failure, cancellation, and
        continue-as-new.
-    2. TODO: The update handler performs cleanup when the workflow is cancelled
-       or fails.
+    2. The update handler performs any necessary compensation/cleanup when the
+       workflow is cancelled, fails, or continues-as-new.
     """
 
     def __init__(self) -> None:
-        self.in_progress_message_handlers_should_abort_and_cleanup = asyncio.Event()
+        self.workflow_exit_exception: asyncio.Future[BaseException] = asyncio.Future()
 
     @workflow.run
     async def run(self, input: WorkflowInput) -> str:
         try:
+            # 👉 Use this `try...except` style, instead of waiting for message
+            # handlers to finish in a `finally` block. The reason is that other
+            # exception types will cause a Workflow Task failure, in which case
+            # we do *not* want to wait for message handlers to finish.
             result = await self._run(input)
             await workflow.wait_condition(workflow.all_handlers_finished)
             return result
@@ -48,24 +53,36 @@ class Workflow:
             workflow.ContinueAsNewError,
             exceptions.FailureError,
         ) as exc:
+            self.workflow_exit_exception.set_result(exc)
             await workflow.wait_condition(workflow.all_handlers_finished)
             raise exc
 
     @workflow.update
     async def my_update(self) -> str:
-        self._update_started = True
-
+        """
+        This update handler demonstrates how to handle the situation where the
+        main Workflow method exits prematurely. In that case we perform
+        compensation/cleanup, and fail the Update. The Update caller will get a
+        WorkflowUpdateFailedError.
+        """
+        # Coroutines must be wrapped in tasks in order to use workflow.wait.
         update_task = asyncio.Task(self._my_update())
-        abort_task = asyncio.Task(
-            self.in_progress_message_handlers_should_abort_and_cleanup.wait()
+        # 👉 Always use `workflow.wait` instead of `asyncio.wait` in Workflow
+        # code: asyncio's version is non-deterministic.
+        first_completed, _ = await workflow.wait(
+            [update_task, self.workflow_exit_exception],
+            return_when=asyncio.FIRST_COMPLETED,
         )
-        done, _ = await workflow.wait(
-            [update_task, abort_task], return_when=asyncio.FIRST_COMPLETED
-        )
-        if abort_task in done:
-            await self._my_update_cleanup()
+        # 👉 It's possible that the update completed and the workflow exited
+        # prematurely in the same tick of the event loop. If the Update has
+        # completed, return the Update result to the caller, whether or not the
+        # Workflow is exiting.
+        if update_task in first_completed:
+            return await update_task
+        else:
+            await self._my_update_compensation_and_cleanup()
             raise exceptions.ApplicationError(
-                "The update failed because the workflow run was aborted"
+                f"The update failed because the workflow run exited: {await self.workflow_exit_exception}"
             )
 
     async def _my_update(self) -> str:
@@ -74,11 +91,16 @@ class Workflow:
         UnfinishedUpdateHandlersWarning (TMPRL1102) unless the main workflow
         task waits for it to finish.
         """
-        await asyncio.sleep(3)
+        # Ignore: implementation detail specific to this sample
+        self._update_started = True
+
+        await workflow.execute_activity(
+            my_activity, start_to_close_timeout=timedelta(seconds=10)
+        )
         return "update-result"
 
-    async def _my_update_cleanup(self):
-        print("performing update handler cleanup operations")
+    async def _my_update_compensation_and_cleanup(self):
+        print("    performing update handler compensation and cleanup operations")
 
     async def _run(self, input: WorkflowInput) -> str:
         """
@@ -105,14 +127,19 @@ class Workflow:
         raise AssertionError("unreachable")
 
 
+@activity.defn
+async def my_activity():
+    await asyncio.sleep(3)
+
+
 async def starter():
     cl = await client.Client.connect("localhost:7233")
 
     for termination_type in [
         TerminationType.SUCCESS,
-        TerminationType.FAILURE,
-        TerminationType.CANCELLATION,
-        TerminationType.CONTINUE_AS_NEW,
+        # TerminationType.FAILURE,
+        # TerminationType.CANCELLATION,
+        # TerminationType.CONTINUE_AS_NEW,
     ]:
         print(f"\nstarting workflow with termination type: {termination_type}")
         wf_handle = await cl.start_workflow(

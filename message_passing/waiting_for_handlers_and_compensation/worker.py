@@ -4,12 +4,13 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from message_passing.message_handler_waiting_compensation_cleanup import TASK_QUEUE
-from message_passing.message_handler_waiting_compensation_cleanup.activities import (
-    my_activity,
+from message_passing.waiting_for_handlers_and_compensation import TASK_QUEUE
+from message_passing.waiting_for_handlers_and_compensation.activities import (
+    activity_executed_by_update_handler,
+    activity_executed_by_update_handler_to_perform_compensation,
 )
-from message_passing.message_handler_waiting_compensation_cleanup.workflows import (
-    MyWorkflow,
+from message_passing.waiting_for_handlers_and_compensation.workflows import (
+    WaitingForHandlersAndCompensationWorkflow,
 )
 
 interrupt_event = asyncio.Event()
@@ -23,8 +24,11 @@ async def main():
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[MyWorkflow],
-        activities=[my_activity],
+        workflows=[WaitingForHandlersAndCompensationWorkflow],
+        activities=[
+            activity_executed_by_update_handler,
+            activity_executed_by_update_handler_to_perform_compensation,
+        ],
     ):
         logging.info("Worker started, ctrl+c to exit")
         await interrupt_event.wait()

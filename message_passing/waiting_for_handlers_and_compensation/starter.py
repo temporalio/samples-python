@@ -1,46 +1,41 @@
 import asyncio
 
-from temporalio import client
+from temporalio import client, common
 
-from message_passing.message_handler_waiting_compensation_cleanup import (
+from message_passing.waiting_for_handlers_and_compensation import (
     TASK_QUEUE,
     WORKFLOW_ID,
-    OnWorkflowExitAction,
-    UpdateInput,
     WorkflowExitType,
     WorkflowInput,
 )
-from message_passing.message_handler_waiting_compensation_cleanup.workflows import (
-    MyWorkflow,
+from message_passing.waiting_for_handlers_and_compensation.workflows import (
+    WaitingForHandlersAndCompensationWorkflow,
 )
 
 
-async def starter(exit_type: WorkflowExitType, update_action: OnWorkflowExitAction):
+async def starter(exit_type: WorkflowExitType):
     cl = await client.Client.connect("localhost:7233")
     wf_handle = await cl.start_workflow(
-        MyWorkflow.run,
+        WaitingForHandlersAndCompensationWorkflow.run,
         WorkflowInput(exit_type=exit_type),
         id=WORKFLOW_ID,
         task_queue=TASK_QUEUE,
+        id_conflict_policy=common.WorkflowIDConflictPolicy.TERMINATE_EXISTING,
     )
-    await _check_run(wf_handle, exit_type, update_action)
+    await _check_run(wf_handle, exit_type)
 
 
 async def _check_run(
     wf_handle: client.WorkflowHandle,
     exit_type: WorkflowExitType,
-    update_action: OnWorkflowExitAction,
 ):
     try:
         up_handle = await wf_handle.start_update(
-            MyWorkflow.my_update,
-            UpdateInput(on_premature_workflow_exit=update_action),
+            WaitingForHandlersAndCompensationWorkflow.my_update,
             wait_for_stage=client.WorkflowUpdateStage.ACCEPTED,
         )
     except Exception as e:
-        print(
-            f"    🔴 caught exception while starting update: {e}: {e.__cause__ or ''}"
-        )
+        print(f"    🔴 caught exception while starting update: {e}: {e.__cause__ or ''}")
 
     if exit_type == WorkflowExitType.CANCELLATION:
         await wf_handle.cancel()
@@ -54,7 +49,7 @@ async def _check_run(
         )
 
     if exit_type == WorkflowExitType.CONTINUE_AS_NEW:
-        await _check_run(wf_handle, WorkflowExitType.SUCCESS, update_action)
+        await _check_run(wf_handle, WorkflowExitType.SUCCESS)
     else:
         try:
             await wf_handle.result()
@@ -66,14 +61,14 @@ async def _check_run(
 
 
 async def main():
-    for exit_type in WorkflowExitType:
+    for exit_type in [
+        WorkflowExitType.SUCCESS,
+        WorkflowExitType.FAILURE,
+        WorkflowExitType.CANCELLATION,
+        WorkflowExitType.CONTINUE_AS_NEW,
+    ]:
         print(f"\n\nworkflow exit type: {exit_type.name}")
-        for update_action in [
-            OnWorkflowExitAction.CONTINUE,
-            OnWorkflowExitAction.ABORT_WITH_COMPENSATION,
-        ]:
-            print(f"  update action on premature workflow exit: {update_action}")
-            await starter(exit_type, update_action)
+        await starter(exit_type)
 
 
 if __name__ == "__main__":

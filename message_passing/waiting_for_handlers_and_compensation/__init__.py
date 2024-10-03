@@ -15,13 +15,3 @@ class WorkflowExitType(IntEnum):
 @dataclass
 class WorkflowInput:
     exit_type: WorkflowExitType
-
-
-class OnWorkflowExitAction(IntEnum):
-    CONTINUE = 0
-    ABORT_WITH_COMPENSATION = 1
-
-
-@dataclass
-class UpdateInput:
-    on_premature_workflow_exit: OnWorkflowExitAction

@@ -36,6 +36,9 @@ class MyWorkflow:
             # handlers to finish in a `finally` block. The reason is that other
             # exception types will cause a Workflow Task failure, in which case
             # we do *not* want to wait for message handlers to finish.
+
+            # self._run would contain your actual workflow business logic. In
+            # this sample, its actual implementation contains nothing relevant.
             result = await self._run(input)
             await workflow.wait_condition(workflow.all_handlers_finished)
             return result
@@ -57,7 +60,7 @@ class MyWorkflow:
         WorkflowUpdateFailedError.
         """
         # Coroutines must be wrapped in tasks in order to use workflow.wait.
-        update_task = asyncio.Task(self._my_update())
+        update_task = asyncio.create_task(self._my_update())
         # 👉 Always use `workflow.wait` instead of `asyncio.wait` in Workflow
         # code: asyncio's version is non-deterministic.
         first_completed, _ = await workflow.wait(  # type: ignore
@@ -100,7 +103,7 @@ class MyWorkflow:
 
     async def _my_update_compensation_and_cleanup(self):
         workflow.logger.info(
-            "performing update handler compensation and cleanup operations"
+            "Performing update handler compensation and cleanup operations"
         )
 
     async def _run(self, input: WorkflowInput) -> str:

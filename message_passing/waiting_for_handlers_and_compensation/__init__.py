@@ -9,7 +9,6 @@ class WorkflowExitType(IntEnum):
     SUCCESS = 0
     FAILURE = 1
     CANCELLATION = 2
-    CONTINUE_AS_NEW = 3
 
 
 @dataclass

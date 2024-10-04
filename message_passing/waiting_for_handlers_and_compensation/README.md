@@ -1,11 +1,12 @@
 # Waiting for message handlers, and performing compensation and cleanup in message handlers
 
-This sample demonstrates the following recommended practices:
+This sample demonstrates how to do the following:
 
-1. Ensuring that all signal and update handlers are finished before a successful
-    workflow return, and on workflow failure, cancellation, and continue-as-new.
-2. Performing necessary compensation/cleanup in an update handler when the
-    workflow is cancelled, fails, or continues-as-new.
+1. Ensure that all update/signal handlers are finished before a successful
+    workflow return, and on workflow cancellation and failure.
+2. Perform compensation/cleanup in an update handler when the workflow is
+    cancelled or fails.
+
 
 
 To run, open two terminals and `cd` to this directory in them.

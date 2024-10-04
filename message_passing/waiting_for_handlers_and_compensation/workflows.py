@@ -32,7 +32,7 @@ class WaitingForHandlersAndCompensationWorkflow:
         # "race" this future against a task performing the message handler's own
         # application logic; if this future completes before the message handler
         # task then the handler should abort and perform compensation.
-        self.workflow_exit = asyncio.Future()
+        self.workflow_exit: asyncio.Future[None] = asyncio.Future()
         self._update_compensation_done = False
 
     @workflow.run
@@ -82,7 +82,7 @@ class WaitingForHandlersAndCompensationWorkflow:
         # 👉 "Race" the workflow_exit future against the handler's own application
         # logic. Always use `workflow.wait` instead of `asyncio.wait` in
         # Workflow code: asyncio's version is non-deterministic.
-        await workflow.wait(
+        await workflow.wait(  # type: ignore
             [update_task, self.workflow_exit], return_when=asyncio.FIRST_EXCEPTION
         )
         try:

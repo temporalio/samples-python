@@ -33,6 +33,10 @@ class WaitingForHandlersAndCompensationWorkflow:
         # application logic; if this future completes before the message handler
         # task then the handler should abort and perform compensation.
         self.workflow_exit: asyncio.Future[None] = asyncio.Future()
+
+        # The following two attributes are implementation detail of this sample
+        # and can be ignored
+        self._update_started = False
         self._update_compensation_done = False
 
     @workflow.run
@@ -144,7 +148,7 @@ class WaitingForHandlersAndCompensationWorkflow:
 
         # Wait until handlers have started, so that we are demonstrating that we
         # wait for them to finish.
-        await workflow.wait_condition(lambda: getattr(self, "_update_started", False))
+        await workflow.wait_condition(lambda: self._update_started)
         if input.exit_type == WorkflowExitType.SUCCESS:
             return "workflow-result"
         elif input.exit_type == WorkflowExitType.CONTINUE_AS_NEW:

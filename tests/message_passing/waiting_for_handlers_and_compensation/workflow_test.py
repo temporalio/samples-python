@@ -12,6 +12,7 @@ from message_passing.waiting_for_handlers_and_compensation import (
 from message_passing.waiting_for_handlers_and_compensation.activities import (
     activity_executed_by_update_handler,
     activity_executed_by_update_handler_to_perform_compensation,
+    activity_executed_to_perform_workflow_compensation,
 )
 from message_passing.waiting_for_handlers_and_compensation.starter import TASK_QUEUE
 from message_passing.waiting_for_handlers_and_compensation.workflows import (
@@ -59,6 +60,7 @@ async def test_waiting_for_handlers_and_compensation(
         activities=[
             activity_executed_by_update_handler,
             activity_executed_by_update_handler_to_perform_compensation,
+            activity_executed_to_perform_workflow_compensation,
         ],
     ):
         wf_handle = await env.client.start_workflow(
@@ -91,6 +93,14 @@ async def test_waiting_for_handlers_and_compensation(
 
         if workflow_expect == WorkflowExpect.SUCCESS:
             await wf_handle.result()
+            assert not (
+                await wf_handle.query(
+                    WaitingForHandlersAndCompensationWorkflow.workflow_compensation_done
+                )
+            )
         else:
             with pytest.raises(client.WorkflowFailureError):
                 await wf_handle.result()
+            assert await wf_handle.query(
+                WaitingForHandlersAndCompensationWorkflow.workflow_compensation_done
+            )

@@ -35,7 +35,9 @@ async def _check_run(
             wait_for_stage=client.WorkflowUpdateStage.ACCEPTED,
         )
     except Exception as e:
-        print(f"    🔴 caught exception while starting update: {e}: {e.__cause__ or ''}")
+        print(
+            f"    🔴 caught exception while starting update: {e}: {e.__cause__ or ''}"
+        )
 
     if exit_type == WorkflowExitType.CANCELLATION:
         await wf_handle.cancel()
@@ -48,16 +50,13 @@ async def _check_run(
             f"    🔴 caught exception while waiting for update result: {e}: {e.__cause__ or ''}"
         )
 
-    if exit_type == WorkflowExitType.CONTINUE_AS_NEW:
-        await _check_run(wf_handle, WorkflowExitType.SUCCESS)
-    else:
-        try:
-            await wf_handle.result()
-            print("    🟢 caller received workflow result")
-        except Exception as e:
-            print(
-                f"    🔴 caught exception while waiting for workflow result: {e}: {e.__cause__ or ''}"
-            )
+    try:
+        await wf_handle.result()
+        print("    🟢 caller received workflow result")
+    except Exception as e:
+        print(
+            f"    🔴 caught exception while waiting for workflow result: {e}: {e.__cause__ or ''}"
+        )
 
 
 async def main():
@@ -65,7 +64,6 @@ async def main():
         WorkflowExitType.SUCCESS,
         WorkflowExitType.FAILURE,
         WorkflowExitType.CANCELLATION,
-        WorkflowExitType.CONTINUE_AS_NEW,
     ]:
         print(f"\n\nworkflow exit type: {exit_type.name}")
         await starter(exit_type)

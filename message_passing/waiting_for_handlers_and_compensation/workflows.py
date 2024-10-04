@@ -21,9 +21,9 @@ class WaitingForHandlersAndCompensationWorkflow:
     perform compensation/cleanup:
 
     1. It ensures that all signal and update handlers have finished before a
-       successful return, and on failure, cancellation, and continue-as-new.
+       successful return, and on failure and cancellation.
     2. The update handler performs any necessary compensation/cleanup when the
-       workflow is cancelled, fails, or continues-as-new.
+       workflow is cancelled or fails.
     """
 
     def __init__(self) -> None:
@@ -151,8 +151,6 @@ class WaitingForHandlersAndCompensationWorkflow:
         await workflow.wait_condition(lambda: self._update_started)
         if input.exit_type == WorkflowExitType.SUCCESS:
             return "workflow-result"
-        elif input.exit_type == WorkflowExitType.CONTINUE_AS_NEW:
-            workflow.continue_as_new(WorkflowInput(exit_type=WorkflowExitType.SUCCESS))
         elif input.exit_type == WorkflowExitType.FAILURE:
             raise exceptions.ApplicationError("deliberately failing workflow")
         elif input.exit_type == WorkflowExitType.CANCELLATION:
@@ -164,7 +162,4 @@ class WaitingForHandlersAndCompensationWorkflow:
 def is_workflow_exit_exception(e: BaseException) -> bool:
     # 👉 If you have set additional failure_exception_types you should also
     # check for these here.
-    return isinstance(
-        e,
-        (asyncio.CancelledError, workflow.ContinueAsNewError, exceptions.FailureError),
-    )
+    return isinstance(e, (asyncio.CancelledError, exceptions.FailureError))

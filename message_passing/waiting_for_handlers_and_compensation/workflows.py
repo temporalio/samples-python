@@ -33,6 +33,7 @@ class WaitingForHandlersAndCompensationWorkflow:
         # application logic; if this future completes before the message handler
         # task then the handler should abort and perform compensation.
         self.workflow_exit = asyncio.Future()
+        self._update_compensation_done = False
 
     @workflow.run
     async def run(self, input: WorkflowInput) -> str:
@@ -64,8 +65,8 @@ class WaitingForHandlersAndCompensationWorkflow:
     @workflow.update
     async def my_update(self) -> str:
         """
-        An update handler that handles exceptions in itself and in the main
-        workflow method.
+        An update handler that handles exceptions raised in its own execution
+        and in that of the main workflow method.
 
         It ensures that:
         - Compensation/cleanup is always performed when appropriate
@@ -117,6 +118,11 @@ class WaitingForHandlersAndCompensationWorkflow:
             activity_executed_by_update_handler_to_perform_compensation,
             start_to_close_timeout=timedelta(seconds=10),
         )
+        self._update_compensation_done = True
+
+    @workflow.query
+    def update_compensation_done(self) -> bool:
+        return self._update_compensation_done
 
     # The following two methods are placeholders for the actual application
     # logic that you would perform in your main workflow method  or update

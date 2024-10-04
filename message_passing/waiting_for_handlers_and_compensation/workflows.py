@@ -11,6 +11,7 @@ from message_passing.waiting_for_handlers_and_compensation import (
 from message_passing.waiting_for_handlers_and_compensation.activities import (
     activity_executed_by_update_handler,
     activity_executed_by_update_handler_to_perform_compensation,
+    activity_executed_to_perform_workflow_compensation,
 )
 
 
@@ -38,6 +39,7 @@ class WaitingForHandlersAndCompensationWorkflow:
         # and can be ignored
         self._update_started = False
         self._update_compensation_done = False
+        self._workflow_compensation_done = False
 
     @workflow.run
     async def run(self, input: WorkflowInput) -> str:
@@ -64,7 +66,16 @@ class WaitingForHandlersAndCompensationWorkflow:
             if is_workflow_exit_exception(e):
                 self.workflow_exit.set_exception(e)
                 await workflow.wait_condition(workflow.all_handlers_finished)
+                await self.workflow_compensation()
+                self._workflow_compensation_done = True
             raise
+
+    async def workflow_compensation(self):
+        await workflow.execute_activity(
+            activity_executed_to_perform_workflow_compensation,
+            start_to_close_timeout=timedelta(seconds=10),
+        )
+        self._update_compensation_done = True
 
     @workflow.update
     async def my_update(self) -> str:
@@ -125,12 +136,16 @@ class WaitingForHandlersAndCompensationWorkflow:
         self._update_compensation_done = True
 
     @workflow.query
+    def workflow_compensation_done(self) -> bool:
+        return self._workflow_compensation_done
+
+    @workflow.query
     def update_compensation_done(self) -> bool:
         return self._update_compensation_done
 
-    # The following two methods are placeholders for the actual application
-    # logic that you would perform in your main workflow method  or update
-    # handler. Their implementation can be ignored.
+    # The following methods are placeholders for the actual application logic
+    # that you would perform in your main workflow method  or update handler.
+    # Their implementation can be ignored.
 
     async def _my_update(self) -> str:
         # Ignore this method unless you are interested in the implementation

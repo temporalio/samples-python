@@ -1,12 +1,23 @@
 import asyncio
 import logging
+import pprint
 
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
 
 from dan.utils import start_workflow
 
-logging.basicConfig(level=logging.INFO)
+
+class CustomFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord):
+        return pprint.pformat(record.__dict__)
+
+
+formatter = CustomFormatter()
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logging.getLogger().addHandler(handler)
+logging.getLogger().setLevel(logging.INFO)
 
 
 @workflow.defn
@@ -40,4 +51,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

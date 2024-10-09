@@ -1,9 +1,12 @@
 import asyncio
+import logging
 
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
 
 from dan.utils import start_workflow
+
+logging.basicConfig(level=logging.INFO)
 
 
 @workflow.defn
@@ -13,12 +16,16 @@ class Workflow:
 
     @workflow.run
     async def run(self) -> None:
-        print("In run")
+        workflow.logger.info("logging: run()")
+        print("printed: in run")
         await workflow.wait_condition(lambda: self.is_complete)
 
     @workflow.update
     async def my_update(self) -> None:
-        workflow.logger.info("In my_update")
+        workflow.logger.info(
+            "logging: my_update()", extra={"my-extra-key": "my-extra-val"}
+        )
+        print("printed: my_update")
         self.is_complete = True
 
 
@@ -33,3 +40,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+

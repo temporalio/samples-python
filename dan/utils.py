@@ -2,6 +2,7 @@ import asyncio
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from datetime import timedelta
 from typing import Optional, TypeVar
 
 import rich
@@ -40,6 +41,7 @@ async def start_workflow(
         id=id or WORKFLOW_ID,
         task_queue=TASK_QUEUE,
         id_reuse_policy=id_reuse_policy,
+        task_timeout=timedelta(minutes=77),
         **kwargs,
     )
 

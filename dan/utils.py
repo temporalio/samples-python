@@ -5,11 +5,18 @@ from contextlib import contextmanager
 from typing import Optional, TypeVar
 
 import rich
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import common, workflow
 from temporalio.api.common.v1 import WorkflowExecution
 from temporalio.api.update.v1 import UpdateRef
 from temporalio.api.workflowservice.v1 import PollWorkflowExecutionUpdateRequest
 from temporalio.client import Client, WorkflowHandle
+from temporalio.contrib.opentelemetry import TracingInterceptor
+from temporalio.runtime import Runtime, TelemetryConfig
 from temporalio.service import RPCError, RPCStatusCode
 from temporalio.types import MethodAsyncNoParam
 
@@ -27,13 +34,23 @@ async def start_workflow(
     **kwargs,
 ) -> WorkflowHandle[S, R]:
     if not client:
-        client = await Client.connect("localhost:7233", namespace=NAMESPACE)
+        client = await connect("Client")
     return await client.start_workflow(
         run,
         id=id or WORKFLOW_ID,
         task_queue=TASK_QUEUE,
         id_reuse_policy=id_reuse_policy,
         **kwargs,
+    )
+
+
+async def connect(service_name: str) -> Client:
+    activate_tracing(service_name)
+    return await Client.connect(
+        "localhost:7233",
+        namespace=NAMESPACE,
+        runtime=runtime_with_telemetry(),
+        interceptors=[TracingInterceptor()],
     )
 
 
@@ -85,3 +102,14 @@ def print_stack():
     formatted_stack = traceback.format_list(stack)
     for line in formatted_stack:
         print(line.strip())
+
+
+def activate_tracing(service_name: str):
+    provider = TracerProvider(resource=Resource.create({SERVICE_NAME: service_name}))
+    exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
+    provider.add_span_processor(BatchSpanProcessor(exporter))
+    trace.set_tracer_provider(provider)
+
+
+def runtime_with_telemetry() -> Runtime:
+    return Runtime(telemetry=TelemetryConfig())

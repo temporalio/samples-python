@@ -3,9 +3,9 @@ import os
 from importlib import import_module
 from pathlib import Path
 
-from temporalio.client import Client
 from temporalio.worker import Worker
 
+import dan.utils
 from dan.constants import NAMESPACE, TASK_QUEUE
 
 
@@ -34,9 +34,7 @@ interrupt_event = asyncio.Event()
 
 async def main():
     print(NAMESPACE, Workflow.__module__)
-
-    client = await Client.connect("localhost:7233", namespace=NAMESPACE)
-
+    client = await dan.utils.connect("Lang")
     async with Worker(
         client,
         task_queue=TASK_QUEUE,

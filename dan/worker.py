@@ -3,7 +3,7 @@ import os
 from importlib import import_module
 from pathlib import Path
 
-from temporalio.worker import Worker
+from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
 import dan.utils
 from dan.constants import NAMESPACE, TASK_QUEUE
@@ -39,6 +39,7 @@ async def main():
         client,
         task_queue=TASK_QUEUE,
         workflows=[Workflow],
+        workflow_runner=UnsandboxedWorkflowRunner(),
     ):
         await interrupt_event.wait()
 

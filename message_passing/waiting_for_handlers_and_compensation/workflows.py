@@ -7,6 +7,7 @@ from temporalio import exceptions, workflow
 from message_passing.waiting_for_handlers_and_compensation import (
     WorkflowExitType,
     WorkflowInput,
+    WorkflowResult,
 )
 from message_passing.waiting_for_handlers_and_compensation.activities import (
     activity_executed_by_update_handler,
@@ -42,7 +43,7 @@ class WaitingForHandlersAndCompensationWorkflow:
         self._workflow_compensation_done = False
 
     @workflow.run
-    async def run(self, input: WorkflowInput) -> str:
+    async def run(self, input: WorkflowInput) -> WorkflowResult:
         try:
             # 👉 Use this `try...except` style, instead of waiting for message
             # handlers to finish in a `finally` block. The reason is that some
@@ -157,7 +158,7 @@ class WaitingForHandlersAndCompensationWorkflow:
         )
         return "update-result"
 
-    async def _run(self, input: WorkflowInput) -> str:
+    async def _run(self, input: WorkflowInput) -> WorkflowResult:
         # Ignore this method unless you are interested in the implementation
         # details of this sample.
 
@@ -165,7 +166,7 @@ class WaitingForHandlersAndCompensationWorkflow:
         # wait for them to finish.
         await workflow.wait_condition(lambda: self._update_started)
         if input.exit_type == WorkflowExitType.SUCCESS:
-            return "workflow-result"
+            return WorkflowResult(data="workflow-result")
         elif input.exit_type == WorkflowExitType.FAILURE:
             raise exceptions.ApplicationError("deliberately failing workflow")
         elif input.exit_type == WorkflowExitType.CANCELLATION:

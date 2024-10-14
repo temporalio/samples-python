@@ -2,21 +2,21 @@ import asyncio
 
 from temporalio import client, common
 
-from message_passing.waiting_for_handlers_and_compensation import (
+from message_passing.waiting_for_handlers import (
     TASK_QUEUE,
     WORKFLOW_ID,
     WorkflowExitType,
     WorkflowInput,
 )
-from message_passing.waiting_for_handlers_and_compensation.workflows import (
-    WaitingForHandlersAndCompensationWorkflow,
+from message_passing.waiting_for_handlers.workflows import (
+    WaitingForHandlersWorkflow,
 )
 
 
 async def starter(exit_type: WorkflowExitType):
     cl = await client.Client.connect("localhost:7233")
     wf_handle = await cl.start_workflow(
-        WaitingForHandlersAndCompensationWorkflow.run,
+        WaitingForHandlersWorkflow.run,
         WorkflowInput(exit_type=exit_type),
         id=WORKFLOW_ID,
         task_queue=TASK_QUEUE,
@@ -31,11 +31,13 @@ async def _check_run(
 ):
     try:
         up_handle = await wf_handle.start_update(
-            WaitingForHandlersAndCompensationWorkflow.my_update,
+            WaitingForHandlersWorkflow.my_update,
             wait_for_stage=client.WorkflowUpdateStage.ACCEPTED,
         )
     except Exception as e:
-        print(f"    🔴 caught exception while starting update: {e}: {e.__cause__ or ''}")
+        print(
+            f"    🔴 caught exception while starting update: {e}: {e.__cause__ or ''}"
+        )
 
     if exit_type == WorkflowExitType.CANCELLATION:
         await wf_handle.cancel()
@@ -51,7 +53,7 @@ async def _check_run(
     try:
         await wf_handle.result()
         print("    🟢 caller received workflow result")
-    except Exception as e:
+    except BaseException as e:
         print(
             f"    🔴 caught exception while waiting for workflow result: {e}: {e.__cause__ or ''}"
         )

@@ -26,6 +26,9 @@ class WaitingForHandlersAndCompensationWorkflow:
        successful return, and on failure and cancellation.
     2. The update handler performs any necessary compensation/cleanup when the
        workflow is cancelled or fails.
+
+    If all you need to do is wait for handlers, without performing cleanup or compensation,
+    then see the simpler sample message_passing/waiting_for_handlers.
     """
 
     def __init__(self) -> None:
@@ -51,13 +54,11 @@ class WaitingForHandlersAndCompensationWorkflow:
             # workflow exit, in which case we do *not* want to wait for message
             # handlers to finish.
 
-            # 👉 self._run contains your actual application logic. This is
-            # implemented in a separate method in order to separate
-            # "platform-level" concerns (waiting for handlers to finish and
-            # ensuring that compensation is performed when appropriate) from
-            # application logic. In this sample, its actual implementation is
-            # below but contains nothing relevant.
-            result = await self._run(input)
+            # 👉 The actual workflow application logic is implemented in a
+            # separate method in order to separate "platform-level" concerns
+            # (waiting for handlers to finish and ensuring that compensation is
+            # performed when appropriate) from application logic.
+            result = await self._my_workflow_application_logic(input)
             self.workflow_exit.set_result(None)
             await workflow.wait_condition(workflow.all_handlers_finished)
             return result
@@ -88,16 +89,12 @@ class WaitingForHandlersAndCompensationWorkflow:
         - Compensation/cleanup is always performed when appropriate
         - The update caller gets the update result, or WorkflowUpdateFailedError
         """
-        # 👉 As with the main workflow method, the update application logic is
-        # implemented in a separate method in order to separate "platform-level"
-        # error-handling and compensation concerns from application logic. Note
-        # that coroutines must be wrapped in tasks in order to use
-        # workflow.wait.
-        update_task = asyncio.create_task(self._my_update())
-
-        # 👉 "Race" the workflow_exit future against the handler's own application
-        # logic. Always use `workflow.wait` instead of `asyncio.wait` in
-        # Workflow code: asyncio's version is non-deterministic.
+        # 👉 "Race" the workflow_exit future against the handler's own
+        # application logic. Always use `workflow.wait` instead of
+        # `asyncio.wait` in Workflow code: asyncio's version is
+        # non-deterministic. (Note that coroutines must be wrapped in tasks in
+        # order to use workflow.wait.)
+        update_task = asyncio.create_task(self._my_update_application_logic())
         await workflow.wait(  # type: ignore
             [update_task, self.workflow_exit], return_when=asyncio.FIRST_EXCEPTION
         )
@@ -144,13 +141,12 @@ class WaitingForHandlersAndCompensationWorkflow:
     def update_compensation_done(self) -> bool:
         return self._update_compensation_done
 
-    # The following methods are placeholders for the actual application logic
+    # Methods below this point are placeholders for the actual application logic
     # that you would perform in your main workflow method  or update handler.
-    # Their implementation can be ignored.
+    # They can be ignored unless you are interested in the implementation
+    # details of this sample.
 
-    async def _my_update(self) -> str:
-        # Ignore this method unless you are interested in the implementation
-        # details of this sample.
+    async def _my_update_application_logic(self) -> str:
         self._update_started = True
         await workflow.execute_activity(
             activity_executed_by_update_handler,
@@ -158,10 +154,9 @@ class WaitingForHandlersAndCompensationWorkflow:
         )
         return "update-result"
 
-    async def _run(self, input: WorkflowInput) -> WorkflowResult:
-        # Ignore this method unless you are interested in the implementation
-        # details of this sample.
-
+    async def _my_workflow_application_logic(
+        self, input: WorkflowInput
+    ) -> WorkflowResult:
         # Wait until handlers have started, so that we are demonstrating that we
         # wait for them to finish.
         await workflow.wait_condition(lambda: self._update_started)

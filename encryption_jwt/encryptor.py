@@ -2,6 +2,7 @@ import asyncio
 import base64
 import logging
 import os
+import typing
 
 from botocore.exceptions import ClientError
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -27,7 +28,7 @@ class KMSEncryptor:
 
         return self._boto_session
 
-    async def encrypt(self, data: bytes) -> tuple[bytes, bytes]:
+    async def encrypt(self, data: bytes) -> typing.Tuple[bytes, bytes]:
         """Encrypt data using a key from KMS."""
         # The keys are rotated automatically by KMS, so fetch a new key to encrypt the data.
         data_key_encrypted, data_key_plaintext = await self.__create_data_key(

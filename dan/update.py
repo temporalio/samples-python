@@ -1,6 +1,7 @@
 import asyncio
 import json
 import time
+from contextlib import contextmanager
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -24,27 +25,64 @@ provider = get_tracer_provider("Workflow")
 tracer = provider.get_tracer(__name__)
 
 
+@contextmanager
+def start_as_current_span(
+    name: str,
+    method: str,
+    request_type: str,
+    request_payload: str,
+    response_type: str,
+):
+    with tracer.start_as_current_span(name) as span:
+        span.set_attribute("rpc.method", method)
+        span.set_attribute("rpc.request.type", request_type)
+        span.set_attribute("rpc.request.payload", request_payload)
+        span.set_attribute("rpc.response.type", response_type)
+        span.set_attribute("temporal.workflow", True)
+        yield span
+
+
 @workflow.defn
 class Workflow:
     def __init__(self):
+        with start_as_current_span(
+            name="WorkflowInit",
+            method="WorkflowInit",
+            request_type="WorkflowInit",
+            request_payload="{}",
+            response_type="WorkflowInitResult",
+        ) as span:
+            span.add_event("hello from workflow init")
+        trace.get_tracer_provider().force_flush()  # type: ignore
+        time.sleep(5)
         self.is_complete = False
 
     @workflow.run
     async def run(self) -> str:
+        with start_as_current_span(
+            name="WorkflowRun",
+            method="WorkflowRun",
+            request_type="WorkflowRun",
+            request_payload="{}",
+            response_type="WorkflowRunResult",
+        ) as span:
+            span.add_event("hello from workflow run")
+        trace.get_tracer_provider().force_flush()  # type: ignore
+        time.sleep(5)
         await workflow.wait_condition(lambda: self.is_complete)
         return "workflow-result"
 
     @workflow.update
     async def my_update(self) -> str:
-        with tracer.start_as_current_span("HandleWorkflowUpdate") as span:
-            span.set_attribute("rpc.method", "UpdateHandler")
-            span.set_attribute("rpc.request.type", "WorkflowUpdate")
-            span.set_attribute("rpc.request.payload", "{}")
-            span.set_attribute("temporalWorkflowID", workflow.info().workflow_id)
-            # span.set_attribute("temporal.worker", True)
-            span.set_attribute("temporal.workflow", True)
+        with start_as_current_span(
+            name="HandleWorkflowUpdate",
+            method="UpdateHandler",
+            request_type="WorkflowUpdate",
+            request_payload="{}",
+            response_type="WorkflowUpdateResult",
+        ) as span:
+            span.add_event("hello from update handler")
             result = await self._my_update()
-            span.set_attribute("rpc.response.type", "WorkflowUpdateResult")
             span.set_attribute("rpc.response.payload", json.dumps({"result": result}))
         trace.get_tracer_provider().force_flush()  # type: ignore
         time.sleep(5)

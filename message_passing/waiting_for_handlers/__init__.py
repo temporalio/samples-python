@@ -14,3 +14,8 @@ class WorkflowExitType(IntEnum):
 @dataclass
 class WorkflowInput:
     exit_type: WorkflowExitType
+
+
+@dataclass
+class WorkflowResult:
+    data: str

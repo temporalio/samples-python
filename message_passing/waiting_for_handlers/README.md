@@ -1,12 +1,15 @@
-# Waiting for message handlers, and performing compensation and cleanup in message handlers
+# Waiting for message handlers in message handlers
 
-This sample demonstrates how to do the following:
+This workflow demonstrates how to wait for signal and update handlers to
+finish in the following circumstances:
 
-1. Ensure that all update/signal handlers are finished before a successful
-    workflow return, and on workflow cancellation and failure.
-2. Perform compensation/cleanup in an update handler when the workflow is
-    cancelled or fails.
+- Before a successful return
+- On failure
+- On cancellation
 
+Your workflow can also exit via Continue-As-New. In that case you would
+usually wait for the handlers to finish immediately before the call to
+continue_as_new(); that's not illustrated in this sample.
 
 
 To run, open two terminals and `cd` to this directory in them.
@@ -29,11 +32,10 @@ workflow exit type: SUCCESS
 
 
 workflow exit type: FAILURE
-    🔴 caught exception while waiting for update result: Workflow update failed: The update failed because the workflow run exited
+    🟢 caller received update result
     🔴 caught exception while waiting for workflow result: Workflow execution failed: deliberately failing workflow
 
 
 workflow exit type: CANCELLATION
-    🔴 caught exception while waiting for update result: Workflow update failed: The update failed because the workflow run exited
-    🔴 caught exception while waiting for workflow result: Workflow execution failed: Workflow cancelled
+    🟢 caller received update result
 ```

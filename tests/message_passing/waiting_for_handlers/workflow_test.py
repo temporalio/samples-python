@@ -1,22 +1,19 @@
-import uuid
 from enum import Enum
 
 import pytest
 from temporalio import client, worker
 from temporalio.testing import WorkflowEnvironment
 
-from message_passing.waiting_for_handlers_and_compensation import (
+from message_passing.waiting_for_handlers import (
     WorkflowExitType,
     WorkflowInput,
 )
-from message_passing.waiting_for_handlers_and_compensation.activities import (
+from message_passing.waiting_for_handlers.activities import (
     activity_executed_by_update_handler,
-    activity_executed_by_update_handler_to_perform_compensation,
-    activity_executed_to_perform_workflow_compensation,
 )
-from message_passing.waiting_for_handlers_and_compensation.starter import TASK_QUEUE
-from message_passing.waiting_for_handlers_and_compensation.workflows import (
-    WaitingForHandlersAndCompensationWorkflow,
+from message_passing.waiting_for_handlers.starter import TASK_QUEUE
+from message_passing.waiting_for_handlers.workflows import (
+    WaitingForHandlersWorkflow,
 )
 
 
@@ -34,15 +31,15 @@ class WorkflowExpect(Enum):
     ["exit_type_name", "update_expect", "workflow_expect"],
     [
         (WorkflowExitType.SUCCESS.name, UpdateExpect.SUCCESS, WorkflowExpect.SUCCESS),
-        (WorkflowExitType.FAILURE.name, UpdateExpect.FAILURE, WorkflowExpect.FAILURE),
+        (WorkflowExitType.FAILURE.name, UpdateExpect.SUCCESS, WorkflowExpect.FAILURE),
         (
             WorkflowExitType.CANCELLATION.name,
-            UpdateExpect.FAILURE,
+            UpdateExpect.SUCCESS,
             WorkflowExpect.FAILURE,
         ),
     ],
 )
-async def test_waiting_for_handlers_and_compensation(
+async def test_waiting_for_handlers(
     env: WorkflowEnvironment,
     exit_type_name: str,
     update_expect: UpdateExpect,
@@ -56,21 +53,19 @@ async def test_waiting_for_handlers_and_compensation(
     async with worker.Worker(
         env.client,
         task_queue=TASK_QUEUE,
-        workflows=[WaitingForHandlersAndCompensationWorkflow],
+        workflows=[WaitingForHandlersWorkflow],
         activities=[
             activity_executed_by_update_handler,
-            activity_executed_by_update_handler_to_perform_compensation,
-            activity_executed_to_perform_workflow_compensation,
         ],
     ):
         wf_handle = await env.client.start_workflow(
-            WaitingForHandlersAndCompensationWorkflow.run,
+            WaitingForHandlersWorkflow.run,
             WorkflowInput(exit_type=exit_type),
-            id=str(uuid.uuid4()),
+            id="waiting-for-handlers-test",
             task_queue=TASK_QUEUE,
         )
         up_handle = await wf_handle.start_update(
-            WaitingForHandlersAndCompensationWorkflow.my_update,
+            WaitingForHandlersWorkflow.my_update,
             wait_for_stage=client.WorkflowUpdateStage.ACCEPTED,
         )
 
@@ -79,28 +74,12 @@ async def test_waiting_for_handlers_and_compensation(
 
         if update_expect == UpdateExpect.SUCCESS:
             await up_handle.result()
-            assert not (
-                await wf_handle.query(
-                    WaitingForHandlersAndCompensationWorkflow.update_compensation_done
-                )
-            )
         else:
             with pytest.raises(client.WorkflowUpdateFailedError):
                 await up_handle.result()
-            assert await wf_handle.query(
-                WaitingForHandlersAndCompensationWorkflow.update_compensation_done
-            )
 
         if workflow_expect == WorkflowExpect.SUCCESS:
             await wf_handle.result()
-            assert not (
-                await wf_handle.query(
-                    WaitingForHandlersAndCompensationWorkflow.workflow_compensation_done
-                )
-            )
         else:
             with pytest.raises(client.WorkflowFailureError):
                 await wf_handle.result()
-            assert await wf_handle.query(
-                WaitingForHandlersAndCompensationWorkflow.workflow_compensation_done
-            )

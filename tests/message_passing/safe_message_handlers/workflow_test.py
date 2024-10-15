@@ -20,11 +20,7 @@ from message_passing.safe_message_handlers.workflow import (
 )
 
 
-async def test_safe_message_handlers(client: Client, env: WorkflowEnvironment):
-    if env.supports_time_skipping:
-        pytest.skip(
-            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
-        )
+async def test_safe_message_handlers(client: Client):
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
         client,
@@ -72,11 +68,7 @@ async def test_safe_message_handlers(client: Client, env: WorkflowEnvironment):
         assert result.num_currently_assigned_nodes == 0
 
 
-async def test_update_idempotency(client: Client, env: WorkflowEnvironment):
-    if env.supports_time_skipping:
-        pytest.skip(
-            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
-        )
+async def test_update_idempotency(client: Client):
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
         client,
@@ -111,11 +103,7 @@ async def test_update_idempotency(client: Client, env: WorkflowEnvironment):
         assert result_1.nodes_assigned >= result_2.nodes_assigned
 
 
-async def test_update_failure(client: Client, env: WorkflowEnvironment):
-    if env.supports_time_skipping:
-        pytest.skip(
-            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
-        )
+async def test_update_failure(client: Client):
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
         client,

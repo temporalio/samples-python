@@ -60,6 +60,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
+* [encryption_jwt](encryption_jwt) - Apply end-to-end encryption for all input/output using a KMS and per-namespace JWT-based auth.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
 * [message-passing introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.

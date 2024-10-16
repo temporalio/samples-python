@@ -5,6 +5,9 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 from temporalio.common import SearchAttributeKey
 
+# define our custom search attribute to modify later in the workflow
+custom_keyword_field = SearchAttributeKey.for_keyword("CustomKeywordField")
+
 
 @workflow.defn
 class GreetingWorkflow:
@@ -13,7 +16,7 @@ class GreetingWorkflow:
         # Wait a couple seconds, then alter the keyword search attribute
         await asyncio.sleep(2)
         workflow.upsert_search_attributes([
-            SearchAttributeKey.for_keyword("CustomKeywordField").value_set("new-value")
+            custom_keyword_field.value_set("new-value")
         ])
 
 
@@ -31,7 +34,6 @@ async def main():
         # While the worker is running, use the client to start the workflow.
         # Note, in many production setups, the client would be in a completely
         # separate process from the worker.
-        custom_keyword_field = SearchAttributeKey.for_keyword("CustomKeywordField")
 
         handle = await client.start_workflow(
             GreetingWorkflow.run,
@@ -42,7 +44,6 @@ async def main():
         )
 
         # Show search attributes before and after a few seconds
-        custom_keyword_field = SearchAttributeKey.for_keyword("CustomKeywordField")
         print(
             "First search attribute values: ",
             (await handle.describe()).typed_search_attributes.get(custom_keyword_field),

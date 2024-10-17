@@ -45,12 +45,12 @@ async def start_workflow(
     )
 
 
-async def connect(service_name: str) -> Client:
+async def connect(service_name: str, tracing_interceptor: bool = False) -> Client:
     activate_tracing(service_name)
     return await Client.connect(
         "localhost:7233",
         namespace=NAMESPACE,
-        interceptors=[TracingInterceptor()],
+        interceptors=[TracingInterceptor()] if tracing_interceptor else [],
     )
 
 

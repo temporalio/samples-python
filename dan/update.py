@@ -1,17 +1,17 @@
 import asyncio
 import json
 import time
-from contextlib import contextmanager
+from typing import cast
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import Tracer, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
 
-from dan.utils import start_workflow
+from dan.utils import start_as_current_workflow_span, start_workflow
 
 
 def get_tracer_provider(service_name: str) -> TracerProvider:
@@ -22,30 +22,14 @@ def get_tracer_provider(service_name: str) -> TracerProvider:
 
 
 provider = get_tracer_provider("Workflow")
-tracer = provider.get_tracer(__name__)
-
-
-@contextmanager
-def start_as_current_span(
-    name: str,
-    method: str,
-    request_type: str,
-    request_payload: str,
-    response_type: str,
-):
-    with tracer.start_as_current_span(name) as span:
-        span.set_attribute("rpc.method", method)
-        span.set_attribute("rpc.request.type", request_type)
-        span.set_attribute("rpc.request.payload", request_payload)
-        span.set_attribute("rpc.response.type", response_type)
-        span.set_attribute("temporal.workflow", True)
-        yield span
+tracer = cast(Tracer, provider.get_tracer(__name__))
 
 
 @workflow.defn
 class Workflow:
     def __init__(self):
-        with start_as_current_span(
+        with start_as_current_workflow_span(
+            tracer=tracer,
             name="WorkflowInit",
             method="WorkflowInit",
             request_type="WorkflowInit",
@@ -59,7 +43,8 @@ class Workflow:
 
     @workflow.run
     async def run(self) -> str:
-        with start_as_current_span(
+        with start_as_current_workflow_span(
+            tracer=tracer,
             name="WorkflowRun",
             method="WorkflowRun",
             request_type="WorkflowRun",
@@ -74,7 +59,8 @@ class Workflow:
 
     @workflow.update
     async def my_update(self) -> str:
-        with start_as_current_span(
+        with start_as_current_workflow_span(
+            tracer=tracer,
             name="HandleWorkflowUpdate",
             method="UpdateHandler",
             request_type="WorkflowUpdate",

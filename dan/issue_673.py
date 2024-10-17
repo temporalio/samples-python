@@ -2,8 +2,10 @@ import asyncio
 from datetime import timedelta
 
 from temporalio import activity, workflow
-from temporalio.client import Client
-from temporalio.worker import Replayer, Worker
+from temporalio.worker import Replayer
+
+from dan import utils
+from dan.constants import WORKFLOW_ID
 
 
 @activity.defn
@@ -12,14 +14,15 @@ async def test_activity() -> None:
 
 
 @workflow.defn
-class TestWorkflow:
+class Workflow:
     def __init__(self) -> None:
         self.running_count = 0
         self.state = "stopped"
+        self._done = False
 
     @workflow.run
     async def run(self) -> None:
-        await asyncio.sleep(1)
+        await workflow.wait_condition(lambda: self._done)
 
     @workflow.signal
     async def start(self) -> None:
@@ -30,6 +33,10 @@ class TestWorkflow:
         if self.state == "running":
             return
         await self.run_one()
+
+    @workflow.signal
+    async def done(self) -> None:
+        self._done = True
 
     async def run_one(self):
         self.running_count += 1
@@ -43,30 +50,23 @@ class TestWorkflow:
             self.state = "stopped"
 
 
-async def main() -> None:
-    id = "wid"
-    client = await Client.connect("localhost:7233")
-    async with Worker(
-        client=client,
-        task_queue="test",
-        workflows=[TestWorkflow],
-        activities=[test_activity],
-    ):
-        workflow_handle = await client.start_workflow(
-            TestWorkflow.run,
-            id=id,
-            task_queue="test",
-        )
-        await workflow_handle.signal(TestWorkflow.start)
-        await asyncio.sleep(0.5)
-        await workflow_handle.execute_update(TestWorkflow.resume)
-        await workflow_handle.result()
+activities = [test_activity]
 
-    workflows = client.list_workflows(f"WorkflowId = '{id}'")
+
+async def starter():
+    client = await utils.connect("Client")
+    workflow_handle = await utils.start_workflow(Workflow.run, client=client)
+    await workflow_handle.signal(Workflow.start)
+    await asyncio.sleep(0.5)
+    await workflow_handle.execute_update(Workflow.resume)
+    await workflow_handle.signal(Workflow.done)
+    await workflow_handle.result()
+
+    workflows = client.list_workflows(f"WorkflowId = '{WORKFLOW_ID}'")
     histories = workflows.map_histories()
-    replayer = Replayer(workflows=[TestWorkflow])
+    replayer = Replayer(workflows=[Workflow])
     await replayer.replay_workflows(histories)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(starter())

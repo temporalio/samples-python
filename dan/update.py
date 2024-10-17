@@ -4,24 +4,15 @@ import time
 from typing import cast
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import Tracer, TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace import Tracer
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
 
-from dan.utils import start_as_current_workflow_span, start_workflow
+from dan.utils.client import start_workflow
+from dan.utils.otel import create_tracer_provider
+from dan.utils.xray import start_as_current_workflow_span
 
-
-def get_tracer_provider(service_name: str) -> TracerProvider:
-    provider = TracerProvider(resource=Resource.create({SERVICE_NAME: service_name}))
-    exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
-    provider.add_span_processor(BatchSpanProcessor(exporter))
-    return provider
-
-
-provider = get_tracer_provider("Workflow")
+provider = create_tracer_provider("Workflow")
 tracer = cast(Tracer, provider.get_tracer(__name__))
 
 

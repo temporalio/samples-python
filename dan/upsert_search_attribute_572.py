@@ -3,7 +3,8 @@ from datetime import datetime
 
 from temporalio import workflow
 from temporalio.common import SearchAttributeKey
-from utils import start_workflow
+
+from dan.utils.client import start_workflow
 
 # https://github.com/temporalio/sdk-python/issues/572
 

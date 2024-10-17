@@ -2,7 +2,9 @@ import asyncio
 
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
-from utils import catch, start_workflow
+
+from dan.utils import catch
+from dan.utils.client import start_workflow
 
 
 @workflow.defn

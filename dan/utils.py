@@ -17,7 +17,6 @@ from temporalio.api.update.v1 import UpdateRef
 from temporalio.api.workflowservice.v1 import PollWorkflowExecutionUpdateRequest
 from temporalio.client import Client, WorkflowHandle
 from temporalio.contrib.opentelemetry import TracingInterceptor
-from temporalio.runtime import Runtime, TelemetryConfig
 from temporalio.service import RPCError, RPCStatusCode
 from temporalio.types import MethodAsyncNoParam
 
@@ -51,7 +50,6 @@ async def connect(service_name: str) -> Client:
     return await Client.connect(
         "localhost:7233",
         namespace=NAMESPACE,
-        runtime=runtime_with_telemetry(),
         interceptors=[TracingInterceptor()],
     )
 
@@ -111,7 +109,3 @@ def activate_tracing(service_name: str):
     exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
     provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
-
-
-def runtime_with_telemetry() -> Runtime:
-    return Runtime(telemetry=TelemetryConfig())

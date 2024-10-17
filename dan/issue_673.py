@@ -1,6 +1,7 @@
 import asyncio
 from datetime import timedelta
 
+from opentelemetry import trace
 from temporalio import activity, workflow
 from temporalio.worker import Replayer
 
@@ -63,10 +64,17 @@ async def starter():
     await workflow_handle.signal(Workflow.done)
     await workflow_handle.result()
 
-    workflows = client.list_workflows(f"WorkflowId = '{WORKFLOW_ID}'")
-    histories = workflows.map_histories()
-    replayer = Replayer(workflows=[Workflow])
-    await replayer.replay_workflows(histories)
+    provider = trace.get_tracer_provider()
+    tracer = provider.get_tracer(__name__)
+
+    with tracer.start_as_current_span("Replaying") as span:
+        span.add_event("Listing workflows")
+        workflows = client.list_workflows(f"WorkflowId = '{WORKFLOW_ID}'")
+        span.add_event("Mapping histories")
+        histories = workflows.map_histories()
+        span.add_event("Replaying")
+        replayer = Replayer(workflows=[Workflow])
+        await replayer.replay_workflows(histories)
 
 
 if __name__ == "__main__":

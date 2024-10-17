@@ -28,6 +28,7 @@ def get_last_edited_workflow_module():
 
 latest_module = get_last_edited_workflow_module()
 Workflow = latest_module.Workflow
+activities = getattr(latest_module, "activities", [])
 
 interrupt_event = asyncio.Event()
 
@@ -39,6 +40,7 @@ async def main():
         client,
         task_queue=TASK_QUEUE,
         workflows=[Workflow],
+        activities=activities,
         workflow_runner=UnsandboxedWorkflowRunner(),
     ):
         await interrupt_event.wait()

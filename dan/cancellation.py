@@ -3,7 +3,8 @@ from typing import NoReturn
 
 from temporalio import workflow
 
-from dan.utils import print, start_workflow
+from dan.utils import print
+from dan.utils.client import start_workflow
 
 
 @workflow.defn

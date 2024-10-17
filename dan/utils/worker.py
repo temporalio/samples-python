@@ -3,16 +3,18 @@ import os
 from importlib import import_module
 from pathlib import Path
 
+from opentelemetry import trace
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
-import dan.utils
 from dan.constants import NAMESPACE, TASK_QUEUE
+from dan.utils import connect
+from dan.utils.otel import create_tracer_provider
 
 
 def get_last_edited_workflow_module():
-    dan_dir = Path(__file__).parent
+    root_dir = Path(__file__).parent.parent
     workflow_files = []
-    for f in dan_dir.glob("*.py"):
+    for f in root_dir.glob("*.py"):
         if f.is_file():
             if f.stem == "worker":
                 continue
@@ -35,7 +37,10 @@ interrupt_event = asyncio.Event()
 
 async def main():
     print(NAMESPACE, Workflow.__module__)
-    client = await dan.utils.connect("Lang")
+    if os.getenv("TRACING"):
+        print("🩻")
+        trace.set_tracer_provider(create_tracer_provider("Lang"))
+    client = await connect()
     async with Worker(
         client,
         task_queue=TASK_QUEUE,

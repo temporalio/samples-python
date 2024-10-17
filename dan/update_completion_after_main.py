@@ -4,7 +4,8 @@ import uuid
 from temporalio import workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
-from utils import update_has_been_admitted
+
+from dan.utils.client import update_has_been_admitted
 
 wid = __file__
 tq = "tq"

@@ -4,6 +4,7 @@ from datetime import timedelta
 from temporalio import activity, workflow
 from temporalio.worker import Replayer
 
+import dan.utils.client
 from dan import utils
 from dan.constants import WORKFLOW_ID
 
@@ -54,8 +55,8 @@ activities = [test_activity]
 
 
 async def starter():
-    client = await utils.connect("Client")
-    workflow_handle = await utils.start_workflow(Workflow.run, client=client)
+    client = await utils.connect()
+    workflow_handle = await dan.utils.client.start_workflow(Workflow.run, client=client)
     await workflow_handle.signal(Workflow.start)
     await asyncio.sleep(0.5)
     await workflow_handle.execute_update(Workflow.resume)

@@ -9,7 +9,7 @@ import rich
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import Tracer, TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import common, workflow
 from temporalio.api.common.v1 import WorkflowExecution
@@ -109,3 +109,21 @@ def activate_tracing(service_name: str):
     exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
     provider.add_span_processor(BatchSpanProcessor(exporter))
     trace.set_tracer_provider(provider)
+
+
+@contextmanager
+def start_as_current_workflow_span(
+    tracer: Tracer,
+    name: str,
+    method: str,
+    request_type: str,
+    request_payload: str,
+    response_type: str,
+):
+    with tracer.start_as_current_span(name) as span:
+        span.set_attribute("rpc.method", method)
+        span.set_attribute("rpc.request.type", request_type)
+        span.set_attribute("rpc.request.payload", request_payload)
+        span.set_attribute("rpc.response.type", response_type)
+        span.set_attribute("temporal.workflow", True)
+        yield span

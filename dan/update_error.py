@@ -5,7 +5,7 @@ from temporalio import workflow
 from temporalio.client import WorkflowUpdateFailedError, WorkflowUpdateStage
 from temporalio.exceptions import FailureError
 
-from dan.utils import start_workflow
+from dan.utils.client import start_workflow
 
 
 @workflow.defn

@@ -5,7 +5,7 @@ import pprint
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
 
-from dan.utils import start_workflow
+from dan.utils.client import start_workflow
 
 
 class CustomFormatter(logging.Formatter):

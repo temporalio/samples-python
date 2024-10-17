@@ -4,7 +4,7 @@ from typing import NoReturn
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
 
-from dan.utils import start_workflow
+from dan.utils.client import start_workflow
 
 wid = __file__
 

@@ -4,7 +4,8 @@ from typing import Optional
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
-from utils import start_workflow
+
+from dan.utils.client import start_workflow
 
 NUM_DUPS = 20
 

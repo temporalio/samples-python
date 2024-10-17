@@ -58,7 +58,7 @@ async def starter():
     client = await utils.connect()
     workflow_handle = await dan.utils.client.start_workflow(Workflow.run, client=client)
     await workflow_handle.signal(Workflow.start)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(5)
     await workflow_handle.execute_update(Workflow.resume)
     await workflow_handle.signal(Workflow.done)
     await workflow_handle.result()

@@ -19,7 +19,7 @@ async def call_greeting_service(to_language: Language) -> Optional[str]:
         Language.FRENCH: "Bonjour, monde",
         Language.HINDI: "नमस्ते दुनिया",
         Language.PORTUGUESE: "Olá mundo",
-        Language.SPANISH: "¡Hola mundo",
+        Language.SPANISH: "Hola mundo",
     }
     await asyncio.sleep(0.2)  # Simulate a network call
     return greetings.get(to_language)

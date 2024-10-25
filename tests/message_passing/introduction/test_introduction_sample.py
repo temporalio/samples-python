@@ -2,7 +2,6 @@ import uuid
 
 import pytest
 from temporalio.client import Client, WorkflowUpdateFailedError
-from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 from message_passing.introduction.starter import TASK_QUEUE
@@ -14,11 +13,7 @@ from message_passing.introduction.workflows import (
 )
 
 
-async def test_queries(client: Client, env: WorkflowEnvironment):
-    if env.supports_time_skipping:
-        pytest.skip(
-            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
-        )
+async def test_queries(client: Client):
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
@@ -46,11 +41,7 @@ async def test_queries(client: Client, env: WorkflowEnvironment):
         ]
 
 
-async def test_set_language(client: Client, env: WorkflowEnvironment):
-    if env.supports_time_skipping:
-        pytest.skip(
-            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
-        )
+async def test_set_language(client: Client):
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
@@ -69,11 +60,7 @@ async def test_set_language(client: Client, env: WorkflowEnvironment):
         assert await wf_handle.query(GreetingWorkflow.get_language) == Language.CHINESE
 
 
-async def test_set_invalid_language(client: Client, env: WorkflowEnvironment):
-    if env.supports_time_skipping:
-        pytest.skip(
-            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
-        )
+async def test_set_invalid_language(client: Client):
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
@@ -92,17 +79,11 @@ async def test_set_invalid_language(client: Client, env: WorkflowEnvironment):
             )
 
 
-async def test_set_language_that_is_only_available_via_remote_service(
-    client: Client, env: WorkflowEnvironment
-):
+async def test_set_language_that_is_only_available_via_remote_service(client: Client):
     """
     Similar to test_set_invalid_language, but this time Arabic is available
     since we use the remote service.
     """
-    if env.supports_time_skipping:
-        pytest.skip(
-            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
-        )
     async with Worker(
         client,
         task_queue=TASK_QUEUE,

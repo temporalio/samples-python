@@ -15,23 +15,22 @@ async def financial_transaction_with_early_return():
     client = await Client.connect("localhost:7233")
     # The user wants to kick off a long-running transaction workflow and get an early-return result.
 
-    # No network call here
-    transaction = client.start_workflow(
+    confirmation_token = await client.start_workflow(
         TransactionWorkflow.run,
         args=[TransactionRequest(amount=77.7)],
         id="transaction-abc123",
         task_queue=TASK_QUEUE,
-        lazy=True,
+        continuation=lambda wf_handle: wf_handle.execute_update(
+            # The wf_handle is trapped because Python doesn't support multi-statement anonymous functions.
+            TransactionWorkflow.get_confirmation
+        ),
     )
-
-    # Send the MultiOp gRPC
-    confirmation_token = await transaction.execute_update(
-        TransactionWorkflow.get_confirmation
-    )
-    final_report = await transaction.result()
 
     print(f"got confirmation token: {confirmation_token}")
-    print(f"got final report: {final_report}")
+
+    # ❗❗ But we can't get the workflow handle if we use a lambda above
+    # final_report = await wf_handle.result()
+    # print(f"got final report: {final_report}")
 
 
 async def use_a_lock_service():
@@ -39,15 +38,16 @@ async def use_a_lock_service():
 
     # The user wants to acquire a lock lease from a lock service
 
-    lock_service = client.start_workflow(
+    lock = await client.start_workflow(
         LockService.run,
         id="lock-service-id",
         id_conflict_policy=common.WorkflowIDConflictPolicy.USE_EXISTING,
         task_queue="uws",
-        lazy=True,
+        continuation=lambda wf_handle: wf_handle.execute_update(
+            LockService.acquire_lock
+        ),
     )
 
-    lock = await lock_service.execute_update(LockService.acquire_lock)
     print(f"acquired lock: {lock}")
 
 

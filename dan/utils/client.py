@@ -22,7 +22,7 @@ R = TypeVar("R")
 async def start_workflow(
     run: MethodAsyncNoParam[S, R],
     id: Optional[str] = None,
-    id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
+    id_conflict_policy=common.WorkflowIDConflictPolicy.TERMINATE_EXISTING,
     client: Optional[Client] = None,
     **kwargs,
 ) -> WorkflowHandle[S, R]:
@@ -35,7 +35,7 @@ async def start_workflow(
         run,
         id=id or WORKFLOW_ID,
         task_queue=TASK_QUEUE,
-        id_reuse_policy=id_reuse_policy,
+        id_conflict_policy=id_conflict_policy,
         task_timeout=timedelta(minutes=77),
         **kwargs,
     )

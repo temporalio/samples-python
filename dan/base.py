@@ -1,4 +1,5 @@
 import asyncio
+import os
 import time
 from typing import cast
 
@@ -18,17 +19,19 @@ tracer = cast(Tracer, provider.get_tracer(__name__))
 class Workflow:
     @workflow.run
     async def run(self) -> str:
-        with start_as_current_workflow_span(
-            tracer=tracer,
-            name="WorkflowInit",
-            method="WorkflowInit",
-            request_type="WorkflowInit",
-            request_payload="{}",
-            response_type="WorkflowInitResult",
-        ) as span:
-            span.add_event("hello from workflow init")
-        trace.get_tracer_provider().force_flush()  # type: ignore
-        time.sleep(5)
+        if os.getenv("TRACING"):
+            print("🩻")
+            with start_as_current_workflow_span(
+                tracer=tracer,
+                name="WorkflowInit",
+                method="WorkflowInit",
+                request_type="WorkflowInit",
+                request_payload="{}",
+                response_type="WorkflowInitResult",
+            ) as span:
+                span.add_event("hello from workflow init")
+            trace.get_tracer_provider().force_flush()  # type: ignore
+            time.sleep(1.5)
         return "workflow-result"
 
 

@@ -2,17 +2,14 @@
 
 This sample shows how to configure [Sentry](https://sentry.io) SDK V2 to intercept and capture errors from the Temporal SDK.
 
-Note: This is a small modification of the original example [sentry (v1)](../sentry) which seems to have
-issues in the Workflow interceptor, as there are modules (`warnings` and `threading`) that Sentry uses that aren't passed through
-to Temporal's sandbox properly, causing the Workflows to fail to execute.
-
-> Sentry V2 only supports Python 3.6 and higher. So if you're on Python 3.5, you may need to refer to the original example
-> (which doesn't work for me) or upgrade your Python version.
-
 ### Further details
 
+This is a small modification of the original example [Sentry (v1)](../sentry_v1) interceptor which doesn't work properly 
+with SDK V2, due to sandbox issues.
+
 Sentry's `Hub` object is now deprecated in the V2 SDK in favour of scopes. See [Activating Current Hub Clone](https://docs.sentry.io/platforms/python/migration/1.x-to-2.x#activating-current-hub-clone)
-for more details. The changes are  simple, just replace `with Hub(Hub.current):` with `with isolation_scope() as scope:`.
+for more details. The changes are simple, just replace `with Hub(Hub.current):` with `with isolation_scope() as scope:`.
+These changes resolve the sandbox issues.
 
 ## Running the Sample
 

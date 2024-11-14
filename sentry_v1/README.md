@@ -2,9 +2,14 @@
 
 This sample shows how to configure [Sentry](https://sentry.io) to intercept and capture errors from the Temporal SDK.
 
-For this sample, the optional `sentry` dependency group must be included. To include, run:
+> Note: This example uses Sentry SDK v1 which is now deprecated. 
+> This sample will still work if you have Sentry SDK v1 installed, but won't work for Sentry SDK v2.
+> See [Sentry V2 Sample](../sentry_v2/README.md) for the updated version.
 
-    poetry install --with sentry
+For this sample, `sentry-sdk@1.11.0`must be installed with pip as we cannot have two versions managed with poetry at the same time. To include, run:
+
+    poetry install
+    poetry run pip install sentry-sdk==1.11.0
 
 To run, first see [README.md](../README.md) for prerequisites. Set `SENTRY_DSN` environment variable to the Sentry DSN.
 Then, run the following from this directory to start the worker:

@@ -9,7 +9,7 @@ from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from sentry.interceptor import SentryInterceptor
+from sentry_v1.interceptor import SentryInterceptor
 
 
 @dataclass

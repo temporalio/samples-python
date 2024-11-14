@@ -4,34 +4,30 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from updates_and_signals.safe_message_handlers.workflow import (
-    ClusterManagerWorkflow,
-    assign_nodes_to_job,
-    find_bad_nodes,
-    unassign_nodes_for_job,
-)
+from message_passing.introduction import TASK_QUEUE
+from message_passing.introduction.activities import call_greeting_service
+from message_passing.introduction.workflows import GreetingWorkflow
 
 interrupt_event = asyncio.Event()
 
 
 async def main():
-    # Connect client
+    logging.basicConfig(level=logging.INFO)
+
     client = await Client.connect("localhost:7233")
 
     async with Worker(
         client,
-        task_queue="safe-message-handlers-task-queue",
-        workflows=[ClusterManagerWorkflow],
-        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
+        task_queue=TASK_QUEUE,
+        workflows=[GreetingWorkflow],
+        activities=[call_greeting_service],
     ):
-        # Wait until interrupted
-        logging.info("ClusterManagerWorkflow worker started, ctrl+c to exit")
+        logging.info("Worker started, ctrl+c to exit")
         await interrupt_event.wait()
         logging.info("Shutting down")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     loop = asyncio.new_event_loop()
     try:
         loop.run_until_complete(main())

@@ -8,7 +8,7 @@ from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ApplicationError
 
-from updates_and_signals.safe_message_handlers.activities import (
+from message_passing.safe_message_handlers.activities import (
     AssignNodesToJobInput,
     FindBadNodesInput,
     UnassignNodesForJobInput,

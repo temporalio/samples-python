@@ -6,7 +6,7 @@ This sample shows how to configure [Sentry](https://sentry.io) to intercept and 
 > This sample will still work if you have Sentry SDK v1 installed, but won't work for Sentry SDK v2.
 > See [Sentry V2 Sample](../sentry_v2/README.md) for the updated version.
 
-For this sample, `sentry-sdk@1.11.0`must be installed with pip as we cannot have two versions managed with poetry at the same time. To include, run:
+For this sample, `sentry-sdk@1.11.0` must be installed with pip as we cannot have two versions managed with poetry at the same time. To include, run:
 
     poetry install
     poetry run pip install sentry-sdk==1.11.0

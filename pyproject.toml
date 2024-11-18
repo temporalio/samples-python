@@ -69,9 +69,7 @@ dependencies = { pydantic = "^1.10.4" }
 
 [tool.poetry.group.sentry]
 optional = true
-dependencies = { sentry-sdk = [
-        {version = "^2.13.0"}
-    ]}
+dependencies = { sentry-sdk = "^2.13.0"}
 
 [tool.poe.tasks]
 format = [{cmd = "black ."}, {cmd = "isort ."}]

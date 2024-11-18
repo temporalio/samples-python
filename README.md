@@ -70,7 +70,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
-* [sentry](sentry) - Report errors to Sentry using sentry-sdk v2.
+* [sentry](sentry) - Report errors to Sentry.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
 

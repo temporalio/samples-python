@@ -1,15 +1,16 @@
 import asyncio
-import logging
 import os
+import random
 from dataclasses import dataclass
 from datetime import timedelta
 
-import sentry_sdk
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from sentry_v2.interceptor import SentryInterceptor
+with workflow.unsafe.imports_passed_through():
+    import sentry_sdk
+    from interceptor import SentryInterceptor
 
 
 @dataclass
@@ -21,6 +22,8 @@ class ComposeGreetingInput:
 @activity.defn
 async def compose_greeting(input: ComposeGreetingInput) -> str:
     activity.logger.info("Running activity with parameter %s" % input)
+    if random.random() < 0.9:
+        raise Exception("Activity failed!")
     return f"{input.greeting}, {input.name}!"
 
 

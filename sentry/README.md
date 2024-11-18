@@ -32,3 +32,10 @@ This will start the worker. Then, in another terminal, run the following to exec
 
 The workflow should complete with the hello result. If you alter the workflow or the activity to raise an
 `ApplicationError` instead, it should appear in Sentry.
+
+## Screenshot
+
+The screenshot below shows the extra tags and context included in the 
+Sentry error from the exception thrown in the activity.
+
+![Sentry screenshot](images/sentry.jpeg)

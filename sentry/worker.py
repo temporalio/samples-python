@@ -10,7 +10,8 @@ from temporalio.worker import Worker
 
 with workflow.unsafe.imports_passed_through():
     import sentry_sdk
-    from interceptor import SentryInterceptor
+
+    from sentry.interceptor import SentryInterceptor
 
 
 @dataclass

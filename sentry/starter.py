@@ -2,7 +2,7 @@ import asyncio
 
 from temporalio.client import Client
 
-from worker import GreetingWorkflow
+from sentry.worker import GreetingWorkflow
 
 
 async def main():

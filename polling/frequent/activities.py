@@ -1,5 +1,4 @@
 import asyncio
-import time
 from dataclasses import dataclass
 
 from temporalio import activity
@@ -22,7 +21,7 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
                 result = await test_service.get_service_result(input)
                 activity.logger.info(f"Exiting activity ${result}")
                 return result
-            except Exception as e:
+            except Exception:
                 # swallow exception since service is down
                 activity.logger.debug("Failed, trying again shortly", exc_info=True)
 

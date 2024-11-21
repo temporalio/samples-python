@@ -1,15 +1,8 @@
 import asyncio
-from dataclasses import dataclass
 
 from temporalio import activity
 
-from polling.test_service import TestService
-
-
-@dataclass
-class ComposeGreetingInput:
-    greeting: str
-    name: str
+from polling.test_service import ComposeGreetingInput, TestService
 
 
 @activity.defn

@@ -16,10 +16,11 @@ class ComposeGreetingInput:
 @activity.defn
 async def compose_greeting(input: ComposeGreetingInput) -> str:
     test_service = TestService()
+    attempt = 1
     while True:
         try:
             try:
-                result = await test_service.get_service_result(input)
+                result = await test_service.get_service_result(input, attempt)
                 activity.logger.info(f"Exiting activity ${result}")
                 return result
             except Exception as e:
@@ -28,6 +29,7 @@ async def compose_greeting(input: ComposeGreetingInput) -> str:
 
             activity.heartbeat("Invoking activity")
             await asyncio.sleep(1)
+            attempt += 1
         except asyncio.CancelledError:
             # activity was either cancelled or workflow was completed or worker shut down
             # if you need to clean up you can catch this.

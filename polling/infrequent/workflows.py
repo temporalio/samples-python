@@ -14,9 +14,9 @@ class GreetingWorkflow:
         return await workflow.execute_activity(
             compose_greeting,
             ComposeGreetingInput("Hello", name),
-            start_to_close_timeout=timedelta(seconds=2),
+            start_to_close_timeout=timedelta(seconds=5),
             retry_policy=RetryPolicy(
                 backoff_coefficient=1.0,
-                initial_interval=timedelta(seconds=60),
+                initial_interval=timedelta(seconds=30),
             ),
         )

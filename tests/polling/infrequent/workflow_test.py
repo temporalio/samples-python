@@ -1,17 +1,18 @@
 import uuid
+
 import pytest
-from polling.infrequent.activities import compose_greeting
-from polling.infrequent.workflows import GreetingWorkflow
 from temporalio.client import Client
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
+from polling.infrequent.activities import compose_greeting
+from polling.infrequent.workflows import GreetingWorkflow
+
 
 async def test_infrequent_polling_workflow(client: Client, env: WorkflowEnvironment):
     if not env.supports_time_skipping:
-        pytest.skip(
-            "Too slow to test with time-skipping disabled")
-    
+        pytest.skip("Too slow to test with time-skipping disabled")
+
     # Start a worker that hosts the workflow and activity implementations.
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(

@@ -14,10 +14,10 @@ class ComposeGreetingInput:
 
 
 async def get_service_result(input):
-    attempts[activity.info().workflow_id] += 1
-    attempt = attempts[activity.info().workflow_id]
+    workflow_id = activity.info().workflow_id
+    attempts[workflow_id] += 1
 
-    print(f"Attempt {attempt} of {ERROR_ATTEMPTS} to invoke service")
-    if attempt == ERROR_ATTEMPTS:
+    print(f"Attempt {attempts[workflow_id]} of {ERROR_ATTEMPTS} to invoke service")
+    if attempts[workflow_id] == ERROR_ATTEMPTS:
         return f"{input.greeting}, {input.name}!"
     raise Exception("service is down")

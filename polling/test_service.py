@@ -1,4 +1,10 @@
+from collections import Counter
 from dataclasses import dataclass
+
+from temporalio import activity
+
+attempts = Counter()
+ERROR_ATTEMPTS = 5
 
 
 @dataclass
@@ -7,17 +13,11 @@ class ComposeGreetingInput:
     name: str
 
 
-try_attempts = 0
+async def get_service_result(input):
+    attempts[activity.info().workflow_id] += 1
+    attempt = attempts[activity.info().workflow_id]
 
-
-class TestService:
-    def __init__(self):
-        self.error_attempts = 5
-
-    async def get_service_result(self, input):
-        global try_attempts
-        print(f"Attempt {try_attempts} of {self.error_attempts} to invoke service")
-        try_attempts += 1
-        if try_attempts % self.error_attempts == 0:
-            return f"{input.greeting}, {input.name}!"
-        raise Exception("service is down")
+    print(f"Attempt {attempt} of {ERROR_ATTEMPTS} to invoke service")
+    if attempt == ERROR_ATTEMPTS:
+        return f"{input.greeting}, {input.name}!"
+    raise Exception("service is down")

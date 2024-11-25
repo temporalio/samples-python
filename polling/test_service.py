@@ -1,9 +1,9 @@
-from collections import Counter
 from dataclasses import dataclass
+from typing import Counter
 
 from temporalio import activity
 
-attempts = Counter()
+attempts = Counter[str]()
 ERROR_ATTEMPTS = 5
 
 

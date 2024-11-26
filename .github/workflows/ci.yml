@@ -16,7 +16,7 @@ jobs:
         os: [ubuntu-latest, macos-intel, macos-arm, windows-latest]
         include:
           - os: macos-intel
-            runsOn: macos-12
+            runsOn: macos-13
           - os: macos-arm
             runsOn: macos-14
         # macOS ARM 3.8 does not have an available Python build at

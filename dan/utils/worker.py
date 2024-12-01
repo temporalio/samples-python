@@ -29,14 +29,14 @@ def get_last_edited_workflow_module():
 
 
 latest_module = get_last_edited_workflow_module()
-Workflow = latest_module.Workflow
 activities = getattr(latest_module, "activities", [])
+workflows = getattr(latest_module, "workflows", [latest_module.Workflow])
 
 interrupt_event = asyncio.Event()
 
 
 async def main():
-    print(NAMESPACE, Workflow.__module__)
+    print(NAMESPACE, latest_module.__name__)
     if os.getenv("TRACING"):
         print("🩻")
         trace.set_tracer_provider(create_tracer_provider("Lang"))
@@ -44,7 +44,7 @@ async def main():
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[Workflow],
+        workflows=workflows,
         activities=activities,
         workflow_runner=UnsandboxedWorkflowRunner(),
     ):

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from temporalio import common, workflow
-from temporalio.client import Client
+from temporalio.client import Client, WorkflowUpdateStage
 from temporalio.worker import Worker
 
 wid = __file__
@@ -49,9 +49,13 @@ async def main():
             task_queue=tq,
             id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
         )
-        update_result = await handle.execute_update(
-            HelloWorldWorkflow.set_greeting, HelloWorldInput("Hola")
+        update_handle = await handle.start_update(
+            HelloWorldWorkflow.set_greeting,
+            HelloWorldInput("Hola"),
+            wait_for_stage=WorkflowUpdateStage.ACCEPTED,
         )
+        print(f"Update Handle: {update_handle}")
+        update_result = await update_handle.result()
         print(f"Update Result: {update_result}")
         result = await handle.result()
         print(f"Workflow Result: {result}")

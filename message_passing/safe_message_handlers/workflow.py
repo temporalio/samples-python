@@ -14,6 +14,7 @@ from message_passing.safe_message_handlers.activities import (
     UnassignNodesForJobInput,
     assign_nodes_to_job,
     find_bad_nodes,
+    start_cluster,
     unassign_nodes_for_job,
 )
 
@@ -81,11 +82,10 @@ class ClusterManagerWorkflow:
         self.max_history_length: Optional[int] = None
         self.sleep_interval_seconds: int = 600
 
-    @workflow.signal
-    async def start_cluster(self) -> None:
-        self.state.cluster_started = True
-        self.state.nodes = {str(k): None for k in range(25)}
-        workflow.logger.info("Cluster started")
+    @workflow.update
+    async def wait_until_cluster_started(self) -> ClusterManagerState:
+        await workflow.wait_condition(lambda: self.state.cluster_started)
+        return self.state
 
     @workflow.signal
     async def shutdown_cluster(self) -> None:
@@ -144,7 +144,7 @@ class ClusterManagerWorkflow:
         self.state.jobs_assigned.add(job_name)
 
     # Even though it returns nothing, this is an update because the client may want to track it, for example
-    # to wait for nodes to be unassignd before reassigning them.
+    # to wait for nodes to be unassigned before reassigning them.
     @workflow.update
     async def delete_job(self, input: ClusterManagerDeleteJobInput) -> None:
         await workflow.wait_condition(lambda: self.state.cluster_started)
@@ -213,7 +213,13 @@ class ClusterManagerWorkflow:
 
     @workflow.run
     async def run(self, input: ClusterManagerInput) -> ClusterManagerResult:
-        await workflow.wait_condition(lambda: self.state.cluster_started)
+        cluster_state = await workflow.execute_activity(
+            start_cluster, schedule_to_close_timeout=timedelta(seconds=10)
+        )
+        self.state.nodes = {k: None for k in cluster_state.node_ids}
+        self.state.cluster_started = True
+        workflow.logger.info("Cluster started")
+
         # Perform health checks at intervals.
         while True:
             await self.perform_health_checks()

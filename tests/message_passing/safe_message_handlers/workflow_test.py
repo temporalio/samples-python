@@ -10,6 +10,7 @@ from temporalio.worker import Worker
 from message_passing.safe_message_handlers.activities import (
     assign_nodes_to_job,
     find_bad_nodes,
+    start_cluster,
     unassign_nodes_for_job,
 )
 from message_passing.safe_message_handlers.workflow import (
@@ -18,6 +19,13 @@ from message_passing.safe_message_handlers.workflow import (
     ClusterManagerInput,
     ClusterManagerWorkflow,
 )
+
+ACTIVITIES = [
+    assign_nodes_to_job,
+    unassign_nodes_for_job,
+    find_bad_nodes,
+    start_cluster,
+]
 
 
 async def test_safe_message_handlers(client: Client, env: WorkflowEnvironment):
@@ -30,7 +38,7 @@ async def test_safe_message_handlers(client: Client, env: WorkflowEnvironment):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
+        activities=ACTIVITIES,
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -38,7 +46,9 @@ async def test_safe_message_handlers(client: Client, env: WorkflowEnvironment):
             id=f"ClusterManagerWorkflow-{uuid.uuid4()}",
             task_queue=task_queue,
         )
-        await cluster_manager_handle.signal(ClusterManagerWorkflow.start_cluster)
+        await cluster_manager_handle.execute_update(
+            ClusterManagerWorkflow.wait_until_cluster_started
+        )
 
         allocation_updates = []
         for i in range(6):
@@ -82,7 +92,7 @@ async def test_update_idempotency(client: Client, env: WorkflowEnvironment):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
+        activities=ACTIVITIES,
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -91,7 +101,9 @@ async def test_update_idempotency(client: Client, env: WorkflowEnvironment):
             task_queue=task_queue,
         )
 
-        await cluster_manager_handle.signal(ClusterManagerWorkflow.start_cluster)
+        await cluster_manager_handle.execute_update(
+            ClusterManagerWorkflow.wait_until_cluster_started
+        )
 
         result_1 = await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.assign_nodes_to_job,
@@ -121,7 +133,7 @@ async def test_update_failure(client: Client, env: WorkflowEnvironment):
         client,
         task_queue=task_queue,
         workflows=[ClusterManagerWorkflow],
-        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
+        activities=ACTIVITIES,
     ):
         cluster_manager_handle = await client.start_workflow(
             ClusterManagerWorkflow.run,
@@ -130,7 +142,9 @@ async def test_update_failure(client: Client, env: WorkflowEnvironment):
             task_queue=task_queue,
         )
 
-        await cluster_manager_handle.signal(ClusterManagerWorkflow.start_cluster)
+        await cluster_manager_handle.execute_update(
+            ClusterManagerWorkflow.wait_until_cluster_started
+        )
 
         await cluster_manager_handle.execute_update(
             ClusterManagerWorkflow.assign_nodes_to_job,

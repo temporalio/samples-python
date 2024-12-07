@@ -11,6 +11,16 @@ class AssignNodesToJobInput:
     job_name: str
 
 
+@dataclass
+class ClusterState:
+    node_ids: List[str]
+
+
+@activity.defn
+async def start_cluster() -> ClusterState:
+    return ClusterState(node_ids=[f"{i}" for i in range(25)])
+
+
 @activity.defn
 async def assign_nodes_to_job(input: AssignNodesToJobInput) -> None:
     print(f"Assigning nodes {input.nodes} to job {input.job_name}")

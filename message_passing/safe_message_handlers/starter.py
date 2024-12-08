@@ -16,8 +16,10 @@ from message_passing.safe_message_handlers.workflow import (
 
 
 async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] = None):
-
-    await wf.signal(ClusterManagerWorkflow.start_cluster)
+    cluster_status = await wf.execute_update(
+        ClusterManagerWorkflow.wait_until_cluster_started
+    )
+    print(f"Cluster started with {len(cluster_status.nodes)} nodes")
 
     print("Assigning jobs to nodes...")
     allocation_updates = []

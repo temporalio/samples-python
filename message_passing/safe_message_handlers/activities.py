@@ -11,6 +11,16 @@ class AssignNodesToJobInput:
     job_name: str
 
 
+@dataclass
+class ClusterState:
+    node_ids: List[str]
+
+
+@activity.defn
+async def start_cluster() -> ClusterState:
+    return ClusterState(node_ids=[f"node-{i}" for i in range(25)])
+
+
 @activity.defn
 async def assign_nodes_to_job(input: AssignNodesToJobInput) -> None:
     print(f"Assigning nodes {input.nodes} to job {input.job_name}")
@@ -37,7 +47,7 @@ class FindBadNodesInput:
 @activity.defn
 async def find_bad_nodes(input: FindBadNodesInput) -> Set[str]:
     await asyncio.sleep(0.1)
-    bad_nodes = set([n for n in input.nodes_to_check if int(n) % 5 == 0])
+    bad_nodes = set([id for id in input.nodes_to_check if hash(id) % 5 == 0])
     if bad_nodes:
         print(f"Found bad nodes: {bad_nodes}")
     else:

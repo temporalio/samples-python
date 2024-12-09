@@ -14,6 +14,7 @@ from message_passing.safe_message_handlers.activities import (
     UnassignNodesForJobInput,
     assign_nodes_to_job,
     find_bad_nodes,
+    start_cluster,
     unassign_nodes_for_job,
 )
 
@@ -65,18 +66,27 @@ class ClusterManagerAssignNodesToJobResult:
 # These updates must run atomically.
 @workflow.defn
 class ClusterManagerWorkflow:
-    def __init__(self) -> None:
-        self.state = ClusterManagerState()
+    @workflow.init
+    def __init__(self, input: ClusterManagerInput) -> None:
+        if input.state:
+            self.state = input.state
+        else:
+            self.state = ClusterManagerState()
+
+        if input.test_continue_as_new:
+            self.max_history_length: Optional[int] = 120
+            self.sleep_interval_seconds = 1
+        else:
+            self.max_history_length = None
+            self.sleep_interval_seconds = 600
+
         # Protects workflow state from interleaved access
         self.nodes_lock = asyncio.Lock()
-        self.max_history_length: Optional[int] = None
-        self.sleep_interval_seconds: int = 600
 
-    @workflow.signal
-    async def start_cluster(self) -> None:
-        self.state.cluster_started = True
-        self.state.nodes = {str(k): None for k in range(25)}
-        workflow.logger.info("Cluster started")
+    @workflow.update
+    async def wait_until_cluster_started(self) -> ClusterManagerState:
+        await workflow.wait_condition(lambda: self.state.cluster_started)
+        return self.state
 
     @workflow.signal
     async def shutdown_cluster(self) -> None:
@@ -135,7 +145,7 @@ class ClusterManagerWorkflow:
         self.state.jobs_assigned.add(job_name)
 
     # Even though it returns nothing, this is an update because the client may want to track it, for example
-    # to wait for nodes to be unassignd before reassigning them.
+    # to wait for nodes to be unassigned before reassigning them.
     @workflow.update
     async def delete_job(self, input: ClusterManagerDeleteJobInput) -> None:
         await workflow.wait_condition(lambda: self.state.cluster_started)
@@ -202,30 +212,15 @@ class ClusterManagerWorkflow:
                     f"Health check failed with error {type(e).__name__}:{e}"
                 )
 
-    # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and
-    # continue-as-new.
-    def init(self, input: ClusterManagerInput) -> None:
-        if input.state:
-            self.state = input.state
-        if input.test_continue_as_new:
-            self.max_history_length = 120
-            self.sleep_interval_seconds = 1
-
-    def should_continue_as_new(self) -> bool:
-        if workflow.info().is_continue_as_new_suggested():
-            return True
-        # This is just for ease-of-testing.  In production, we trust temporal to tell us when to continue as new.
-        if (
-            self.max_history_length
-            and workflow.info().get_current_history_length() > self.max_history_length
-        ):
-            return True
-        return False
-
     @workflow.run
     async def run(self, input: ClusterManagerInput) -> ClusterManagerResult:
-        self.init(input)
-        await workflow.wait_condition(lambda: self.state.cluster_started)
+        cluster_state = await workflow.execute_activity(
+            start_cluster, schedule_to_close_timeout=timedelta(seconds=10)
+        )
+        self.state.nodes = {k: None for k in cluster_state.node_ids}
+        self.state.cluster_started = True
+        workflow.logger.info("Cluster started")
+
         # Perform health checks at intervals.
         while True:
             await self.perform_health_checks()
@@ -239,6 +234,8 @@ class ClusterManagerWorkflow:
                 pass
             if self.state.cluster_shutdown:
                 break
+            # The cluster manager is a long-running "entity" workflow so we need to periodically checkpoint its state and
+            # continue-as-new.
             if self.should_continue_as_new():
                 # We don't want to leave any job assignment or deletion handlers half-finished when we continue as new.
                 await workflow.wait_condition(lambda: workflow.all_handlers_finished())
@@ -255,3 +252,14 @@ class ClusterManagerWorkflow:
             len(self.get_assigned_nodes()),
             len(self.get_bad_nodes()),
         )
+
+    def should_continue_as_new(self) -> bool:
+        if workflow.info().is_continue_as_new_suggested():
+            return True
+        # This is just for ease-of-testing.  In production, we trust temporal to tell us when to continue as new.
+        if (
+            self.max_history_length
+            and workflow.info().get_current_history_length() > self.max_history_length
+        ):
+            return True
+        return False

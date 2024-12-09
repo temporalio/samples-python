@@ -74,13 +74,14 @@ class ClusterManagerWorkflow:
             self.state = ClusterManagerState()
 
         if input.test_continue_as_new:
-            self.max_history_length = 120
+            self.max_history_length: Optional[int] = 120
             self.sleep_interval_seconds = 1
+        else:
+            self.max_history_length = None
+            self.sleep_interval_seconds = 600
 
         # Protects workflow state from interleaved access
         self.nodes_lock = asyncio.Lock()
-        self.max_history_length: Optional[int] = None
-        self.sleep_interval_seconds: int = 600
 
     @workflow.update
     async def wait_until_cluster_started(self) -> ClusterManagerState:

@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from typing import Callable, Sequence
 
 import pytest
 from temporalio.client import Client, WorkflowUpdateFailedError
@@ -20,7 +21,7 @@ from message_passing.safe_message_handlers.workflow import (
     ClusterManagerWorkflow,
 )
 
-ACTIVITIES = [
+ACTIVITIES: Sequence[Callable] = [
     assign_nodes_to_job,
     unassign_nodes_for_job,
     find_bad_nodes,

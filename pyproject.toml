@@ -17,7 +17,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-temporalio = "^1.7.0"
+temporalio = "^1.8.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

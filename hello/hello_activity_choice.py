@@ -54,10 +54,10 @@ class ShoppingList:
 @workflow.defn
 class PurchaseFruitsWorkflow:
     @workflow.run
-    async def run(self, list: ShoppingList) -> str:
+    async def run(self, shopping_list: ShoppingList) -> str:
         # Order each thing on the list
         ordered: List[str] = []
-        for item in list.items:
+        for item in shopping_list.items:
             if item.fruit is Fruit.APPLE:
                 order_function = order_apples
             elif item.fruit is Fruit.BANANA:

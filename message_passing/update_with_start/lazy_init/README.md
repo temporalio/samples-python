@@ -1,4 +1,4 @@
-# Update With Start: Shopping Cart
+# Update With Start: Lazy init
 
 This sample illustrates the use of update-with-start to send Updates to a Workflow, starting the Workflow if
 it is not running yet. The Workflow represents a Shopping Cart in an e-commerce application, and

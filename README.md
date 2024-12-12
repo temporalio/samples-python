@@ -62,13 +62,14 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
-* [message-passing introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
+* [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
+* [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
+* [message_passing/update_with_start/lazy_init](message_passing/update_with_start/lazy_init/) - Use update-with-start to update a Shopping Cart, starting if it it does not exist.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
-* [safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.

@@ -5,7 +5,10 @@ from typing import Tuple
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from message_passing.update_shopping_cart.activities import ShoppingCartItem, get_price
+from message_passing.update_with_start.lazy_init.activities import (
+    ShoppingCartItem,
+    get_price,
+)
 
 
 @dataclass

@@ -4,7 +4,7 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from message_passing.update_with_start.lazy_init import TASK_QUEUE, workflows
+from message_passing.update_with_start.lazy_initialization import TASK_QUEUE, workflows
 
 interrupt_event = asyncio.Event()
 

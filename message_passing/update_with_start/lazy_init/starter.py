@@ -38,7 +38,7 @@ async def handle_add_item_request(
     )
     try:
         price = Decimal(
-            await temporal_client.execute_update_with_start(
+            await temporal_client.execute_update_with_start_workflow(
                 ShoppingCartWorkflow.add_item,
                 ShoppingCartItem(sku=item_id, quantity=quantity),
                 start_workflow_operation=start_op,

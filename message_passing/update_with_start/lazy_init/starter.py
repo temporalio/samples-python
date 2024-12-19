@@ -47,7 +47,9 @@ async def handle_add_item_request(
     except WorkflowUpdateFailedError:
         price = None
 
-    return price, await start_op.workflow_handle()
+    workflow_handle = await start_op.workflow_handle()
+
+    return price, workflow_handle
 
 
 async def main():

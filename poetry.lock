@@ -2685,27 +2685,25 @@ name = "temporalio"
 version = "1.8.0"
 description = "Temporal.io Python SDK"
 optional = false
-python-versions = "<4.0,>=3.8"
-files = [
-    {file = "temporalio-1.8.0-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:c6acb217d4bd7297389db756dd9da73ef2bae17f6afee1faa8bf77be200e8b93"},
-    {file = "temporalio-1.8.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:6ec61660631b2513ce710b468068135280996af105571126295c9645bf29ee22"},
-    {file = "temporalio-1.8.0-cp38-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:4ee13d155dc917e7792b87d1e37b1a0e837c361deb722ccc294edaa5344f2fa2"},
-    {file = "temporalio-1.8.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:6b67c115b6eaceddae373dc2c597e5ad5dd567282f4bb0ee63c99124f5f0c12d"},
-    {file = "temporalio-1.8.0-cp38-abi3-win_amd64.whl", hash = "sha256:6a45571c09859b6cbf33be26dd5d5fab7e7ee3625750a7b91ebde5770e61015b"},
-    {file = "temporalio-1.8.0.tar.gz", hash = "sha256:b9e239b8bfd60126a4b591c6e2e691392b69afc8cac9db452d692654bf85f9cc"},
-]
+python-versions = "^3.8"
+files = []
+develop = true
 
 [package.dependencies]
 opentelemetry-api = {version = ">=1.11.1,<2.0.0", optional = true, markers = "extra == \"opentelemetry\""}
 opentelemetry-sdk = {version = ">=1.11.1,<2.0.0", optional = true, markers = "extra == \"opentelemetry\""}
 protobuf = ">=3.20"
-python-dateutil = {version = ">=2.8.2,<3.0.0", markers = "python_version < \"3.11\""}
+python-dateutil = {version = "^2.8.2", markers = "python_version < \"3.11\""}
 types-protobuf = ">=3.20"
-typing-extensions = ">=4.2.0,<5.0.0"
+typing-extensions = "^4.2.0"
 
 [package.extras]
 grpc = ["grpcio (>=1.59.0,<2.0.0)"]
 opentelemetry = ["opentelemetry-api (>=1.11.1,<2.0.0)", "opentelemetry-sdk (>=1.11.1,<2.0.0)"]
+
+[package.source]
+type = "directory"
+url = "../sdk-python"
 
 [[package]]
 name = "tenacity"
@@ -3436,4 +3434,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "2571c8acee413d5cba63a83f043c9f214ecacc7c73b76d15d82702146b19ba5f"
+content-hash = "cc9e23e5fd76d33484f59c055884335775c6b489838068ca9d6908521bb897b2"

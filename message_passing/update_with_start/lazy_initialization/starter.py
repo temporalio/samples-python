@@ -10,7 +10,7 @@ from temporalio.client import (
     WorkflowUpdateFailedError,
 )
 
-from message_passing.update_with_start.lazy_init.workflows import (
+from message_passing.update_with_start.lazy_initialization.workflows import (
     ShoppingCartItem,
     ShoppingCartWorkflow,
 )

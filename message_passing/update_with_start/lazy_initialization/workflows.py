@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Tuple
+from typing import List, Tuple
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
@@ -14,14 +14,14 @@ from message_passing.update_with_start.lazy_initialization.activities import (
 @dataclass
 class FinalizedOrder:
     id: str
-    items: list[Tuple[ShoppingCartItem, str]]
+    items: List[Tuple[ShoppingCartItem, str]]
     total: str
 
 
 @workflow.defn
 class ShoppingCartWorkflow:
     def __init__(self):
-        self.items: list[Tuple[ShoppingCartItem, Decimal]] = []
+        self.items: List[Tuple[ShoppingCartItem, Decimal]] = []
         self.order_submitted = False
 
     @workflow.run
@@ -32,10 +32,7 @@ class ShoppingCartWorkflow:
         return FinalizedOrder(
             id=workflow.info().workflow_id,
             items=[(item, str(price)) for item, price in self.items],
-            total=str(
-                sum(item.quantity * price for item, price in self.items)
-                or Decimal("0.00")
-            ),
+            total=str(sum(price for _, price in self.items) or Decimal("0.00")),
         )
 
     @workflow.update
@@ -46,9 +43,8 @@ class ShoppingCartWorkflow:
                 f"Item unavailable: {item}",
             )
         self.items.append((item, Decimal(price)))
-        return str(
-            sum(item.quantity * price for item, price in self.items) or Decimal("0.00")
-        )
+
+        return str(sum(price for _, price in self.items) or Decimal("0.00"))
 
     @workflow.signal
     def checkout(self):

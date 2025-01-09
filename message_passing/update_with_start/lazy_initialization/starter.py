@@ -1,5 +1,4 @@
 import asyncio
-from decimal import Decimal
 from typing import Optional, Tuple
 
 from temporalio import common
@@ -18,7 +17,7 @@ from message_passing.update_with_start.lazy_initialization.workflows import (
 
 async def handle_add_item_request(
     session_id: str, item_id: str, quantity: int, temporal_client: Client
-) -> Tuple[Optional[Decimal], WorkflowHandle]:
+) -> Tuple[Optional[int], WorkflowHandle]:
     """
     Handle a client request to add an item to the shopping cart. The user is not logged in, but a session ID is
     available from a cookie, and we use this as the cart ID. The Temporal client was created at service-start
@@ -37,12 +36,10 @@ async def handle_add_item_request(
         task_queue="uws",
     )
     try:
-        price = Decimal(
-            await temporal_client.execute_update_with_start_workflow(
-                ShoppingCartWorkflow.add_item,
-                ShoppingCartItem(sku=item_id, quantity=quantity),
-                start_workflow_operation=start_op,
-            )
+        price = await temporal_client.execute_update_with_start_workflow(
+            ShoppingCartWorkflow.add_item,
+            ShoppingCartItem(sku=item_id, quantity=quantity),
+            start_workflow_operation=start_op,
         )
     except WorkflowUpdateFailedError:
         price = None

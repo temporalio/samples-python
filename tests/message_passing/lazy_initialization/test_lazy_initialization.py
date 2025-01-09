@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 import pytest
 from temporalio import common
 from temporalio.client import (
@@ -35,27 +33,23 @@ async def test_shopping_cart_workflow(client: Client, env: WorkflowEnvironment):
             task_queue="lazy-initialization-test",
         )
         start_op_1 = make_start_op()
-        price = Decimal(
-            await client.execute_update_with_start_workflow(
-                ShoppingCartWorkflow.add_item,
-                ShoppingCartItem(sku="item-1", quantity=2),
-                start_workflow_operation=start_op_1,
-            )
+        price = await client.execute_update_with_start_workflow(
+            ShoppingCartWorkflow.add_item,
+            ShoppingCartItem(sku="item-1", quantity=2),
+            start_workflow_operation=start_op_1,
         )
 
-        assert price == Decimal("11.98")
+        assert price == 1198
 
         workflow_handle = await start_op_1.workflow_handle()
 
         start_op_2 = make_start_op()
-        price = Decimal(
-            await client.execute_update_with_start_workflow(
-                ShoppingCartWorkflow.add_item,
-                ShoppingCartItem(sku="item-2", quantity=1),
-                start_workflow_operation=start_op_2,
-            )
+        price = await client.execute_update_with_start_workflow(
+            ShoppingCartWorkflow.add_item,
+            ShoppingCartItem(sku="item-2", quantity=1),
+            start_workflow_operation=start_op_2,
         )
-        assert price == Decimal("17.97")
+        assert price == 1797
 
         workflow_handle = await start_op_2.workflow_handle()
 
@@ -63,7 +57,7 @@ async def test_shopping_cart_workflow(client: Client, env: WorkflowEnvironment):
 
         finalized_order = await workflow_handle.result()
         assert finalized_order.items == [
-            (ShoppingCartItem(sku="item-1", quantity=2), "11.98"),
-            (ShoppingCartItem(sku="item-2", quantity=1), "5.99"),
+            (ShoppingCartItem(sku="item-1", quantity=2), 1198),
+            (ShoppingCartItem(sku="item-2", quantity=1), 599),
         ]
-        assert finalized_order.total == "17.97"
+        assert finalized_order.total == 1797

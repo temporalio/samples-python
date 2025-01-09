@@ -46,6 +46,11 @@ class ShoppingCartWorkflow:
 
         return str(sum(price for _, price in self.items) or Decimal("0.00"))
 
+    @add_item.validator
+    def validate_add_item(self, item: ShoppingCartItem) -> None:
+        if self.order_submitted:
+            raise ApplicationError("Order already submitted")
+
     @workflow.signal
     def checkout(self):
         self.order_submitted = True

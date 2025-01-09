@@ -4,10 +4,11 @@ from typing import List, Tuple
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from message_passing.update_with_start.lazy_initialization.activities import (
-    ShoppingCartItem,
-    get_price,
-)
+with workflow.unsafe.imports_passed_through():
+    from message_passing.update_with_start.lazy_initialization.activities import (
+        ShoppingCartItem,
+        get_price,
+    )
 
 
 @dataclass

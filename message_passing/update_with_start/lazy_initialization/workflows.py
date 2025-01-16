@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import List, Tuple
 
 from temporalio import workflow
@@ -37,7 +38,9 @@ class ShoppingCartWorkflow:
 
     @workflow.update
     async def add_item(self, item: ShoppingCartItem) -> int:
-        price = await get_price(item)
+        price = await workflow.execute_activity(
+            get_price, item, start_to_close_timeout=timedelta(seconds=10)
+        )
         if price is None:
             raise ApplicationError(
                 f"Item unavailable: {item}",

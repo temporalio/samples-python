@@ -5,6 +5,7 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from message_passing.update_with_start.lazy_initialization import TASK_QUEUE, workflows
+from message_passing.update_with_start.lazy_initialization.activities import get_price
 
 interrupt_event = asyncio.Event()
 
@@ -18,6 +19,7 @@ async def main():
         client,
         task_queue=TASK_QUEUE,
         workflows=[workflows.ShoppingCartWorkflow],
+        activities=[get_price],
     ):
         logging.info("Worker started, ctrl+c to exit")
         await interrupt_event.wait()

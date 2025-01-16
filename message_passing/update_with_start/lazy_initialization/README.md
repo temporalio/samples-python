@@ -4,7 +4,9 @@ This sample illustrates the use of update-with-start to send Updates to a Workfl
 it is not running yet ("lazy init"). The Workflow represents a Shopping Cart in an e-commerce application, and
 update-with-start is used to add items to the cart, receiving back the updated cart subtotal.
 
-Run the following from this directory:
+To run, first see the main [README.md](../../../README.md) for prerequisites.
+
+Then run the following from this directory:
 
     poetry run python worker.py
 

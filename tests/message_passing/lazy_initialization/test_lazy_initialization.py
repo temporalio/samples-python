@@ -1,9 +1,6 @@
 import pytest
 from temporalio import common
-from temporalio.client import (
-    Client,
-    WithStartWorkflowOperation,
-)
+from temporalio.client import Client, WithStartWorkflowOperation
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 

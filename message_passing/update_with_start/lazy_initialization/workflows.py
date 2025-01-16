@@ -44,6 +44,7 @@ class ShoppingCartWorkflow:
         if price is None:
             raise ApplicationError(
                 f"Item unavailable: {item}",
+                type="ItemUnavailableError",
             )
         self.items.append((item, price))
 

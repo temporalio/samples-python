@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from typing import Optional, Tuple
 
 from temporalio import common
@@ -8,7 +9,9 @@ from temporalio.client import (
     WorkflowHandle,
     WorkflowUpdateFailedError,
 )
+from temporalio.exceptions import ApplicationError
 
+from message_passing.update_with_start.lazy_initialization import TASK_QUEUE
 from message_passing.update_with_start.lazy_initialization.workflows import (
     ShoppingCartItem,
     ShoppingCartWorkflow,
@@ -33,7 +36,7 @@ async def handle_add_item_request(
         ShoppingCartWorkflow.run,
         id=cart_id,
         id_conflict_policy=common.WorkflowIDConflictPolicy.USE_EXISTING,
-        task_queue="uws",
+        task_queue=TASK_QUEUE,
     )
     try:
         price = await temporal_client.execute_update_with_start_workflow(
@@ -41,8 +44,14 @@ async def handle_add_item_request(
             ShoppingCartItem(sku=item_id, quantity=quantity),
             start_workflow_operation=start_op,
         )
-    except WorkflowUpdateFailedError:
-        price = None
+    except WorkflowUpdateFailedError as err:
+        if (
+            isinstance(err.cause, ApplicationError)
+            and err.cause.type == "ItemUnavailableError"
+        ):
+            price = None
+        else:
+            raise err
 
     workflow_handle = await start_op.workflow_handle()
 
@@ -51,12 +60,13 @@ async def handle_add_item_request(
 
 async def main():
     print("🛒")
+    session_id = f"session-{uuid.uuid4()}"
     temporal_client = await Client.connect("localhost:7233")
     subtotal_1, _ = await handle_add_item_request(
-        "session-777", "sku-123", 1, temporal_client
+        session_id, "sku-123", 1, temporal_client
     )
     subtotal_2, wf_handle = await handle_add_item_request(
-        "session-777", "sku-456", 1, temporal_client
+        session_id, "sku-456", 1, temporal_client
     )
     print(f"subtotals were, {[subtotal_1, subtotal_2]}")
     await wf_handle.signal(ShoppingCartWorkflow.checkout)

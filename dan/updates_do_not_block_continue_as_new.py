@@ -16,7 +16,7 @@ import threading
 
 from temporalio import workflow
 
-from dan.utils import connect
+from dan.utils import connect, worker
 from dan.utils.client import admitted_update_task, start_workflow
 
 # See docstring at top of file.
@@ -34,6 +34,11 @@ class Workflow:
         """
         Continue as new once, then return the current run ID.
         """
+        if not first_run_wft_is_in_progress.is_set():
+            # Note: you should usually never block the thread in workflow code.
+            # See docstring at top of file.
+            first_run_wft_is_in_progress.set()
+            update_has_been_admitted.wait()
 
         info = workflow.info()
         if info.continued_run_id is not None:
@@ -53,11 +58,13 @@ class Workflow:
 
 
 async def main():
+    worker_task = asyncio.create_task(worker.main([Workflow], []))
     client = await connect()
     handle = await start_workflow(Workflow.run, client=client)
-
     # See docstring at top of file.
     # Cause an update to be admitted while the first WFT is in progress
+    await asyncio.to_thread(first_run_wft_is_in_progress.wait)
+    # The workflow is now blocking its thread waiting for the update to be admitted
     update_task = await admitted_update_task(
         client, handle, Workflow.update, "update-id"
     )
@@ -71,7 +78,16 @@ async def main():
         and update_run_id
         and update_run_id != handle.first_execution_run_id
     ), "Expected update to be handled on post-CAN run"
+    worker_task.cancel()
+
+
+interrupt_event = asyncio.Event()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        interrupt_event.set()
+        loop.run_until_complete(loop.shutdown_asyncgens())

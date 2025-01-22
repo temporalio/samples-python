@@ -2,6 +2,7 @@ import asyncio
 import os
 from importlib import import_module
 from pathlib import Path
+from typing import Callable, Type
 
 from opentelemetry import trace
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
@@ -29,13 +30,13 @@ def get_last_edited_workflow_module():
 
 
 latest_module = get_last_edited_workflow_module()
-activities = getattr(latest_module, "activities", [])
-workflows = getattr(latest_module, "workflows", [latest_module.Workflow])
+activities: list[Callable] = getattr(latest_module, "activities", [])
+workflows: list[Type] = getattr(latest_module, "workflows", [latest_module.Workflow])
 
 interrupt_event = asyncio.Event()
 
 
-async def main():
+async def main(workflows: list[Type], activities: list[Callable]):
     print(NAMESPACE, latest_module.__name__)
     if os.getenv("TRACING"):
         print("🩻")
@@ -54,7 +55,7 @@ async def main():
 if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     try:
-        loop.run_until_complete(main())
+        loop.run_until_complete(main(workflows, activities))
     except KeyboardInterrupt:
         interrupt_event.set()
         loop.run_until_complete(loop.shutdown_asyncgens())

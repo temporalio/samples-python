@@ -39,8 +39,8 @@ class WaitingForHandlersAndCompensationWorkflow:
         # task then the handler should abort and perform compensation.
         self.workflow_exit: asyncio.Future[None] = asyncio.Future()
 
-        # The following two attributes are implementation detail of this sample
-        # and can be ignored
+        # The following attributes are implementation detail of this sample and can be
+        # ignored
         self._update_started = False
         self._update_compensation_done = False
         self._workflow_compensation_done = False

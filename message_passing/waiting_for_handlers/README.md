@@ -1,4 +1,4 @@
-# Waiting for message handlers in message handlers
+# Waiting for message handlers
 
 This workflow demonstrates how to wait for signal and update handlers to
 finish in the following circumstances:

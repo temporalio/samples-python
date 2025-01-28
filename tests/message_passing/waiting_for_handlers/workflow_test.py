@@ -4,17 +4,12 @@ import pytest
 from temporalio import client, worker
 from temporalio.testing import WorkflowEnvironment
 
-from message_passing.waiting_for_handlers import (
-    WorkflowExitType,
-    WorkflowInput,
-)
+from message_passing.waiting_for_handlers import WorkflowExitType, WorkflowInput
 from message_passing.waiting_for_handlers.activities import (
     activity_executed_by_update_handler,
 )
 from message_passing.waiting_for_handlers.starter import TASK_QUEUE
-from message_passing.waiting_for_handlers.workflows import (
-    WaitingForHandlersWorkflow,
-)
+from message_passing.waiting_for_handlers.workflows import WaitingForHandlersWorkflow
 
 
 class UpdateExpect(Enum):

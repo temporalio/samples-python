@@ -8,9 +8,7 @@ from message_passing.waiting_for_handlers import (
     WorkflowExitType,
     WorkflowInput,
 )
-from message_passing.waiting_for_handlers.workflows import (
-    WaitingForHandlersWorkflow,
-)
+from message_passing.waiting_for_handlers.workflows import WaitingForHandlersWorkflow
 
 
 async def starter(exit_type: WorkflowExitType):

@@ -7,7 +7,7 @@ This sample demonstrates how to do the following:
 2. Perform compensation/cleanup in an update handler when the workflow is
     cancelled or fails.
 
-
+For a simpler sample showing how to do (1) without (2), see [safe_message_handlers](../safe_message_handlers/README.md).
 
 To run, open two terminals and `cd` to this directory in them.
 

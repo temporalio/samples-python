@@ -3,9 +3,9 @@ from datetime import datetime
 from ipaddress import IPv4Address
 
 from temporalio.client import Client
+from temporalio.contrib.pydantic.converter import pydantic_data_converter
 from temporalio.worker import Worker
 
-from pydantic_converter.converter import pydantic_data_converter
 from pydantic_converter.worker import (
     MyPydanticModel,
     MyWorkflow,

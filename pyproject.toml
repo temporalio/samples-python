@@ -63,9 +63,9 @@ optional = true
 temporalio = { version = "*", extras = ["opentelemetry"] }
 opentelemetry-exporter-otlp-proto-grpc = "1.18.0"
 
-[tool.poetry.group.pydantic]
+[tool.poetry.group.pydantic_converter]
 optional = true
-dependencies = { pydantic = "^1.10.4" }
+dependencies = { pydantic = "^2.10.6" }
 
 [tool.poetry.group.sentry]
 optional = true

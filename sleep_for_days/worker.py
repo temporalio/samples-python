@@ -7,6 +7,7 @@ from sleep_for_days import TASK_QUEUE
 from sleep_for_days.activities import send_email
 from sleep_for_days.workflows import SleepForDaysWorkflow
 
+
 async def main():
     client = await Client.connect("localhost:7233")
 
@@ -18,6 +19,7 @@ async def main():
     )
 
     await worker.run()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

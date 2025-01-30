@@ -14,5 +14,5 @@ async def send_email(input: SendEmailInput) -> str:
     A stub Activity for sending an email.
     """
     result = f"Email message: {input.email_msg}, sent"
-    print(result)
+    activity.logger.info(result)
     return result

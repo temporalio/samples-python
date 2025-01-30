@@ -18,7 +18,7 @@ class SleepForDaysWorkflow:
         while not self.is_complete:
             await workflow.execute_activity(
                 send_email,
-                SendEmailInput("30 until the next email"),
+                SendEmailInput("30 days until the next email"),
                 start_to_close_timeout=timedelta(seconds=10),
             )
             await workflow.wait(

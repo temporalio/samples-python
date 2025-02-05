@@ -6,7 +6,7 @@ This is the set of Python samples for the [Python SDK](https://github.com/tempor
 
 Prerequisites:
 
-* Python >= 3.8
+* Python >= 3.9
 * [Poetry](https://python-poetry.org)
 * [Temporal CLI installed](https://docs.temporal.io/cli#install)
 * [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
@@ -72,6 +72,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
+* [trio_async](trio_async) - Use asyncio Temporal in Trio-based environments.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
 

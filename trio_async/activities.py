@@ -17,9 +17,9 @@ async def say_hello_activity_async(name: str) -> str:
     await asyncio.sleep(0.1)
 
     # Now Trio. We have to invoke the function separately decorated.
-    # Unfortunately the @trio_as_aio decorator doesn't do a proper functools
-    # wrap so it doesn't respond to things like __name__ that @activity.defn
-    # needs.
+    # We cannot use the @trio_as_aio decorator on the activity itself because
+    # it doesn't use functools wrap or similar so it doesn't respond to things
+    # like __name__ that @activity.defn needs.
     return await say_hello_in_trio_from_asyncio(name)
 
 

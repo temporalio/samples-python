@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import time
 from typing import cast
 
@@ -19,50 +20,57 @@ tracer = cast(Tracer, provider.get_tracer(__name__))
 @workflow.defn
 class Workflow:
     def __init__(self):
-        with start_as_current_workflow_span(
-            tracer=tracer,
-            name="WorkflowInit",
-            method="WorkflowInit",
-            request_type="WorkflowInit",
-            request_payload="{}",
-            response_type="WorkflowInitResult",
-        ) as span:
-            span.add_event("hello from workflow init")
-        trace.get_tracer_provider().force_flush()  # type: ignore
-        time.sleep(5)
+        if os.getenv("TRACING"):
+            with start_as_current_workflow_span(
+                tracer=tracer,
+                name="WorkflowInit",
+                method="WorkflowInit",
+                request_type="WorkflowInit",
+                request_payload="{}",
+                response_type="WorkflowInitResult",
+            ) as span:
+                span.add_event("hello from workflow init")
+            trace.get_tracer_provider().force_flush()  # type: ignore
+            time.sleep(5)
         self.is_complete = False
 
     @workflow.run
     async def run(self) -> str:
-        with start_as_current_workflow_span(
-            tracer=tracer,
-            name="WorkflowRun",
-            method="WorkflowRun",
-            request_type="WorkflowRun",
-            request_payload="{}",
-            response_type="WorkflowRunResult",
-        ) as span:
-            span.add_event("hello from workflow run")
-        trace.get_tracer_provider().force_flush()  # type: ignore
-        time.sleep(5)
+        if os.getenv("TRACING"):
+            with start_as_current_workflow_span(
+                tracer=tracer,
+                name="WorkflowRun",
+                method="WorkflowRun",
+                request_type="WorkflowRun",
+                request_payload="{}",
+                response_type="WorkflowRunResult",
+            ) as span:
+                span.add_event("hello from workflow run")
+            trace.get_tracer_provider().force_flush()  # type: ignore
+            time.sleep(5)
         await workflow.wait_condition(lambda: self.is_complete)
         return "workflow-result"
 
     @workflow.update
     async def my_update(self) -> str:
-        with start_as_current_workflow_span(
-            tracer=tracer,
-            name="HandleWorkflowUpdate",
-            method="UpdateHandler",
-            request_type="WorkflowUpdate",
-            request_payload="{}",
-            response_type="WorkflowUpdateResult",
-        ) as span:
-            span.add_event("hello from update handler")
+        if os.getenv("TRACING"):
+            with start_as_current_workflow_span(
+                tracer=tracer,
+                name="HandleWorkflowUpdate",
+                method="UpdateHandler",
+                request_type="WorkflowUpdate",
+                request_payload="{}",
+                response_type="WorkflowUpdateResult",
+            ) as span:
+                span.add_event("hello from update handler")
+                result = await self._my_update()
+                span.set_attribute(
+                    "rpc.response.payload", json.dumps({"result": result})
+                )
+            trace.get_tracer_provider().force_flush()  # type: ignore
+            time.sleep(5)
+        else:
             result = await self._my_update()
-            span.set_attribute("rpc.response.payload", json.dumps({"result": result}))
-        trace.get_tracer_provider().force_flush()  # type: ignore
-        time.sleep(5)
         return result
 
     async def _my_update(self) -> str:

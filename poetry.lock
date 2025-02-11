@@ -149,7 +149,7 @@ version = "0.7.0"
 description = "Reusable constraint types to use with typing.Annotated"
 optional = false
 python-versions = ">=3.8"
-groups = ["langchain", "pydantic_converter"]
+groups = ["main", "langchain", "pydantic_converter"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
 files = [
     {file = "annotated_types-0.7.0-py3-none-any.whl", hash = "sha256:1f02e8b43a8fbbc3f3e0d4f0f4bfc8131bcb4eebe8849b8e5c773f3a1c582a53"},
@@ -2287,7 +2287,7 @@ version = "2.10.6"
 description = "Data validation using Python type hints"
 optional = false
 python-versions = ">=3.8"
-groups = ["langchain", "pydantic_converter"]
+groups = ["main", "langchain", "pydantic_converter"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
 files = [
     {file = "pydantic-2.10.6-py3-none-any.whl", hash = "sha256:427d664bf0b8a2b34ff5dd0f5a18df00591adcee7198fbd71981054cef37b584"},
@@ -2309,7 +2309,7 @@ version = "2.27.2"
 description = "Core functionality for Pydantic validation and serialization"
 optional = false
 python-versions = ">=3.8"
-groups = ["langchain", "pydantic_converter"]
+groups = ["main", "langchain", "pydantic_converter"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
 files = [
     {file = "pydantic_core-2.27.2-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:2d367ca20b2f14095a8f4fa1210f5a7b78b8a20009ecced6b12818f455b1e9fa"},
@@ -2957,29 +2957,31 @@ name = "temporalio"
 version = "1.9.0"
 description = "Temporal.io Python SDK"
 optional = false
-python-versions = "<4.0,>=3.8"
+python-versions = "^3.9"
 groups = ["main", "open_telemetry"]
 markers = "python_version <= \"3.11\" or python_version >= \"3.12\""
-files = [
-    {file = "temporalio-1.9.0-cp38-abi3-macosx_10_9_x86_64.whl", hash = "sha256:ee941702e8925e2c018b5c2d7b296f811205043654d7f9c4564d7fa6597f1989"},
-    {file = "temporalio-1.9.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:101040090238d97b61d769e009f732409894d8f26596a3827662f2dde2862097"},
-    {file = "temporalio-1.9.0-cp38-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:91f49b81823f8f44819cc48da0b730175acd793dc428e451e1824b48a4e41465"},
-    {file = "temporalio-1.9.0-cp38-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:f516ae152935ec16afb65b7555486f161b427eaa4b411e945063e31da1a644eb"},
-    {file = "temporalio-1.9.0-cp38-abi3-win_amd64.whl", hash = "sha256:254267109e8e5cb3fa35b4719fdde5ec114b264f3b030ab5be6a69f697acdc5e"},
-    {file = "temporalio-1.9.0.tar.gz", hash = "sha256:932b56720a20401f333ffdaea157cc64d0f9d615a2fd16358bee56d9491bff77"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 opentelemetry-api = {version = ">=1.11.1,<2.0.0", optional = true, markers = "extra == \"opentelemetry\""}
 opentelemetry-sdk = {version = ">=1.11.1,<2.0.0", optional = true, markers = "extra == \"opentelemetry\""}
 protobuf = ">=3.20"
-python-dateutil = {version = ">=2.8.2,<3.0.0", markers = "python_version < \"3.11\""}
+pydantic = {version = "^2.0.0", optional = true}
+python-dateutil = {version = "^2.8.2", markers = "python_version < \"3.11\""}
 types-protobuf = ">=3.20"
-typing-extensions = ">=4.2.0,<5.0.0"
+typing-extensions = "^4.2.0"
 
 [package.extras]
-grpc = ["grpcio (>=1.59.0,<2.0.0)"]
+grpc = ["grpcio (>=1.48.2,<2.0.0)"]
 opentelemetry = ["opentelemetry-api (>=1.11.1,<2.0.0)", "opentelemetry-sdk (>=1.11.1,<2.0.0)"]
+pydantic = ["pydantic (>=2.0.0,<3.0.0)"]
+
+[package.source]
+type = "git"
+url = "https://github.com/temporalio/sdk-python.git"
+reference = "pydantic"
+resolved_reference = "a8fb520fe2a0e023f5cf343ded569032678f49b3"
 
 [[package]]
 name = "tenacity"
@@ -3792,4 +3794,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "60a8e704d3f5855338995743668571c4cb813b6a51c5350e885b08352386357c"
+content-hash = "aed23bbebe9700807a17c7b84b95b85972a6625fd78bf268fffcb410f7239e25"

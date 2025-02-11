@@ -3,14 +3,13 @@ from datetime import datetime
 from ipaddress import IPv4Address
 
 from temporalio.client import Client
+from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.worker import Worker
 
-from pydantic_converter.converter import pydantic_data_converter
 from pydantic_converter.worker import (
     MyPydanticModel,
     MyWorkflow,
     my_activity,
-    new_sandbox_runner,
 )
 
 
@@ -35,7 +34,6 @@ async def test_workflow_with_pydantic_model(client: Client):
         task_queue=task_queue_name,
         workflows=[MyWorkflow],
         activities=[my_activity],
-        workflow_runner=new_sandbox_runner(),
     ):
         result = await client.execute_workflow(
             MyWorkflow.run,

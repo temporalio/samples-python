@@ -18,7 +18,7 @@ from temporalio.worker.workflow_sandbox import (
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel
 
-    from pydantic_converter.v1.converter import pydantic_data_converter
+    from pydantic_converter_v1.converter import pydantic_data_converter
 
 
 class MyPydanticModel(BaseModel):

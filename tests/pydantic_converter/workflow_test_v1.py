@@ -5,8 +5,8 @@ from ipaddress import IPv4Address
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from pydantic_converter.v1.converter import pydantic_data_converter
-from pydantic_converter.v1.worker import (
+from pydantic_converter_v1.converter import pydantic_data_converter
+from pydantic_converter_v1.worker import (
     MyPydanticModel,
     MyWorkflow,
     my_activity,

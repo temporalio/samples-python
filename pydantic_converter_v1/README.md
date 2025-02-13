@@ -1,7 +1,7 @@
 # Pydantic v1 Converter Sample
 
 **This sample shows how to use Pydantic v1 with Temporal. This is not recommended: use Pydantic v2 if possible, and use the
-main [pydantic_converter](../../README.md) sample.**
+main [pydantic_converter](../pydantic_converter/README.md) sample.**
 
 To install, run:
 
@@ -9,7 +9,7 @@ To install, run:
     poetry run pip uninstall pydantic pydantic-core
     poetry run pip install pydantic==1.10
 
-To run, first see [README.md](../../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see the root [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:
 
     poetry run python worker.py
@@ -22,9 +22,6 @@ In the worker terminal, the workflow and its activity will log that it received 
 terminal, the Pydantic models in the workflow result will be logged.
 
 ### Notes
-
-**This sample uses Pydantic v1. This is not recommended: use Pydantic v2 if possible, and use the
-main [pydantic_converter](../../README.md) sample.**
 
 This sample also demonstrates use of `datetime` inside of Pydantic v1 models. Due to a known issue with the Temporal
 sandbox, this class is seen by Pydantic v1 as `date` instead of `datetime` upon deserialization. This is due to a

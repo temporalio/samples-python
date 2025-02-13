@@ -6,11 +6,7 @@ from temporalio.client import Client
 from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.worker import Worker
 
-from pydantic_converter.worker import (
-    MyPydanticModel,
-    MyWorkflow,
-    my_activity,
-)
+from pydantic_converter.worker import MyPydanticModel, MyWorkflow, my_activity
 
 
 async def test_workflow_with_pydantic_model(client: Client):

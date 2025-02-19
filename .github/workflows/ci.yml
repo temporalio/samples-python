@@ -44,7 +44,7 @@ jobs:
           echo y | poetry run pip uninstall pydantic
           echo y | poetry run pip uninstall pydantic-core
           poetry run pip install pydantic==1.10
-          poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--pydantic-v1.xml tests/pydantic_converter/workflow_test_v1.py
+          poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--pydantic-v1.xml tests/pydantic_converter_v1/workflow_test.py
 
       # On latest, run gevent test
       - name: Gevent test

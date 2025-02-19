@@ -32,7 +32,7 @@ jobs:
       # Using fixed Poetry version until
       # https://github.com/python-poetry/poetry/pull/7694 is fixed
       - run: python -m pip install --upgrade wheel "poetry==1.4.0" poethepoet
-      - run: poetry install --with pydantic --with dsl --with encryption --with trio_async
+      - run: poetry install --with pydantic_converter --with dsl --with encryption --with trio_async
       - run: poe lint
       - run: mkdir junit-xml
       - run: poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}.xml

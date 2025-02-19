@@ -17,7 +17,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-temporalio = { git = "https://github.com/temporalio/sdk-python.git", branch = "pydantic", extras = ["pydantic"] }
+temporalio = "^1.9.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

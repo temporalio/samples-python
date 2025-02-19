@@ -38,8 +38,11 @@ jobs:
       - run: poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}.xml
       - run: poe test -s --workflow-environment time-skipping --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--time-skipping.xml
       # This must remain the last step since it downgrades pydantic
-      - run: |
-          poetry run pip uninstall pydantic pydantic-core
+      - name: Uninstall pydantic
+        shell: bash
+        run: |
+          yes | poetry run pip uninstall pydantic
+          yes | poetry run pip uninstall pydantic-core
           poetry run pip install pydantic==1.10
           poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--pydantic-v1.xml tests/pydantic_converter/workflow_test_v1.py
 

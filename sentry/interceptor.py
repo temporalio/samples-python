@@ -37,8 +37,10 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
             try:
                 return await super().execute_activity(input)
             except Exception as e:
-                if len(input.args) == 1 and is_dataclass(input.args[0]):
-                    set_context("temporal.activity.input", asdict(input.args[0]))
+                if len(input.args) == 1:
+                    [arg] = input.args
+                    if is_dataclass(arg) and not isinstance(arg, type):
+                        set_context("temporal.activity.input", asdict(arg))
                 set_context("temporal.activity.info", activity.info().__dict__)
                 capture_exception()
                 raise e
@@ -58,8 +60,10 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
             try:
                 return await super().execute_workflow(input)
             except Exception as e:
-                if len(input.args) == 1 and is_dataclass(input.args[0]):
-                    set_context("temporal.workflow.input", asdict(input.args[0]))
+                if len(input.args) == 1:
+                    [arg] = input.args
+                    if is_dataclass(arg) and not isinstance(arg, type):
+                        set_context("temporal.workflow.input", asdict(arg))
                 set_context("temporal.workflow.info", workflow.info().__dict__)
 
                 if not workflow.unsafe.is_replaying():

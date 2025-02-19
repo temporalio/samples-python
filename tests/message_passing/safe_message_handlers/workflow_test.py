@@ -79,8 +79,8 @@ async def test_safe_message_handlers(client: Client, env: WorkflowEnvironment):
 
         await cluster_manager_handle.signal(ClusterManagerWorkflow.shutdown_cluster)
 
-        result = await cluster_manager_handle.result()
-        assert result.num_currently_assigned_nodes == 0
+        cluster_manager_result = await cluster_manager_handle.result()
+        assert cluster_manager_result.num_currently_assigned_nodes == 0
 
 
 async def test_update_idempotency(client: Client, env: WorkflowEnvironment):

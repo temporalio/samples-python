@@ -32,11 +32,19 @@ jobs:
       # Using fixed Poetry version until
       # https://github.com/python-poetry/poetry/pull/7694 is fixed
       - run: python -m pip install --upgrade wheel "poetry==1.4.0" poethepoet
-      - run: poetry install --with pydantic --with dsl --with encryption --with trio_async
+      - run: poetry install --with pydantic_converter --with dsl --with encryption --with trio_async
       - run: poe lint
       - run: mkdir junit-xml
-      - run: poe test -s -o log_cli_level=DEBUG --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}.xml
-      - run: poe test -s -o log_cli_level=DEBUG --workflow-environment time-skipping --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--time-skipping.xml
+      - run: poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}.xml
+      - run: poe test -s --workflow-environment time-skipping --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--time-skipping.xml
+      # This must remain the last step since it downgrades pydantic
+      - name: Uninstall pydantic
+        shell: bash
+        run: |
+          echo y | poetry run pip uninstall pydantic
+          echo y | poetry run pip uninstall pydantic-core
+          poetry run pip install pydantic==1.10
+          poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--pydantic-v1.xml tests/pydantic_converter_v1/workflow_test.py
 
       # On latest, run gevent test
       - name: Gevent test

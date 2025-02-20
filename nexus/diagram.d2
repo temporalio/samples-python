@@ -1,0 +1,38 @@
+shape: sequence_diagram
+
+S: {
+  label: "Cloud Cell\n\n(handler namespace)"
+}
+
+NW: {
+  label: "Nexus\nWorker\n\n(User's codebase)"
+}
+
+NSDK: {
+  label: "Nexus\nSDK\n\n(nexus-rpc)"
+}
+
+NH: {
+  label: "Nexus\nHandler"
+}
+
+type-check: "type-check time" {
+  NW.00: "type-check operation impls\n\nE.g. Workflow.run signature\nmust match operation I/O types"
+  NW.01: "type-check call sites\n\nE.g.fetchResult"
+}
+
+import-time: "import time" {
+  NW.10: import MyService
+  NW -> NSDK: service_decorator(\ninterface, impl)
+  NSDK.1: validate impl\nagainst interface
+}
+
+start-worker: "start Worker" {
+  NW.12: "Worker(nexus_services=[MyService()])"
+  NW.14: "worker now has Service and \nOperation instances keyed by name\n\nthe Operation instances implement\nstart/cancel/getInfo/getResult interface"
+}
+handle-request: "handle request" {
+  S -> NW: dispatch NexusTask
+  NW -> NH: "lookup\nService and Operation\ninstance by name"
+  NH.1: "start()"
+}

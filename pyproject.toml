@@ -6,7 +6,10 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = "~=3.9"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.10.0,<2"]
+dependencies = [
+    "rich>=13.9.4",
+    "temporalio",
+]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -22,7 +25,8 @@ dev = [
     "pytest>=7.1.2,<8",
     "pytest-asyncio>=0.18.3,<0.19",
     "frozenlist>=1.4.0,<2",
-    "types-pyyaml>=6.0.12.20241230,<7",
+    "pdbpp>=0.10.3",
+    "pyright>=1.1.394",
 ]
 bedrock = ["boto3>=1.34.92,<2"]
 dsl = [
@@ -43,21 +47,23 @@ langchain = [
     "tqdm>=4.62.0,<5",
     "uvicorn[standard]>=0.24.0.post1,<0.25",
 ]
-open-telemetry = [
+open_telemetry = [
     "temporalio[opentelemetry]",
-    "opentelemetry-exporter-otlp-proto-grpc==1.18.0",
+    "opentelemetry-exporter-otlp-proto-grpc",
 ]
-pydantic-converter = ["pydantic>=2.10.6,<3"]
+pydantic_converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=1.11.0,<2"]
-trio-async = [
+trio_async = [
     "trio>=0.28.0,<0.29",
     "trio-asyncio>=0.15.0,<0.16",
 ]
-cloud-export-to-parquet = [
+cloud_export_to_parquet = [
     "pandas>=2.2.2,<3 ; python_version >= '3.9' and python_version < '4.0'",
     "numpy>=1.26.0,<2 ; python_version >= '3.9' and python_version < '3.13'",
     "boto3>=1.34.89,<2",
-    "pyarrow>=19.0.1",
+]
+nexus = [
+    "nexus-rpc",
 ]
 
 [tool.uv]
@@ -68,47 +74,22 @@ default-groups = [
     "encryption",
     "gevent",
     "langchain",
-    "open-telemetry",
-    "pydantic-converter",
+    "open_telemetry",
+    "pydantic_converter",
     "sentry",
-    "trio-async",
+    "trio_async",
+    "cloud_export_to_parquet",
 ]
+
+[tool.uv.sources]
+nexus-rpc = { path = "../nexus-sdk-python", editable = true }
+temporalio = { path = "../sdk-python", editable = true }
 
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]
 
 [tool.hatch.build.targets.wheel]
 include = ["./**/*.py"]
-packages = [
-    "activity_worker",
-    "bedrock",
-    "cloud_export_to_parquet",
-    "context_propagation",
-    "custom_converter",
-    "custom_decorator",
-    "dsl",
-    "encryption",
-    "gevent_async",
-    "hello",
-    "langchain",
-    "message_passing",
-    "open_telemetry",
-    "patching",
-    "polling",
-    "prometheus",
-    "pydantic_converter",
-    "pydantic_converter_v1",
-    "pyproject.toml",
-    "replay",
-    "schedules",
-    "sentry",
-    "sleep_for_days",
-    "tests",
-    "trio_async",
-    "updatable_timer",
-    "worker_specific_task_queues",
-    "worker_versioning",
-]
 
 [tool.hatch.build.targets.wheel.sources]
 "./**/*.py" = "**/*.py"
@@ -118,10 +99,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.poe.tasks]
-format = [{cmd = "uv run black ."}, {cmd = "uv run isort ."}]
-lint = [{cmd = "uv run black --check ."}, {cmd = "uv run isort --check-only ."}, {ref = "lint-types" }]
-lint-types = "uv run mypy --check-untyped-defs --namespace-packages ."
-test = "uv run pytest"
+format = [{cmd = "black ."}, {cmd = "isort ."}]
+lint = [{cmd = "black --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]
+lint-types = "mypy --check-untyped-defs --namespace-packages ."
+test = "pytest"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

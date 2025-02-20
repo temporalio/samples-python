@@ -1,0 +1,14 @@
+temporal-delete-all my-target-namespace
+temporal-delete-all my-caller-namespace
+
+temporal operator namespace create --namespace my-target-namespace
+temporal operator namespace create --namespace my-caller-namespace
+
+sleep 1
+
+temporal operator nexus endpoint create \
+  --name my-nexus-endpoint-name \
+  --target-namespace my-target-namespace \
+  --target-task-queue my-target-task-queue \
+  --description-file ./hello_nexus/service/description.md
+  

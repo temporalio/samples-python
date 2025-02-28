@@ -14,7 +14,7 @@ class ShoppingCartItem:
 @activity.defn
 async def get_price(item: ShoppingCartItem) -> Optional[int]:
     await asyncio.sleep(0.1)
-    price = None if item.sku == "sku-456" else 599
+    price = None if item.sku == "sku-456" else 1
     if price is None:
         return None
     return price * item.quantity

@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 
+from httpx import HTTPStatusError, Request, Response
 from temporalio import activity, workflow
 from temporalio.common import RetryPolicy
 
@@ -10,11 +11,14 @@ log_file = open("/tmp/activity_retries.log", "a")
 
 
 @activity.defn
-async def hello_activity() -> str:
+async def my_activity():
     log_file.write(f"executing activity at {datetime.now()}\n")
     log_file.flush()
-    raise Exception("deliberate error in activity")
-    return "activity-result 1"
+    raise HTTPStatusError(
+        message="deliberate error in activity",
+        request=Request(method="POST", url="https://httpbin.org/post"),
+        response=Response(status_code=504, text="deliberate error in activity"),
+    )
 
 
 @workflow.defn
@@ -22,13 +26,13 @@ class Workflow:
     @workflow.run
     async def run(self) -> str:
         return await workflow.execute_activity(
-            hello_activity,
+            my_activity,
             start_to_close_timeout=timedelta(seconds=10),
             retry_policy=RetryPolicy(initial_interval=timedelta(seconds=2)),
         )
 
 
-activities = [hello_activity]
+activities = [my_activity]
 
 
 async def main():

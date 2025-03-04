@@ -1,11 +1,14 @@
 import asyncio
+import uuid
 from datetime import datetime, timedelta
 
-from httpx import HTTPStatusError, Request, Response
 from temporalio import activity, workflow
+from temporalio.client import Client
 from temporalio.common import RetryPolicy
+from temporalio.worker import Worker
 
-from dan.utils.client import start_workflow
+with workflow.unsafe.imports_passed_through():
+    from httpx import HTTPStatusError, Request, Response
 
 log_file = open("/tmp/activity_retries.log", "a")
 
@@ -22,7 +25,7 @@ async def my_activity():
 
 
 @workflow.defn
-class Workflow:
+class MyWorkflow:
     @workflow.run
     async def run(self) -> str:
         return await workflow.execute_activity(
@@ -32,12 +35,20 @@ class Workflow:
         )
 
 
-activities = [my_activity]
-
-
 async def main():
-    wf_handle = await start_workflow(Workflow.run)
-    print("workflow result:", await wf_handle.result())
+    client = await Client.connect("localhost:7233")
+    async with Worker(
+        client,
+        task_queue="activity-retries-task-queue",
+        workflows=[MyWorkflow],
+        activities=[my_activity],
+    ):
+        result = await client.execute_workflow(
+            MyWorkflow.run,
+            id=str(uuid.uuid4()),
+            task_queue="activity-retries-task-queue",
+        )
+        print(f"Result: {result}")
 
 
 if __name__ == "__main__":

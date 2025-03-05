@@ -77,6 +77,9 @@ default-groups = [
     "cloud_export_to_parquet",
 ]
 
+[tool.uv.sources]
+temporalio = { path = "../sdk-python", editable = true }
+
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]
 

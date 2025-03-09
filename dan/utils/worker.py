@@ -6,10 +6,10 @@ from typing import Callable, Type
 
 from opentelemetry import trace
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
+from temporalio_xray import create_tracer_provider
 
 from dan.constants import NAMESPACE, TASK_QUEUE
 from dan.utils import connect
-from dan.utils.otel import create_tracer_provider
 
 
 def get_last_edited_workflow_module():

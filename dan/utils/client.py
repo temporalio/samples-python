@@ -13,10 +13,10 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.service import RPCError, RPCStatusCode
 from temporalio.types import MethodAsyncNoParam
 from temporalio.workflow import UpdateMethodMultiParam
+from temporalio_xray import create_tracer_provider
 
 from dan.constants import TASK_QUEUE, WORKFLOW_ID
 from dan.utils import connect
-from dan.utils.otel import create_tracer_provider
 
 R = TypeVar("R")
 S = TypeVar("S")
@@ -103,6 +103,6 @@ async def assert_eq_eventually(
         if expected == last_value:
             return
         await asyncio.sleep(interval.total_seconds())
-    assert (
-        expected == last_value
-    ), f"timed out waiting for equal, asserted against last value of {last_value}"
+    assert expected == last_value, (
+        f"timed out waiting for equal, asserted against last value of {last_value}"
+    )

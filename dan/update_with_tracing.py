@@ -8,10 +8,9 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import Tracer
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
-from temporalio_xray import start_as_current_workflow_span
+from temporalio_xray import create_tracer_provider, start_as_current_workflow_span
 
 from dan.utils.client import start_workflow
-from dan.utils.otel import create_tracer_provider
 
 provider = create_tracer_provider("Workflow")
 tracer = cast(Tracer, provider.get_tracer(__name__))
@@ -22,8 +21,8 @@ class Workflow:
     def __init__(self):
         if os.getenv("TRACING"):
             with start_as_current_workflow_span(
-                tracer=tracer,
                 name="WorkflowInit",
+                workflow_id=workflow.info().workflow_id,
                 method="WorkflowInit",
                 request_type="WorkflowInit",
                 request_payload="{}",
@@ -38,8 +37,8 @@ class Workflow:
     async def run(self) -> str:
         if os.getenv("TRACING"):
             with start_as_current_workflow_span(
-                tracer=tracer,
                 name="WorkflowRun",
+                workflow_id=workflow.info().workflow_id,
                 method="WorkflowRun",
                 request_type="WorkflowRun",
                 request_payload="{}",
@@ -55,8 +54,8 @@ class Workflow:
     async def my_update(self) -> str:
         if os.getenv("TRACING"):
             with start_as_current_workflow_span(
-                tracer=tracer,
                 name="HandleWorkflowUpdate",
+                workflow_id=workflow.info().workflow_id,
                 method="UpdateHandler",
                 request_type="WorkflowUpdate",
                 request_payload="{}",

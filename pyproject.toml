@@ -49,7 +49,7 @@ langchain = [
 ]
 open_telemetry = [
     "temporalio[opentelemetry]",
-    "opentelemetry-exporter-otlp-proto-grpc==1.18.0",
+    "opentelemetry-exporter-otlp-proto-grpc",
 ]
 pydantic_converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=1.11.0,<2"]

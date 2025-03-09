@@ -3,9 +3,9 @@ from typing import cast
 
 from opentelemetry.sdk.trace import Tracer
 from temporalio import common, workflow
+from temporalio_xray import create_tracer_provider
 
 from dan.utils import connect
-from dan.utils.otel import create_tracer_provider
 
 provider = create_tracer_provider("Workflow")
 tracer = cast(Tracer, provider.get_tracer(__name__))

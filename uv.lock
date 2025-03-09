@@ -2219,6 +2219,7 @@ dependencies = [
     { name = "protobuf" },
     { name = "pyright" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'" },
+    { name = "temporalio-xray" },
     { name = "types-protobuf" },
     { name = "typing-extensions" },
 ]
@@ -2239,6 +2240,7 @@ requires-dist = [
     { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.0.0,<3" },
     { name = "pyright", specifier = "==1.1.394" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'", specifier = ">=2.8.2,<3" },
+    { name = "temporalio-xray", editable = "../xray/sdks/python" },
     { name = "types-protobuf", specifier = ">=3.20" },
     { name = "typing-extensions", specifier = ">=4.2.0,<5" },
 ]
@@ -2270,6 +2272,7 @@ source = { editable = "." }
 dependencies = [
     { name = "rich" },
     { name = "temporalio" },
+    { name = "temporalio-xray" },
 ]
 
 [package.dev-dependencies]
@@ -2329,6 +2332,7 @@ trio-async = [
 requires-dist = [
     { name = "rich", specifier = ">=13.9.4" },
     { name = "temporalio", editable = "../sdk-python" },
+    { name = "temporalio-xray", editable = "../xray/sdks/python" },
 ]
 
 [package.metadata.requires-dev]
@@ -2375,6 +2379,17 @@ trio-async = [
     { name = "trio", specifier = ">=0.28.0,<0.29" },
     { name = "trio-asyncio", specifier = ">=0.15.0,<0.16" },
 ]
+
+[[package]]
+name = "temporalio-xray"
+version = "0.1.0"
+source = { editable = "../xray/sdks/python" }
+dependencies = [
+    { name = "opentelemetry-sdk" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "opentelemetry-sdk", specifier = ">=1.11.1,<2" }]
 
 [[package]]
 name = "tenacity"

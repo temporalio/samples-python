@@ -9,6 +9,7 @@ license = "MIT"
 dependencies = [
     "rich>=13.9.4",
     "temporalio>=1.10.0,<2",
+    "temporalio-xray",
 ]
 
 [project.urls]
@@ -79,6 +80,7 @@ default-groups = [
 
 [tool.uv.sources]
 temporalio = { path = "../sdk-python", editable = true }
+temporalio-xray = { path = "../xray/sdks/python", editable = true }
 
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]

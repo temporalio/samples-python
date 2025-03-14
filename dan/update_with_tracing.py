@@ -2,31 +2,24 @@ import asyncio
 import json
 import os
 import time
-from typing import cast
 
+import xray
 from opentelemetry import trace
-from opentelemetry.sdk.trace import Tracer
 from temporalio import workflow
 from temporalio.client import WorkflowUpdateStage
-from temporalio_xray import create_tracer_provider, start_as_current_workflow_span
 
 from dan.utils.client import start_workflow
-
-provider = create_tracer_provider("Workflow")
-tracer = cast(Tracer, provider.get_tracer(__name__))
 
 
 @workflow.defn
 class Workflow:
     def __init__(self):
         if os.getenv("TRACING"):
-            with start_as_current_workflow_span(
+            with xray.start_as_current_span(
+                xray.Actor.WORKFLOW_USER,
                 name="WorkflowInit",
                 workflow_id=workflow.info().workflow_id,
-                method="WorkflowInit",
-                request_type="WorkflowInit",
                 request_payload="{}",
-                response_type="WorkflowInitResult",
             ) as span:
                 span.add_event("hello from workflow init")
             trace.get_tracer_provider().force_flush()  # type: ignore
@@ -36,13 +29,11 @@ class Workflow:
     @workflow.run
     async def run(self) -> str:
         if os.getenv("TRACING"):
-            with start_as_current_workflow_span(
+            with xray.start_as_current_span(
+                xray.Actor.WORKFLOW_USER,
                 name="WorkflowRun",
                 workflow_id=workflow.info().workflow_id,
-                method="WorkflowRun",
-                request_type="WorkflowRun",
                 request_payload="{}",
-                response_type="WorkflowRunResult",
             ) as span:
                 span.add_event("hello from workflow run")
             trace.get_tracer_provider().force_flush()  # type: ignore
@@ -53,13 +44,11 @@ class Workflow:
     @workflow.update
     async def my_update(self) -> str:
         if os.getenv("TRACING"):
-            with start_as_current_workflow_span(
+            with xray.start_as_current_span(
+                xray.Actor.WORKFLOW_USER,
                 name="HandleWorkflowUpdate",
                 workflow_id=workflow.info().workflow_id,
-                method="UpdateHandler",
-                request_type="WorkflowUpdate",
                 request_payload="{}",
-                response_type="WorkflowUpdateResult",
             ) as span:
                 span.add_event("hello from update handler")
                 result = await self._my_update()

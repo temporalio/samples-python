@@ -1,13 +1,13 @@
 import asyncio
 from typing import cast
 
+import xray
 from opentelemetry.sdk.trace import Tracer
 from temporalio import common, workflow
-from temporalio_xray import create_tracer_provider
 
 from dan.utils import connect
 
-provider = create_tracer_provider("Workflow")
+provider = xray.create_tracer_provider("Workflow")
 tracer = cast(Tracer, provider.get_tracer(__name__))
 
 

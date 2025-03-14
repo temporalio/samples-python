@@ -4,9 +4,9 @@ from importlib import import_module
 from pathlib import Path
 from typing import Callable, Type
 
+import xray
 from opentelemetry import trace
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
-from temporalio_xray import create_tracer_provider
 
 from dan.constants import NAMESPACE, TASK_QUEUE
 from dan.utils import connect
@@ -40,7 +40,7 @@ async def main(workflows: list[Type], activities: list[Callable]):
     print(NAMESPACE, latest_module.__name__)
     if os.getenv("TRACING"):
         print("🩻")
-        trace.set_tracer_provider(create_tracer_provider("Lang"))
+        trace.set_tracer_provider(xray.create_tracer_provider("Lang"))
     client = await connect()
     async with Worker(
         client,

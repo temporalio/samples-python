@@ -13,7 +13,7 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.service import RPCError, RPCStatusCode
 from temporalio.types import MethodAsyncNoParam
 from temporalio.workflow import UpdateMethodMultiParam
-from temporalio_xray import create_tracer_provider
+from xray import create_tracer_provider
 
 from dan.constants import TASK_QUEUE, WORKFLOW_ID
 from dan.utils import connect

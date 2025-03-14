@@ -1,8 +1,8 @@
 import asyncio
 import os
 
+import xray
 from temporalio import workflow
-from temporalio_xray import start_as_current_workflow_span
 
 from dan.utils.client import start_workflow
 
@@ -13,13 +13,11 @@ class Workflow:
     async def run(self) -> str:
         if os.getenv("TRACING"):
             print("🩻")
-            with start_as_current_workflow_span(
+            with xray.start_as_current_span(
+                xray.Actor.WORKFLOW_USER,
                 name="WorkflowInit",
                 workflow_id=workflow.info().workflow_id,
-                method="WorkflowInit",
-                request_type="WorkflowInit",
                 request_payload="{}",
-                response_type="WorkflowInitResult",
             ) as span:
                 span.add_event("hello from workflow init")
         return "workflow-result"

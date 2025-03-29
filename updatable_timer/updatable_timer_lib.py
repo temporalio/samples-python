@@ -5,7 +5,6 @@ from temporalio import workflow
 
 
 class UpdatableTimer:
-
     def __init__(self, wake_up_time: datetime) -> None:
         self.wake_up_time = wake_up_time
         self.wake_up_time_updated = False

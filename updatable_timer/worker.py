@@ -15,9 +15,9 @@ async def main():
 
     client = await Client.connect("localhost:7233")
     async with Worker(
-            client,
-            task_queue=TASK_QUEUE,
-            workflows=[Workflow],
+        client,
+        task_queue=TASK_QUEUE,
+        workflows=[Workflow],
     ):
         logging.info("Worker started, ctrl+c to exit")
         # Wait until interrupted

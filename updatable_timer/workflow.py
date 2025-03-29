@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from temporalio import workflow
 
-from updatable_timer import UpdatableTimer
+from updatable_timer.updatable_timer_lib import UpdatableTimer
 
 
 @workflow.defn
@@ -18,9 +18,9 @@ class Workflow:
 
     @workflow.signal
     async def update_wake_up_time(self, wake_up_time: float):
-        # Deals with situation when signal method is called before run method.
-        # This happens when workflow task is executed after the signal is received
-        # or when workflow is started using signal with start.
+        # Deals with situation when the signal method is called before the run method.
+        # This happens when a workflow task is executed after a signal is received
+        # or when a workflow is started using the signal-with-start.
         await workflow.wait_condition(lambda: self.timer is not None)
         self.timer.update_wake_up_time(datetime.fromtimestamp(wake_up_time, tz=timezone.utc))
 

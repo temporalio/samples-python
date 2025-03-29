@@ -3,7 +3,9 @@ import logging
 
 from temporalio.client import Client
 from temporalio.worker import Worker
-from workflow import Workflow
+
+from updatable_timer import TASK_QUEUE
+from updatable_timer.workflow import Workflow
 
 interrupt_event = asyncio.Event()
 
@@ -14,7 +16,7 @@ async def main():
     client = await Client.connect("localhost:7233")
     async with Worker(
             client,
-            task_queue="updatable-timer",
+            task_queue=TASK_QUEUE,
             workflows=[Workflow],
     ):
         logging.info("Worker started, ctrl+c to exit")

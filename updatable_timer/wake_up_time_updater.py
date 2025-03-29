@@ -5,7 +5,7 @@ from typing import Optional
 
 from temporalio.client import Client
 
-from workflow import Workflow
+from updatable_timer.workflow import Workflow
 
 
 async def main(client: Optional[Client] = None):

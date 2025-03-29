@@ -6,7 +6,8 @@ from typing import Optional
 from temporalio import exceptions
 from temporalio.client import Client
 
-from workflow import Workflow
+from updatable_timer import TASK_QUEUE
+from updatable_timer.workflow import Workflow
 
 
 async def main(client: Optional[Client] = None):
@@ -18,7 +19,7 @@ async def main(client: Optional[Client] = None):
             Workflow.run,
             (datetime.now() + timedelta(days=1)).timestamp(),
             id=f"updatable-timer-workflow",
-            task_queue="updatable-timer",
+            task_queue=TASK_QUEUE,
         )
         logging.info(f"Workflow started: run_id={handle.result_run_id}")
     except exceptions.WorkflowAlreadyStartedError as e:

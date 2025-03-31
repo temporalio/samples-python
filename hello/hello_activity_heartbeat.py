@@ -49,9 +49,6 @@ async def main():
         task_queue="hello-activity-heartbeating-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
-        # Synchronous activities are not allowed unless we provide some kind of
-        # executor. This same thread pool could be passed to multiple workers if
-        # desired.
         activity_executor=ThreadPoolExecutor(5),
     ):
 

@@ -51,7 +51,7 @@ async def main():
         task_queue="hello-activity-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
-        # Synchronous activities require some kind of executor;
+        # Non-async activities require some kind of executor;
         # a thread pool executor is recommended.
         # This same thread pool could be passed to multiple workers if desired.
         activity_executor=ThreadPoolExecutor(5),

@@ -7,7 +7,7 @@ activities.
 
 For this sample, the optional `trio_async` dependency group must be included. To include, run:
 
-    poetry install --with trio_async
+    uv sync --group trio_async
 
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:

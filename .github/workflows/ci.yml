@@ -46,7 +46,7 @@ jobs:
       - name: Gevent test
         if: ${{ matrix.python == '3.12' }}
         run: |
-          poetry install --with gevent
+          uv sync --group gevent
           uv run python gevent_async/test/run_combined.py
 
       - name: Upload junit-xml artifacts

@@ -4,7 +4,7 @@ This sample shows how to configure OpenTelemetry to capture workflow traces and 
 
 For this sample, the optional `open_telemetry` dependency group must be included. To include, run:
 
-    poetry install --with open_telemetry
+    uv sync --group open-telemetry
 
 To run, first see [README.md](../README.md) for prerequisites. Then run the following to start an [Aspire](https://hub.docker.com/r/microsoft/dotnet-aspire-dashboard/) OTEL collector
 

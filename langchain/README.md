@@ -4,7 +4,7 @@ This sample shows you how you can use Temporal to orchestrate workflows for [Lan
 
 For this sample, the optional `langchain` dependency group must be included. To include, run:
 
-    poetry install --with langchain
+    uv sync --group langchain
 
 Export your [OpenAI API key](https://platform.openai.com/api-keys) as an environment variable. Replace `YOUR_API_KEY` with your actual OpenAI API key.
 

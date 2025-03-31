@@ -7,7 +7,7 @@ samples [in TypeScript](https://github.com/temporalio/samples-typescript/tree/ma
 
 For this sample, the optional `encryption` dependency group must be included. To include, run:
 
-    poetry install --with encryption
+    uv sync --group encryption
 
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:

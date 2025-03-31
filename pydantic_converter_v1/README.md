@@ -5,7 +5,7 @@ main [pydantic_converter](../pydantic_converter/README.md) sample.**
 
 To install, run:
 
-    poetry install --with pydantic_converter
+    uv sync --group pydantic-converter
     uv run pip uninstall pydantic pydantic-core
     uv run pip install pydantic==1.10
 

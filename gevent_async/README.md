@@ -12,7 +12,7 @@ workflows.
 
 For this sample, the optional `gevent` dependency group must be included. To include, run:
 
-    poetry install --with gevent
+    uv sync --group gevent
 
 To run the sample, first see [README.md](../README.md) for prerequisites such as having a localhost Temporal server
 running. Then, run the following from this directory to start the worker:

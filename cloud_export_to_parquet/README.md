@@ -11,13 +11,13 @@ Before you start, please modify workflow input in `create_schedule.py` with your
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the worker:
 
 ```bash
-poetry run python run_worker.py
+uv run python run_worker.py
 ```
 
 This will start the worker. Then, in another terminal, run the following to execute the schedule:
 
 ```bash
-poetry run python create_schedule.py
+uv run python create_schedule.py
 ```
 
 The workflow should convert exported file in your input s3 bucket to parquet in your specified location.

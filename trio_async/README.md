@@ -12,11 +12,11 @@ For this sample, the optional `trio_async` dependency group must be included. To
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:
 
-    poetry run python worker.py
+    uv run python worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    poetry run python starter.py
+    uv run python starter.py
 
 The starter should complete with:
 

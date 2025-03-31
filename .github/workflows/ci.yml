@@ -37,9 +37,9 @@ jobs:
       - name: Uninstall pydantic
         shell: bash
         run: |
-          echo y | poetry run pip uninstall pydantic
-          echo y | poetry run pip uninstall pydantic-core
-          poetry run pip install pydantic==1.10
+          echo y | uv run pip uninstall pydantic
+          echo y | uv run pip uninstall pydantic-core
+          uv run pip install pydantic==1.10
           poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--pydantic-v1.xml tests/pydantic_converter_v1/workflow_test.py
 
       # On latest, run gevent test
@@ -47,7 +47,7 @@ jobs:
         if: ${{ matrix.python == '3.12' }}
         run: |
           poetry install --with gevent
-          poetry run python gevent_async/test/run_combined.py
+          uv run python gevent_async/test/run_combined.py
 
       - name: Upload junit-xml artifacts
         uses: actions/upload-artifact@v4

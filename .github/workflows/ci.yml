@@ -27,7 +27,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - run: uv --preview python install --default ${{ matrix.python }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
       - run: uv tool install poethepoet
       - run: uv sync --group=dsl --group=encryption --group=trio-async --python ${{ matrix.python }}
       - name: Check python version

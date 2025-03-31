@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import logging
 from dataclasses import dataclass
 from datetime import timedelta
@@ -18,7 +19,7 @@ class ComposeGreetingInput:
 
 
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> NoReturn:
+def compose_greeting(input: ComposeGreetingInput) -> NoReturn:
     # Always raise exception
     raise RuntimeError(f"Greeting exception: {input.greeting}, {input.name}!")
 
@@ -46,6 +47,7 @@ async def main():
         task_queue="hello-exception-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to run the workflow and

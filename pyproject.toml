@@ -72,7 +72,6 @@ default-groups = [
     "pydantic_converter",
     "sentry",
     "trio_async",
-    "cloud_export_to_parquet",
 ]
 
 [tool.hatch.build.targets.sdist]

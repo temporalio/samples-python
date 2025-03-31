@@ -88,10 +88,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.poe.tasks]
-format = [{cmd = "black ."}, {cmd = "isort ."}]
-lint = [{cmd = "black --check ."}, {cmd = "isort --check-only ."}, {ref = "lint-types" }]
-lint-types = "mypy --check-untyped-defs --namespace-packages ."
-test = "pytest"
+format = [{cmd = "uv run black ."}, {cmd = "uv run isort ."}]
+lint = [{cmd = "uv run black --check ."}, {cmd = "uv run isort --check-only ."}, {ref = "lint-types" }]
+lint-types = "uv run mypy --check-untyped-defs --namespace-packages ."
+test = "uv run pytest"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

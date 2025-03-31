@@ -43,17 +43,17 @@ langchain = [
     "tqdm>=4.62.0,<5",
     "uvicorn[standard]>=0.24.0.post1,<0.25",
 ]
-open_telemetry = [
+open-telemetry = [
     "temporalio[opentelemetry]",
     "opentelemetry-exporter-otlp-proto-grpc==1.18.0",
 ]
-pydantic_converter = ["pydantic>=2.10.6,<3"]
+pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=1.11.0,<2"]
-trio_async = [
+trio-async = [
     "trio>=0.28.0,<0.29",
     "trio-asyncio>=0.15.0,<0.16",
 ]
-cloud_export_to_parquet = [
+cloud-export-to-parquet = [
     "pandas>=2.2.2,<3 ; python_version >= '3.9' and python_version < '4.0'",
     "numpy>=1.26.0,<2 ; python_version >= '3.9' and python_version < '3.13'",
     "boto3>=1.34.89,<2",

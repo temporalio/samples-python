@@ -1,23 +1,22 @@
 # Temporal Python SDK Samples
 
-This is the set of Python samples for the [Python SDK](https://github.com/temporalio/sdk-python).
+This is a collection of samples showing how to use the [Python SDK](https://github.com/temporalio/sdk-python).
 
 ## Usage
 
 Prerequisites:
 
-* Python >= 3.9
-* [Poetry](https://python-poetry.org)
+* [uv](https://docs.astral.sh/uv/)
 * [Temporal CLI installed](https://docs.temporal.io/cli#install)
 * [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
 
 With this repository cloned, run the following at the root of the directory:
 
-    poetry install
+    uv sync
 
 That loads all required dependencies. Then to run a sample, usually you just run it in Python. For example:
 
-    poetry run python hello/hello_activity.py
+    uv run python hello/hello_activity.py
 
 Some examples require extra dependencies. See each sample's directory for specific instructions.
 
@@ -81,7 +80,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 
 Running the tests requires `poe` to be installed.
 
-    python -m pip install poethepoet
+    uv tool install poethepoet
 
 Once you have `poe` installed you can run:
 

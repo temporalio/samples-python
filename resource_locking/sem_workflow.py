@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from temporalio import workflow
 
@@ -31,7 +31,8 @@ SEMAPHORE_WORKFLOW_ID = "semaphore"
 @dataclass
 class SemaphoreWorkflowInput:
     # Key is resource, value is users of the resource. The first item in each list is the current holder of the lease
-    # on that resource.
+    # on that resource. A similar data structure could allow for multiple holders (perhaps the first n items are the
+    # current holders).
     resource_queues: dict[str, list[AcquireRequest]]
 
 @workflow.defn(
@@ -43,16 +44,21 @@ class SemaphoreWorkflow:
 
     @workflow.signal
     async def acquire_resource(self, request: AcquireRequest):
+        # A real-world version of this workflow probably wants to use more sophisticated load balancing strategies than
+        # "first free" and "wait for a random one".
+
         for resource in self.resource_queues:
             # Naively give out the first free resource, if we have one
             if len(self.resource_queues[resource]) == 0:
+                workflow.logger.info(f"workflow_id={request.workflow_id} run_id={request.run_id} acquired resource {resource}")
                 self.resource_queues[resource].append(request)
                 requester = workflow.get_external_workflow_handle(request.workflow_id, run_id=request.run_id)
                 await requester.signal("assign_resource", AssignedResource(resource))
                 return
 
-        # Otherwise put this resource in a random queue
+        # Otherwise put this resource in a random queue.
         resource = workflow.random().choice(list(self.resource_queues.keys()))
+        workflow.logger.info(f"workflow_id={request.workflow_id} run_id={request.run_id} is waiting for resource {resource}")
         self.resource_queues[resource].append(request)
 
     @workflow.signal
@@ -74,12 +80,14 @@ class SemaphoreWorkflow:
             return
 
         # Remove the current holder from the head of the queue
+        workflow.logger.info(f"workflow_id={request.workflow_id} run_id={request.run_id} released resource {request.resource}")
         queue = queue[1:]
         self.resource_queues[request.resource] = queue
 
         # If there are queued requests, assign the resource to the next one
         if len(queue) > 0:
             next_holder = queue[0]
+            workflow.logger.info(f"workflow_id={next_holder.workflow_id} run_id={next_holder.run_id} acquired resource {request.resource} after waiting")
             requester = workflow.get_external_workflow_handle(next_holder.workflow_id, run_id=next_holder.run_id)
             await requester.signal("assign_resource", AssignedResource(request.resource))
 
@@ -101,7 +109,10 @@ class SemaphoreWorkflow:
             workflow.logger.warning(f"request was from wf_id={request.workflow_id} run_id={request.old_run_id}")
             return
 
+        workflow.logger.info(f"workflow_id={request.workflow_id} handed off resource {request.resource} from run_id={request.old_run_id} to run_id={request.new_run_id}")
         queue[0] = AcquireRequest(request.workflow_id, request.new_run_id)
+        requester = workflow.get_external_workflow_handle(request.workflow_id, run_id=request.new_run_id)
+        await requester.signal("assign_resource", AssignedResource(request.resource))
 
     @workflow.query
     def get_current_holders(self) -> dict[str, AcquireRequest]:

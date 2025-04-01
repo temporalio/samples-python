@@ -1,9 +1,9 @@
 import asyncio
-from typing import Optional, Any
+from typing import Any
 
 from temporalio.client import Client, WorkflowHandle, WorkflowFailureError
 
-from resource_locking.load_workflow import LoadWorkflow, LoadWorkflowInput, FailWorkflowException
+from resource_locking.load_workflow import LoadWorkflow, LoadWorkflowInput
 from resource_locking.sem_workflow import SemaphoreWorkflow, SemaphoreWorkflowInput, SEMAPHORE_WORKFLOW_ID
 
 
@@ -24,9 +24,11 @@ async def main():
 
     load_handles: list[WorkflowHandle[Any, Any]] = []
     for i in range(0, 4):
-        input = LoadWorkflowInput(iteration_to_fail_after=None)
+        input = LoadWorkflowInput(iteration_to_fail_after=None, should_continue_as_new=False, already_owned_resource=None)
+        if i == 0:
+            input.should_continue_as_new = True
         if i == 1:
-            input = LoadWorkflowInput(iteration_to_fail_after="first")
+            input.iteration_to_fail_after = "first"
 
         load_handle = await client.start_workflow(
             workflow=LoadWorkflow.run,

@@ -79,6 +79,36 @@ include = ["./**/*.py"]
 
 [tool.hatch.build.targets.wheel]
 include = ["./**/*.py"]
+packages = [
+    "activity_worker",
+    "bedrock",
+    "cloud_export_to_parquet",
+    "context_propagation",
+    "custom_converter",
+    "custom_decorator",
+    "dsl",
+    "encryption",
+    "gevent_async",
+    "hello",
+    "langchain",
+    "message_passing",
+    "open_telemetry",
+    "patching",
+    "polling",
+    "prometheus",
+    "pydantic_converter",
+    "pydantic_converter_v1",
+    "pyproject.toml",
+    "replay",
+    "schedules",
+    "sentry",
+    "sleep_for_days",
+    "tests",
+    "trio_async",
+    "updatable_timer",
+    "worker_specific_task_queues",
+    "worker_versioning",
+]
 
 [tool.hatch.build.targets.wheel.sources]
 "./**/*.py" = "**/*.py"

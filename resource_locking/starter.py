@@ -3,49 +3,50 @@ from typing import Any
 
 from temporalio.client import Client, WorkflowHandle, WorkflowFailureError
 
-from resource_locking.load_workflow import LoadWorkflow, LoadWorkflowInput
-from resource_locking.sem_workflow import SemaphoreWorkflow, SemaphoreWorkflowInput, SEMAPHORE_WORKFLOW_ID
+from resource_locking.resource_locking_workflow import ResourceLockingWorkflow, ResourceLockingWorkflowInput
+from resource_locking.lock_manager_workflow import LockManagerWorkflow, LockManagerWorkflowInput, LOCK_MANAGER_WORKFLOW_ID
 
 
 async def main():
     # Connect client
     client = await Client.connect("localhost:7233")
 
-    # Run the semaphore workflow
-    sem_handle = await client.start_workflow(
-        workflow=SemaphoreWorkflow.run,
-        arg=SemaphoreWorkflowInput({
+    # Start the LockManagerWorkflow
+    lock_manager_handle = await client.start_workflow(
+        workflow=LockManagerWorkflow.run,
+        arg=LockManagerWorkflowInput({
             "resource_a": [],
             "resource_b": [],
         }),
-        id=SEMAPHORE_WORKFLOW_ID,
+        id=LOCK_MANAGER_WORKFLOW_ID,
         task_queue="default",
     )
 
-    load_handles: list[WorkflowHandle[Any, Any]] = []
+    # Start the ResourceLockingWorkflows
+    resource_locking_handles: list[WorkflowHandle[Any, Any]] = []
     for i in range(0, 4):
-        input = LoadWorkflowInput(iteration_to_fail_after=None, should_continue_as_new=False, already_owned_resource=None)
+        input = ResourceLockingWorkflowInput(iteration_to_fail_after=None, should_continue_as_new=False, already_owned_resource=None)
         if i == 0:
             input.should_continue_as_new = True
         if i == 1:
             input.iteration_to_fail_after = "first"
 
-        load_handle = await client.start_workflow(
-            workflow=LoadWorkflow.run,
+        resource_locking_handle = await client.start_workflow(
+            workflow=ResourceLockingWorkflow.run,
             arg=input,
-            id=f"load-workflow-{i}",
+            id=f"resource-locking-workflow-{i}",
             task_queue="default",
         )
-        load_handles.append(load_handle)
+        resource_locking_handles.append(resource_locking_handle)
 
-    for load_handle in load_handles:
+    for resource_locking_handle in resource_locking_handles:
         try:
-            await load_handle.result()
+            await resource_locking_handle.result()
         except WorkflowFailureError:
             pass
 
-    await sem_handle.terminate()
-
+    # Clean up after ourselves. In the real world, the lock manager workflow would run forever.
+    await lock_manager_handle.terminate()
 
 if __name__ == "__main__":
     asyncio.run(main())

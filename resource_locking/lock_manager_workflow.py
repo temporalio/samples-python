@@ -25,20 +25,17 @@ class HandoffRequest:
     old_run_id: str
     new_run_id: str
 
-SEMAPHORE_WORKFLOW_TYPE = "semaphore-wf"
-SEMAPHORE_WORKFLOW_ID = "semaphore"
+LOCK_MANAGER_WORKFLOW_ID = "lock_manager"
 
 @dataclass
-class SemaphoreWorkflowInput:
+class LockManagerWorkflowInput:
     # Key is resource, value is users of the resource. The first item in each list is the current holder of the lease
     # on that resource. A similar data structure could allow for multiple holders (perhaps the first n items are the
     # current holders).
     resource_queues: dict[str, list[AcquireRequest]]
 
-@workflow.defn(
-    name=SEMAPHORE_WORKFLOW_TYPE,
-)
-class SemaphoreWorkflow:
+@workflow.defn
+class LockManagerWorkflow:
     def __init__(self):
         self.resource_queues: dict[str, list[AcquireRequest]] = {}
 
@@ -119,7 +116,7 @@ class SemaphoreWorkflow:
         return { k: v[0] if v else None for k, v in self.resource_queues.items() }
 
     @workflow.run
-    async def run(self, input: SemaphoreWorkflowInput) -> None:
+    async def run(self, input: LockManagerWorkflowInput) -> None:
         self.resource_queues = input.resource_queues
 
         # Continue as new either when temporal tells us to, or every 12 hours (so it occurs semi-frequently)
@@ -128,4 +125,4 @@ class SemaphoreWorkflow:
             timeout=timedelta(hours=12),
         )
 
-        workflow.continue_as_new(SemaphoreWorkflowInput(self.resource_queues))
+        workflow.continue_as_new(LockManagerWorkflowInput(self.resource_queues))

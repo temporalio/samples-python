@@ -4,8 +4,8 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from resource_locking.load_workflow import LoadWorkflow, load
-from resource_locking.sem_workflow import SemaphoreWorkflow
+from resource_locking.resource_locking_workflow import ResourceLockingWorkflow, use_resource
+from resource_locking.lock_manager_workflow import LockManagerWorkflow
 
 async def main():
     # Uncomment the line below to see logging
@@ -18,8 +18,8 @@ async def main():
     worker = Worker(
         client,
         task_queue="default",
-        workflows=[SemaphoreWorkflow, LoadWorkflow],
-        activities=[load],
+        workflows=[LockManagerWorkflow, ResourceLockingWorkflow],
+        activities=[use_resource],
     )
 
     await worker.run()

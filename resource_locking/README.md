@@ -28,4 +28,4 @@ Temporal's durabile execution guarantees, this can only happen if:
 
 If a leak were to happen in the wild, you could discover the identity of the leaker using the query above, then:
 
-    ~/Code/tctl/tctl wf signal -w semaphore --name release_resource --input '{ "resource": "the resource", "workflow_id": "holder workflow id", "run_id": "holder run id" }'
+    tctl wf signal -w semaphore --name release_resource --input '{ "resource": "the resource", "workflow_id": "holder workflow id", "run_id": "holder run id" }'

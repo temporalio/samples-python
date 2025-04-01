@@ -4,8 +4,12 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from resource_locking.resource_locking_workflow import ResourceLockingWorkflow, use_resource
 from resource_locking.lock_manager_workflow import LockManagerWorkflow
+from resource_locking.resource_locking_workflow import (
+    ResourceLockingWorkflow,
+    use_resource,
+)
+
 
 async def main():
     logging.basicConfig(level=logging.INFO)
@@ -22,6 +26,7 @@ async def main():
     )
 
     await worker.run()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

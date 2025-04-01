@@ -26,7 +26,7 @@ def never_complete_activity() -> NoReturn:
 
 
 @activity.defn
-async def cleanup_activity() -> None:
+def cleanup_activity() -> None:
     print("Executing cleanup activity")
 
 

@@ -5,24 +5,23 @@ from typing import Optional
 
 from temporalio import activity, workflow
 
-from resource_locking.sem_workflow import AssignedResource, SEMAPHORE_WORKFLOW_ID, \
+from resource_locking.lock_manager_workflow import AssignedResource, LOCK_MANAGER_WORKFLOW_ID, \
     ReleaseRequest, AcquireRequest, HandoffRequest
 
-
 @dataclass
-class LoadActivityInput:
+class UseResourceActivityInput:
     resource: str
     iteration: str
 
 @activity.defn
-async def load(input: LoadActivityInput) -> None:
-    workflow_id = activity.info().workflow_id
-    print(f"Workflow {workflow_id} starts using {input.resource} the {input.iteration} time")
-    await asyncio.sleep(5)
-    print(f"Workflow {workflow_id} finishes using {input.resource} the {input.iteration} time")
+async def use_resource(input: UseResourceActivityInput) -> None:
+    info = activity.info()
+    activity.logger.info(f"{info.workflow_id} starts using {input.resource} the {input.iteration} time")
+    await asyncio.sleep(3)
+    activity.logger.info(f"{info.workflow_id} done using {input.resource} the {input.iteration} time")
 
 @dataclass
-class LoadWorkflowInput:
+class ResourceLockingWorkflowInput:
     # If set, this workflow will fail after the "first", "second", or "third" activity.
     iteration_to_fail_after: Optional[str]
 
@@ -36,15 +35,13 @@ class LoadWorkflowInput:
 class FailWorkflowException(Exception):
     pass
 
+# Wait this long for a resource before giving up
 MAX_RESOURCE_WAIT_TIME = timedelta(minutes=5)
-
-def has_timeout(timeout: Optional[timedelta]) -> bool:
-    return timeout is not None and timeout > timedelta(0)
 
 @workflow.defn(
   failure_exception_types=[FailWorkflowException]
 )
-class LoadWorkflow:
+class ResourceLockingWorkflow:
 
     def __init__(self):
         self.assigned_resource: Optional[str] = None
@@ -54,15 +51,15 @@ class LoadWorkflow:
         self.assigned_resource = input.resource
 
     @workflow.run
-    async def run(self, input: LoadWorkflowInput):
+    async def run(self, input: ResourceLockingWorkflowInput):
         workflow.info()
         if has_timeout(workflow.info().run_timeout):
             # See "locking" comment below for rationale
-            raise FailWorkflowException(f"LoadWorkflow cannot have a run_timeout (found {workflow.info().run_timeout})")
+            raise FailWorkflowException(f"ResourceLockingWorkflow cannot have a run_timeout (found {workflow.info().run_timeout})")
         if has_timeout(workflow.info().execution_timeout):
-            raise FailWorkflowException(f"LoadWorkflow cannot have an execution_timeout (found {workflow.info().execution_timeout})")
+            raise FailWorkflowException(f"ResourceLockingWorkflow cannot have an execution_timeout (found {workflow.info().execution_timeout})")
 
-        sem_handle = workflow.get_external_workflow_handle(SEMAPHORE_WORKFLOW_ID)
+        sem_handle = workflow.get_external_workflow_handle(LOCK_MANAGER_WORKFLOW_ID)
 
         info = workflow.info()
         if input.already_owned_resource is None:
@@ -78,13 +75,13 @@ class LoadWorkflow:
             raise FailWorkflowException(f"No resource was assigned after {MAX_RESOURCE_WAIT_TIME}")
 
         # From this point forward, we own the resource. Note that this is a lock, not a lease! Our finally block will
-        # free up the resource if an activity fails. This is why we asserted the lack of workflow-level timeouts
+        # release the resource if an activity fails. This is why we asserted the lack of workflow-level timeouts
         # above - the finally block wouldn't run if there was a timeout.
         try:
             for iteration in ["first", "second", "third"]:
                 await workflow.execute_activity(
-                    load,
-                    LoadActivityInput(self.assigned_resource, iteration),
+                    use_resource,
+                    UseResourceActivityInput(self.assigned_resource, iteration),
                     start_to_close_timeout=timedelta(seconds=10),
                 )
 
@@ -93,7 +90,7 @@ class LoadWorkflow:
                     raise FailWorkflowException()
 
             if input.should_continue_as_new:
-                next_input = LoadWorkflowInput(
+                next_input = ResourceLockingWorkflowInput(
                     iteration_to_fail_after=input.iteration_to_fail_after,
                     should_continue_as_new=False,
                     already_owned_resource=self.assigned_resource,
@@ -101,7 +98,12 @@ class LoadWorkflow:
                 workflow.continue_as_new(next_input)
         finally:
             # Only release the resource if we didn't continue-as-new. workflow.continue_as_new raises to halt workflow
-            # execution, but the code in this finally block will still run. It wouldn't successfully send the signal...
+            # execution, but this code in this finally block will still run. It wouldn't successfully send the signal...
             # the if statement just avoids some warnings in the log.
             if not input.should_continue_as_new:
                 await sem_handle.signal("release_resource", ReleaseRequest(self.assigned_resource, info.workflow_id, info.run_id))
+
+def has_timeout(timeout: Optional[timedelta]) -> bool:
+    # After continue_as_new, timeouts are 0, even if they were None before continue_as_new (and were not set in the
+    # continue_as_new call).
+    return timeout is not None and timeout > timedelta(0)

@@ -8,7 +8,6 @@ from resource_locking.resource_locking_workflow import ResourceLockingWorkflow, 
 from resource_locking.lock_manager_workflow import LockManagerWorkflow
 
 async def main():
-    # Uncomment the line below to see logging
     logging.basicConfig(level=logging.INFO)
 
     # Start client

@@ -82,7 +82,7 @@ class ResourceLockingWorkflow:
             await sem_handle.signal(
                 "acquire_resource", AcquireRequest(info.workflow_id, info.run_id)
             )
-        else:
+        elif info.continued_run_id:
             # If we continued as new, we already have a resource. We need to transfer ownership from our predecessor to
             # ourselves.
             await sem_handle.signal(
@@ -93,6 +93,10 @@ class ResourceLockingWorkflow:
                     info.continued_run_id,
                     info.run_id,
                 ),
+            )
+        else:
+            raise FailWorkflowException(
+                f"Only set 'already_owned_resource' when using continue_as_new"
             )
 
         # Both branches above should cause us to receive an "assign_resource" signal.

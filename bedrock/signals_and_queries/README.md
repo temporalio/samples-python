@@ -4,16 +4,16 @@ Adding signals & queries to the [basic Bedrock sample](../1_basic). Starts a wor
 
 To run, first see `samples-python` [README.md](../../README.md), and `bedrock` [README.md](../README.md) for prerequisites specific to this sample. Once set up, run the following from this directory:
 
-1. Run the worker: `poetry run python run_worker.py`
+1. Run the worker: `uv run run_worker.py`
 2. In another terminal run the client with a prompt.
 
-    Example: `poetry run python send_message.py 'What animals are marsupials?'`
+    Example: `uv run send_message.py 'What animals are marsupials?'`
 
 3. View the worker's output for the response.
 4. Give followup prompts by signaling the workflow.
 
-    Example: `poetry run python send_message.py 'Do they lay eggs?'`
+    Example: `uv run send_message.py 'Do they lay eggs?'`
 5. Get the conversation history by querying the workflow.
     
-    Example: `poetry run python get_history.py`
+    Example: `uv run get_history.py`
 6. The workflow will timeout after inactivity.

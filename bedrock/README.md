@@ -20,6 +20,6 @@ These examples use Amazon's Python SDK (Boto3). To configure Boto3 to use your A
 
 For these sample, the optional `bedrock` dependency group must be included. To include, run:
 
-    poetry install --with bedrock
+    uv sync --group bedrock
 
 There are 3 Bedrock samples, see the README.md in each sub-directory for instructions on running each.

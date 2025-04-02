@@ -21,6 +21,7 @@ jobs:
             runsOn: macos-14
     runs-on: ${{ matrix.runsOn || matrix.os }}
     steps:
+      - uses: astral-sh/setup-uv@v5
       - name: Print build information
         run: "echo head_ref: ${{ github.head_ref }}, ref: ${{ github.ref }}, os: ${{ matrix.os }}, python: ${{ matrix.python }}"
       - uses: actions/checkout@v4
@@ -29,10 +30,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-      # Using fixed Poetry version until
-      # https://github.com/python-poetry/poetry/pull/7694 is fixed
-      - run: python -m pip install --upgrade wheel "poetry==1.4.0" poethepoet
-      - run: poetry install --with pydantic_converter --with dsl --with encryption --with trio_async
+      - run: uv tool install poethepoet
+      - run: uv sync --group=dsl --group=encryption --group=trio-async
       - run: poe lint
       - run: mkdir junit-xml
       - run: poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}.xml
@@ -41,17 +40,17 @@ jobs:
       - name: Uninstall pydantic
         shell: bash
         run: |
-          echo y | poetry run pip uninstall pydantic
-          echo y | poetry run pip uninstall pydantic-core
-          poetry run pip install pydantic==1.10
+          echo y | uv run pip uninstall pydantic
+          echo y | uv run pip uninstall pydantic-core
+          uv run pip install pydantic==1.10
           poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--pydantic-v1.xml tests/pydantic_converter_v1/workflow_test.py
 
       # On latest, run gevent test
       - name: Gevent test
         if: ${{ matrix.python == '3.12' }}
         run: |
-          poetry install --with gevent
-          poetry run python gevent_async/test/run_combined.py
+          uv sync --group gevent
+          uv run gevent_async/test/run_combined.py
 
       - name: Upload junit-xml artifacts
         uses: actions/upload-artifact@v4

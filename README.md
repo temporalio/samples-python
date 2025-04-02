@@ -1,23 +1,26 @@
 # Temporal Python SDK Samples
 
-This is the set of Python samples for the [Python SDK](https://github.com/temporalio/sdk-python).
+This is a collection of samples showing how to use the [Python SDK](https://github.com/temporalio/sdk-python).
 
 ## Usage
 
 Prerequisites:
 
-* Python >= 3.9
-* [Poetry](https://python-poetry.org)
+* [uv](https://docs.astral.sh/uv/)
 * [Temporal CLI installed](https://docs.temporal.io/cli#install)
 * [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
 
+The SDK requires Python >= 3.9. You can install Python using uv. For example,
+
+    uv python install 3.13
+
 With this repository cloned, run the following at the root of the directory:
 
-    poetry install
+    uv sync
 
-That loads all required dependencies. Then to run a sample, usually you just run it in Python. For example:
+That loads all required dependencies. Then to run a sample, usually you just run it under uv. For example:
 
-    poetry run python hello/hello_activity.py
+    uv run hello/hello_activity.py
 
 Some examples require extra dependencies. See each sample's directory for specific instructions.
 
@@ -73,6 +76,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
 * [trio_async](trio_async) - Use asyncio Temporal in Trio-based environments.
+* [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
 
@@ -80,7 +84,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 
 Running the tests requires `poe` to be installed.
 
-    python -m pip install poethepoet
+    uv tool install poethepoet
 
 Once you have `poe` installed you can run:
 

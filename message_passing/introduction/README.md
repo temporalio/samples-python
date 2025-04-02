@@ -10,9 +10,9 @@ Then create two terminals and `cd` to this directory.
 
 Run the worker in one terminal:
 
-    poetry run python worker.py
+    uv run worker.py
 
 And execute the workflow in the other terminal:
 
-    poetry run python starter.py
+    uv run starter.py
 

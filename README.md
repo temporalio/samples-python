@@ -10,6 +10,10 @@ Prerequisites:
 * [Temporal CLI installed](https://docs.temporal.io/cli#install)
 * [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
 
+The SDK requires Python >= 3.9. You can install Python using uv. For example,
+
+    uv python install 3.13
+
 With this repository cloned, run the following at the root of the directory:
 
     uv sync

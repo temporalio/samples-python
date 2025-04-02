@@ -18,9 +18,9 @@ With this repository cloned, run the following at the root of the directory:
 
     uv sync
 
-That loads all required dependencies. Then to run a sample, usually you just run it in Python. For example:
+That loads all required dependencies. Then to run a sample, usually you just run it under uv. For example:
 
-    uv run python hello/hello_activity.py
+    uv run hello/hello_activity.py
 
 Some examples require extra dependencies. See each sample's directory for specific instructions.
 

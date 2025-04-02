@@ -12,11 +12,11 @@ For this sample, the optional `encryption` dependency group must be included. To
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:
 
-    uv run python worker.py
+    uv run worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    uv run python starter.py
+    uv run starter.py
 
 The workflow should complete with the hello result. To view the workflow, use [temporal](https://docs.temporal.io/cli):
 
@@ -31,7 +31,7 @@ Note how the result looks like (with wrapping removed):
 This is because the data is encrypted and not visible. To make data visible to external Temporal tools like `temporal` and
 the UI, start a codec server in another terminal:
 
-    uv run python codec_server.py
+    uv run codec_server.py
 
 Now with that running, run `temporal` again with the codec endpoint:
 

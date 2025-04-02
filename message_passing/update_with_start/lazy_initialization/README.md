@@ -8,11 +8,11 @@ To run, first see the main [README.md](../../../README.md) for prerequisites.
 
 Then run the following from this directory:
 
-    uv run python worker.py
+    uv run worker.py
 
 Then, in another terminal:
 
-    uv run python starter.py
+    uv run starter.py
 
 This will start a worker to run your workflow and activities, then simulate a backend application receiving
 requests to add items to a shopping cart, before finalizing the order.

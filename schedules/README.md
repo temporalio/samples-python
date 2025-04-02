@@ -4,18 +4,18 @@ These samples show how to schedule a Workflow Execution and control certain acti
 
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to run the `schedules/` sample:
 
-    uv run python run_worker.py
-    uv run python start_schedule.py
+    uv run run_worker.py
+    uv run start_schedule.py
 
 Replace `start_schedule.py` in the command with any other example filename to run it instead.
 
-    uv run python backfill_schedule.py
-    uv run python delete_schedule.py
-    uv run python describe_schedule.py
-    uv run python list_schedule.py
-    uv run python pause_schedule.py
+    uv run backfill_schedule.py
+    uv run delete_schedule.py
+    uv run describe_schedule.py
+    uv run list_schedule.py
+    uv run pause_schedule.py
     python run python trigger_schedule.py
-    uv run python update_schedule.py
+    uv run update_schedule.py
 
 - create: Creates a new Schedule. Newly created Schedules return a Schedule ID to be used in other Schedule commands.
 - backfill: Backfills the Schedule by going through the specified time periods as if they passed right now.

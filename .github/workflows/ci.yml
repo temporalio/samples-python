@@ -50,7 +50,7 @@ jobs:
         if: ${{ matrix.python == '3.12' }}
         run: |
           uv sync --group gevent
-          uv run python gevent_async/test/run_combined.py
+          uv run gevent_async/test/run_combined.py
 
       - name: Upload junit-xml artifacts
         uses: actions/upload-artifact@v4

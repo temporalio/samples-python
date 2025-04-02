@@ -16,11 +16,11 @@ To run, open two terminals and `cd` to this directory in them.
 
 Run the worker in one terminal:
 
-    uv run python worker.py
+    uv run worker.py
 
 And run the workflow-starter code in the other terminal:
 
-    uv run python starter.py
+    uv run starter.py
 
 
 Here's the output you'll see:

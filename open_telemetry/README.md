@@ -12,11 +12,11 @@ To run, first see [README.md](../README.md) for prerequisites. Then run the foll
 
 Now, from this directory, start the worker in its own terminal:
 
-    uv run python worker.py
+    uv run worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    uv run python starter.py
+    uv run starter.py
 
 The workflow should complete with the hello result.
 

@@ -39,9 +39,7 @@ class GreetingComposer:
         # does not consider the activity complete from the workflow perspective
         activity.raise_complete_async()
 
-    def complete_greeting(
-        self, task_token: bytes, input: ComposeGreetingInput
-    ) -> None:
+    def complete_greeting(self, task_token: bytes, input: ComposeGreetingInput) -> None:
         # Let's wait three seconds, heartbeating each second. Note, heartbeating
         # during async activity completion is done via the client directly. It
         # is often important to heartbeat so the server can know when an

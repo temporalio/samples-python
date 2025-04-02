@@ -6,8 +6,8 @@ from datetime import timedelta
 from typing import NoReturn
 
 from temporalio import activity, workflow
-from temporalio.exceptions import CancelledError
 from temporalio.client import Client, WorkflowFailureError
+from temporalio.exceptions import CancelledError
 from temporalio.worker import Worker
 
 

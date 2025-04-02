@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import Optional
 
 from temporalio import workflow
 
@@ -163,7 +164,7 @@ class LockManagerWorkflow:
         await requester.signal("assign_resource", AssignedResource(request.resource))
 
     @workflow.query
-    def get_current_holders(self) -> dict[str, AcquireRequest]:
+    def get_current_holders(self) -> dict[str, Optional[AcquireRequest]]:
         return {k: v[0] if v else None for k, v in self.resource_queues.items()}
 
     @workflow.run

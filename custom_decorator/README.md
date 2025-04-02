@@ -6,11 +6,11 @@ decorator that automatically configures an activity to heartbeat twice as freque
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:
 
-    poetry run python worker.py
+    uv run worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    poetry run python starter.py
+    uv run starter.py
 
 The workflow will be started, and then after 5 seconds will be sent a signal to cancel its forever-running activity.
 The activity has a heartbeat timeout set to 2s, so since it has the `@auto_heartbeater` decorator set, it will heartbeat

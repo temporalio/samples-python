@@ -13,11 +13,11 @@ To run, first see [README.md](../../README.md) for prerequisites.
 
 Then, run the following from this directory to run the sample:
 
-    poetry run python run_worker.py
+    uv run run_worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    poetry run python run_infrequent.py
+    uv run run_infrequent.py
 
 
 Since the test service simulates being _down_ for four polling attempts and then returns _OK_ on the fifth poll attempt, the Workflow will perform four Activity retries with a 60-second poll interval, and then return the service result on the successful fifth attempt.

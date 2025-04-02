@@ -12,10 +12,10 @@ To run, first see [README.md](../../README.md) for prerequisites.
 
 Then, run the following from this directory to run the worker:
 \
-    poetry run python worker.py
+    uv run worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    poetry run python starter.py
+    uv run starter.py
 
 This will start a worker to run your workflow and activities, then start a ClusterManagerWorkflow and put it through its paces.

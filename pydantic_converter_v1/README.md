@@ -5,18 +5,18 @@ main [pydantic_converter](../pydantic_converter/README.md) sample.**
 
 To install, run:
 
-    poetry install --with pydantic_converter
-    poetry run pip uninstall pydantic pydantic-core
-    poetry run pip install pydantic==1.10
+    uv sync --group pydantic-converter
+    uv run pip uninstall pydantic pydantic-core
+    uv run pip install pydantic==1.10
 
 To run, first see the root [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:
 
-    poetry run python worker.py
+    uv run worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    poetry run python starter.py
+    uv run starter.py
 
 In the worker terminal, the workflow and its activity will log that it received the Pydantic models. In the starter
 terminal, the Pydantic models in the workflow result will be logged.

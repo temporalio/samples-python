@@ -5,7 +5,7 @@ These samples show basic workflow and activity features.
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to run the
 `hello_activity.py` sample:
 
-    poetry run python hello_activity.py
+    uv run hello_activity.py
 
 The result will be:
 

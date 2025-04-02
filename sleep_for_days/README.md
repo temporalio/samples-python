@@ -8,11 +8,11 @@ Then create two terminals and `cd` to this directory.
 
 Run the worker in one terminal:
 
-    poetry run python worker.py
+    uv run worker.py
 
 And execute the workflow in the other terminal:
 
-    poetry run python starter.py
+    uv run starter.py
 
 This sample will run indefinitely until you send a signal to `complete`. See how to send a signal via Temporal CLI [here](https://docs.temporal.io/cli/workflow#signal).
 

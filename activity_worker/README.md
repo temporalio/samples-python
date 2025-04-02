@@ -8,6 +8,6 @@ First run the Go workflow worker by running this in the `go_workflow` directory 
 
 Then in another terminal, run the sample from this directory:
 
-    poetry run python activity_worker.py
+    uv run activity_worker.py
 
 The Python code will invoke the Go workflow which will execute the Python activity and return.

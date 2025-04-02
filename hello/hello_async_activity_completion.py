@@ -17,19 +17,15 @@ class ComposeGreetingInput:
 
 
 class GreetingComposer:
-    def __init__(self, client: Client) -> None:
+    def __init__(self, client: Client, loop: asyncio.AbstractEventLoop) -> None:
         self.client = client
+        self.loop = loop
 
     @activity.defn
     def compose_greeting(self, input: ComposeGreetingInput) -> str:
-        # Schedule a task to complete this asynchronously. This could be done in
+        # Make a thread to complete this externally. This could be done in
         # a completely different process or system.
         print("Completing activity asynchronously")
-        # Tasks stored by asyncio are weak references and therefore can get GC'd
-        # which can cause warnings like "Task was destroyed but it is pending!".
-        # So we store the tasks ourselves.
-        # See https://docs.python.org/3/library/asyncio-task.html#creating-tasks,
-        # https://bugs.python.org/issue21163 and others.
         Thread(
             target=self.complete_greeting,
             args=(activity.info().task_token, input),
@@ -47,11 +43,13 @@ class GreetingComposer:
         handle = self.client.get_async_activity_handle(task_token=task_token)
         for _ in range(0, 3):
             print("Waiting one second...")
-            asyncio.run(handle.heartbeat())
+            asyncio.run_coroutine_threadsafe(handle.heartbeat(), self.loop)
             time.sleep(1)
 
         # Complete using the handle
-        asyncio.run(handle.complete(f"{input.greeting}, {input.name}!"))
+        asyncio.run_coroutine_threadsafe(
+            handle.complete(f"{input.greeting}, {input.name}!"), self.loop
+        )
 
 
 @workflow.defn
@@ -72,8 +70,10 @@ async def main():
     # Start client
     client = await Client.connect("localhost:7233")
 
+    loop = asyncio.get_event_loop()
+
     # Run a worker for the workflow
-    composer = GreetingComposer(client)
+    composer = GreetingComposer(client, loop)
     async with Worker(
         client,
         task_queue="hello-async-activity-completion-task-queue",

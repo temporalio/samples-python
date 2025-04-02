@@ -50,9 +50,9 @@ async def main():
         task_queue="hello-activity-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
-        # If the worker is running async activities, you don't need
+        # If the worker is only running async activities, you don't need
         # to supply an activity executor because they run in
-        # the event loop of the worker.
+        # the worker's event loop.
     ):
 
         # While the worker is running, use the client to run the workflow and

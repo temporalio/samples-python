@@ -68,10 +68,10 @@ default-groups = [
     "encryption",
     "gevent",
     "langchain",
-    "open_telemetry",
-    "pydantic_converter",
+    "open-telemetry",
+    "pydantic-converter",
     "sentry",
-    "trio_async",
+    "trio-async",
 ]
 
 [tool.hatch.build.targets.sdist]

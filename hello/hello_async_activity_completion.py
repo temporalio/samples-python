@@ -1,9 +1,9 @@
 import asyncio
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 from threading import Thread
-import time
 
 from temporalio import activity, workflow
 from temporalio.client import Client

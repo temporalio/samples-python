@@ -1,7 +1,7 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from typing import NoReturn
 

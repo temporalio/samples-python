@@ -1,6 +1,9 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
+from threading import Thread
+import time
 
 from temporalio import activity, workflow
 from temporalio.client import Client
@@ -18,7 +21,7 @@ class GreetingComposer:
         self.client = client
 
     @activity.defn
-    async def compose_greeting(self, input: ComposeGreetingInput) -> str:
+    def compose_greeting(self, input: ComposeGreetingInput) -> str:
         # Schedule a task to complete this asynchronously. This could be done in
         # a completely different process or system.
         print("Completing activity asynchronously")
@@ -27,15 +30,16 @@ class GreetingComposer:
         # So we store the tasks ourselves.
         # See https://docs.python.org/3/library/asyncio-task.html#creating-tasks,
         # https://bugs.python.org/issue21163 and others.
-        _ = asyncio.create_task(
-            self.complete_greeting(activity.info().task_token, input)
-        )
+        Thread(
+            target=self.complete_greeting,
+            args=(activity.info().task_token, input),
+        ).start()
 
         # Raise the complete-async error which will complete this function but
         # does not consider the activity complete from the workflow perspective
         activity.raise_complete_async()
 
-    async def complete_greeting(
+    def complete_greeting(
         self, task_token: bytes, input: ComposeGreetingInput
     ) -> None:
         # Let's wait three seconds, heartbeating each second. Note, heartbeating
@@ -45,11 +49,11 @@ class GreetingComposer:
         handle = self.client.get_async_activity_handle(task_token=task_token)
         for _ in range(0, 3):
             print("Waiting one second...")
-            await handle.heartbeat()
-            await asyncio.sleep(1)
+            asyncio.run(handle.heartbeat())
+            time.sleep(1)
 
         # Complete using the handle
-        await handle.complete(f"{input.greeting}, {input.name}!")
+        asyncio.run(handle.complete(f"{input.greeting}, {input.name}!"))
 
 
 @workflow.defn
@@ -77,6 +81,7 @@ async def main():
         task_queue="hello-async-activity-completion-task-queue",
         workflows=[GreetingWorkflow],
         activities=[composer.compose_greeting],
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to run the workflow and

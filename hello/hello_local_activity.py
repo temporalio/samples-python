@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -14,7 +15,7 @@ class ComposeGreetingInput:
 
 
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
+def compose_greeting(input: ComposeGreetingInput) -> str:
     return f"{input.greeting}, {input.name}!"
 
 
@@ -39,6 +40,7 @@ async def main():
         task_queue="hello-local-activity-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to run the workflow and

@@ -1,5 +1,4 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -19,7 +18,7 @@ class ComposeGreetingInput:
 
 # Basic activity that logs and does string concatenation
 @activity.defn
-def compose_greeting(input: ComposeGreetingInput) -> str:
+async def compose_greeting(input: ComposeGreetingInput) -> str:
     activity.logger.info("Running activity with parameter %s" % input)
     return f"{input.greeting}, {input.name}!"
 
@@ -51,10 +50,9 @@ async def main():
         task_queue="hello-activity-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
-        # Non-async activities require an executor;
-        # a thread pool executor is recommended.
-        # This same thread pool could be passed to multiple workers if desired.
-        activity_executor=ThreadPoolExecutor(5),
+        # If the worker is only running async activities, you don't need
+        # to supply an activity executor because they run in
+        # the worker's event loop.
     ):
 
         # While the worker is running, use the client to run the workflow and

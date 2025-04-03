@@ -43,13 +43,13 @@ class GreetingComposer:
         handle = self.client.get_async_activity_handle(task_token=task_token)
         for _ in range(0, 3):
             print("Waiting one second...")
-            asyncio.run_coroutine_threadsafe(handle.heartbeat(), self.loop)
+            asyncio.run_coroutine_threadsafe(handle.heartbeat(), self.loop).result()
             time.sleep(1)
 
         # Complete using the handle
         asyncio.run_coroutine_threadsafe(
             handle.complete(f"{input.greeting}, {input.name}!"), self.loop
-        )
+        ).result()
 
 
 @workflow.defn

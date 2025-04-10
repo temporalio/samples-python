@@ -16,52 +16,61 @@ class InternalAcquireRequest(AcquireRequest):
 
 @dataclass
 class LockManagerWorkflowInput:
-    # Key is resource, value is users of the resource. The first item in each list is the current holder of the lock
-    # on that resource. A similar data structure could allow for multiple holders (perhaps the first n items are the
-    # current holders).
-    resource_queues: dict[str, list[InternalAcquireRequest]]
+    # Key is resource, value is current lock holder for the resource (None if not locked)
+    resources: dict[str, Optional[InternalAcquireRequest]]
+    waiters: list[InternalAcquireRequest]
 
 @workflow.defn
 class LockManagerWorkflow:
     @workflow.init
     def __init__(self, input: LockManagerWorkflowInput):
-        self.resource_queues = input.resource_queues
+        self.resources = input.resources
+        self.waiters = input.waiters
         self.release_signal_to_resource: dict[str, str] = {}
-        for resource, queue in self.resource_queues.items():
-            if len(queue) > 0:
-                self.release_signal_to_resource[queue[0].release_signal] = resource
+        for resource, holder in self.resources.items():
+            if holder is not None:
+                self.release_signal_to_resource[holder.release_signal] = resource
+
+    @workflow.signal
+    async def add_resources(self, resources: list[str]):
+        for resource in resources:
+            if resource in self.resources:
+                workflow.logger.warning(
+                    f"Ignoring attempt to add already-existing resource: {resource}"
+                )
+                continue
+
+            self.resources[resource] = None
+            if len(self.waiters) > 0:
+                next_holder = self.waiters.pop(0)
+                await self.allocate_resource(resource, next_holder)
 
     @workflow.signal
     async def acquire_resource(self, request: AcquireRequest):
         internal_request = InternalAcquireRequest(workflow_id=request.workflow_id, release_signal=None)
 
-        # A real-world version of this workflow probably wants to use more sophisticated load balancing strategies than
-        # "first free" and "wait for a random one".
-
-        for resource in self.resource_queues:
+        for resource, holder in self.resources.items():
             # Naively give out the first free resource, if we have one
-            if len(self.resource_queues[resource]) == 0:
-                self.resource_queues[resource].append(internal_request)
-                await self.notify_acquirer(resource)
+            if holder is None:
+                await self.allocate_resource(resource, internal_request)
                 return
 
-        # Otherwise put this request in a random queue.
-        resource = workflow.random().choice(list(self.resource_queues.keys()))
+        # Otherwise queue the request
+        self.waiters.append(internal_request)
         workflow.logger.info(
-            f"workflow_id={request.workflow_id} is waiting for resource {resource}"
+            f"workflow_id={request.workflow_id} is waiting for a resource"
         )
-        self.resource_queues[resource].append(internal_request)
 
-    async def notify_acquirer(self, resource: str):
-        acquirer = self.resource_queues[resource][0]
+    async def allocate_resource(self, resource: str, internal_request: InternalAcquireRequest):
+        self.resources[resource] = internal_request
         workflow.logger.info(
-            f"workflow_id={acquirer.workflow_id} acquired resource {resource}"
+            f"workflow_id={internal_request.workflow_id} acquired resource {resource}"
         )
-        acquirer.release_signal = str(workflow.uuid4())
-        self.release_signal_to_resource[acquirer.release_signal] = resource
+        internal_request.release_signal = str(workflow.uuid4())
+        self.release_signal_to_resource[internal_request.release_signal] = resource
 
-        requester = workflow.get_external_workflow_handle(acquirer.workflow_id)
-        await requester.signal("assign_resource", AcquireResponse(release_signal_name=acquirer.release_signal, resource=resource))
+        requester = workflow.get_external_workflow_handle(internal_request.workflow_id)
+        await requester.signal("assign_resource", AcquireResponse(release_signal_name=internal_request.release_signal, resource=resource))
 
     @workflow.signal(dynamic=True)
     async def release_resource(self, signal_name, *args):
@@ -71,43 +80,37 @@ class LockManagerWorkflow:
 
         resource = self.release_signal_to_resource[signal_name]
 
-        queue = self.resource_queues[resource]
-        if queue is None:
-            workflow.logger.warning(
-                f"Ignoring request to release non-existent resource: {resource}"
-            )
-            return
-
-        if len(queue) == 0:
+        holder = self.resources[resource]
+        if holder is None:
             workflow.logger.warning(
                 f"Ignoring request to release resource that is not locked: {resource}"
             )
-            return
 
-        holder = queue[0]
-
-        # Remove the current holder from the head of the queue
+        # Remove the current holder
         workflow.logger.info(
             f"workflow_id={holder.workflow_id} released resource {resource}"
         )
-        queue = queue[1:]
-        self.resource_queues[resource] = queue
+        self.resources[resource] = None
         del self.release_signal_to_resource[signal_name]
 
         # If there are queued requests, assign the resource to the next one
-        if len(queue) > 0:
-            await self.notify_acquirer(resource)
+        if len(self.waiters) > 0:
+            next_holder = self.waiters.pop(0)
+            await self.allocate_resource(resource, next_holder)
 
     @workflow.query
     def get_current_holders(self) -> dict[str, Optional[InternalAcquireRequest]]:
-        return {k: v[0] if v else None for k, v in self.resource_queues.items()}
+        return {k: v if v else None for k, v in self.resources.items()}
 
     @workflow.run
-    async def run(self, input: LockManagerWorkflowInput) -> None:
+    async def run(self, _: LockManagerWorkflowInput) -> None:
         # Continue as new either when temporal tells us to, or every 12 hours (so it occurs semi-frequently)
         await workflow.wait_condition(
             lambda: workflow.info().is_continue_as_new_suggested(),
             timeout=timedelta(hours=12),
         )
 
-        workflow.continue_as_new(LockManagerWorkflowInput(self.resource_queues))
+        workflow.continue_as_new(LockManagerWorkflowInput(
+            resources=self.resources,
+            waiters=self.waiters,
+        ))

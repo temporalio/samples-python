@@ -22,10 +22,8 @@ async def main():
     lock_manager_handle = await client.start_workflow(
         workflow=LockManagerWorkflow.run,
         arg=LockManagerWorkflowInput(
-            {
-                "resource_a": [],
-                "resource_b": [],
-            }
+            resources={ "resource_a": None, "resource_b": None },
+            waiters=[],
         ),
         id=LOCK_MANAGER_WORKFLOW_ID,
         task_queue="default",

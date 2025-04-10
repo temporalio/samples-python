@@ -3,8 +3,8 @@ from typing import Any
 
 from temporalio.client import Client, WorkflowFailureError, WorkflowHandle
 
+from resource_locking.shared import LOCK_MANAGER_WORKFLOW_ID
 from resource_locking.lock_manager_workflow import (
-    LOCK_MANAGER_WORKFLOW_ID,
     LockManagerWorkflow,
     LockManagerWorkflowInput,
 )
@@ -37,7 +37,7 @@ async def main():
         input = ResourceLockingWorkflowInput(
             iteration_to_fail_after=None,
             should_continue_as_new=False,
-            already_owned_resource=None,
+            already_assigned_resource=None,
         )
         if i == 0:
             input.should_continue_as_new = True

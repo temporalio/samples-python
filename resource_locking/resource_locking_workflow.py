@@ -5,20 +5,16 @@ from typing import Optional
 
 from temporalio import activity, workflow
 
-from resource_locking.lock_manager_workflow import (
+from resource_locking.shared import (
     LOCK_MANAGER_WORKFLOW_ID,
     AcquireRequest,
-    AssignedResource,
-    HandoffRequest,
-    ReleaseRequest,
+    AcquireResponse,
 )
-
 
 @dataclass
 class UseResourceActivityInput:
     resource: str
     iteration: str
-
 
 @activity.defn
 async def use_resource(input: UseResourceActivityInput) -> None:
@@ -42,7 +38,7 @@ class ResourceLockingWorkflowInput:
     should_continue_as_new: bool
 
     # Used to transfer resource ownership between iterations during continue_as_new
-    already_owned_resource: Optional[str]
+    already_assigned_resource: Optional[AcquireResponse]
 
 
 class FailWorkflowException(Exception):
@@ -56,15 +52,14 @@ MAX_RESOURCE_WAIT_TIME = timedelta(minutes=5)
 @workflow.defn(failure_exception_types=[FailWorkflowException])
 class ResourceLockingWorkflow:
     def __init__(self):
-        self.assigned_resource: Optional[str] = None
+        self.assigned_resource: Optional[AcquireResponse] = None
 
     @workflow.signal(name="assign_resource")
-    def handle_assign_resource(self, input: AssignedResource):
-        self.assigned_resource = input.resource
+    def handle_assign_resource(self, input: AcquireResponse):
+        self.assigned_resource = input
 
     @workflow.run
     async def run(self, input: ResourceLockingWorkflowInput):
-        workflow.info()
         if has_timeout(workflow.info().run_timeout):
             # See "locking" comment below for rationale
             raise FailWorkflowException(
@@ -78,28 +73,15 @@ class ResourceLockingWorkflow:
         sem_handle = workflow.get_external_workflow_handle(LOCK_MANAGER_WORKFLOW_ID)
 
         info = workflow.info()
-        if input.already_owned_resource is None:
-            await sem_handle.signal(
-                "acquire_resource", AcquireRequest(info.workflow_id, info.run_id)
-            )
+        if input.already_assigned_resource is None:
+            await sem_handle.signal("acquire_resource", AcquireRequest(info.workflow_id))
         elif info.continued_run_id:
-            # If we continued as new, we already have a resource. We need to transfer ownership from our predecessor to
-            # ourselves.
-            await sem_handle.signal(
-                "handoff_resource",
-                HandoffRequest(
-                    input.already_owned_resource,
-                    info.workflow_id,
-                    info.continued_run_id,
-                    info.run_id,
-                ),
-            )
+            self.assigned_resource = input.already_assigned_resource
         else:
             raise FailWorkflowException(
-                f"Only set 'already_owned_resource' when using continue_as_new"
+                f"Only set 'already_assigned_resource' when using continue_as_new"
             )
 
-        # Both branches above should cause us to receive an "assign_resource" signal.
         await workflow.wait_condition(
             lambda: self.assigned_resource is not None, timeout=MAX_RESOURCE_WAIT_TIME
         )
@@ -115,7 +97,7 @@ class ResourceLockingWorkflow:
             for iteration in ["first", "second", "third"]:
                 await workflow.execute_activity(
                     use_resource,
-                    UseResourceActivityInput(self.assigned_resource, iteration),
+                    UseResourceActivityInput(self.assigned_resource.resource, iteration),
                     start_to_close_timeout=timedelta(seconds=10),
                 )
 
@@ -129,7 +111,7 @@ class ResourceLockingWorkflow:
                 next_input = ResourceLockingWorkflowInput(
                     iteration_to_fail_after=input.iteration_to_fail_after,
                     should_continue_as_new=False,
-                    already_owned_resource=self.assigned_resource,
+                    already_assigned_resource=self.assigned_resource,
                 )
                 workflow.continue_as_new(next_input)
         finally:
@@ -137,13 +119,7 @@ class ResourceLockingWorkflow:
             # execution, but this code in this finally block will still run. It wouldn't successfully send the signal...
             # the if statement just avoids some warnings in the log.
             if not input.should_continue_as_new:
-                await sem_handle.signal(
-                    "release_resource",
-                    ReleaseRequest(
-                        self.assigned_resource, info.workflow_id, info.run_id
-                    ),
-                )
-
+                await sem_handle.signal(self.assigned_resource.release_signal_name)
 
 def has_timeout(timeout: Optional[timedelta]) -> bool:
     # After continue_as_new, timeouts are 0, even if they were None before continue_as_new (and were not set in the

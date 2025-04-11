@@ -4,10 +4,8 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from resource_pool.resource_pool_client import ResourcePoolClient
 from resource_pool.resource_pool_workflow import ResourcePoolWorkflow
 from resource_pool.resource_user_workflow import ResourceUserWorkflow, use_resource
-from resource_pool.shared import RESOURCE_POOL_WORKFLOW_ID
 
 
 async def main() -> None:

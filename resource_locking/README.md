@@ -1,16 +1,16 @@
 # Resource Locking Sample
 
-This sample shows how to use a long-lived `LockManagerWorkflow` to ensure that each `resource` is used by at most one
-`ResourceLockingWorkflow` at a time. `ResourceLockingWorkflow` runs several activities while it has ownership of a
-resource.
+This sample shows how to use a long-lived `LockManagerWorkflow` to allocate `resources` to `ResourceLockingWorkflows`.
+Each`ResourceLockingWorkflow` runs several activities while it has ownership of a resource. Note that
+`LockManagerWorkflow` is making resource allocation decisions based on in-memory state.
 
 Run the following from this directory to start the worker:
 
-    poetry run python worker.py
+    uv run worker.py
 
-This will start the worker. Then, in another terminal, run the following to execute several load workflows:
+This will start the worker. Then, in another terminal, run the following to execute several `ResourceLockingWorkflows`.
 
-    poetry run python starter.py
+    uv run starter.py
 
 You should see output indicating that the LockManagerWorkflow serialized access to each resource.
 
@@ -36,6 +36,7 @@ signals. Locking carries a risk where failure to unlock permanently removing a r
 Temporal's durable execution guarantees, this can only happen if:
 
 - A LoadWorkflow times out (prohibited in the sample code)
+- An operator terminates a LoadWorkflow. (Temporal recommends canceling workflows instead of terminating them whenever possible.)
 - You shut down your workers and never restart them (unhandled, but irrelevant)
 
 If a leak were to happen, you could discover the identity of the leaker using the query above, then:

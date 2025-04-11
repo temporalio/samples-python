@@ -4,7 +4,7 @@ from typing import Optional
 
 from temporalio import workflow
 
-from resource_locking.shared import AcquireRequest, AcquireResponse
+from resource_pool.shared import AcquireRequest, AcquireResponse
 
 
 # Internal to this workflow, we'll associate randomly generated release signal names with each acquire request.
@@ -14,16 +14,16 @@ class InternalAcquireRequest(AcquireRequest):
 
 
 @dataclass
-class LockManagerWorkflowInput:
-    # Key is resource, value is current lock holder for the resource (None if not locked)
+class ResourcePoolWorkflowInput:
+    # Key is resource, value is current holder of the resource (None if not held)
     resources: dict[str, Optional[InternalAcquireRequest]]
     waiters: list[InternalAcquireRequest]
 
 
 @workflow.defn
-class LockManagerWorkflow:
+class ResourcePoolWorkflow:
     @workflow.init
-    def __init__(self, input: LockManagerWorkflowInput):
+    def __init__(self, input: ResourcePoolWorkflowInput):
         self.resources = input.resources
         self.waiters = input.waiters
         self.release_signal_to_resource: dict[str, str] = {}
@@ -94,7 +94,7 @@ class LockManagerWorkflow:
         holder = self.resources[resource]
         if holder is None:
             workflow.logger.warning(
-                f"Ignoring request to release resource that is not locked: {resource}"
+                f"Ignoring request to release resource that is not held: {resource}"
             )
             return
 
@@ -115,7 +115,7 @@ class LockManagerWorkflow:
         return {k: v if v else None for k, v in self.resources.items()}
 
     @workflow.run
-    async def run(self, _: LockManagerWorkflowInput) -> None:
+    async def run(self, _: ResourcePoolWorkflowInput) -> None:
         # Continue as new either when temporal tells us to, or every 12 hours (so it occurs semi-frequently)
         await workflow.wait_condition(
             lambda: workflow.info().is_continue_as_new_suggested(),
@@ -123,7 +123,7 @@ class LockManagerWorkflow:
         )
 
         workflow.continue_as_new(
-            LockManagerWorkflowInput(
+            ResourcePoolWorkflowInput(
                 resources=self.resources,
                 waiters=self.waiters,
             )

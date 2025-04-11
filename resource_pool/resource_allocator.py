@@ -6,12 +6,12 @@ from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.common import WorkflowIDConflictPolicy
 
-from resource_locking.lock_manager_workflow import (
-    LockManagerWorkflow,
-    LockManagerWorkflowInput,
+from resource_pool.resource_pool_workflow import (
+    ResourcePoolWorkflow,
+    ResourcePoolWorkflowInput,
 )
-from resource_locking.shared import (
-    LOCK_MANAGER_WORKFLOW_ID,
+from resource_pool.shared import (
+    RESOURCE_POOL_WORKFLOW_ID,
     AcquiredResource,
     AcquireRequest,
     AcquireResponse,
@@ -29,12 +29,12 @@ class ResourceAllocator:
 
         # This will start and signal the workflow if it isn't running, otherwise it will signal the current run.
         await self.client.start_workflow(
-            workflow=LockManagerWorkflow.run,
-            arg=LockManagerWorkflowInput(
+            workflow=ResourcePoolWorkflow.run,
+            arg=ResourcePoolWorkflowInput(
                 resources={},
                 waiters=[],
             ),
-            id=LOCK_MANAGER_WORKFLOW_ID,
+            id=RESOURCE_POOL_WORKFLOW_ID,
             task_queue="default",
             id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
             start_signal="acquire_resource",
@@ -85,7 +85,9 @@ class ResourceAllocator:
             yield resource
         finally:
             if resource.autorelease:
-                handle = workflow.get_external_workflow_handle(LOCK_MANAGER_WORKFLOW_ID)
+                handle = workflow.get_external_workflow_handle(
+                    RESOURCE_POOL_WORKFLOW_ID
+                )
                 await handle.signal(resource.release_signal_name)
 
 

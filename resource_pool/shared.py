@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 
-LOCK_MANAGER_WORKFLOW_ID = "lock_manager"
+RESOURCE_POOL_WORKFLOW_ID = "resource_pool"
 
 
 @dataclass

@@ -1,7 +1,5 @@
 import asyncio
-import uuid
 from collections import defaultdict
-from datetime import timedelta
 from typing import Any, Optional, Sequence
 
 from temporalio import activity
@@ -9,17 +7,17 @@ from temporalio.client import Client, WorkflowFailureError, WorkflowHandle
 from temporalio.common import WorkflowIDConflictPolicy
 from temporalio.worker import Worker
 
-from resource_locking.lock_manager_workflow import (
-    LockManagerWorkflow,
-    LockManagerWorkflowInput,
+from resource_pool.resource_allocator import ResourceAllocator
+from resource_pool.resource_pool_workflow import (
+    ResourcePoolWorkflow,
+    ResourcePoolWorkflowInput,
 )
-from resource_locking.resource_allocator import ResourceAllocator
-from resource_locking.resource_locking_workflow import (
-    ResourceLockingWorkflow,
-    ResourceLockingWorkflowInput,
+from resource_pool.resource_user_workflow import (
+    ResourceUserWorkflow,
+    ResourceUserWorkflowInput,
     UseResourceActivityInput,
 )
-from resource_locking.shared import LOCK_MANAGER_WORKFLOW_ID
+from resource_pool.shared import RESOURCE_POOL_WORKFLOW_ID
 
 TASK_QUEUE = "default"
 
@@ -42,7 +40,7 @@ async def test_resource_locking_workflow(client: Client):
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[LockManagerWorkflow, ResourceLockingWorkflow],
+        workflows=[ResourcePoolWorkflow, ResourceUserWorkflow],
         activities=[use_resource_mock, resource_allocator.send_acquire_signal],
     ):
         await run_all_workflows(client)
@@ -76,9 +74,9 @@ async def test_resource_locking_workflow(client: Client):
 
 
 async def run_all_workflows(client: Client):
-    resource_locking_handles: list[WorkflowHandle[Any, Any]] = []
+    resource_user_handles: list[WorkflowHandle[Any, Any]] = []
     for i in range(0, 8):
-        input = ResourceLockingWorkflowInput(
+        input = ResourceUserWorkflowInput(
             iteration_to_fail_after=None,
             should_continue_as_new=False,
         )
@@ -87,32 +85,32 @@ async def run_all_workflows(client: Client):
         if i == 1:
             input.iteration_to_fail_after = "first"
 
-        resource_locking_handle = await client.start_workflow(
-            workflow=ResourceLockingWorkflow.run,
+        handle = await client.start_workflow(
+            workflow=ResourceUserWorkflow.run,
             arg=input,
-            id=f"resource-locking-workflow-{i}",
+            id=f"resource-user-workflow-{i}",
             task_queue=TASK_QUEUE,
         )
-        resource_locking_handles.append(resource_locking_handle)
+        resource_user_handles.append(handle)
 
     # Add some resources
-    lock_manager_handle = await client.start_workflow(
-        workflow=LockManagerWorkflow.run,
-        arg=LockManagerWorkflowInput(
+    resource_pool_handle = await client.start_workflow(
+        workflow=ResourcePoolWorkflow.run,
+        arg=ResourcePoolWorkflowInput(
             resources={},
             waiters=[],
         ),
-        id=LOCK_MANAGER_WORKFLOW_ID,
+        id=RESOURCE_POOL_WORKFLOW_ID,
         task_queue="default",
         id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
         start_signal="add_resources",
         start_signal_args=[["r_a", "r_b", "r_c"]],
     )
 
-    for resource_locking_handle in resource_locking_handles:
+    for handle in resource_user_handles:
         try:
-            await resource_locking_handle.result()
+            await handle.result()
         except WorkflowFailureError:
             pass
 
-    await lock_manager_handle.terminate()
+    await resource_pool_handle.terminate()

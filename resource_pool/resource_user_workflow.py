@@ -1,17 +1,12 @@
 import asyncio
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Callable, Optional
+from typing import Optional
 
 from temporalio import activity, workflow
 
-from resource_locking.resource_allocator import ResourceAllocator
-from resource_locking.shared import (
-    LOCK_MANAGER_WORKFLOW_ID,
-    AcquiredResource,
-    AcquireRequest,
-    AcquireResponse,
-)
+from resource_pool.resource_allocator import ResourceAllocator
+from resource_pool.shared import AcquiredResource
 
 
 @dataclass
@@ -33,12 +28,12 @@ async def use_resource(input: UseResourceActivityInput) -> None:
 
 
 @dataclass
-class ResourceLockingWorkflowInput:
-    # If set, this workflow will fail after the "first", "second", or "third" activity.
+class ResourceUserWorkflowInput:
+    # If set, this workflow will fail after the "first" or "second" activity.
     iteration_to_fail_after: Optional[str]
 
-    # If True, this workflow will continue as new after the third activity. The next iteration will run three more
-    # activities, but will not continue as new. This lets us exercise the handoff logic.
+    # If True, this workflow will continue as new after the last activity. The next iteration will run more activities,
+    # but will not continue as new.
     should_continue_as_new: bool
 
     # Used to transfer resource ownership between iterations during continue_as_new
@@ -54,9 +49,9 @@ MAX_RESOURCE_WAIT_TIME = timedelta(minutes=5)
 
 
 @workflow.defn(failure_exception_types=[FailWorkflowException])
-class ResourceLockingWorkflow:
+class ResourceUserWorkflow:
     @workflow.run
-    async def run(self, input: ResourceLockingWorkflowInput):
+    async def run(self, input: ResourceUserWorkflowInput):
         async with ResourceAllocator.acquire_resource(
             already_acquired_resource=input.already_acquired_resource
         ) as resource:
@@ -74,7 +69,7 @@ class ResourceLockingWorkflow:
                     raise FailWorkflowException()
 
             if input.should_continue_as_new:
-                next_input = ResourceLockingWorkflowInput(
+                next_input = ResourceUserWorkflowInput(
                     iteration_to_fail_after=input.iteration_to_fail_after,
                     should_continue_as_new=False,
                     already_acquired_resource=resource,

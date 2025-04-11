@@ -3,31 +3,18 @@ from typing import Any
 
 from temporalio.client import Client, WorkflowFailureError, WorkflowHandle
 
-from resource_locking.shared import LOCK_MANAGER_WORKFLOW_ID
-from resource_locking.lock_manager_workflow import (
-    LockManagerWorkflow,
-    LockManagerWorkflowInput,
-)
+from resource_locking.lock_manager_workflow import LockManagerWorkflow, LockManagerWorkflowInput
 from resource_locking.resource_locking_workflow import (
     ResourceLockingWorkflow,
     ResourceLockingWorkflowInput,
 )
+from resource_locking.shared import LOCK_MANAGER_WORKFLOW_ID
+from temporalio.common import WorkflowIDConflictPolicy
 
 
 async def main():
     # Connect client
     client = await Client.connect("localhost:7233")
-
-    # Start the LockManagerWorkflow
-    lock_manager_handle = await client.start_workflow(
-        workflow=LockManagerWorkflow.run,
-        arg=LockManagerWorkflowInput(
-            resources={ "resource_a": None, "resource_b": None },
-            waiters=[],
-        ),
-        id=LOCK_MANAGER_WORKFLOW_ID,
-        task_queue="default",
-    )
 
     # Start the ResourceLockingWorkflows
     resource_locking_handles: list[WorkflowHandle[Any, Any]] = []
@@ -35,7 +22,6 @@ async def main():
         input = ResourceLockingWorkflowInput(
             iteration_to_fail_after=None,
             should_continue_as_new=False,
-            already_assigned_resource=None,
         )
         if i == 0:
             input.should_continue_as_new = True
@@ -49,6 +35,20 @@ async def main():
             task_queue="default",
         )
         resource_locking_handles.append(resource_locking_handle)
+
+    # Add some resources
+    lock_manager_handle = await client.start_workflow(
+        workflow=LockManagerWorkflow.run,
+        arg=LockManagerWorkflowInput(
+            resources={},
+            waiters=[],
+        ),
+        id=LOCK_MANAGER_WORKFLOW_ID,
+        task_queue="default",
+        id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
+        start_signal="add_resources",
+        start_signal_args=[["resource_a", "resource_b"]],
+    )
 
     for resource_locking_handle in resource_locking_handles:
         try:

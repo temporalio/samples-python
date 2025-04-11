@@ -1,14 +1,15 @@
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Optional
+from typing import Optional, Callable
 
 from temporalio import activity, workflow
 
+from resource_locking.resource_allocator import ResourceAllocator
 from resource_locking.shared import (
     LOCK_MANAGER_WORKFLOW_ID,
     AcquireRequest,
-    AcquireResponse,
+    AcquireResponse, AcquiredResource,
 )
 
 @dataclass
@@ -38,7 +39,7 @@ class ResourceLockingWorkflowInput:
     should_continue_as_new: bool
 
     # Used to transfer resource ownership between iterations during continue_as_new
-    already_assigned_resource: Optional[AcquireResponse]
+    already_acquired_resource: Optional[AcquiredResource] = field(default=None)
 
 
 class FailWorkflowException(Exception):
@@ -51,53 +52,13 @@ MAX_RESOURCE_WAIT_TIME = timedelta(minutes=5)
 
 @workflow.defn(failure_exception_types=[FailWorkflowException])
 class ResourceLockingWorkflow:
-    def __init__(self):
-        self.assigned_resource: Optional[AcquireResponse] = None
-
-    @workflow.signal(name="assign_resource")
-    def handle_assign_resource(self, input: AcquireResponse):
-        self.assigned_resource = input
-
     @workflow.run
     async def run(self, input: ResourceLockingWorkflowInput):
-        if has_timeout(workflow.info().run_timeout):
-            # See "locking" comment below for rationale
-            raise FailWorkflowException(
-                f"ResourceLockingWorkflow cannot have a run_timeout (found {workflow.info().run_timeout})"
-            )
-        if has_timeout(workflow.info().execution_timeout):
-            raise FailWorkflowException(
-                f"ResourceLockingWorkflow cannot have an execution_timeout (found {workflow.info().execution_timeout})"
-            )
-
-        sem_handle = workflow.get_external_workflow_handle(LOCK_MANAGER_WORKFLOW_ID)
-
-        info = workflow.info()
-        if input.already_assigned_resource is None:
-            await sem_handle.signal("acquire_resource", AcquireRequest(info.workflow_id))
-        elif info.continued_run_id:
-            self.assigned_resource = input.already_assigned_resource
-        else:
-            raise FailWorkflowException(
-                f"Only set 'already_assigned_resource' when using continue_as_new"
-            )
-
-        await workflow.wait_condition(
-            lambda: self.assigned_resource is not None, timeout=MAX_RESOURCE_WAIT_TIME
-        )
-        if self.assigned_resource is None:
-            raise FailWorkflowException(
-                f"No resource was assigned after {MAX_RESOURCE_WAIT_TIME}"
-            )
-
-        # From this point forward, we own the resource. Note that this is a lock, not a lease! Our finally block will
-        # release the resource if an activity fails. This is why we asserted the lack of workflow-level timeouts
-        # above - the finally block wouldn't run if there was a timeout.
-        try:
+        async with ResourceAllocator.acquire_resource(already_acquired_resource=input.already_acquired_resource) as resource:
             for iteration in ["first", "second", "third"]:
                 await workflow.execute_activity(
                     use_resource,
-                    UseResourceActivityInput(self.assigned_resource.resource, iteration),
+                    UseResourceActivityInput(resource.resource, iteration),
                     start_to_close_timeout=timedelta(seconds=10),
                 )
 
@@ -111,17 +72,11 @@ class ResourceLockingWorkflow:
                 next_input = ResourceLockingWorkflowInput(
                     iteration_to_fail_after=input.iteration_to_fail_after,
                     should_continue_as_new=False,
-                    already_assigned_resource=self.assigned_resource,
+                    already_acquired_resource=resource,
                 )
-                workflow.continue_as_new(next_input)
-        finally:
-            # Only release the resource if we didn't continue-as-new. workflow.continue_as_new raises to halt workflow
-            # execution, but this code in this finally block will still run. It wouldn't successfully send the signal...
-            # the if statement just avoids some warnings in the log.
-            if not input.should_continue_as_new:
-                await sem_handle.signal(self.assigned_resource.release_signal_name)
 
-def has_timeout(timeout: Optional[timedelta]) -> bool:
-    # After continue_as_new, timeouts are 0, even if they were None before continue_as_new (and were not set in the
-    # continue_as_new call).
-    return timeout is not None and timeout > timedelta(0)
+                # By default, ResourceAllocator will release the resource when we return. We want to hold the resource
+                # across continue-as-new for the sake of demonstration.
+                resource.autorelease = False
+
+                workflow.continue_as_new(next_input)

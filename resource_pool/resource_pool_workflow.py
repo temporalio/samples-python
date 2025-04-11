@@ -23,7 +23,7 @@ class ResourcePoolWorkflowInput:
 @workflow.defn
 class ResourcePoolWorkflow:
     @workflow.init
-    def __init__(self, input: ResourcePoolWorkflowInput):
+    def __init__(self, input: ResourcePoolWorkflowInput) -> None:
         self.resources = input.resources
         self.waiters = input.waiters
         self.release_signal_to_resource: dict[str, str] = {}
@@ -32,7 +32,7 @@ class ResourcePoolWorkflow:
                 self.release_signal_to_resource[holder.release_signal] = resource
 
     @workflow.signal
-    async def add_resources(self, resources: list[str]):
+    async def add_resources(self, resources: list[str]) -> None:
         for resource in resources:
             if resource in self.resources:
                 workflow.logger.warning(
@@ -46,7 +46,7 @@ class ResourcePoolWorkflow:
                 await self.assign_resource(resource, next_holder)
 
     @workflow.signal
-    async def acquire_resource(self, request: AcquireRequest):
+    async def acquire_resource(self, request: AcquireRequest) -> None:
         internal_request = InternalAcquireRequest(
             workflow_id=request.workflow_id, release_signal=None
         )
@@ -65,7 +65,7 @@ class ResourcePoolWorkflow:
 
     async def assign_resource(
         self, resource: str, internal_request: InternalAcquireRequest
-    ):
+    ) -> None:
         self.resources[resource] = internal_request
         workflow.logger.info(
             f"workflow_id={internal_request.workflow_id} acquired resource {resource}"
@@ -82,7 +82,7 @@ class ResourcePoolWorkflow:
         )
 
     @workflow.signal(dynamic=True)
-    async def release_resource(self, signal_name, *args):
+    async def release_resource(self, signal_name, *args) -> None:
         if not signal_name in self.release_signal_to_resource:
             workflow.logger.warning(
                 f"Ignoring unknown signal: {signal_name} was not a valid release signal."

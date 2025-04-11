@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from datetime import timedelta
-from typing import Optional
+from typing import AsyncGenerator, Optional
 
 from temporalio import activity, workflow
 from temporalio.client import Client
@@ -20,7 +20,7 @@ from resource_pool.shared import (
 
 # Use this class in workflow code that that needs to run on locked resources.
 class ResourceAllocator:
-    def __init__(self, client: Client):
+    def __init__(self, client: Client) -> None:
         self.client = client
 
     @activity.defn
@@ -48,13 +48,13 @@ class ResourceAllocator:
         *,
         already_acquired_resource: Optional[AcquiredResource] = None,
         max_wait_time: timedelta = timedelta(minutes=5),
-    ):
+    ) -> AsyncGenerator[AcquiredResource, None]:
         warn_when_workflow_has_timeouts()
 
         resource = already_acquired_resource
         if resource is None:
 
-            async def assign_resource(input: AcquireResponse):
+            async def assign_resource(input: AcquireResponse) -> None:
                 workflow.set_signal_handler("assign_resource", None)
                 nonlocal resource
                 resource = AcquiredResource(
@@ -91,7 +91,7 @@ class ResourceAllocator:
                 await handle.signal(resource.release_signal_name)
 
 
-def warn_when_workflow_has_timeouts():
+def warn_when_workflow_has_timeouts() -> None:
     if has_timeout(workflow.info().run_timeout):
         workflow.logger.warning(
             f"ResourceLockingWorkflow cannot have a run_timeout (found {workflow.info().run_timeout}) - this will leak locks"

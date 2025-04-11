@@ -9,7 +9,7 @@ from resource_pool.resource_pool_workflow import ResourcePoolWorkflow
 from resource_pool.resource_user_workflow import ResourceUserWorkflow, use_resource
 
 
-async def main():
+async def main() -> None:
     logging.basicConfig(level=logging.INFO)
 
     # Start client

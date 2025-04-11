@@ -15,7 +15,7 @@ from resource_pool.resource_user_workflow import (
 from resource_pool.shared import RESOURCE_POOL_WORKFLOW_ID
 
 
-async def main():
+async def main() -> None:
     # Connect client
     client = await Client.connect("localhost:7233")
 

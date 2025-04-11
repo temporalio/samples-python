@@ -51,7 +51,7 @@ MAX_RESOURCE_WAIT_TIME = timedelta(minutes=5)
 @workflow.defn(failure_exception_types=[FailWorkflowException])
 class ResourceUserWorkflow:
     @workflow.run
-    async def run(self, input: ResourceUserWorkflowInput):
+    async def run(self, input: ResourceUserWorkflowInput) -> None:
         async with ResourceAllocator.acquire_resource(
             already_acquired_resource=input.already_acquired_resource
         ) as resource:

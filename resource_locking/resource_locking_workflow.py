@@ -60,7 +60,7 @@ class ResourceLockingWorkflow:
         async with ResourceAllocator.acquire_resource(
             already_acquired_resource=input.already_acquired_resource
         ) as resource:
-            for iteration in ["first", "second", "third"]:
+            for iteration in ["first", "second"]:
                 await workflow.execute_activity(
                     use_resource,
                     UseResourceActivityInput(resource.resource, iteration),

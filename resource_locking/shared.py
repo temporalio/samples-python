@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import Optional
 
 LOCK_MANAGER_WORKFLOW_ID = "lock_manager"
 

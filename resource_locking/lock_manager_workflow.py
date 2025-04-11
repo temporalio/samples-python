@@ -43,7 +43,7 @@ class LockManagerWorkflow:
             self.resources[resource] = None
             if len(self.waiters) > 0:
                 next_holder = self.waiters.pop(0)
-                await self.allocate_resource(resource, next_holder)
+                await self.assign_resource(resource, next_holder)
 
     @workflow.signal
     async def acquire_resource(self, request: AcquireRequest):
@@ -54,7 +54,7 @@ class LockManagerWorkflow:
         for resource, holder in self.resources.items():
             # Naively give out the first free resource, if we have one
             if holder is None:
-                await self.allocate_resource(resource, internal_request)
+                await self.assign_resource(resource, internal_request)
                 return
 
         # Otherwise queue the request
@@ -63,7 +63,7 @@ class LockManagerWorkflow:
             f"workflow_id={request.workflow_id} is waiting for a resource"
         )
 
-    async def allocate_resource(
+    async def assign_resource(
         self, resource: str, internal_request: InternalAcquireRequest
     ):
         self.resources[resource] = internal_request
@@ -108,7 +108,7 @@ class LockManagerWorkflow:
         # If there are queued requests, assign the resource to the next one
         if len(self.waiters) > 0:
             next_holder = self.waiters.pop(0)
-            await self.allocate_resource(resource, next_holder)
+            await self.assign_resource(resource, next_holder)
 
     @workflow.query
     def get_current_holders(self) -> dict[str, Optional[InternalAcquireRequest]]:

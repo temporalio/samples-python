@@ -7,7 +7,7 @@ from temporalio.client import Client, WorkflowFailureError, WorkflowHandle
 from temporalio.common import WorkflowIDConflictPolicy
 from temporalio.worker import Worker
 
-from resource_pool.resource_allocator import ResourceAllocator
+from resource_pool.resource_pool_client import ResourcePoolClient
 from resource_pool.resource_pool_workflow import (
     ResourcePoolWorkflow,
     ResourcePoolWorkflowInput,
@@ -35,13 +35,11 @@ async def test_resource_locking_workflow(client: Client):
         await asyncio.sleep(0.05)
         resource_usage[input.resource].append((workflow_id, "end"))
 
-    resource_allocator = ResourceAllocator(client)
-
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
         workflows=[ResourcePoolWorkflow, ResourceUserWorkflow],
-        activities=[use_resource_mock, resource_allocator.send_acquire_signal],
+        activities=[use_resource_mock],
     ):
         await run_all_workflows(client)
 
@@ -74,9 +72,21 @@ async def test_resource_locking_workflow(client: Client):
 
 
 async def run_all_workflows(client: Client):
+    resource_pool_handle = await client.start_workflow(
+        workflow=ResourcePoolWorkflow.run,
+        arg=ResourcePoolWorkflowInput(
+            resources={"r_a": None, "r_b": None, "r_c": None},
+            waiters=[],
+        ),
+        id=RESOURCE_POOL_WORKFLOW_ID,
+        task_queue="default",
+        id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
+    )
+
     resource_user_handles: list[WorkflowHandle[Any, Any]] = []
     for i in range(0, 8):
         input = ResourceUserWorkflowInput(
+            resource_pool_workflow_id=RESOURCE_POOL_WORKFLOW_ID,
             iteration_to_fail_after=None,
             should_continue_as_new=False,
         )
@@ -92,20 +102,6 @@ async def run_all_workflows(client: Client):
             task_queue=TASK_QUEUE,
         )
         resource_user_handles.append(handle)
-
-    # Add some resources
-    resource_pool_handle = await client.start_workflow(
-        workflow=ResourcePoolWorkflow.run,
-        arg=ResourcePoolWorkflowInput(
-            resources={},
-            waiters=[],
-        ),
-        id=RESOURCE_POOL_WORKFLOW_ID,
-        task_queue="default",
-        id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
-        start_signal="add_resources",
-        start_signal_args=[["r_a", "r_b", "r_c"]],
-    )
 
     for handle in resource_user_handles:
         try:

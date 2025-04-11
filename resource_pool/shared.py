@@ -10,10 +10,22 @@ class AcquireRequest:
 
 @dataclass
 class AcquireResponse:
-    release_signal_name: str
+    release_key: str
     resource: str
 
 
 @dataclass
-class AcquiredResource(AcquireResponse):
-    autorelease: bool = field(default=True)
+class DetachedResource:
+    resource: str
+    release_key: str
+
+
+@dataclass
+class AcquiredResource:
+    resource: str
+    release_key: str
+    detached: bool = field(default=False)
+
+    def detach(self) -> DetachedResource:
+        self.detached = True
+        return DetachedResource(resource=self.resource, release_key=self.release_key)

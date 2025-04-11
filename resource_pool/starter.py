@@ -19,10 +19,23 @@ async def main() -> None:
     # Connect client
     client = await Client.connect("localhost:7233")
 
+    # Initialize the resource pool
+    resource_pool_handle = await client.start_workflow(
+        workflow=ResourcePoolWorkflow.run,
+        arg=ResourcePoolWorkflowInput(
+            resources={"resource_a": None, "resource_b": None},
+            waiters=[],
+        ),
+        id=RESOURCE_POOL_WORKFLOW_ID,
+        task_queue="default",
+        id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
+    )
+
     # Start the ResourceUserWorkflows
     resource_user_handles: list[WorkflowHandle[Any, Any]] = []
     for i in range(0, 4):
         input = ResourceUserWorkflowInput(
+            resource_pool_workflow_id=RESOURCE_POOL_WORKFLOW_ID,
             iteration_to_fail_after=None,
             should_continue_as_new=False,
         )
@@ -38,20 +51,6 @@ async def main() -> None:
             task_queue="default",
         )
         resource_user_handles.append(handle)
-
-    # Add some resources
-    resource_pool_handle = await client.start_workflow(
-        workflow=ResourcePoolWorkflow.run,
-        arg=ResourcePoolWorkflowInput(
-            resources={},
-            waiters=[],
-        ),
-        id=RESOURCE_POOL_WORKFLOW_ID,
-        task_queue="default",
-        id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
-        start_signal="add_resources",
-        start_signal_args=[["resource_a", "resource_b"]],
-    )
 
     for handle in resource_user_handles:
         try:

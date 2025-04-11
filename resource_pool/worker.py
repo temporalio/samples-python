@@ -4,9 +4,10 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from resource_pool.resource_allocator import ResourceAllocator
+from resource_pool.resource_pool_client import ResourcePoolClient
 from resource_pool.resource_pool_workflow import ResourcePoolWorkflow
 from resource_pool.resource_user_workflow import ResourceUserWorkflow, use_resource
+from resource_pool.shared import RESOURCE_POOL_WORKFLOW_ID
 
 
 async def main() -> None:
@@ -15,8 +16,6 @@ async def main() -> None:
     # Start client
     client = await Client.connect("localhost:7233")
 
-    resource_allocator = ResourceAllocator(client)
-
     # Run a worker for the workflow
     worker = Worker(
         client,
@@ -24,7 +23,6 @@ async def main() -> None:
         workflows=[ResourcePoolWorkflow, ResourceUserWorkflow],
         activities=[
             use_resource,
-            resource_allocator.send_acquire_signal,
         ],
     )
 

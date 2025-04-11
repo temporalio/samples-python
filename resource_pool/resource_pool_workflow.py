@@ -26,10 +26,11 @@ class ResourcePoolWorkflow:
     def __init__(self, input: ResourcePoolWorkflowInput) -> None:
         self.resources = input.resources
         self.waiters = input.waiters
-        self.release_signal_to_resource: dict[str, str] = {}
+        self.release_key_to_resource: dict[str, str] = {}
+
         for resource, holder in self.resources.items():
             if holder is not None and holder.release_signal is not None:
-                self.release_signal_to_resource[holder.release_signal] = resource
+                self.release_key_to_resource[holder.release_signal] = resource
 
     @workflow.signal
     async def add_resources(self, resources: list[str]) -> None:
@@ -39,57 +40,25 @@ class ResourcePoolWorkflow:
                     f"Ignoring attempt to add already-existing resource: {resource}"
                 )
                 continue
-
-            self.resources[resource] = None
-            if len(self.waiters) > 0:
-                next_holder = self.waiters.pop(0)
-                await self.assign_resource(resource, next_holder)
+            else:
+                self.resources[resource] = None
 
     @workflow.signal
     async def acquire_resource(self, request: AcquireRequest) -> None:
-        internal_request = InternalAcquireRequest(
-            workflow_id=request.workflow_id, release_signal=None
+        self.waiters.append(
+            InternalAcquireRequest(workflow_id=request.workflow_id, release_signal=None)
         )
-
-        for resource, holder in self.resources.items():
-            # Naively give out the first free resource, if we have one
-            if holder is None:
-                await self.assign_resource(resource, internal_request)
-                return
-
-        # Otherwise queue the request
-        self.waiters.append(internal_request)
         workflow.logger.info(
             f"workflow_id={request.workflow_id} is waiting for a resource"
         )
 
-    async def assign_resource(
-        self, resource: str, internal_request: InternalAcquireRequest
-    ) -> None:
-        self.resources[resource] = internal_request
-        workflow.logger.info(
-            f"workflow_id={internal_request.workflow_id} acquired resource {resource}"
-        )
-        internal_request.release_signal = str(workflow.uuid4())
-        self.release_signal_to_resource[internal_request.release_signal] = resource
-
-        requester = workflow.get_external_workflow_handle(internal_request.workflow_id)
-        await requester.signal(
-            "assign_resource",
-            AcquireResponse(
-                release_signal_name=internal_request.release_signal, resource=resource
-            ),
-        )
-
-    @workflow.signal(dynamic=True)
-    async def release_resource(self, signal_name, *args) -> None:
-        if not signal_name in self.release_signal_to_resource:
-            workflow.logger.warning(
-                f"Ignoring unknown signal: {signal_name} was not a valid release signal."
-            )
+    @workflow.signal()
+    async def release_resource(self, acquire_response: AcquireResponse) -> None:
+        release_key = acquire_response.release_key
+        resource = self.release_key_to_resource.get(release_key)
+        if resource is None:
+            workflow.logger.warning(f"Ignoring unknown release_key: {release_key}")
             return
-
-        resource = self.release_signal_to_resource[signal_name]
 
         holder = self.resources[resource]
         if holder is None:
@@ -103,28 +72,71 @@ class ResourcePoolWorkflow:
             f"workflow_id={holder.workflow_id} released resource {resource}"
         )
         self.resources[resource] = None
-        del self.release_signal_to_resource[signal_name]
-
-        # If there are queued requests, assign the resource to the next one
-        if len(self.waiters) > 0:
-            next_holder = self.waiters.pop(0)
-            await self.assign_resource(resource, next_holder)
+        del self.release_key_to_resource[release_key]
 
     @workflow.query
     def get_current_holders(self) -> dict[str, Optional[InternalAcquireRequest]]:
-        return {k: v if v else None for k, v in self.resources.items()}
+        return self.resources
+
+    async def assign_resource(
+        self, resource: str, internal_request: InternalAcquireRequest
+    ) -> None:
+        self.resources[resource] = internal_request
+        workflow.logger.info(
+            f"workflow_id={internal_request.workflow_id} acquired resource {resource}"
+        )
+        internal_request.release_signal = str(workflow.uuid4())
+        self.release_key_to_resource[internal_request.release_signal] = resource
+
+        requester = workflow.get_external_workflow_handle(internal_request.workflow_id)
+        await requester.signal(
+            "assign_resource",
+            AcquireResponse(
+                release_key=internal_request.release_signal, resource=resource
+            ),
+        )
+
+    async def assign_next_resource(self) -> bool:
+        if len(self.waiters) == 0:
+            return False
+
+        next_free_resource = self.get_free_resource()
+        if next_free_resource is None:
+            return False
+
+        next_waiter = self.waiters.pop(0)
+        await self.assign_resource(next_free_resource, next_waiter)
+        return True
+
+    def get_free_resource(self) -> Optional[str]:
+        return next(
+            (resource for resource, holder in self.resources.items() if holder is None),
+            None,
+        )
+
+    def can_assign_resource(self) -> bool:
+        return len(self.waiters) > 0 and self.get_free_resource() is not None
+
+    def should_continue_as_new(self) -> bool:
+        return (
+            workflow.info().is_continue_as_new_suggested()
+            and workflow.all_handlers_finished()
+        )
 
     @workflow.run
     async def run(self, _: ResourcePoolWorkflowInput) -> None:
-        # Continue as new either when temporal tells us to, or every 12 hours (so it occurs semi-frequently)
-        await workflow.wait_condition(
-            lambda: workflow.info().is_continue_as_new_suggested(),
-            timeout=timedelta(hours=12),
-        )
-
-        workflow.continue_as_new(
-            ResourcePoolWorkflowInput(
-                resources=self.resources,
-                waiters=self.waiters,
+        while True:
+            await workflow.wait_condition(
+                lambda: self.can_assign_resource() or self.should_continue_as_new()
             )
-        )
+
+            if await self.assign_next_resource():
+                continue
+
+            if self.should_continue_as_new():
+                workflow.continue_as_new(
+                    ResourcePoolWorkflowInput(
+                        resources=self.resources,
+                        waiters=self.waiters,
+                    )
+                )

@@ -5,8 +5,8 @@ from typing import Optional
 
 from temporalio import activity, workflow
 
-from resource_pool.resource_allocator import ResourceAllocator
-from resource_pool.shared import AcquiredResource
+from resource_pool.resource_pool_client import ResourcePoolClient
+from resource_pool.shared import AcquiredResource, DetachedResource
 
 
 @dataclass
@@ -29,6 +29,9 @@ async def use_resource(input: UseResourceActivityInput) -> None:
 
 @dataclass
 class ResourceUserWorkflowInput:
+    # The id of the resource pool workflow to request a resource from
+    resource_pool_workflow_id: str
+
     # If set, this workflow will fail after the "first" or "second" activity.
     iteration_to_fail_after: Optional[str]
 
@@ -37,7 +40,7 @@ class ResourceUserWorkflowInput:
     should_continue_as_new: bool
 
     # Used to transfer resource ownership between iterations during continue_as_new
-    already_acquired_resource: Optional[AcquiredResource] = field(default=None)
+    already_acquired_resource: Optional[DetachedResource] = field(default=None)
 
 
 class FailWorkflowException(Exception):
@@ -52,13 +55,15 @@ MAX_RESOURCE_WAIT_TIME = timedelta(minutes=5)
 class ResourceUserWorkflow:
     @workflow.run
     async def run(self, input: ResourceUserWorkflowInput) -> None:
-        async with ResourceAllocator.acquire_resource(
-            already_acquired_resource=input.already_acquired_resource
-        ) as resource:
+        pool_client = ResourcePoolClient(input.resource_pool_workflow_id)
+
+        async with pool_client.acquire_resource(
+            reattach=input.already_acquired_resource
+        ) as acquired_resource:
             for iteration in ["first", "second"]:
                 await workflow.execute_activity(
                     use_resource,
-                    UseResourceActivityInput(resource.resource, iteration),
+                    UseResourceActivityInput(acquired_resource.resource, iteration),
                     start_to_close_timeout=timedelta(seconds=10),
                 )
 
@@ -68,15 +73,16 @@ class ResourceUserWorkflow:
                     )
                     raise FailWorkflowException()
 
+            # This workflow only continues as new so it can demonstrate how to pass acquired resources across
+            # iterations. Ordinarily, such a short workflow would not use continue as new.
             if input.should_continue_as_new:
+                detached_resource = acquired_resource.detach()
+
                 next_input = ResourceUserWorkflowInput(
+                    resource_pool_workflow_id=input.resource_pool_workflow_id,
                     iteration_to_fail_after=input.iteration_to_fail_after,
                     should_continue_as_new=False,
-                    already_acquired_resource=resource,
+                    already_acquired_resource=detached_resource,
                 )
-
-                # By default, ResourceAllocator will release the resource when we return. We want to hold the resource
-                # across continue-as-new for the sake of demonstration.b
-                resource.autorelease = False
 
                 workflow.continue_as_new(next_input)

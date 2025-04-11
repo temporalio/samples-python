@@ -2,14 +2,17 @@ import asyncio
 from typing import Any
 
 from temporalio.client import Client, WorkflowFailureError, WorkflowHandle
+from temporalio.common import WorkflowIDConflictPolicy
 
-from resource_locking.lock_manager_workflow import LockManagerWorkflow, LockManagerWorkflowInput
+from resource_locking.lock_manager_workflow import (
+    LockManagerWorkflow,
+    LockManagerWorkflowInput,
+)
 from resource_locking.resource_locking_workflow import (
     ResourceLockingWorkflow,
     ResourceLockingWorkflowInput,
 )
 from resource_locking.shared import LOCK_MANAGER_WORKFLOW_ID
-from temporalio.common import WorkflowIDConflictPolicy
 
 
 async def main():

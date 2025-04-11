@@ -1,21 +1,24 @@
 import asyncio
 from dataclasses import dataclass, field
 from datetime import timedelta
-from typing import Optional, Callable
+from typing import Callable, Optional
 
 from temporalio import activity, workflow
 
 from resource_locking.resource_allocator import ResourceAllocator
 from resource_locking.shared import (
     LOCK_MANAGER_WORKFLOW_ID,
+    AcquiredResource,
     AcquireRequest,
-    AcquireResponse, AcquiredResource,
+    AcquireResponse,
 )
+
 
 @dataclass
 class UseResourceActivityInput:
     resource: str
     iteration: str
+
 
 @activity.defn
 async def use_resource(input: UseResourceActivityInput) -> None:
@@ -54,7 +57,9 @@ MAX_RESOURCE_WAIT_TIME = timedelta(minutes=5)
 class ResourceLockingWorkflow:
     @workflow.run
     async def run(self, input: ResourceLockingWorkflowInput):
-        async with ResourceAllocator.acquire_resource(already_acquired_resource=input.already_acquired_resource) as resource:
+        async with ResourceAllocator.acquire_resource(
+            already_acquired_resource=input.already_acquired_resource
+        ) as resource:
             for iteration in ["first", "second", "third"]:
                 await workflow.execute_activity(
                     use_resource,
@@ -76,7 +81,7 @@ class ResourceLockingWorkflow:
                 )
 
                 # By default, ResourceAllocator will release the resource when we return. We want to hold the resource
-                # across continue-as-new for the sake of demonstration.
+                # across continue-as-new for the sake of demonstration.b
                 resource.autorelease = False
 
                 workflow.continue_as_new(next_input)

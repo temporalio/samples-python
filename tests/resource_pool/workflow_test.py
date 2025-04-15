@@ -18,10 +18,10 @@ from resource_pool.resource_user_workflow import (
 )
 from resource_pool.shared import RESOURCE_POOL_WORKFLOW_ID
 
-TASK_QUEUE = "default"
+TASK_QUEUE = "resource_pool-task-queue"
 
 
-async def test_resource_locking_workflow(client: Client):
+async def test_resource_pool_workflow(client: Client):
     # key is resource, value is a description of resource usage
     resource_usage: defaultdict[str, list[Sequence[str]]] = defaultdict(list)
 
@@ -78,7 +78,7 @@ async def run_all_workflows(client: Client):
             waiters=[],
         ),
         id=RESOURCE_POOL_WORKFLOW_ID,
-        task_queue="default",
+        task_queue=TASK_QUEUE,
         id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
     )
 

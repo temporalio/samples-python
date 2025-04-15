@@ -17,7 +17,7 @@ async def main() -> None:
     # Run a worker for the workflow
     worker = Worker(
         client,
-        task_queue="default",
+        task_queue="resource_pool-task-queue",
         workflows=[ResourcePoolWorkflow, ResourceUserWorkflow],
         activities=[
             use_resource,

@@ -27,7 +27,7 @@ async def main() -> None:
             waiters=[],
         ),
         id=RESOURCE_POOL_WORKFLOW_ID,
-        task_queue="default",
+        task_queue="resource_pool-task-queue",
         id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
     )
 
@@ -48,7 +48,7 @@ async def main() -> None:
             workflow=ResourceUserWorkflow.run,
             arg=input,
             id=f"resource-user-workflow-{i}",
-            task_queue="default",
+            task_queue="resource_pool-task-queue",
         )
         resource_user_handles.append(handle)
 

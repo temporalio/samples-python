@@ -38,7 +38,6 @@ class ResourcePoolWorkflow:
                 workflow.logger.warning(
                     f"Ignoring attempt to add already-existing resource: {resource}"
                 )
-                continue
             else:
                 self.resources[resource] = None
 
@@ -51,7 +50,7 @@ class ResourcePoolWorkflow:
             f"workflow_id={request.workflow_id} is waiting for a resource"
         )
 
-    @workflow.signal()
+    @workflow.signal
     async def release_resource(self, acquire_response: AcquireResponse) -> None:
         release_key = acquire_response.release_key
         resource = self.release_key_to_resource.get(release_key)
@@ -89,7 +88,7 @@ class ResourcePoolWorkflow:
 
         requester = workflow.get_external_workflow_handle(internal_request.workflow_id)
         await requester.signal(
-            "assign_resource",
+            f"assign_resource_{workflow.info().workflow_id}",
             AcquireResponse(
                 release_key=internal_request.release_signal, resource=resource
             ),

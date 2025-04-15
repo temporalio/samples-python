@@ -4,6 +4,7 @@ from typing import AsyncGenerator, Optional
 
 from temporalio import workflow
 
+from resource_pool.resource_pool_workflow import ResourcePoolWorkflow
 from resource_pool.shared import (
     AcquiredResource,
     AcquireRequest,
@@ -17,15 +18,30 @@ class ResourcePoolClient:
     def __init__(self, pool_workflow_id: str) -> None:
         self.pool_workflow_id = pool_workflow_id
         self.acquired_resources: list[AcquiredResource] = []
+        self.register_signal_handler()
+
+    def register_signal_handler(self) -> None:
+        signal_name = f"assign_resource_{self.pool_workflow_id}"
+        if workflow.get_signal_handler(signal_name) is None:
+            workflow.set_signal_handler(signal_name, self.assign_resource)
+        else:
+            raise RuntimeError(
+                f"{signal_name} already registered - if you use multiple ResourcePoolClients within the "
+                f"same workflow, they must use different pool_workflow_ids"
+            )
 
     async def send_acquire_signal(self) -> None:
-        handle = workflow.get_external_workflow_handle(self.pool_workflow_id)
+        handle = workflow.get_external_workflow_handle_for(
+            ResourcePoolWorkflow.run, self.pool_workflow_id
+        )
         await handle.signal(
             "acquire_resource", AcquireRequest(workflow.info().workflow_id)
         )
 
     async def send_release_signal(self, acquired_resource: AcquiredResource) -> None:
-        handle = workflow.get_external_workflow_handle(self.pool_workflow_id)
+        handle = workflow.get_external_workflow_handle_for(
+            ResourcePoolWorkflow.run, self.pool_workflow_id
+        )
         await handle.signal(
             "release_resource",
             AcquireResponse(
@@ -33,10 +49,6 @@ class ResourcePoolClient:
                 release_key=acquired_resource.release_key,
             ),
         )
-
-    def lazy_register_signal_handler(self) -> None:
-        if workflow.get_signal_handler("assign_resource") is None:
-            workflow.set_signal_handler("assign_resource", self.assign_resource)
 
     def assign_resource(self, response: AcquireResponse) -> None:
         self.acquired_resources.append(
@@ -52,8 +64,7 @@ class ResourcePoolClient:
         reattach: Optional[DetachedResource] = None,
         max_wait_time: timedelta = timedelta(minutes=5),
     ) -> AsyncGenerator[AcquiredResource, None]:
-        warn_when_workflow_has_timeouts()
-        self.lazy_register_signal_handler()
+        _warn_when_workflow_has_timeouts()
 
         if reattach is None:
             await self.send_acquire_signal()
@@ -80,7 +91,12 @@ class ResourcePoolClient:
                 await self.send_release_signal(resource)
 
 
-def warn_when_workflow_has_timeouts() -> None:
+def _warn_when_workflow_has_timeouts() -> None:
+    def has_timeout(timeout: Optional[timedelta]) -> bool:
+        # After continue_as_new, timeouts are 0, even if they were None before continue_as_new (and were not set in the
+        # continue_as_new call).
+        return timeout is not None and timeout > timedelta(0)
+
     if has_timeout(workflow.info().run_timeout):
         workflow.logger.warning(
             f"ResourceLockingWorkflow cannot have a run_timeout (found {workflow.info().run_timeout}) - this will leak locks"
@@ -89,9 +105,3 @@ def warn_when_workflow_has_timeouts() -> None:
         workflow.logger.warning(
             f"ResourceLockingWorkflow cannot have an execution_timeout (found {workflow.info().execution_timeout}) - this will leak locks"
         )
-
-
-def has_timeout(timeout: Optional[timedelta]) -> bool:
-    # After continue_as_new, timeouts are 0, even if they were None before continue_as_new (and were not set in the
-    # continue_as_new call).
-    return timeout is not None and timeout > timedelta(0)

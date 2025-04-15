@@ -31,18 +31,14 @@ class ResourcePoolClient:
             )
 
     async def send_acquire_signal(self) -> None:
-        handle = workflow.get_external_workflow_handle_for(
+        await workflow.get_external_workflow_handle_for(
             ResourcePoolWorkflow.run, self.pool_workflow_id
-        )
-        await handle.signal(
-            "acquire_resource", AcquireRequest(workflow.info().workflow_id)
-        )
+        ).signal("acquire_resource", AcquireRequest(workflow.info().workflow_id))
 
     async def send_release_signal(self, acquired_resource: AcquiredResource) -> None:
-        handle = workflow.get_external_workflow_handle_for(
+        await workflow.get_external_workflow_handle_for(
             ResourcePoolWorkflow.run, self.pool_workflow_id
-        )
-        await handle.signal(
+        ).signal(
             "release_resource",
             AcquireResponse(
                 resource=acquired_resource.resource,

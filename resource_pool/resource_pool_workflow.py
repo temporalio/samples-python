@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from temporalio import workflow
+from temporalio.exceptions import ApplicationError
 
 from resource_pool.shared import AcquireRequest, AcquireResponse
 
@@ -79,20 +80,28 @@ class ResourcePoolWorkflow:
     async def assign_resource(
         self, resource: str, internal_request: InternalAcquireRequest
     ) -> None:
-        self.resources[resource] = internal_request
         workflow.logger.info(
             f"workflow_id={internal_request.workflow_id} acquired resource {resource}"
         )
-        internal_request.release_signal = str(workflow.uuid4())
-        self.release_key_to_resource[internal_request.release_signal] = resource
 
         requester = workflow.get_external_workflow_handle(internal_request.workflow_id)
-        await requester.signal(
-            f"assign_resource_{workflow.info().workflow_id}",
-            AcquireResponse(
-                release_key=internal_request.release_signal, resource=resource
-            ),
-        )
+        try:
+            release_signal = str(workflow.uuid4())
+            await requester.signal(
+                f"assign_resource_{workflow.info().workflow_id}",
+                AcquireResponse(release_key=release_signal, resource=resource),
+            )
+
+            internal_request.release_signal = release_signal
+            self.resources[resource] = internal_request
+            self.release_key_to_resource[release_signal] = resource
+        except ApplicationError as e:
+            if e.type == "ExternalWorkflowExecutionNotFound":
+                workflow.logger.info(
+                    f"Could not assign resource {resource} to {internal_request.workflow_id}: {e.message}"
+                )
+            else:
+                raise e
 
     async def assign_next_resource(self) -> bool:
         if len(self.waiters) == 0:

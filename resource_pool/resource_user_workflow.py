@@ -5,7 +5,7 @@ from typing import Optional
 
 from temporalio import activity, workflow
 
-from resource_pool.resource_pool_client import ResourcePoolClient
+from resource_pool.pool_client import ResourcePoolClient
 from resource_pool.shared import DetachedResource
 
 

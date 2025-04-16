@@ -4,7 +4,7 @@ from typing import AsyncGenerator, Optional
 
 from temporalio import workflow
 
-from resource_pool.resource_pool_workflow import ResourcePoolWorkflow
+from resource_pool.pool_client.resource_pool_workflow import ResourcePoolWorkflow
 from resource_pool.shared import (
     AcquiredResource,
     AcquireRequest,
@@ -18,24 +18,29 @@ class ResourcePoolClient:
     def __init__(self, pool_workflow_id: str) -> None:
         self.pool_workflow_id = pool_workflow_id
         self.acquired_resources: list[AcquiredResource] = []
-        self.register_signal_handler()
 
-    def register_signal_handler(self) -> None:
         signal_name = f"assign_resource_{self.pool_workflow_id}"
         if workflow.get_signal_handler(signal_name) is None:
-            workflow.set_signal_handler(signal_name, self.assign_resource)
+            workflow.set_signal_handler(signal_name, self._handle_acquire_response)
         else:
             raise RuntimeError(
                 f"{signal_name} already registered - if you use multiple ResourcePoolClients within the "
                 f"same workflow, they must use different pool_workflow_ids"
             )
 
-    async def send_acquire_signal(self) -> None:
+    def _handle_acquire_response(self, response: AcquireResponse) -> None:
+        self.acquired_resources.append(
+            AcquiredResource(
+                resource=response.resource, release_key=response.release_key
+            )
+        )
+
+    async def _send_acquire_signal(self) -> None:
         await workflow.get_external_workflow_handle_for(
             ResourcePoolWorkflow.run, self.pool_workflow_id
         ).signal("acquire_resource", AcquireRequest(workflow.info().workflow_id))
 
-    async def send_release_signal(self, acquired_resource: AcquiredResource) -> None:
+    async def _send_release_signal(self, acquired_resource: AcquiredResource) -> None:
         await workflow.get_external_workflow_handle_for(
             ResourcePoolWorkflow.run, self.pool_workflow_id
         ).signal(
@@ -44,13 +49,6 @@ class ResourcePoolClient:
                 resource=acquired_resource.resource,
                 release_key=acquired_resource.release_key,
             ),
-        )
-
-    def assign_resource(self, response: AcquireResponse) -> None:
-        self.acquired_resources.append(
-            AcquiredResource(
-                resource=response.resource, release_key=response.release_key
-            )
         )
 
     @asynccontextmanager
@@ -63,7 +61,7 @@ class ResourcePoolClient:
         _warn_when_workflow_has_timeouts()
 
         if reattach is None:
-            await self.send_acquire_signal()
+            await self._send_acquire_signal()
             await workflow.wait_condition(
                 lambda: len(self.acquired_resources) > 0, timeout=max_wait_time
             )
@@ -84,7 +82,7 @@ class ResourcePoolClient:
             yield resource
         finally:
             if not resource.detached:
-                await self.send_release_signal(resource)
+                await self._send_release_signal(resource)
 
 
 def _warn_when_workflow_has_timeouts() -> None:

@@ -7,7 +7,7 @@ from temporalio.client import Client, WorkflowFailureError, WorkflowHandle
 from temporalio.common import WorkflowIDConflictPolicy
 from temporalio.worker import Worker
 
-from resource_pool.resource_pool_workflow import (
+from resource_pool.pool_client.resource_pool_workflow import (
     ResourcePoolWorkflow,
     ResourcePoolWorkflowInput,
 )

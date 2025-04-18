@@ -1,7 +1,9 @@
 import asyncio
+import time
 from concurrent.futures import ThreadPoolExecutor
+from datetime import timedelta
 
-from temporalio import activity
+from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 from temporalio.worker import (
@@ -10,6 +12,31 @@ from temporalio.worker import (
     Interceptor,
     Worker,
 )
+
+
+@activity.defn
+def print_message():
+    print("In the activity.")
+    time.sleep(1)
+
+
+@workflow.defn
+class ExecuteActivityWorkflow:
+
+    @workflow.run
+    async def run(self):
+        # Request two concurrent activities with only one task slot so
+        # we can see nontrivial schedule to start times.
+        activity1 = workflow.execute_activity(
+            print_message,
+            start_to_close_timeout=timedelta(seconds=5),
+        )
+        activity2 = workflow.execute_activity(
+            print_message,
+            start_to_close_timeout=timedelta(seconds=5),
+        )
+        await asyncio.gather(activity1, activity2)
+        return None
 
 
 class SimpleWorkerInterceptor(Interceptor):
@@ -43,11 +70,6 @@ class CustomScheduleToStartInterceptor(ActivityInboundInterceptor):
         return await self.next.execute_activity(input)
 
 
-@activity.defn
-def print_message():
-    print("in the activity")
-
-
 async def main():
     runtime = Runtime(
         telemetry=TelemetryConfig(metrics=PrometheusConfig(bind_address="0.0.0.0:9090"))
@@ -59,9 +81,13 @@ async def main():
     worker = Worker(
         client,
         task_queue="custom-metric-task-queue",
-        activities=[print_message],
-        activity_executor=ThreadPoolExecutor(5),
         interceptors=[SimpleWorkerInterceptor()],
+        workflows=[ExecuteActivityWorkflow],
+        activities=[print_message],
+        # only one activity executor with two concurrently scheduled activities
+        # to force a nontrivial schedule to start times
+        activity_executor=ThreadPoolExecutor(1),
+        max_concurrent_activities=1,
     )
 
     await worker.run()

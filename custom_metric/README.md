@@ -1,5 +1,10 @@
 # Custom Metric
 
+This sample deminstrates two things: how to make a custom metric, and how to use an interceptor.
+The custom metric in this sample shows how to make an activity schedule-to-start-latency with a workflow type tag.
+
+Please see the top-level README for prerequisites such as Python, uv, starting the local temporal development server, etc.
+
 1. Run the server with `temporal server start-dev`
 2. Run the client with `uv run custom_metric/client.py`
 3. Run the workflow worker with `uv run custom_metric/workflow_worker.py`

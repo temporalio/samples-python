@@ -1,5 +1,6 @@
 import asyncio
 
+import xray
 from temporalio import workflow
 
 from hello_nexus.service.interface import (
@@ -14,6 +15,7 @@ class HelloWorkflow:
     Workflow that backs the `hello` operation.
     """
 
+    @xray.start_as_current_workflow_method_span()
     @workflow.run
     async def run(self, input: HelloInput) -> HelloOutput:
         await asyncio.sleep(1)  # so that it can be cancelled

@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import xray
 from temporalio import workflow
 from temporalio.exceptions import FailureError
 from temporalio.workflow import NexusClient
@@ -24,6 +25,7 @@ class CallerWorkflowBase:
 
 @workflow.defn
 class EchoCallerWorkflow(CallerWorkflowBase):
+    @xray.start_as_current_workflow_method_span()
     @workflow.run
     async def run(self, message: str) -> EchoOutput:
         op_output = await self.nexus_client.execute_operation(
@@ -35,6 +37,7 @@ class EchoCallerWorkflow(CallerWorkflowBase):
 
 @workflow.defn
 class Echo2CallerWorkflow(CallerWorkflowBase):
+    @xray.start_as_current_workflow_method_span()
     @workflow.run
     async def run(self, message: str) -> EchoOutput:
         op_output = await self.nexus_client.execute_operation(
@@ -46,6 +49,7 @@ class Echo2CallerWorkflow(CallerWorkflowBase):
 
 @workflow.defn
 class Echo3CallerWorkflow(CallerWorkflowBase):
+    @xray.start_as_current_workflow_method_span()
     @workflow.run
     async def run(self, message: str) -> EchoOutput:
         op_output = await self.nexus_client.execute_operation(
@@ -57,6 +61,7 @@ class Echo3CallerWorkflow(CallerWorkflowBase):
 
 @workflow.defn
 class HelloCallerWorkflow(CallerWorkflowBase):
+    @xray.start_as_current_workflow_method_span()
     @workflow.run
     async def run(self, name: str) -> HelloOutput:
         handle = await self.nexus_client.start_operation(
@@ -78,6 +83,7 @@ class HelloCallerWorkflow(CallerWorkflowBase):
 
 @workflow.defn
 class Hello2CallerWorkflow(CallerWorkflowBase):
+    @xray.start_as_current_workflow_method_span()
     @workflow.run
     async def run(self, name: str) -> HelloOutput:
         handle = await self.nexus_client.start_operation(
@@ -89,6 +95,7 @@ class Hello2CallerWorkflow(CallerWorkflowBase):
 
 @workflow.defn
 class Hello3CallerWorkflow(CallerWorkflowBase):
+    @xray.start_as_current_workflow_method_span()
     @workflow.run
     async def run(self, name: str) -> HelloOutput:
         handle = await self.nexus_client.start_operation(

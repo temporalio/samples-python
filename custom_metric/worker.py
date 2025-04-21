@@ -1,9 +1,7 @@
 import asyncio
-import time
 from concurrent.futures import ThreadPoolExecutor
-from datetime import timedelta
 
-from temporalio import activity, workflow
+from temporalio import activity
 from temporalio.client import Client
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 from temporalio.worker import (
@@ -13,30 +11,8 @@ from temporalio.worker import (
     Worker,
 )
 
-
-@activity.defn
-def print_message():
-    print("In the activity.")
-    time.sleep(1)
-
-
-@workflow.defn
-class ExecuteActivityWorkflow:
-
-    @workflow.run
-    async def run(self):
-        # Request two concurrent activities with only one task slot so
-        # we can see nontrivial schedule to start times.
-        activity1 = workflow.execute_activity(
-            print_message,
-            start_to_close_timeout=timedelta(seconds=5),
-        )
-        activity2 = workflow.execute_activity(
-            print_message,
-            start_to_close_timeout=timedelta(seconds=5),
-        )
-        await asyncio.gather(activity1, activity2)
-        return None
+from custom_metric.activity import print_and_sleep
+from custom_metric.workflow import StartTwoActivitiesWorkflow
 
 
 class SimpleWorkerInterceptor(Interceptor):
@@ -82,8 +58,8 @@ async def main():
         client,
         task_queue="custom-metric-task-queue",
         interceptors=[SimpleWorkerInterceptor()],
-        workflows=[ExecuteActivityWorkflow],
-        activities=[print_message],
+        workflows=[StartTwoActivitiesWorkflow],
+        activities=[print_and_sleep],
         # only one activity executor with two concurrently scheduled activities
         # to force a nontrivial schedule to start times
         activity_executor=ThreadPoolExecutor(1),

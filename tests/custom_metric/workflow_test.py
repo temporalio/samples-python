@@ -12,7 +12,6 @@ activity_counter = 0
 
 
 async def test_custom_metric_workflow(client: Client):
-
     @activity.defn(name="print_message")
     async def print_message_mock():
         global activity_counter

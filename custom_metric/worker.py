@@ -16,7 +16,6 @@ from custom_metric.workflow import StartTwoActivitiesWorkflow
 
 
 class SimpleWorkerInterceptor(Interceptor):
-
     def intercept_activity(
         self, next: ActivityInboundInterceptor
     ) -> ActivityInboundInterceptor:
@@ -24,7 +23,6 @@ class SimpleWorkerInterceptor(Interceptor):
 
 
 class CustomScheduleToStartInterceptor(ActivityInboundInterceptor):
-
     async def execute_activity(self, input: ExecuteActivityInput):
 
         schedule_to_start = (

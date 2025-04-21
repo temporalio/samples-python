@@ -9,7 +9,6 @@ with workflow.unsafe.imports_passed_through():
 
 @workflow.defn
 class StartTwoActivitiesWorkflow:
-
     @workflow.run
     async def run(self):
         # Request two concurrent activities with only one task slot so

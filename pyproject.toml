@@ -86,6 +86,7 @@ packages = [
     "context_propagation",
     "custom_converter",
     "custom_decorator",
+    "custom_metric",
     "dsl",
     "encryption",
     "gevent_async",

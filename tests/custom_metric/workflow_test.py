@@ -1,4 +1,5 @@
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 from temporalio import activity
 from temporalio.client import Client
@@ -22,6 +23,7 @@ async def test_custom_metric_workflow(client: Client):
         task_queue=_TASK_QUEUE,
         workflows=[StartTwoActivitiesWorkflow],
         activities=[print_message_mock],
+        activity_executor=ThreadPoolExecutor(5),
     ):
         result = await client.execute_workflow(
             StartTwoActivitiesWorkflow.run,

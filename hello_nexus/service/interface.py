@@ -23,11 +23,13 @@ class EchoOutput:
     message: str
 
 
-@nexusrpc.service
+# TODO(dan): for now, making interface explicit in imports to distinguish from handler
+# implementation. Final import scheme and names TBD.
+@nexusrpc.interface.service
 class MyNexusService:
-    echo: nexusrpc.Operation[EchoInput, EchoOutput]
-    hello: nexusrpc.Operation[HelloInput, HelloOutput]
-    echo2: nexusrpc.Operation[EchoInput, EchoOutput]
-    hello2: nexusrpc.Operation[HelloInput, HelloOutput]
-    echo3: nexusrpc.Operation[EchoInput, EchoOutput]
-    hello3: nexusrpc.Operation[HelloInput, HelloOutput]
+    echo: nexusrpc.interface.Operation[EchoInput, EchoOutput]
+    hello: nexusrpc.interface.Operation[HelloInput, HelloOutput]
+    echo2: nexusrpc.interface.Operation[EchoInput, EchoOutput]
+    hello2: nexusrpc.interface.Operation[HelloInput, HelloOutput]
+    echo3: nexusrpc.interface.Operation[EchoInput, EchoOutput]
+    hello3: nexusrpc.interface.Operation[HelloInput, HelloOutput]

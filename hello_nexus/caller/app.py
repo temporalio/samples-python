@@ -5,7 +5,7 @@ from typing import Any, Type
 from temporalio.client import Client
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
-from hello_nexus.caller.workflows import (
+from hello_nexus.caller.workflows_via_interface import (
     Echo2CallerWorkflow,
     Echo3CallerWorkflow,
     EchoCallerWorkflow,
@@ -17,7 +17,9 @@ interrupt_event = asyncio.Event()
 
 
 async def execute_workflow(workflow_cls: Type[Any], input: Any) -> None:
-    client = await Client.connect("localhost:7233", namespace="my-caller-namespace-python")
+    client = await Client.connect(
+        "localhost:7233", namespace="my-caller-namespace-python"
+    )
     task_queue = "my-caller-task-queue"
 
     async with Worker(

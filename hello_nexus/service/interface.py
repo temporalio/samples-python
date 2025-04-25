@@ -32,4 +32,3 @@ class MyNexusService:
     echo2: nexusrpc.interface.Operation[EchoInput, EchoOutput]
     hello2: nexusrpc.interface.Operation[HelloInput, HelloOutput]
     echo3: nexusrpc.interface.Operation[EchoInput, EchoOutput]
-    hello3: nexusrpc.interface.Operation[HelloInput, HelloOutput]

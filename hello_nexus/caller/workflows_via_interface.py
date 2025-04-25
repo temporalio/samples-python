@@ -91,15 +91,3 @@ class Hello2CallerWorkflow(CallerWorkflowBase):
             HelloInput(name),
         )
         return await handle
-
-
-@workflow.defn
-class Hello3CallerWorkflow(CallerWorkflowBase):
-    @xray.start_as_current_workflow_method_span()
-    @workflow.run
-    async def run(self, name: str) -> HelloOutput:
-        handle = await self.nexus_client.start_operation(
-            MyNexusService.hello3,
-            HelloInput(name),
-        )
-        return await handle

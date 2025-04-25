@@ -5,14 +5,6 @@ from typing import Any, Type
 from temporalio.client import Client
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
-from hello_nexus.caller.workflows_via_interface import (
-    Echo2CallerWorkflow,
-    Echo3CallerWorkflow,
-    EchoCallerWorkflow,
-    Hello2CallerWorkflow,
-    HelloCallerWorkflow,
-)
-
 interrupt_event = asyncio.Event()
 
 
@@ -39,11 +31,31 @@ async def execute_workflow(workflow_cls: Type[Any], input: Any) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python -m nexus.caller.app [echo|hello]")
+    if len(sys.argv) != 3:
+        print("Usage: python -m nexus.caller.app [echo|hello] [impl|interface]")
         sys.exit(1)
 
-    [wf_name] = sys.argv[1:]
+    [wf_name, impl_or_interface] = sys.argv[1:]
+
+    if impl_or_interface == "impl":
+        from hello_nexus.caller.workflows_via_impl import (
+            Echo2CallerWorkflow,
+            Echo3CallerWorkflow,
+            EchoCallerWorkflow,
+            Hello2CallerWorkflow,
+            HelloCallerWorkflow,
+        )
+    elif impl_or_interface == "interface":
+        from hello_nexus.caller.workflows_via_interface import (
+            Echo2CallerWorkflow,
+            Echo3CallerWorkflow,
+            EchoCallerWorkflow,
+            Hello2CallerWorkflow,
+            HelloCallerWorkflow,
+        )
+    else:
+        raise ValueError(f"Invalid impl_or_interface: {impl_or_interface}")
+
     fn = {
         "echo": lambda: execute_workflow(EchoCallerWorkflow, "hello"),
         "echo2": lambda: execute_workflow(Echo2CallerWorkflow, "hello"),

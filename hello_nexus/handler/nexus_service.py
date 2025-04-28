@@ -151,7 +151,7 @@ class MyNexusService:
     # instance, but not to the operation instance (users who need the latter
     # should implement the Operation interface directly).
 
-    @temporalio.nexus.handler.workflow_operation
+    @temporalio.nexus.handler.workflow_run_operation
     async def hello2(
         self, input: HelloInput, options: nexusrpc.handler.StartOperationOptions
     ) -> temporalio.nexus.handler.StartWorkflowOperationResult[HelloOutput]:

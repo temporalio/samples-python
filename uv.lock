@@ -1435,14 +1435,18 @@ name = "nexus-rpc"
 version = "0.1.0"
 source = { editable = "../nexus-sdk-python" }
 dependencies = [
-    { name = "pyright" },
     { name = "typing-extensions" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "pyright", specifier = "==1.1.394" },
-    { name = "typing-extensions", specifier = ">=4.12.2" },
+requires-dist = [{ name = "typing-extensions", specifier = ">=4.12.2" }]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "mypy", specifier = ">=1.15.0" },
+    { name = "pyright", specifier = ">=1.1.400" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "ruff", specifier = ">=0.11.7" },
 ]
 
 [[package]]
@@ -2571,8 +2575,8 @@ source = { editable = "../sdk-python" }
 dependencies = [
     { name = "hyperlinked" },
     { name = "nexus-rpc" },
+    { name = "pdbpp" },
     { name = "protobuf" },
-    { name = "pyright" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'" },
     { name = "temporalio-xray" },
     { name = "types-protobuf" },
@@ -2592,9 +2596,9 @@ requires-dist = [
     { name = "nexus-rpc", editable = "../nexus-sdk-python" },
     { name = "opentelemetry-api", marker = "extra == 'opentelemetry'", specifier = ">=1.11.1,<2" },
     { name = "opentelemetry-sdk", marker = "extra == 'opentelemetry'", specifier = ">=1.11.1,<2" },
+    { name = "pdbpp", specifier = ">=0.11.6" },
     { name = "protobuf", specifier = ">=3.20" },
     { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.0.0,<3" },
-    { name = "pyright", specifier = "==1.1.394" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'", specifier = ">=2.8.2,<3" },
     { name = "temporalio-xray", editable = "../xray/sdks/python" },
     { name = "types-protobuf", specifier = ">=3.20" },
@@ -2612,7 +2616,7 @@ dev = [
     { name = "psutil", specifier = ">=5.9.3,<6" },
     { name = "pydocstyle", specifier = ">=6.3.0,<7" },
     { name = "pydoctor", specifier = ">=24.11.1,<25" },
-    { name = "pyright", specifier = "==1.1.394" },
+    { name = "pyright", specifier = "==1.1.400" },
     { name = "pytest", specifier = "~=7.4" },
     { name = "pytest-asyncio", specifier = ">=0.21,<0.22" },
     { name = "pytest-timeout", specifier = "~=2.2" },

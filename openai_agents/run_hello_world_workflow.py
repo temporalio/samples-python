@@ -10,8 +10,6 @@ from openai_agents.workflows.hello_world_workflow import HelloWorldAgent
 
 
 async def main():
-    logging.basicConfig(level=logging.DEBUG)
-
     # Create client connected to server at the given address
     client = await Client.connect("localhost:7233",
                                   data_converter=open_ai_data_converter,

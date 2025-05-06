@@ -8,8 +8,6 @@ from openai_agents.adapters.open_ai_converter import open_ai_data_converter
 from openai_agents.workflows.research_bot_workflow import ResearchWorkflow
 
 async def main():
-    logging.basicConfig(level=logging.DEBUG)
-
     # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",

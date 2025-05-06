@@ -9,8 +9,6 @@ from openai_agents.workflows.tools_workflow import ToolsWorkflow
 
 
 async def main():
-    logging.basicConfig(level=logging.DEBUG)
-
     # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",

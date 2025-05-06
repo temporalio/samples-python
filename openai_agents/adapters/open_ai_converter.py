@@ -1,16 +1,6 @@
-"""A data converter for Pydantic v2.
-
-To use, pass ``pydantic_data_converter`` as the ``data_converter`` argument to
-:py:class:`temporalio.client.Client`:
-
-.. code-block:: python
-
-    client = Client(
-        data_converter=pydantic_data_converter,
-        ...
-    )
-
-Pydantic v1 is not supported.
+"""
+DataConverter that supports conversion of types used by OpenAI Agents SDK.
+These are mostly Pydantic types. NotGiven requires special handling.
 """
 from __future__ import annotations
 
@@ -19,7 +9,7 @@ from openai import BaseModel, NOT_GIVEN
 from openai._types import NotGiven
 from typing import Any, Optional, Type, Generic, TypeVar, Required
 
-from pydantic import TypeAdapter
+from pydantic import TypeAdapter, RootModel
 import pydantic
 import json
 
@@ -32,26 +22,11 @@ from temporalio.converter import (
     JSONPlainPayloadConverter,
 )
 
-# Note that in addition to the implementation in this module, _RestrictedProxy
-# implements __get_pydantic_core_schema__ so that pydantic unwraps proxied types.
+T = TypeVar("T", bound=BaseModel)
 
-T = TypeVar("T")
-
-PYDANTIC_V2 = pydantic.VERSION.startswith("2.")
-
-if not PYDANTIC_V2:
-    raise NotImplementedError("pydantic v1 is not supported. Please use pydantic v2.")
-
-
-class WrapperModel(BaseModel, Generic[T]):
-    """
-    A generic wrapper model that preserves type information for the root value.
-    """
-    root: T
-
+class WrapperModel(RootModel[T]):
     model_config = {
         "arbitrary_types_allowed": True,
-        "json_encoders": {NotGiven: lambda x: None}
     }
 
 
@@ -111,14 +86,6 @@ class OpenAIJSONPlainPayloadConverter(EncodingPayloadConverter):
             payload: temporalio.api.common.v1.Payload,
             type_hint: Optional[Type] = None,
     ) -> Any:
-        """See base class.
-
-        Uses ``pydantic.TypeAdapter.validate_json`` to construct an
-        instance of the type specified by ``type_hint`` from the JSON payload.
-
-        See
-        https://docs.pydantic.dev/latest/api/type_adapter/#pydantic.type_adapter.TypeAdapter.validate_json.
-        """
         _type_hint = type_hint if type_hint is not None else Any
         wrapper = WrapperModel[_type_hint]
         return TypeAdapter(wrapper).validate_json(payload.data.decode()).root

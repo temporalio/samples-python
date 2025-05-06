@@ -19,7 +19,7 @@ with workflow.unsafe.imports_passed_through():
         response_create_params, ToolParam, Response, ResponseStreamEvent
 
 
-def monkey_patch_open_ai_client_create(client: AsyncOpenAI) -> AsyncOpenAI:
+def _monkey_patch_open_ai_client_create(client: AsyncOpenAI) -> AsyncOpenAI:
     async def open_ai_client_create(self, *,
                                     input: Union[str, ResponseInputParam],
                                     model: ResponsesModel,
@@ -84,7 +84,7 @@ class ModelStubProvider(ModelProvider):
         if model_name is None:
             model_name = DEFAULT_MODEL
         client = AsyncOpenAI()
-        return OpenAIResponsesModel(model_name, monkey_patch_open_ai_client_create(client))
+        return OpenAIResponsesModel(model_name, _monkey_patch_open_ai_client_create(client))
 
 
 def activity_as_tool(activity: Callable[..., Any]) -> Tool:

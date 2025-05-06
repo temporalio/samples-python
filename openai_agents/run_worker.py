@@ -23,16 +23,16 @@ async def main():
 
     item = TResponseInputItem
     # Run the worker
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as activity_executor:
-        worker = Worker(
-            client,
-            task_queue="my-task-queue",
-            workflows=[HelloWorldAgent, ToolsWorkflow, ResearchWorkflow, CustomerServiceWorkflow,
-                       AgentsAsToolsWorkflow],
-            activities=[invoke_open_ai_model, get_weather],
-            activity_executor=activity_executor,
-        )
-        await worker.run()
+    # with concurrent.futures.ThreadPoolExecutor(max_workers=100) as activity_executor:
+    worker = Worker(
+        client,
+        task_queue="my-task-queue",
+        workflows=[HelloWorldAgent, ToolsWorkflow, ResearchWorkflow, CustomerServiceWorkflow,
+                   AgentsAsToolsWorkflow],
+        activities=[invoke_open_ai_model, get_weather],
+        # activity_executor=activity_executor,
+    )
+    await worker.run()
 
 
 if __name__ == "__main__":

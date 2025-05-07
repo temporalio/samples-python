@@ -1,12 +1,13 @@
 import argparse
 import asyncio
+from ftplib import print_line
 
-from temporalio.client import Client, WorkflowQueryRejectedError
+from temporalio.client import Client, WorkflowQueryRejectedError, WorkflowUpdateFailedError
 from temporalio.common import WorkflowIDReusePolicy, QueryRejectCondition
 from temporalio.service import RPCError, RPCStatusCode
 
-from openai_agents.workflows.customer_service_workflow import CustomerServiceWorkflow
 from openai_agents.adapters.open_ai_converter import open_ai_data_converter
+from openai_agents.workflows.customer_service_workflow import CustomerServiceWorkflow, ProcessUserMessageInput
 
 
 async def main():
@@ -42,8 +43,17 @@ async def main():
     # Loop to send messages to the workflow
     while True:
         user_input = input("Enter your message: ")
-        new_history = await handle.execute_update(CustomerServiceWorkflow.process_user_message, user_input)
-        print(*new_history, sep="\n")
+        message_input = ProcessUserMessageInput(user_input=user_input, chat_length=len(history))
+        try:
+            new_history = await handle.execute_update(CustomerServiceWorkflow.process_user_message, message_input)
+            history.extend(new_history)
+            print(*new_history, sep="\n")
+        except WorkflowUpdateFailedError:
+            print_line("** Stale conversation. Reloading...")
+            length = len(history)
+            history = await handle.query(CustomerServiceWorkflow.get_chat_history,
+                                         reject_condition=QueryRejectCondition.NOT_OPEN)
+            print(*history[length:], sep="\n")
 
 
 if __name__ == "__main__":

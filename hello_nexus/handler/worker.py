@@ -11,7 +11,9 @@ interrupt_event = asyncio.Event()
 
 
 async def main():
-    client = await Client.connect("localhost:7233", namespace="my-target-namespace-python")
+    client = await Client.connect(
+        "localhost:7233", namespace="my-target-namespace-python"
+    )
     task_queue = "my-target-task-queue-python"
 
     async with Worker(

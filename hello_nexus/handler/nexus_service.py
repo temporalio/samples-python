@@ -41,6 +41,7 @@ class EchoOperation(nexusrpc.handler.Operation[EchoInput, EchoOutput]):
     def __init__(self, service: MyNexusService):
         self.service = service
 
+    # TODO support non-async def
     async def start(
         self, input: EchoInput, options: nexusrpc.handler.StartOperationOptions
     ) -> EchoOutput:

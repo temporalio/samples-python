@@ -1,0 +1,14 @@
+temporal-delete-all my-target-namespace-python
+temporal-delete-all my-caller-namespace-python
+
+temporal operator namespace create --namespace my-target-namespace-python
+temporal operator namespace create --namespace my-caller-namespace-python
+
+sleep 1
+
+temporal operator nexus endpoint create \
+  --name my-nexus-endpoint-name-python \
+  --target-namespace my-target-namespace-python \
+  --target-task-queue my-target-task-queue-python \
+  --description-file ./hello_nexus/service/description.md
+  

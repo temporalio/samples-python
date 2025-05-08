@@ -1,11 +1,9 @@
 import asyncio
-import logging
 
 from temporalio.client import Client
 from temporalio.common import WorkflowIDReusePolicy
 
 from openai_agents.adapters.open_ai_converter import open_ai_data_converter
-# Import the workflow from the previous code
 from openai_agents.workflows.hello_world_workflow import HelloWorldAgent
 
 

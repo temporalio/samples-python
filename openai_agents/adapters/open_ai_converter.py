@@ -4,16 +4,12 @@ These are mostly Pydantic types. NotGiven requires special handling.
 """
 from __future__ import annotations
 
-import typing_extensions
-from openai import BaseModel, NOT_GIVEN
-from openai._types import NotGiven
-from typing import Any, Optional, Type, Generic, TypeVar, Required
-
-from pydantic import TypeAdapter, RootModel
-import pydantic
 import json
+from typing import Any, Optional, Type, TypeVar
 
 import temporalio.api.common.v1
+from openai import BaseModel, NOT_GIVEN
+from pydantic import TypeAdapter, RootModel
 from temporalio.converter import (
     CompositePayloadConverter,
     DataConverter,
@@ -24,26 +20,13 @@ from temporalio.converter import (
 
 T = TypeVar("T", bound=BaseModel)
 
-class WrapperModel(RootModel[T]):
+class _WrapperModel(RootModel[T]):
     model_config = {
         "arbitrary_types_allowed": True,
     }
 
 
-def strip_not_given(obj: Any) -> Any:
-    if isinstance(obj, dict):
-        return {
-            k: strip_not_given(v)
-            for k, v in obj.items()
-            if v != NOT_GIVEN and v is not None
-        }
-    elif isinstance(obj, list):
-        return [strip_not_given(v) for v in obj if v != NOT_GIVEN and v is not None]
-    else:
-        return obj
-
-
-class OpenAIJSONPlainPayloadConverter(EncodingPayloadConverter):
+class _OpenAIJSONPlainPayloadConverter(EncodingPayloadConverter):
     """Pydantic JSON payload converter.
 
     Supports conversion of all types supported by Pydantic to and from JSON.
@@ -70,8 +53,19 @@ class OpenAIJSONPlainPayloadConverter(EncodingPayloadConverter):
         https://docs.pydantic.dev/latest/api/pydantic_core/#pydantic_core.to_json.
         """
 
-        # json = Wrapper(value=value).model_dump_json().encode()
-        wrapper = WrapperModel[type(value)](root=value)
+        def strip_not_given(obj: Any) -> Any:
+            if isinstance(obj, dict):
+                return {
+                    k: strip_not_given(v)
+                    for k, v in obj.items()
+                    if v != NOT_GIVEN and v is not None
+                }
+            elif isinstance(obj, list):
+                return [strip_not_given(v) for v in obj if v != NOT_GIVEN and v is not None]
+            else:
+                return obj
+
+        wrapper = _WrapperModel[type(value)](root=value)
         dump = wrapper.model_dump(mode="python", by_alias=True)
         # NotGiven values are not JSON serializable, so we need to strip them out
         dump = strip_not_given(dump)
@@ -87,7 +81,7 @@ class OpenAIJSONPlainPayloadConverter(EncodingPayloadConverter):
             type_hint: Optional[Type] = None,
     ) -> Any:
         _type_hint = type_hint if type_hint is not None else Any
-        wrapper = WrapperModel[_type_hint]
+        wrapper = _WrapperModel[_type_hint]
         return TypeAdapter(wrapper).validate_json(payload.data.decode()).root
 
 
@@ -100,7 +94,7 @@ class OpenAIPayloadConverter(CompositePayloadConverter):
 
     def __init__(self) -> None:
         """Initialize object"""
-        json_payload_converter = OpenAIJSONPlainPayloadConverter()
+        json_payload_converter = _OpenAIJSONPlainPayloadConverter()
         super().__init__(
             *(
                 c

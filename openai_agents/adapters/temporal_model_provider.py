@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from temporalio import workflow
 
+from openai_agents.adapters.invoke_model_activity import OpenAIActivityInput, invoke_open_ai_model
+
 with workflow.unsafe.imports_passed_through():
     from datetime import timedelta
     from idlelib.query import Query
@@ -9,7 +11,6 @@ with workflow.unsafe.imports_passed_through():
     from wsgiref.headers import Headers
     from agents.function_schema import function_schema
     from agents.models.openai_provider import DEFAULT_MODEL
-    from openai_agents.adapters.model_activity import OpenAIActivityInput, invoke_open_ai_model
     from agents import ModelProvider, Model, OpenAIResponsesModel, Tool, RunContextWrapper, FunctionTool
     import httpx
     from fastapi import Body
@@ -79,7 +80,7 @@ def _monkey_patch_open_ai_client_create(client: AsyncOpenAI) -> AsyncOpenAI:
     return client
 
 
-class ModelStubProvider(ModelProvider):
+class TemporalModelProvider(ModelProvider):
     def get_model(self, model_name: str | None) -> Model:
         if model_name is None:
             model_name = DEFAULT_MODEL

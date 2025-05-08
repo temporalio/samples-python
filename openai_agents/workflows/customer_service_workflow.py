@@ -2,9 +2,10 @@
 
 from temporalio import workflow
 
+from openai_agents.adapters.temporal_model_provider import TemporalModelProvider
+
 with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel
-    from openai_agents.adapters.activity_model import ModelStubProvider
     from agents import (
         Agent,
         HandoffOutputItem,
@@ -144,7 +145,7 @@ class ProcessUserMessageInput(BaseModel):
 class CustomerServiceWorkflow:
 
     def __init__(self, input_items: list[TResponseInputItem] = None):
-        self.run_config = RunConfig(model_provider=ModelStubProvider())
+        self.run_config = RunConfig(model_provider=TemporalModelProvider())
         self.chat_history = []
         self.current_agent: Agent[AirlineAgentContext] = init_agents()
         self.context = AirlineAgentContext()

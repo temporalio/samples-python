@@ -8,7 +8,7 @@ from temporalio import activity
 F = TypeVar("F", bound=Callable[..., Awaitable[Any]])
 
 
-def auto_heartbeater(fn: F) -> F:
+def _auto_heartbeater(fn: F) -> F:
     # We want to ensure that the type hints from the original callable are
     # available via our wrapper, so we use the functools wraps decorator
     @wraps(fn)

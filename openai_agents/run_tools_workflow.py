@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from temporalio.client import Client
 from temporalio.common import WorkflowIDReusePolicy

@@ -2378,7 +2378,7 @@ trio-async = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "temporalio", specifier = ">=1.11.0,<2" }]
+requires-dist = [{ name = "temporalio", specifier = ">=1.11.1,<2" }]
 
 [package.metadata.requires-dev]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]

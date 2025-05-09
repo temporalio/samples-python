@@ -2406,7 +2406,7 @@ encryption = [
     { name = "aiohttp", specifier = ">=3.8.1,<4" },
     { name = "cryptography", specifier = ">=38.0.1,<39" },
 ]
-gevent = [{ name = "gevent", marker = "python_full_version >= '3.8'" }]
+gevent = [{ name = "gevent", marker = "python_full_version >= '3.8'", specifier = "==25.4.2" }]
 langchain = [
     { name = "fastapi", specifier = ">=0.105.0,<0.106" },
     { name = "langchain", marker = "python_full_version >= '3.9' and python_full_version < '4.0'", specifier = ">=0.1.7,<0.2" },

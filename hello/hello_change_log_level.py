@@ -2,7 +2,10 @@
 Changes the log level of workflow task failures from WARN to ERROR.
 """
 
-import asyncio, logging, sys
+import asyncio
+import logging
+import sys
+
 from temporalio import workflow
 from temporalio.client import Client
 from temporalio.worker import Worker

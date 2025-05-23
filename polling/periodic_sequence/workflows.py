@@ -6,10 +6,8 @@ from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
 with workflow.unsafe.imports_passed_through():
-    from polling.periodic_sequence.activities import (
-        ComposeGreetingInput,
-        compose_greeting,
-    )
+    from polling.periodic_sequence.activities import compose_greeting
+    from polling.test_service import ComposeGreetingInput
 
 
 @workflow.defn
@@ -40,6 +38,5 @@ class ChildWorkflow:
             except ActivityError:
                 workflow.logger.error("Activity failed, retrying in 1 seconds")
             await asyncio.sleep(1)
-            workflow.continue_as_new(name)
 
-        raise Exception("Polling failed after all attempts")
+        workflow.continue_as_new(name)

@@ -4,8 +4,8 @@ from datetime import datetime
 from ipaddress import IPv4Address
 
 from temporalio.client import Client
+from temporalio.contrib.pydantic import pydantic_data_converter
 
-from pydantic_converter.converter import pydantic_data_converter
 from pydantic_converter.worker import MyPydanticModel, MyWorkflow
 
 
@@ -29,7 +29,7 @@ async def main():
                 some_date=datetime(2001, 2, 3, 4, 5, 6),
             ),
         ],
-        id=f"pydantic_converter-workflow-id",
+        id="pydantic_converter-workflow-id",
         task_queue="pydantic_converter-task-queue",
     )
     logging.info("Got models from client: %s" % result)

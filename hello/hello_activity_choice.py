@@ -54,44 +54,27 @@ class ShoppingList:
 @workflow.defn
 class PurchaseFruitsWorkflow:
     @workflow.run
-    async def run(self, list: ShoppingList) -> str:
+    async def run(self, shopping_list: ShoppingList) -> str:
         # Order each thing on the list
         ordered: List[str] = []
-        for item in list.items:
+        for item in shopping_list.items:
             if item.fruit is Fruit.APPLE:
-                ordered.append(
-                    await workflow.execute_activity(
-                        order_apples,
-                        item.amount,
-                        start_to_close_timeout=timedelta(seconds=5),
-                    )
-                )
+                order_function = order_apples
             elif item.fruit is Fruit.BANANA:
-                ordered.append(
-                    await workflow.execute_activity(
-                        order_bananas,
-                        item.amount,
-                        start_to_close_timeout=timedelta(seconds=5),
-                    )
-                )
+                order_function = order_bananas
             elif item.fruit is Fruit.CHERRY:
-                ordered.append(
-                    await workflow.execute_activity(
-                        order_cherries,
-                        item.amount,
-                        start_to_close_timeout=timedelta(seconds=5),
-                    )
-                )
+                order_function = order_cherries
             elif item.fruit is Fruit.ORANGE:
-                ordered.append(
-                    await workflow.execute_activity(
-                        order_oranges,
-                        item.amount,
-                        start_to_close_timeout=timedelta(seconds=5),
-                    )
-                )
+                order_function = order_oranges
             else:
                 raise ValueError(f"Unrecognized fruit: {item.fruit}")
+            ordered.append(
+                await workflow.execute_activity(
+                    order_function,
+                    item.amount,
+                    start_to_close_timeout=timedelta(seconds=5),
+                )
+            )
         return "".join(ordered)
 
 

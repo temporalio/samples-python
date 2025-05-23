@@ -1,0 +1,8 @@
+services:
+  aspire-dashboard:
+    environment:
+      Dashboard__Frontend__AuthMode: Unsecured
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:8.0
+    ports:
+      - 4317:18889
+      - 18888:18888

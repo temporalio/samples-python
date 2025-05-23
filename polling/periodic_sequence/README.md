@@ -8,11 +8,11 @@ To run, first see [README.md](../../README.md) for prerequisites.
 
 Then, run the following from this directory to run the sample:
 
-    poetry run python run_worker.py
+    uv run run_worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    poetry run python run_periodic.py
+    uv run run_periodic.py
 
 
 This will start a Workflow and Child Workflow to periodically poll an Activity.

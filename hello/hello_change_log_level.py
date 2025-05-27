@@ -23,8 +23,6 @@ class CustomLogFilter(logging.Filter):
         msg = record.getMessage()
         if (
             msg.startswith("Failed activation on workflow")
-            and " with ID " in msg
-            and " and run ID " in msg
             and record.levelno < logging.ERROR
         ):
             record.levelno = logging.ERROR

@@ -19,10 +19,9 @@ logging.basicConfig(
 
 
 class CustomLogFilter(logging.Filter):
-    def filter(self, record):
-        msg = record.getMessage()
+    def filter(self, record: logging.LogRecord) -> bool:
         if (
-            msg.startswith("Failed activation on workflow")
+            record.msg.startswith("Failed activation on workflow")
             and record.levelno < logging.ERROR
         ):
             record.levelno = logging.ERROR

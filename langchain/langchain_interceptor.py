@@ -136,7 +136,7 @@ class _LangChainContextPropagationWorkflowInboundInterceptor(
             # with trace(...):
             #   return await self.next.execute_workflow(input)
             with temporalio.workflow.unsafe.sandbox_unrestricted():
-                t = trace(name=f"execute_workflow:{name}")
+                t = trace(name=f"execute_workflow:{name}", run_id=workflow.info().run_id)
             try:
                 return await self.next.execute_workflow(input)
             finally:
@@ -153,7 +153,7 @@ class _LangChainContextPropagationWorkflowOutboundInterceptor(
         self, input: temporalio.worker.StartActivityInput
     ) -> temporalio.workflow.ActivityHandle:
         with temporalio.workflow.unsafe.sandbox_unrestricted():
-            t = trace(name=f"start_activity:{input.activity}")
+            t = trace(name=f"start_activity:{input.activity}", run_id=workflow.uuid4())
         try:
             set_header_from_context(input, temporalio.workflow.payload_converter())
             return self.next.start_activity(input)
@@ -165,7 +165,7 @@ class _LangChainContextPropagationWorkflowOutboundInterceptor(
         self, input: temporalio.worker.StartChildWorkflowInput
     ) -> temporalio.workflow.ChildWorkflowHandle:
         with temporalio.workflow.unsafe.sandbox_unrestricted():
-            t = trace(name=f"start_child_workflow:{input.workflow}")
+            t = trace(name=f"start_child_workflow:{input.workflow}", run_id=workflow.uuid4())
         try:
             set_header_from_context(input, temporalio.workflow.payload_converter())
             return await self.next.start_child_workflow(input)

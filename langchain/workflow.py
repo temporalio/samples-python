@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import List
@@ -27,20 +28,25 @@ class TranslateWorkflowParams:
 class LangChainWorkflow:
     @workflow.run
     async def run(self, params: TranslateWorkflowParams) -> dict:
-        result = {}
-        result[params.languages[0]] = await workflow.execute_activity(
-            translate_phrase,
-            TranslateParams(params.phrase, params.languages[0]),
-            schedule_to_close_timeout=timedelta(seconds=30),
+        result1, result2, result3 = await asyncio.gather(
+            workflow.execute_activity(
+                translate_phrase,
+                TranslateParams(params.phrase, params.languages[0]),
+                schedule_to_close_timeout=timedelta(seconds=30),
+            ),
+            workflow.execute_activity(
+                translate_phrase,
+                TranslateParams(params.phrase, params.languages[1]),
+                schedule_to_close_timeout=timedelta(seconds=30),
+            ),
+            workflow.execute_child_workflow(
+                LangChainChildWorkflow.run,
+                TranslateParams(params.phrase, params.languages[2]),
+            ),
         )
-        result[params.languages[1]] = await workflow.execute_activity(
-            translate_phrase,
-            TranslateParams(params.phrase, params.languages[1]),
-            schedule_to_close_timeout=timedelta(seconds=30),
-        )
-        result[params.languages[2]] = await workflow.execute_child_workflow(
-            LangChainChildWorkflow.run,
-            TranslateParams(params.phrase, params.languages[2]),
-        )
-        return result
+        return {
+            params.languages[0]: result1,
+            params.languages[1]: result2,
+            params.languages[2]: result3,
+        }
         

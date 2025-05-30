@@ -97,9 +97,11 @@ class _LangChainContextPropagationActivityInboundInterceptor(
             name = input.fn
         elif callable(input.fn):
             defn = activity._Definition.from_callable(input.fn)
-            if not defn or not defn.name:
-                name = "unknown"
-            name = defn.name
+            name = (
+                defn.name if defn is not None and defn.name is not None else "unknown"
+            )
+        else:
+            name = "unknown"
 
         with context_from_header(input, activity.payload_converter()):
             with trace(name=f"execute_activity:{name}"):
@@ -119,9 +121,11 @@ class _LangChainContextPropagationWorkflowInboundInterceptor(
             name = input.run_fn
         elif callable(input.run_fn):
             defn = workflow._Definition.from_run_fn(input.run_fn)
-            if defn is None or defn.name is None:
-                name = "unknown"
-            name = defn.name
+            name = (
+                defn.name if defn is not None and defn.name is not None else "unknown"
+            )
+        else:
+            name = "unknown"
 
         with context_from_header(input, workflow.payload_converter()):
             # This is a sandbox friendly way to write

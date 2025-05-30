@@ -38,6 +38,7 @@ gevent = ["gevent==25.4.2 ; python_version >= '3.8'"]
 langchain = [
     "langchain>=0.1.7,<0.2 ; python_version >= '3.8.1' and python_version < '4.0'",
     "langchain-openai>=0.0.6,<0.0.7 ; python_version >= '3.8.1' and python_version < '4.0'",
+    "langsmith>=0.1.22,<0.2 ; python_version >= '3.8.1' and python_version < '4.0'",
     "openai>=1.4.0,<2",
     "fastapi>=0.105.0,<0.106",
     "tqdm>=4.62.0,<5",

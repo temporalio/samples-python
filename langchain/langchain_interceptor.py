@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from typing import Any, Mapping, Protocol, Type
 from temporalio import workflow, worker, converter, client, api, activity
 
 with workflow.unsafe.imports_passed_through():
     from contextlib import contextmanager
-    from typing import Any, Mapping, Protocol, Type
     from langsmith import trace, tracing_context
     from langsmith.run_helpers import get_current_run_tree
 

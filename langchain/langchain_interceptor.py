@@ -5,8 +5,6 @@ from temporalio import workflow, worker, converter, client, api, activity
 with workflow.unsafe.imports_passed_through():
     from contextlib import contextmanager
     from typing import Any, Mapping, Protocol, Type
-
-
     from langsmith import trace, tracing_context
     from langsmith.run_helpers import get_current_run_tree
 
@@ -145,6 +143,7 @@ class _LangChainContextPropagationWorkflowOutboundInterceptor(
     ) -> workflow.ActivityHandle:
         with workflow.unsafe.sandbox_unrestricted():
             t = trace(name=f"start_activity:{input.activity}", run_id=workflow.uuid4())
+            t.__enter__()
         try:
             set_header_from_context(input, workflow.payload_converter())
             return self.next.start_activity(input)

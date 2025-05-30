@@ -126,6 +126,8 @@ class _LangChainContextPropagationWorkflowInboundInterceptor(
             #   return await self.next.execute_workflow(input)
             with workflow.unsafe.sandbox_unrestricted():
                 t = trace(name=f"execute_workflow:{name}", run_id=workflow.info().run_id)
+                with workflow.unsafe.imports_passed_through():
+                    t.__enter__()
             try:
                 return await self.next.execute_workflow(input)
             finally:
@@ -143,7 +145,8 @@ class _LangChainContextPropagationWorkflowOutboundInterceptor(
     ) -> workflow.ActivityHandle:
         with workflow.unsafe.sandbox_unrestricted():
             t = trace(name=f"start_activity:{input.activity}", run_id=workflow.uuid4())
-            t.__enter__()
+            with workflow.unsafe.imports_passed_through():
+                t.__enter__()
         try:
             set_header_from_context(input, workflow.payload_converter())
             return self.next.start_activity(input)
@@ -156,6 +159,9 @@ class _LangChainContextPropagationWorkflowOutboundInterceptor(
     ) -> workflow.ChildWorkflowHandle:
         with workflow.unsafe.sandbox_unrestricted():
             t = trace(name=f"start_child_workflow:{input.workflow}", run_id=workflow.uuid4())
+            with workflow.unsafe.imports_passed_through():
+                t.__enter__()
+
         try:
             set_header_from_context(input, workflow.payload_converter())
             return await self.next.start_child_workflow(input)

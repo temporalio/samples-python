@@ -5,15 +5,16 @@ from uuid import uuid4
 import uvicorn
 from activities import TranslateParams
 from fastapi import FastAPI, HTTPException
-from temporalio.client import Client
-from workflow import TranslateWorkflowParams
 from langchain_interceptor import LangChainContextPropagationInterceptor
-from workflow import LangChainWorkflow
+from temporalio.client import Client
+from workflow import LangChainWorkflow, TranslateWorkflowParams
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.temporal_client = await Client.connect("localhost:7233", interceptors=[LangChainContextPropagationInterceptor()])
+    app.state.temporal_client = await Client.connect(
+        "localhost:7233", interceptors=[LangChainContextPropagationInterceptor()]
+    )
     yield
 
 

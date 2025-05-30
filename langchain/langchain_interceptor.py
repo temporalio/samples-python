@@ -1,18 +1,22 @@
 from __future__ import annotations
 
 from typing import Any, Mapping, Protocol, Type
-from temporalio import workflow, worker, converter, client, api, activity
+
+from temporalio import activity, api, client, converter, worker, workflow
 
 with workflow.unsafe.imports_passed_through():
     from contextlib import contextmanager
+
     from langsmith import trace, tracing_context
     from langsmith.run_helpers import get_current_run_tree
 
 # Header key for LangChain context
 LANGCHAIN_CONTEXT_KEY = "langchain-context"
 
+
 class _InputWithHeaders(Protocol):
     headers: Mapping[str, api.common.v1.Payload]
+
 
 def set_header_from_context(
     input: _InputWithHeaders, payload_converter: converter.PayloadConverter
@@ -25,6 +29,7 @@ def set_header_from_context(
             **input.headers,
             LANGCHAIN_CONTEXT_KEY: payload_converter.to_payload(headers),
         }
+
 
 @contextmanager
 def context_from_header(
@@ -39,9 +44,8 @@ def context_from_header(
     else:
         yield
 
-class LangChainContextPropagationInterceptor(
-    client.Interceptor, worker.Interceptor
-):
+
+class LangChainContextPropagationInterceptor(client.Interceptor, worker.Interceptor):
     """Interceptor that propagates LangChain context through Temporal."""
 
     def __init__(
@@ -67,9 +71,8 @@ class LangChainContextPropagationInterceptor(
     ) -> Type[_LangChainContextPropagationWorkflowInboundInterceptor]:
         return _LangChainContextPropagationWorkflowInboundInterceptor
 
-class _LangChainContextPropagationClientOutboundInterceptor(
-    client.OutboundInterceptor
-):
+
+class _LangChainContextPropagationClientOutboundInterceptor(client.OutboundInterceptor):
     def __init__(
         self,
         next: client.OutboundInterceptor,
@@ -85,12 +88,11 @@ class _LangChainContextPropagationClientOutboundInterceptor(
             set_header_from_context(input, self._payload_converter)
             return await super().start_workflow(input)
 
+
 class _LangChainContextPropagationActivityInboundInterceptor(
     worker.ActivityInboundInterceptor
 ):
-    async def execute_activity(
-        self, input: worker.ExecuteActivityInput
-    ) -> Any:
+    async def execute_activity(self, input: worker.ExecuteActivityInput) -> Any:
         if isinstance(input.fn, str):
             name = input.fn
         elif callable(input.fn):
@@ -103,15 +105,16 @@ class _LangChainContextPropagationActivityInboundInterceptor(
             with trace(name=f"execute_activity:{name}"):
                 return await self.next.execute_activity(input)
 
+
 class _LangChainContextPropagationWorkflowInboundInterceptor(
     worker.WorkflowInboundInterceptor
 ):
     def init(self, outbound: worker.WorkflowOutboundInterceptor) -> None:
-        self.next.init(_LangChainContextPropagationWorkflowOutboundInterceptor(outbound))
+        self.next.init(
+            _LangChainContextPropagationWorkflowOutboundInterceptor(outbound)
+        )
 
-    async def execute_workflow(
-        self, input: worker.ExecuteWorkflowInput
-    ) -> Any:
+    async def execute_workflow(self, input: worker.ExecuteWorkflowInput) -> Any:
         if isinstance(input.run_fn, str):
             name = input.run_fn
         elif callable(input.run_fn):
@@ -125,14 +128,16 @@ class _LangChainContextPropagationWorkflowInboundInterceptor(
             # with trace(...):
             #   return await self.next.execute_workflow(input)
             with workflow.unsafe.sandbox_unrestricted():
-                t = trace(name=f"execute_workflow:{name}", run_id=workflow.info().run_id)
+                t = trace(
+                    name=f"execute_workflow:{name}", run_id=workflow.info().run_id
+                )
                 with workflow.unsafe.imports_passed_through():
                     t.__enter__()
             try:
                 return await self.next.execute_workflow(input)
             finally:
                 with workflow.unsafe.sandbox_unrestricted():
-                    # Cannot use __aexit__ because it's internally uses 
+                    # Cannot use __aexit__ because it's internally uses
                     # loop.run_in_executor which is not available in the sandbox
                     t.__exit__()
 
@@ -158,7 +163,9 @@ class _LangChainContextPropagationWorkflowOutboundInterceptor(
         self, input: worker.StartChildWorkflowInput
     ) -> workflow.ChildWorkflowHandle:
         with workflow.unsafe.sandbox_unrestricted():
-            t = trace(name=f"start_child_workflow:{input.workflow}", run_id=workflow.uuid4())
+            t = trace(
+                name=f"start_child_workflow:{input.workflow}", run_id=workflow.uuid4()
+            )
             with workflow.unsafe.imports_passed_through():
                 t.__enter__()
 

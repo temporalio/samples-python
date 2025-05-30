@@ -1,13 +1,14 @@
-
-from typing import List
-from datetime import timedelta
 import asyncio
+from datetime import timedelta
+from typing import List
 
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from dataclasses import dataclass
+
     from activities import TranslateParams, translate_phrase
+
 
 @workflow.defn
 class LangChainChildWorkflow:
@@ -18,7 +19,8 @@ class LangChainChildWorkflow:
             params,
             schedule_to_close_timeout=timedelta(seconds=30),
         )
-        
+
+
 @dataclass
 class TranslateWorkflowParams:
     phrase: str
@@ -50,4 +52,3 @@ class LangChainWorkflow:
             params.languages[1]: result2,
             params.languages[2]: result3,
         }
-        

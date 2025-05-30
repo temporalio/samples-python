@@ -1,10 +1,10 @@
 import asyncio
 
 from activities import translate_phrase
+from langchain_interceptor import LangChainContextPropagationInterceptor
 from temporalio.client import Client
 from temporalio.worker import Worker
 from workflow import LangChainChildWorkflow, LangChainWorkflow
-from langchain_interceptor import LangChainContextPropagationInterceptor
 
 interrupt_event = asyncio.Event()
 

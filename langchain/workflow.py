@@ -1,12 +1,11 @@
 import asyncio
 from datetime import timedelta
 from typing import List
+from dataclasses import dataclass
 
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from dataclasses import dataclass
-
     from activities import TranslateParams, translate_phrase
 
 

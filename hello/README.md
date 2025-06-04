@@ -28,6 +28,7 @@ Replace `hello_activity.py` in the command with any other example filename to ru
 * [hello_async_activity_completion](hello_async_activity_completion.py) - Complete an activity outside of the function
   that was called.
 * [hello_cancellation](hello_cancellation.py) - Manually react to cancellation inside workflows and activities.
+* [hello_change_log_level](hello_change_log_level.py) - Change the level of workflow task failure from WARN to ERROR.
 * [hello_child_workflow](hello_child_workflow.py) - Execute a child workflow from a workflow.
 * [hello_continue_as_new](hello_continue_as_new.py) - Use continue as new to restart a workflow.
 * [hello_cron](hello_cron.py) - Execute a workflow once a minute.

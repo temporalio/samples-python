@@ -1,9 +1,6 @@
 import asyncio
-import time
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
-from threading import Thread
 
 from temporalio import activity, workflow
 from temporalio.client import Client
@@ -17,25 +14,30 @@ class ComposeGreetingInput:
 
 
 class GreetingComposer:
-    def __init__(self, client: Client, loop: asyncio.AbstractEventLoop) -> None:
+    def __init__(self, client: Client) -> None:
         self.client = client
-        self.loop = loop
 
     @activity.defn
-    def compose_greeting(self, input: ComposeGreetingInput) -> str:
-        # Make a thread to complete this externally. This could be done in
+    async def compose_greeting(self, input: ComposeGreetingInput) -> str:
+        # Schedule a task to complete this asynchronously. This could be done in
         # a completely different process or system.
         print("Completing activity asynchronously")
-        Thread(
-            target=self.complete_greeting,
-            args=(activity.info().task_token, input),
-        ).start()
+        # Tasks stored by asyncio are weak references and therefore can get GC'd
+        # which can cause warnings like "Task was destroyed but it is pending!".
+        # So we store the tasks ourselves.
+        # See https://docs.python.org/3/library/asyncio-task.html#creating-tasks,
+        # https://bugs.python.org/issue21163 and others.
+        _ = asyncio.create_task(
+            self.complete_greeting(activity.info().task_token, input)
+        )
 
         # Raise the complete-async error which will complete this function but
         # does not consider the activity complete from the workflow perspective
         activity.raise_complete_async()
 
-    def complete_greeting(self, task_token: bytes, input: ComposeGreetingInput) -> None:
+    async def complete_greeting(
+        self, task_token: bytes, input: ComposeGreetingInput
+    ) -> None:
         # Let's wait three seconds, heartbeating each second. Note, heartbeating
         # during async activity completion is done via the client directly. It
         # is often important to heartbeat so the server can know when an
@@ -43,13 +45,11 @@ class GreetingComposer:
         handle = self.client.get_async_activity_handle(task_token=task_token)
         for _ in range(0, 3):
             print("Waiting one second...")
-            asyncio.run_coroutine_threadsafe(handle.heartbeat(), self.loop).result()
-            time.sleep(1)
+            await handle.heartbeat()
+            await asyncio.sleep(1)
 
         # Complete using the handle
-        asyncio.run_coroutine_threadsafe(
-            handle.complete(f"{input.greeting}, {input.name}!"), self.loop
-        ).result()
+        await handle.complete(f"{input.greeting}, {input.name}!")
 
 
 @workflow.defn
@@ -70,16 +70,13 @@ async def main():
     # Start client
     client = await Client.connect("localhost:7233")
 
-    loop = asyncio.get_event_loop()
-
     # Run a worker for the workflow
-    composer = GreetingComposer(client, loop)
+    composer = GreetingComposer(client)
     async with Worker(
         client,
         task_queue="hello-async-activity-completion-task-queue",
         workflows=[GreetingWorkflow],
         activities=[composer.compose_greeting],
-        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to run the workflow and

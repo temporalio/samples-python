@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = "~=3.9"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.10.0,<2"]
+dependencies = ["temporalio>=1.12.0,<2"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -34,10 +34,11 @@ encryption = [
     "cryptography>=38.0.1,<39",
     "aiohttp>=3.8.1,<4",
 ]
-gevent = ["gevent>=23.9.1,<24 ; python_version >= '3.8'"]
+gevent = ["gevent==25.4.2 ; python_version >= '3.8'"]
 langchain = [
     "langchain>=0.1.7,<0.2 ; python_version >= '3.8.1' and python_version < '4.0'",
     "langchain-openai>=0.0.6,<0.0.7 ; python_version >= '3.8.1' and python_version < '4.0'",
+    "langsmith>=0.1.22,<0.2 ; python_version >= '3.8.1' and python_version < '4.0'",
     "openai>=1.4.0,<2",
     "fastapi>=0.105.0,<0.106",
     "tqdm>=4.62.0,<5",

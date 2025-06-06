@@ -1,29 +1,32 @@
 import asyncio
+import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from typing import NoReturn
 
 from temporalio import activity, workflow
 from temporalio.client import Client, WorkflowFailureError
+from temporalio.exceptions import CancelledError
 from temporalio.worker import Worker
 
 
 @activity.defn
-async def never_complete_activity() -> NoReturn:
+def never_complete_activity() -> NoReturn:
     # All long-running activities should heartbeat. Heartbeat is how
     # cancellation is delivered from the server.
     try:
         while True:
             print("Heartbeating activity")
             activity.heartbeat()
-            await asyncio.sleep(1)
-    except asyncio.CancelledError:
+            time.sleep(1)
+    except CancelledError:
         print("Activity cancelled")
         raise
 
 
 @activity.defn
-async def cleanup_activity() -> None:
+def cleanup_activity() -> None:
     print("Executing cleanup activity")
 
 
@@ -56,6 +59,7 @@ async def main():
         task_queue="hello-cancellation-task-queue",
         workflows=[CancellationWorkflow],
         activities=[never_complete_activity, cleanup_activity],
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to start the workflow.

@@ -19,7 +19,7 @@ async def test_nexus_service_without_service_definition(client: Client):
     )
     try:
         result = await execute_caller_workflow(client)
-        assert result == "Hello world from sync operation!"
+        assert result == "Hello world from workflow run operation!"
     finally:
         await delete_nexus_endpoint(
             id=create_response.endpoint.id,

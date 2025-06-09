@@ -21,7 +21,7 @@ class CallerWorkflow:
     @workflow.run
     async def run(self, name: str) -> tuple[MyOutput, MyOutput]:
         # Start the Nexus operation and wait for the result in one go, using execute_operation.
-        wf_result: MyOutput = await self.nexus_client.execute_operation(
+        wf_result = await self.nexus_client.execute_operation(
             MyNexusService.my_workflow_run_operation,
             MyInput(name),
         )

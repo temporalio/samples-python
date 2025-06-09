@@ -86,8 +86,8 @@ default-groups = [
 ]
 
 [tool.uv.sources]
-nexus-rpc = { path = "../nexus-sdk-python", editable = true }
-temporalio = { path = "../sdk-python", editable = true }
+nexus-rpc = { git = "https://github.com/nexus-rpc/sdk-python", branch = "v0" }
+temporalio = { git = "https://github.com/temporalio/sdk-python", branch = "nexus" }
 
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]

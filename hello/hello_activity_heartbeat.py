@@ -1,5 +1,4 @@
 import asyncio
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -21,7 +20,7 @@ def compose_greeting(input: ComposeGreetingInput) -> str:
     # We'll wait for 3 seconds, heartbeating in between (like all long-running
     # activities should do), then return the greeting
     for _ in range(0, 3):
-        print(f"Heartbeating activity on thread {threading.get_ident()}")
+        print(f"Heartbeating activity")
         activity.heartbeat()
         time.sleep(1)
     return f"{input.greeting}, {input.name}!"
@@ -47,12 +46,9 @@ async def main():
     # Run a worker for the workflow
     async with Worker(
         client,
-        task_queue="hello-activity-threaded-task-queue",
+        task_queue="hello-activity-heartbeating-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
-        # Synchronous activities are not allowed unless we provide some kind of
-        # executor. This same thread pool could be passed to multiple workers if
-        # desired.
         activity_executor=ThreadPoolExecutor(5),
     ):
 
@@ -62,10 +58,10 @@ async def main():
         result = await client.execute_workflow(
             GreetingWorkflow.run,
             "World",
-            id="hello-activity-threaded-workflow-id",
-            task_queue="hello-activity-threaded-task-queue",
+            id="hello-activity-heartbeating-workflow-id",
+            task_queue="hello-activity-heartbeating-task-queue",
         )
-        print(f"Result on thread {threading.get_ident()}: {result}")
+        print(f"Result: {result}")
 
 
 if __name__ == "__main__":

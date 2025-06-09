@@ -1498,7 +1498,7 @@ wheels = [
 [[package]]
 name = "nexus-rpc"
 version = "0.1.0"
-source = { git = "https://github.com/nexus-rpc/sdk-python?branch=v0#61f77892f6959c385e89e227d30b6f8bf4c61333" }
+source = { editable = "../nexus-sdk-python" }
 dependencies = [
     { name = "typing-extensions" },
 ]
@@ -2670,7 +2670,7 @@ wheels = [
 [[package]]
 name = "temporalio"
 version = "1.11.1"
-source = { git = "https://github.com/temporalio/sdk-python?branch=nexus#e90ac2586457a4f6eef1441c401c64091a4811ed" }
+source = { editable = "../sdk-python" }
 dependencies = [
     { name = "nexus-rpc" },
     { name = "pdbpp" },
@@ -2800,7 +2800,7 @@ trio-async = [
 requires-dist = [
     { name = "ipython", specifier = ">=8.18.1" },
     { name = "rich", specifier = ">=13.9.4" },
-    { name = "temporalio", git = "https://github.com/temporalio/sdk-python?branch=nexus" },
+    { name = "temporalio", editable = "../sdk-python" },
 ]
 
 [package.metadata.requires-dev]
@@ -2841,10 +2841,10 @@ langchain = [
     { name = "tqdm", specifier = ">=4.62.0,<5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0.post1,<0.25" },
 ]
-nexus = [{ name = "nexus-rpc", git = "https://github.com/nexus-rpc/sdk-python?branch=v0" }]
+nexus = [{ name = "nexus-rpc", editable = "../nexus-sdk-python" }]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "temporalio", extras = ["opentelemetry"], git = "https://github.com/temporalio/sdk-python?branch=nexus" },
+    { name = "temporalio", extras = ["opentelemetry"], editable = "../sdk-python" },
 ]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]
 sentry = [{ name = "sentry-sdk", specifier = ">=1.11.0,<2" }]

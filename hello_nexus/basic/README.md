@@ -22,7 +22,7 @@ temporal operator nexus endpoint create \
   --name my-nexus-endpoint \
   --target-namespace my-target-namespace \
   --target-task-queue my-target-task-queue \
-  --description-file ./hello_nexus/basic/service_description.md
+  --description-file ./hello_nexus/basic/endpoint_description.md
 ```
 
 In one terminal, run the Temporal worker in the handler namespace:

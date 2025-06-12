@@ -14,14 +14,15 @@ from __future__ import annotations
 
 import uuid
 
+import nexusrpc.handler
 import temporalio.common
 import temporalio.nexus.handler
 from nexusrpc.handler import (
-    StartOperationContext,
     service_handler,
     sync_operation_handler,
 )
 from temporalio.client import WorkflowHandle
+from temporalio.nexus import StartOperationContext
 
 from hello_nexus.basic.handler.db_client import MyDBClient
 from hello_nexus.basic.handler.workflows import WorkflowStartedByNexusOperation
@@ -50,11 +51,11 @@ class MyNexusServiceHandler:
         self, ctx: StartOperationContext, input: MyInput
     ) -> WorkflowHandle[WorkflowStartedByNexusOperation, MyOutput]:
         # You could use self.connected_db_client here.
-        return await temporalio.nexus.handler.start_workflow(
-            ctx,
+        return await ctx.client.start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
             id=str(uuid.uuid4()),
+            task_queue=ctx.task_queue,
         )
 
     # This is a sync operation. That means that unlike the workflow run operation above,
@@ -63,7 +64,7 @@ class MyNexusServiceHandler:
     # execution duration must not exceed 10s.
     @sync_operation_handler
     async def my_sync_operation(
-        self, ctx: StartOperationContext, input: MyInput
+        self, ctx: nexusrpc.handler.StartOperationContext, input: MyInput
     ) -> MyOutput:
         # You could use self.connected_db_client here.
         return MyOutput(message=f"Hello {input.name} from sync operation!")

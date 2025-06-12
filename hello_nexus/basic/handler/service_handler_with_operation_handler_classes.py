@@ -23,16 +23,15 @@ import uuid
 import temporalio.common
 import temporalio.nexus.handler
 from nexusrpc.handler import (
-    CancelOperationContext,
     FetchOperationInfoContext,
     FetchOperationResultContext,
     OperationHandler,
     OperationInfo,
-    StartOperationContext,
     StartOperationResultSync,
     operation_handler,
     service_handler,
 )
+from temporalio.nexus import CancelOperationContext, StartOperationContext
 from temporalio.nexus.handler import WorkflowRunOperationResult
 
 from hello_nexus.basic.handler.db_client import MyDBClient
@@ -128,11 +127,11 @@ class MyWorkflowRunOperation(OperationHandler[MyInput, MyOutput]):
     async def start(
         self, ctx: StartOperationContext, input: MyInput
     ) -> WorkflowRunOperationResult:
-        wf_handle = await temporalio.nexus.handler.start_workflow(
-            ctx,
+        wf_handle = await ctx.client.start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
             id=str(uuid.uuid4()),
+            task_queue=ctx.task_queue,
         )
         return WorkflowRunOperationResult.from_workflow_handle(wf_handle)
 

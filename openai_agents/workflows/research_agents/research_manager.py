@@ -7,7 +7,6 @@ from rich.console import Console
 
 from agents import Runner, custom_span, gen_trace_id, trace, RunConfig
 
-from openai_agents.adapters.temporal_model_provider import TemporalModelProvider
 from openai_agents.workflows.research_agents.planner_agent import WebSearchPlan, WebSearchItem, new_planner_agent
 from openai_agents.workflows.research_agents.printer import Printer
 from openai_agents.workflows.research_agents.search_agent import new_search_agent
@@ -18,7 +17,7 @@ class ResearchManager:
     def __init__(self):
         self.console = Console()
         self.printer = Printer(self.console)
-        self.run_config = RunConfig(model_provider=TemporalModelProvider())
+        self.run_config = RunConfig()
         self.search_agent = new_search_agent()
         self.planner_agent = new_planner_agent()
         self.writer_agent = new_writer_agent()

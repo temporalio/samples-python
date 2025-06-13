@@ -6,7 +6,6 @@ from temporalio.client import Client, WorkflowQueryRejectedError, WorkflowUpdate
 from temporalio.common import WorkflowIDReusePolicy, QueryRejectCondition
 from temporalio.service import RPCError, RPCStatusCode
 
-from openai_agents.adapters.open_ai_converter import open_ai_data_converter
 from openai_agents.workflows.customer_service_workflow import CustomerServiceWorkflow, ProcessUserMessageInput
 
 
@@ -16,7 +15,7 @@ async def main():
     args = parser.parse_args()
 
     # Create client connected to server at the given address
-    client = await Client.connect("localhost:7233", data_converter=open_ai_data_converter)
+    client = await Client.connect("localhost:7233")
 
     handle = client.get_workflow_handle(args.conversation_id)
 

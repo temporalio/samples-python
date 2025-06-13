@@ -1,7 +1,5 @@
 from temporalio import workflow
-
-from openai_agents.adapters.temporal_model_provider import TemporalModelProvider
-
+    
 with workflow.unsafe.imports_passed_through():
     from agents import Agent, ItemHelpers, MessageOutputItem, Runner, trace, RunConfig
 
@@ -67,7 +65,7 @@ def synthesizer_agent() -> Agent:
 class AgentsAsToolsWorkflow:
     @workflow.run
     async def run(self, msg: str) -> str:
-        config = RunConfig(model_provider=TemporalModelProvider())
+        config = RunConfig()
 
         # Run the entire orchestration in a single trace
         with trace("Orchestrator evaluator"):

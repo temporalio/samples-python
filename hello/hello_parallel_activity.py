@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from typing import List
 
@@ -8,7 +9,7 @@ from temporalio.worker import Worker
 
 
 @activity.defn
-async def say_hello_activity(name: str) -> str:
+def say_hello_activity(name: str) -> str:
     return f"Hello, {name}!"
 
 
@@ -48,6 +49,7 @@ async def main():
         task_queue="hello-parallel-activity-task-queue",
         workflows=[SayHelloWorkflow],
         activities=[say_hello_activity],
+        activity_executor=ThreadPoolExecutor(10),
     ):
 
         # While the worker is running, use the client to run the workflow and

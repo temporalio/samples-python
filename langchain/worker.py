@@ -1,9 +1,10 @@
 import asyncio
 
 from activities import translate_phrase
+from langchain_interceptor import LangChainContextPropagationInterceptor
 from temporalio.client import Client
 from temporalio.worker import Worker
-from workflow import LangChainWorkflow
+from workflow import LangChainChildWorkflow, LangChainWorkflow
 
 interrupt_event = asyncio.Event()
 
@@ -13,8 +14,9 @@ async def main():
     worker = Worker(
         client,
         task_queue="langchain-task-queue",
-        workflows=[LangChainWorkflow],
+        workflows=[LangChainWorkflow, LangChainChildWorkflow],
         activities=[translate_phrase],
+        interceptors=[LangChainContextPropagationInterceptor()],
     )
 
     print("\nWorker started, ctrl+c to exit\n")
@@ -28,7 +30,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     try:
         loop.run_until_complete(main())
     except KeyboardInterrupt:

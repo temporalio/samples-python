@@ -1,5 +1,5 @@
-from dataclasses import asdict, is_dataclass
 import logging
+from dataclasses import asdict, is_dataclass
 from typing import Any, Optional, Type
 
 from temporalio import activity, workflow

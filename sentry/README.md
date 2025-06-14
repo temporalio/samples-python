@@ -8,12 +8,7 @@ for workflows and activities. The integration adds some useful context to the er
 This is a small modification of the original example Sentry integration in this repo based on SDK v1. The integration
 didn't work properly with Sentry SDK v2 due to some internal changes in the Sentry SDK that broke the worker sandbox.
 Additionally, the v1 SDK has been deprecated and is only receiving security patches and will reach EOL some time in the future.
-
 If you still need to use Sentry SDK v1, check the original example at this [commit](https://github.com/temporalio/samples-python/blob/090b96d750bafc10d4aad5ad506bb2439c413d5e/sentry).
-
-Sentry's `Hub` object is now deprecated in the v2 SDK in favour of scopes. See [Activating Current Hub Clone](https://docs.sentry.io/platforms/python/migration/1.x-to-2.x#activating-current-hub-clone)
-for more details. The changes are simple, just replace `with Hub(Hub.current):` with `with isolation_scope() as scope:`.
-These changes resolve the sandbox issues.
 
 ## Running the Sample
 

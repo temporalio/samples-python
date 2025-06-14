@@ -1,50 +1,20 @@
 import asyncio
 import logging
 import os
-from dataclasses import dataclass
-from datetime import timedelta
 
-from temporalio import activity, workflow
-from temporalio.common import RetryPolicy
+import sentry_sdk
+from sentry_sdk.integrations.asyncio import AsyncioIntegration
+from sentry_sdk.types import Event, Hint
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-with workflow.unsafe.imports_passed_through():
-    import sentry_sdk
-
-    from sentry.interceptor import SentryInterceptor
-    from sentry_sdk.integrations.asyncio import AsyncioIntegration
-    from sentry_sdk.types import Event, Hint
-
+from sentry.activity import compose_greeting
+from sentry.interceptor import SentryInterceptor
+from sentry.workflow import GreetingWorkflow
 
 logger = logging.getLogger(__name__)
 
 interrupt_event = asyncio.Event()
-
-
-@dataclass
-class ComposeGreetingInput:
-    greeting: str
-    name: str
-
-
-@activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
-    activity.logger.info("Running activity with parameter %s" % input)
-    raise Exception("Activity failed!")
-
-
-@workflow.defn
-class GreetingWorkflow:
-    @workflow.run
-    async def run(self, name: str) -> str:
-        workflow.logger.info("Running workflow with parameter %s" % name)
-        return await workflow.execute_activity(
-            compose_greeting,
-            ComposeGreetingInput("Hello", name),
-            start_to_close_timeout=timedelta(seconds=10),
-            retry_policy=RetryPolicy(maximum_attempts=1),
-        )
 
 
 def before_send(event: Event, hint: Hint) -> Event | None:
@@ -56,6 +26,7 @@ def before_send(event: Event, hint: Hint) -> Event | None:
 
 
 async def main():
+    # Configure logging
     logging.basicConfig(level=logging.DEBUG)
 
     # Initialize the Sentry SDK
@@ -95,14 +66,14 @@ async def main():
 
 if __name__ == "__main__":
     # Note: "Addressing Concurrency Issues" section in Sentry docs recommends using
-    # the AsyncioIntegration: "If you do concurrency with asyncio coroutines, make 
-    # sure to use the AsyncioIntegration which will clone the correct scope in your Tasks" 
+    # the AsyncioIntegration: "If you do concurrency with asyncio coroutines, make
+    # sure to use the AsyncioIntegration which will clone the correct scope in your Tasks"
     # See https://docs.sentry.io/platforms/python/troubleshooting/
     #
     # However, this captures all unhandled exceptions in the event loop.
-    # So handle shutdown gracefully to avoid CancelledError and KeyboardInterrupt 
+    # So handle shutdown gracefully to avoid CancelledError and KeyboardInterrupt
     # exceptions being captured as errors. Sentry also captures the worker's
-    # _ShutdownRequested exception, which is probably not useful. We've filtered this 
+    # _ShutdownRequested exception, which is probably not useful. We've filtered this
     # out in Sentry's before_send function.
     loop = asyncio.new_event_loop()
     try:

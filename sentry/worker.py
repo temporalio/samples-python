@@ -7,6 +7,10 @@ from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.types import Event, Hint
 from temporalio.client import Client
 from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import (
+    SandboxedWorkflowRunner,
+    SandboxRestrictions,
+)
 
 from sentry.activity import compose_greeting
 from sentry.interceptor import SentryInterceptor
@@ -27,7 +31,7 @@ def before_send(event: Event, hint: Hint) -> Event | None:
 
 async def main():
     # Configure logging
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     # Initialize the Sentry SDK
     if sentry_dsn := os.environ.get("SENTRY_DSN"):
@@ -57,6 +61,11 @@ async def main():
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
         interceptors=[SentryInterceptor()],  # Use SentryInterceptor for error reporting
+        workflow_runner=SandboxedWorkflowRunner(
+            restrictions=SandboxRestrictions.default.with_passthrough_modules(
+                "sentry_sdk"
+            )
+        ),
     ):
         # Wait until interrupted
         print("Worker started, ctrl+c to exit")

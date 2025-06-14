@@ -13,7 +13,7 @@ from temporalio.worker import (
 )
 
 with workflow.unsafe.imports_passed_through():
-    from sentry_sdk import isolation_scope
+    import sentry_sdk
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
     async def execute_activity(self, input: ExecuteActivityInput) -> Any:
         # https://docs.sentry.io/platforms/python/troubleshooting/#addressing-concurrency-issues
-        with isolation_scope() as scope:
+        with sentry_sdk.isolation_scope() as scope:
             scope.set_tag("temporal.execution_type", "activity")
             scope.set_tag("module", input.fn.__module__ + "." + input.fn.__qualname__)
             activity_info = activity.info()
@@ -50,7 +50,7 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
 class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
     async def execute_workflow(self, input: ExecuteWorkflowInput) -> Any:
         # https://docs.sentry.io/platforms/python/troubleshooting/#addressing-concurrency-issues
-        with isolation_scope() as scope:
+        with sentry_sdk.isolation_scope() as scope:
             scope.set_tag("temporal.execution_type", "workflow")
             scope.set_tag(
                 "module", input.run_fn.__module__ + "." + input.run_fn.__qualname__

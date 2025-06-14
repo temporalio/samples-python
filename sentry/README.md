@@ -19,19 +19,23 @@ These changes resolve the sandbox issues.
 
 For this sample, the optional `sentry` dependency group must be included. To include, run:
 
-    uv sync --group sentry
+    uv sync --no-default-groups --dev --group sentry
+
+> Note: this integration breaks when `gevent` is installed (e.g. by the gevent sample) so make sure to only install
+> the `sentry` group and run the scripts below as described.
 
 To run, first see [README.md](../README.md) for prerequisites. Set `SENTRY_DSN` environment variable to the Sentry DSN.
 Then, run the following from this directory to start the worker:
 
-    uv run worker.py
+    export SENTRY_DSN=  # You'll need a Sentry account to test against
+    export ENVIRONMENT=dev
+    uv run --no-default-groups --dev --group sentry worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    uv run starter.py
+    uv run --no-default-groups --dev --group sentry starter.py
 
-The workflow should complete with the hello result. If you alter the workflow or the activity to raise an
-`ApplicationError` instead, it should appear in Sentry.
+You should see the activity fail causing an error to be reported to Sentry.
 
 ## Screenshot
 

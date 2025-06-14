@@ -1,23 +1,26 @@
 # Temporal Python SDK Samples
 
-This is the set of Python samples for the [Python SDK](https://github.com/temporalio/sdk-python).
+This is a collection of samples showing how to use the [Python SDK](https://github.com/temporalio/sdk-python).
 
 ## Usage
 
 Prerequisites:
 
-* Python >= 3.8
-* [Poetry](https://python-poetry.org)
+* [uv](https://docs.astral.sh/uv/)
 * [Temporal CLI installed](https://docs.temporal.io/cli#install)
 * [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
 
+The SDK requires Python >= 3.9. You can install Python using uv. For example,
+
+    uv python install 3.13
+
 With this repository cloned, run the following at the root of the directory:
 
-    poetry install
+    uv sync
 
-That loads all required dependencies. Then to run a sample, usually you just run it in Python. For example:
+That loads all required dependencies. Then to run a sample, usually you just run it under uv. For example:
 
-    poetry run python hello/hello_activity.py
+    uv run hello/hello_activity.py
 
 Some examples require extra dependencies. See each sample's directory for specific instructions.
 
@@ -58,19 +61,23 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [context_propagation](context_propagation) - Context propagation through workflows/activities via interceptor.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
+* [custom_metric](custom_metric) - Custom metric to record the workflow type in the activity schedule to start latency.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
-* [message-passing introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
+* [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
+* [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
+* [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
-* [safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
+* [trio_async](trio_async) - Use asyncio Temporal in Trio-based environments.
+* [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
 
@@ -78,7 +85,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 
 Running the tests requires `poe` to be installed.
 
-    python -m pip install poethepoet
+    uv tool install poethepoet
 
 Once you have `poe` installed you can run:
 

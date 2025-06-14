@@ -24,16 +24,16 @@ Activities have been artificially slowed with `time.sleep(3)` to simulate doing 
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
 worker:
 
-    poetry run python worker.py
+    uv run worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    poetry run python starter.py
+    uv run starter.py
 
 #### Example output:
 
 ```bash
-(temporalio-samples-py3.10) user@machine:~/samples-python/activities_sticky_queues$ poetry run python starter.py
+(temporalio-samples-py3.10) user@machine:~/samples-python/activities_sticky_queues$ uv run starter.py
 Output checksums:
 49d7419e6cba3575b3158f62d053f922aa08b23c64f05411cda3213b56c84ba4
 49d7419e6cba3575b3158f62d053f922aa08b23c64f05411cda3213b56c84ba4

@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
@@ -12,22 +13,22 @@ from temporalio.worker import Worker
 
 
 @activity.defn
-async def order_apples(amount: int) -> str:
+def order_apples(amount: int) -> str:
     return f"Ordered {amount} Apples..."
 
 
 @activity.defn
-async def order_bananas(amount: int) -> str:
+def order_bananas(amount: int) -> str:
     return f"Ordered {amount} Bananas..."
 
 
 @activity.defn
-async def order_cherries(amount: int) -> str:
+def order_cherries(amount: int) -> str:
     return f"Ordered {amount} Cherries..."
 
 
 @activity.defn
-async def order_oranges(amount: int) -> str:
+def order_oranges(amount: int) -> str:
     return f"Ordered {amount} Oranges..."
 
 
@@ -54,44 +55,27 @@ class ShoppingList:
 @workflow.defn
 class PurchaseFruitsWorkflow:
     @workflow.run
-    async def run(self, list: ShoppingList) -> str:
+    async def run(self, shopping_list: ShoppingList) -> str:
         # Order each thing on the list
         ordered: List[str] = []
-        for item in list.items:
+        for item in shopping_list.items:
             if item.fruit is Fruit.APPLE:
-                ordered.append(
-                    await workflow.execute_activity(
-                        order_apples,
-                        item.amount,
-                        start_to_close_timeout=timedelta(seconds=5),
-                    )
-                )
+                order_function = order_apples
             elif item.fruit is Fruit.BANANA:
-                ordered.append(
-                    await workflow.execute_activity(
-                        order_bananas,
-                        item.amount,
-                        start_to_close_timeout=timedelta(seconds=5),
-                    )
-                )
+                order_function = order_bananas
             elif item.fruit is Fruit.CHERRY:
-                ordered.append(
-                    await workflow.execute_activity(
-                        order_cherries,
-                        item.amount,
-                        start_to_close_timeout=timedelta(seconds=5),
-                    )
-                )
+                order_function = order_cherries
             elif item.fruit is Fruit.ORANGE:
-                ordered.append(
-                    await workflow.execute_activity(
-                        order_oranges,
-                        item.amount,
-                        start_to_close_timeout=timedelta(seconds=5),
-                    )
-                )
+                order_function = order_oranges
             else:
                 raise ValueError(f"Unrecognized fruit: {item.fruit}")
+            ordered.append(
+                await workflow.execute_activity(
+                    order_function,
+                    item.amount,
+                    start_to_close_timeout=timedelta(seconds=5),
+                )
+            )
         return "".join(ordered)
 
 
@@ -105,6 +89,7 @@ async def main():
         task_queue="hello-activity-choice-task-queue",
         workflows=[PurchaseFruitsWorkflow],
         activities=[order_apples, order_bananas, order_cherries, order_oranges],
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to run the workflow and

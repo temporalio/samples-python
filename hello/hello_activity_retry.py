@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -15,7 +16,7 @@ class ComposeGreetingInput:
 
 
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
+def compose_greeting(input: ComposeGreetingInput) -> str:
     print(f"Invoking activity, attempt number {activity.info().attempt}")
     # Fail the first 3 attempts, succeed the 4th
     if activity.info().attempt < 4:
@@ -52,6 +53,7 @@ async def main():
         task_queue="hello-activity-retry-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to run the workflow and

@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -14,7 +15,7 @@ class ComposeGreetingInput:
 
 
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
+def compose_greeting(input: ComposeGreetingInput) -> str:
     return f"{input.greeting}, {input.name}!"
 
 
@@ -40,6 +41,7 @@ async def main():
         task_queue="hello-cron-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         print("Running workflow once a minute")

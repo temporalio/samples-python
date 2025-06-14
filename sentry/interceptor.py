@@ -1,4 +1,5 @@
 from dataclasses import asdict, is_dataclass
+import logging
 from typing import Any, Optional, Type, Union
 
 from temporalio import activity, workflow
@@ -13,6 +14,9 @@ from temporalio.worker import (
 
 with workflow.unsafe.imports_passed_through():
     from sentry_sdk import Scope, isolation_scope
+
+
+logger = logging.getLogger(__name__)
 
 
 def _set_common_workflow_tags(scope: Scope, info: Union[workflow.Info, activity.Info]):
@@ -72,7 +76,13 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
 
                 if not workflow.unsafe.is_replaying():
                     with workflow.unsafe.sandbox_unrestricted():
-                        scope.capture_exception()
+                        try:
+                            scope.capture_exception()
+                        except TypeError as e2:
+                            logger.exception(
+                                "An error occured when trying to call Sentry from the interceptor."
+                            )
+                            raise e2 from e
                 raise e
 
 

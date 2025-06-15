@@ -6,13 +6,13 @@ from temporalio.client import Client
 from temporalio.common import RetryPolicy
 from temporalio.worker import Worker
 
-from custom_decorator.activity_utils import auto_heartbeater
+from custom_decorator.activity_utils import _auto_heartbeater
 
 
 # Here we use our automatic heartbeater decorator. If this wasn't present, our
 # activity would timeout since it isn't heartbeating.
 @activity.defn
-@auto_heartbeater
+@_auto_heartbeater
 async def wait_for_cancel_activity() -> str:
     # Wait forever, catch the cancel, and return some value
     try:

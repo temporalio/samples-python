@@ -1,6 +1,6 @@
-# POC of Temporal integration with OpenAI Agents SDK
+# Pre-release of Temporal integration with OpenAI Agents SDK
 
-Temporal equivalent of sample code from OpenAI Agents SDK:
+These sampoles are adatapted from the code in the OpenAI Agents SDK:
 
 https://github.com/openai/openai-agents-python/tree/main/examples
 

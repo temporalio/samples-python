@@ -61,7 +61,7 @@ def synthesizer_agent() -> Agent:
     )
 
 
-@workflow.defn(sandboxed=False)
+@workflow.defn
 class AgentsAsToolsWorkflow:
     @workflow.run
     async def run(self, msg: str) -> str:
@@ -78,7 +78,7 @@ class AgentsAsToolsWorkflow:
                 if isinstance(item, MessageOutputItem):
                     text = ItemHelpers.text_message_output(item)
                     if text:
-                        print(f"  - Translation step: {text}")
+                        workflow.logger.info(f"  - Translation step: {text}")
 
             synthesizer_result = await Runner.run(
                 synthesizer, orchestrator_result.to_input_list(), run_config=config

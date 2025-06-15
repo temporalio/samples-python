@@ -2,21 +2,22 @@ from __future__ import annotations
 
 import asyncio
 
-# with workflow.unsafe.imports_passed_through():
-from rich.console import Console
+from temporalio import workflow
 
-from agents import Runner, custom_span, gen_trace_id, trace, RunConfig
-
-from openai_agents.workflows.research_agents.planner_agent import WebSearchPlan, WebSearchItem, new_planner_agent
-from openai_agents.workflows.research_agents.printer import Printer
-from openai_agents.workflows.research_agents.search_agent import new_search_agent
-from openai_agents.workflows.research_agents.writer_agent import ReportData, new_writer_agent
+with workflow.unsafe.imports_passed_through():
+    # TODO: Restore progress updates
+    # from rich.console import Console
+    from agents import Runner, custom_span, gen_trace_id, trace, RunConfig
+    from openai_agents.workflows.research_agents.planner_agent import WebSearchPlan, WebSearchItem, new_planner_agent
+    # from openai_agents.workflows.research_agents.printer import Printer
+    from openai_agents.workflows.research_agents.search_agent import new_search_agent
+    from openai_agents.workflows.research_agents.writer_agent import ReportData, new_writer_agent
 
 
 class ResearchManager:
     def __init__(self):
-        self.console = Console()
-        self.printer = Printer(self.console)
+        # self.console = Console()
+        # self.printer = Printer(self.console)
         self.run_config = RunConfig()
         self.search_agent = new_search_agent()
         self.planner_agent = new_planner_agent()
@@ -26,27 +27,27 @@ class ResearchManager:
     async def run(self, query: str) -> str:
         trace_id = gen_trace_id()
         with trace("Research trace", trace_id=trace_id):
-            self.printer.update_item(
-                "trace_id",
-                f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}",
-                is_done=True,
-                hide_checkmark=True,
-            )
+            # self.printer.update_item(
+            #     "trace_id",
+            #     f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}",
+            #     is_done=True,
+            #     hide_checkmark=True,
+            # )
 
-            self.printer.update_item(
-                "starting",
-                "Starting research...",
-                is_done=True,
-                hide_checkmark=True,
-            )
+            # self.printer.update_item(
+            #     "starting",
+            #     "Starting research...",
+            #     is_done=True,
+            #     hide_checkmark=True,
+            # )
             search_plan = await self._plan_searches(query)
             search_results = await self._perform_searches(search_plan)
             report = await self._write_report(query, search_results)
 
             final_report = f"Report summary\n\n{report.short_summary}"
-            self.printer.update_item("final_report", final_report, is_done=True)
+            # self.printer.update_item("final_report", final_report, is_done=True)
 
-            self.printer.end()
+            # self.printer.end()
 
         print("\n\n=====REPORT=====\n\n")
         print(f"Report: {report.markdown_report}")
@@ -57,23 +58,23 @@ class ResearchManager:
 
 
     async def _plan_searches(self, query: str) -> WebSearchPlan:
-        self.printer.update_item("planning", "Planning searches...")
+        # self.printer.update_item("planning", "Planning searches...")
         result = await Runner.run(
             self.planner_agent,
             f"Query: {query}",
             run_config=self.run_config,
         )
-        self.printer.update_item(
-            "planning",
-            f"Will perform {len(result.final_output.searches)} searches",
-            is_done=True,
-        )
+        # self.printer.update_item(
+        #     "planning",
+        #     f"Will perform {len(result.final_output.searches)} searches",
+        #     is_done=True,
+        # )
         return result.final_output_as(WebSearchPlan)
 
 
     async def _perform_searches(self, search_plan: WebSearchPlan) -> list[str]:
         with custom_span("Search the web"):
-            self.printer.update_item("searching", "Searching...")
+            # self.printer.update_item("searching", "Searching...")
             num_completed = 0
             tasks = [asyncio.create_task(self._search(item)) for item in search_plan.searches]
             results = []
@@ -82,10 +83,10 @@ class ResearchManager:
                 if result is not None:
                     results.append(result)
                 num_completed += 1
-                self.printer.update_item(
-                    "searching", f"Searching... {num_completed}/{len(tasks)} completed"
-                )
-            self.printer.mark_item_done("searching")
+                # self.printer.update_item(
+                #     "searching", f"Searching... {num_completed}/{len(tasks)} completed"
+                # )
+            # self.printer.mark_item_done("searching")
             return results
 
 
@@ -103,7 +104,7 @@ class ResearchManager:
 
 
     async def _write_report(self, query: str, search_results: list[str]) -> ReportData:
-        self.printer.update_item("writing", "Thinking about report...")
+        # self.printer.update_item("writing", "Thinking about report...")
         input = f"Original query: {query}\nSummarized search results: {search_results}"
         result = await Runner.run(
             self.writer_agent,
@@ -128,5 +129,5 @@ class ResearchManager:
         #         next_message += 1
         #         last_update = time.time()
 
-        self.printer.mark_item_done("writing")
+        # self.printer.mark_item_done("writing")
         return result.final_output_as(ReportData)

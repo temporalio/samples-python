@@ -1,13 +1,6 @@
 from dataclasses import dataclass
 
-from openai import BaseModel
 from temporalio import activity
-
-
-class Weather(BaseModel):
-    city: str
-    temperature_range: str
-    conditions: str
 
 
 @dataclass

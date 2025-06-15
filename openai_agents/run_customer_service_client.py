@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-from ftplib import print_line
 
 from temporalio import workflow
 from temporalio.client import (
@@ -73,7 +72,7 @@ async def main():
             history.extend(new_history)
             print(*new_history, sep="\n")
         except WorkflowUpdateFailedError:
-            print_line("** Stale conversation. Reloading...")
+            print("** Stale conversation. Reloading...")
             length = len(history)
             history = await handle.query(
                 CustomerServiceWorkflow.get_chat_history,

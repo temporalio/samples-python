@@ -3,12 +3,12 @@ from __future__ import annotations as _annotations
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from pydantic import BaseModel
     from agents import (
         Agent,
         HandoffOutputItem,
         ItemHelpers,
         MessageOutputItem,
+        RunConfig,
         RunContextWrapper,
         Runner,
         ToolCallItem,
@@ -16,9 +16,10 @@ with workflow.unsafe.imports_passed_through():
         TResponseInputItem,
         function_tool,
         handoff,
-        trace, RunConfig,
+        trace,
     )
     from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
+    from pydantic import BaseModel
 
 
 ### CONTEXT
@@ -35,7 +36,8 @@ class AirlineAgentContext(BaseModel):
 
 
 @function_tool(
-    name_override="faq_lookup_tool", description_override="Lookup frequently asked questions."
+    name_override="faq_lookup_tool",
+    description_override="Lookup frequently asked questions.",
 )
 async def faq_lookup_tool(question: str) -> str:
     if "bag" in question or "baggage" in question:
@@ -57,7 +59,9 @@ async def faq_lookup_tool(question: str) -> str:
 
 @function_tool
 async def update_seat(
-        context: RunContextWrapper[AirlineAgentContext], confirmation_number: str, new_seat: str
+    context: RunContextWrapper[AirlineAgentContext],
+    confirmation_number: str,
+    new_seat: str,
 ) -> str:
     """
     Update the seat for a given confirmation number.
@@ -77,12 +81,15 @@ async def update_seat(
 ### HOOKS
 
 
-async def on_seat_booking_handoff(context: RunContextWrapper[AirlineAgentContext]) -> None:
+async def on_seat_booking_handoff(
+    context: RunContextWrapper[AirlineAgentContext],
+) -> None:
     flight_number = f"FLT-{workflow.random().randint(100, 999)}"
     context.context.flight_number = flight_number
 
 
 ### AGENTS
+
 
 def init_agents() -> Agent[AirlineAgentContext]:
     """
@@ -141,7 +148,6 @@ class ProcessUserMessageInput(BaseModel):
 
 @workflow.defn
 class CustomerServiceWorkflow:
-
     def __init__(self, input_items: list[TResponseInputItem] = None):
         self.run_config = RunConfig()
         self.chat_history = []
@@ -152,7 +158,9 @@ class CustomerServiceWorkflow:
     @workflow.run
     async def run(self, input_items: list[TResponseInputItem] = None):
         await workflow.wait_condition(
-            lambda: workflow.info().is_continue_as_new_suggested() and workflow.all_handlers_finished())
+            lambda: workflow.info().is_continue_as_new_suggested()
+            and workflow.all_handlers_finished()
+        )
         workflow.continue_as_new(self.input_items)
 
     @workflow.query
@@ -165,13 +173,19 @@ class CustomerServiceWorkflow:
         self.chat_history.append(f"User: {input.user_input}")
         with trace("Customer service", group_id=workflow.info().workflow_id):
             self.input_items.append({"content": input.user_input, "role": "user"})
-            result = await Runner.run(self.current_agent, self.input_items, context=self.context,
-                                      run_config=self.run_config)
+            result = await Runner.run(
+                self.current_agent,
+                self.input_items,
+                context=self.context,
+                run_config=self.run_config,
+            )
 
             for new_item in result.new_items:
                 agent_name = new_item.agent.name
                 if isinstance(new_item, MessageOutputItem):
-                    self.chat_history.append(f"{agent_name}: {ItemHelpers.text_message_output(new_item)}")
+                    self.chat_history.append(
+                        f"{agent_name}: {ItemHelpers.text_message_output(new_item)}"
+                    )
                 elif isinstance(new_item, HandoffOutputItem):
                     self.chat_history.append(
                         f"Handed off from {new_item.source_agent.name} to {new_item.target_agent.name}"
@@ -179,9 +193,13 @@ class CustomerServiceWorkflow:
                 elif isinstance(new_item, ToolCallItem):
                     self.chat_history.append(f"{agent_name}: Calling a tool")
                 elif isinstance(new_item, ToolCallOutputItem):
-                    self.chat_history.append(f"{agent_name}: Tool call output: {new_item.output}")
+                    self.chat_history.append(
+                        f"{agent_name}: Tool call output: {new_item.output}"
+                    )
                 else:
-                    self.chat_history.append(f"{agent_name}: Skipping item: {new_item.__class__.__name__}")
+                    self.chat_history.append(
+                        f"{agent_name}: Skipping item: {new_item.__class__.__name__}"
+                    )
             self.input_items = result.to_input_list()
             self.current_agent = result.last_agent
         workflow.set_current_details("\n\n".join(self.chat_history))

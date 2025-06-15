@@ -1,7 +1,6 @@
 # Agent used to synthesize a final report from the individual summaries.
-from pydantic import BaseModel
-
 from agents import Agent
+from pydantic import BaseModel
 
 PROMPT = (
     "You are a senior researcher tasked with writing a cohesive report for a research query. "

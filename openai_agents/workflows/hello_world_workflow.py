@@ -4,6 +4,7 @@ from temporalio import workflow
 with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
 
+
 @workflow.defn
 class HelloWorldAgent:
     @workflow.run

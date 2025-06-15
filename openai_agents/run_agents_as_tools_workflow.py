@@ -12,10 +12,13 @@ async def main():
     client = await Client.connect("localhost:7233")
 
     # Execute a workflow
-    result = await client.execute_workflow(AgentsAsToolsWorkflow.run,
-                                           "Translate to English: '¿Cómo estás?'",
-                                           id="my-workflow-id", task_queue="my-task-queue",
-                                           id_reuse_policy=WorkflowIDReusePolicy.TERMINATE_IF_RUNNING)
+    result = await client.execute_workflow(
+        AgentsAsToolsWorkflow.run,
+        "Translate to English: '¿Cómo estás?'",
+        id="my-workflow-id",
+        task_queue="my-task-queue",
+        id_reuse_policy=WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
+    )
 
     print(f"Result: {result}")
 

@@ -4,21 +4,23 @@ import asyncio
 import concurrent.futures
 
 from temporalio import workflow
-
 from temporalio.client import Client
-from temporalio.worker import Worker
 from temporalio.contrib.openai_agents.invoke_model_activity import ModelActivity
-from temporalio.contrib.openai_agents.open_ai_data_converter import open_ai_data_converter
+from temporalio.contrib.openai_agents.open_ai_data_converter import (
+    open_ai_data_converter,
+)
+from temporalio.worker import Worker
 
 with workflow.unsafe.imports_passed_through():
     from openai_agents.workflows.hello_world_workflow import HelloWorldAgent
     from openai_agents.workflows.tools_workflow import ToolsWorkflow
     from openai_agents.workflows.research_bot_workflow import ResearchWorkflow
-    from openai_agents.workflows.customer_service_workflow import CustomerServiceWorkflow
+    from openai_agents.workflows.customer_service_workflow import (
+        CustomerServiceWorkflow,
+    )
     from openai_agents.workflows.agents_as_tools_workflow import AgentsAsToolsWorkflow
 
     from openai_agents.workflows.get_weather_activity import get_weather
-
 
 from temporalio.contrib.openai_agents.temporal_openai_agents import (
     set_open_ai_agent_temporal_overrides,
@@ -39,16 +41,16 @@ async def main():
                 client,
                 task_queue="my-task-queue",
                 workflows=[
-                        HelloWorldAgent,
-                        ToolsWorkflow,
-                        ResearchWorkflow,
-                        CustomerServiceWorkflow,
-                        AgentsAsToolsWorkflow,
-                    ],
+                    HelloWorldAgent,
+                    ToolsWorkflow,
+                    ResearchWorkflow,
+                    CustomerServiceWorkflow,
+                    AgentsAsToolsWorkflow,
+                ],
                 activities=[
-                        model_activity.invoke_model_activity,
-                        get_weather,
-                    ],
+                    model_activity.invoke_model_activity,
+                    get_weather,
+                ],
                 activity_executor=activity_executor,
             )
             await worker.run()

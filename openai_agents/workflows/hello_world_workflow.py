@@ -1,12 +1,10 @@
 from temporalio import workflow
 
+# Import agent Agent and Runner
+with workflow.unsafe.imports_passed_through():
+    from agents import Agent, Runner
 
-# Import our activity, passing it through the sandbox
-# with workflow.unsafe.imports_passed_through():
-from agents import Agent, Runner, RunConfig
-
-
-@workflow.defn(sandboxed=False)
+@workflow.defn
 class HelloWorldAgent:
     @workflow.run
     async def run(self, prompt: str) -> str:

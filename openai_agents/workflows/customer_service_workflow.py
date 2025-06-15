@@ -1,4 +1,4 @@
-# from __future__ import annotations as _annotations
+from __future__ import annotations as _annotations
 
 from temporalio import workflow
 
@@ -139,7 +139,7 @@ class ProcessUserMessageInput(BaseModel):
     chat_length: int
 
 
-@workflow.defn(sandboxed=False)
+@workflow.defn
 class CustomerServiceWorkflow:
 
     def __init__(self, input_items: list[TResponseInputItem] = None):

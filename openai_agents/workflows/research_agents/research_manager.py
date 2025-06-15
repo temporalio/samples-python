@@ -7,11 +7,20 @@ from temporalio import workflow
 with workflow.unsafe.imports_passed_through():
     # TODO: Restore progress updates
     # from rich.console import Console
-    from agents import Runner, custom_span, gen_trace_id, trace, RunConfig
-    from openai_agents.workflows.research_agents.planner_agent import WebSearchPlan, WebSearchItem, new_planner_agent
+    from agents import RunConfig, Runner, custom_span, gen_trace_id, trace
+
+    from openai_agents.workflows.research_agents.planner_agent import (
+        WebSearchItem,
+        WebSearchPlan,
+        new_planner_agent,
+    )
+
     # from openai_agents.workflows.research_agents.printer import Printer
     from openai_agents.workflows.research_agents.search_agent import new_search_agent
-    from openai_agents.workflows.research_agents.writer_agent import ReportData, new_writer_agent
+    from openai_agents.workflows.research_agents.writer_agent import (
+        ReportData,
+        new_writer_agent,
+    )
 
 
 class ResearchManager:
@@ -22,7 +31,6 @@ class ResearchManager:
         self.search_agent = new_search_agent()
         self.planner_agent = new_planner_agent()
         self.writer_agent = new_writer_agent()
-
 
     async def run(self, query: str) -> str:
         trace_id = gen_trace_id()
@@ -56,7 +64,6 @@ class ResearchManager:
         print(f"Follow up questions: {follow_up_questions}")
         return report.markdown_report
 
-
     async def _plan_searches(self, query: str) -> WebSearchPlan:
         # self.printer.update_item("planning", "Planning searches...")
         result = await Runner.run(
@@ -71,12 +78,13 @@ class ResearchManager:
         # )
         return result.final_output_as(WebSearchPlan)
 
-
     async def _perform_searches(self, search_plan: WebSearchPlan) -> list[str]:
         with custom_span("Search the web"):
             # self.printer.update_item("searching", "Searching...")
             num_completed = 0
-            tasks = [asyncio.create_task(self._search(item)) for item in search_plan.searches]
+            tasks = [
+                asyncio.create_task(self._search(item)) for item in search_plan.searches
+            ]
             results = []
             for task in asyncio.as_completed(tasks):
                 result = await task
@@ -89,7 +97,6 @@ class ResearchManager:
             # self.printer.mark_item_done("searching")
             return results
 
-
     async def _search(self, item: WebSearchItem) -> str | None:
         input = f"Search term: {item.query}\nReason for searching: {item.reason}"
         try:
@@ -101,7 +108,6 @@ class ResearchManager:
             return str(result.final_output)
         except Exception:
             return None
-
 
     async def _write_report(self, query: str, search_results: list[str]) -> ReportData:
         # self.printer.update_item("writing", "Thinking about report...")

@@ -37,7 +37,7 @@ logging.getLogger("temporalio.worker._workflow_instance").addFilter(CustomLogFil
 class GreetingWorkflow:
     @workflow.run
     async def run(self):
-        raise RuntimeError("This is a test error")
+        raise RuntimeError("This error is an experiment to check the log level")
 
 
 async def main():

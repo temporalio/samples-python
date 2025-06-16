@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
@@ -12,22 +13,22 @@ from temporalio.worker import Worker
 
 
 @activity.defn
-async def order_apples(amount: int) -> str:
+def order_apples(amount: int) -> str:
     return f"Ordered {amount} Apples..."
 
 
 @activity.defn
-async def order_bananas(amount: int) -> str:
+def order_bananas(amount: int) -> str:
     return f"Ordered {amount} Bananas..."
 
 
 @activity.defn
-async def order_cherries(amount: int) -> str:
+def order_cherries(amount: int) -> str:
     return f"Ordered {amount} Cherries..."
 
 
 @activity.defn
-async def order_oranges(amount: int) -> str:
+def order_oranges(amount: int) -> str:
     return f"Ordered {amount} Oranges..."
 
 
@@ -88,6 +89,7 @@ async def main():
         task_queue="hello-activity-choice-task-queue",
         workflows=[PurchaseFruitsWorkflow],
         activities=[order_apples, order_bananas, order_cherries, order_oranges],
+        activity_executor=ThreadPoolExecutor(5),
     ):
 
         # While the worker is running, use the client to run the workflow and

@@ -1,6 +1,6 @@
 # LangChain Sample
 
-This sample shows you how you can use Temporal to orchestrate workflows for [LangChain](https://www.langchain.com).
+This sample shows you how you can use Temporal to orchestrate workflows for [LangChain](https://www.langchain.com). It includes an interceptor that makes LangSmith traces work seamlessly across Temporal clients, workflows and activities.
 
 For this sample, the optional `langchain` dependency group must be included. To include, run:
 
@@ -21,8 +21,10 @@ This will start the worker. Then, in another terminal, run the following to exec
 
 Then, in another terminal, run the following command to translate a phrase:
 
-    curl -X POST "http://localhost:8000/translate?phrase=hello%20world&language=Spanish"
+    curl -X POST "http://localhost:8000/translate?phrase=hello%20world&language1=Spanish&language2=French&language3=Russian"
 
 Which should produce some output like:
 
-    {"translation":"Hola mundo"}
+    {"translations":{"French":"Bonjour tout le monde","Russian":"Привет, мир","Spanish":"Hola mundo"}}
+
+Check [LangSmith](https://smith.langchain.com/) for the corresponding trace.

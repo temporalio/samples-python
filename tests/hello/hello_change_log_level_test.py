@@ -33,7 +33,7 @@ async def test_workflow_with_log_capture(client: Client):
         )
         await asyncio.sleep(
             0.2
-        )  # arbitrary wait to ensure the workflow has started and logged
+        )  # small wait to ensure the workflow has started, failed, and logged
         await handle.terminate()
 
     logger.removeHandler(handler)

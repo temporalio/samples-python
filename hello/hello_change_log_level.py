@@ -11,6 +11,8 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 # --- Begin logging set‑up ----------------------------------------------------------
+_WORKFLOW_TASK_FAILURE_LOG_PREFIX = "Failed activation on workflow"
+
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO,
@@ -21,7 +23,7 @@ logging.basicConfig(
 class CustomLogFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         if (
-            record.msg.startswith("Failed activation on workflow")
+            record.msg.startswith(_WORKFLOW_TASK_FAILURE_LOG_PREFIX)
             and record.levelno < logging.ERROR
         ):
             record.levelno = logging.ERROR
@@ -29,7 +31,8 @@ class CustomLogFilter(logging.Filter):
         return True
 
 
-logging.getLogger("temporalio.worker._workflow_instance").addFilter(CustomLogFilter())
+for h in logging.getLogger().handlers:
+    h.addFilter(CustomLogFilter())
 # --- End logging set‑up ----------------------------------------------------------
 
 

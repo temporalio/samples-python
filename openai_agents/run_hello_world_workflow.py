@@ -1,4 +1,5 @@
 import asyncio
+from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.common import WorkflowIDReusePolicy
@@ -13,7 +14,9 @@ async def main():
     # Create client connected to server at the given address
     client = await Client.connect("localhost:7233")
 
-    with set_open_ai_agent_temporal_overrides():
+    with set_open_ai_agent_temporal_overrides(
+        start_to_close_timeout=timedelta(seconds=10)
+    ):
         # Execute a workflow
         result = await client.execute_workflow(
             HelloWorldAgent.run,

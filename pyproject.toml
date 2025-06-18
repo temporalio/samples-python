@@ -48,9 +48,9 @@ open-telemetry = [
     "temporalio[opentelemetry]",
     "opentelemetry-exporter-otlp-proto-grpc==1.18.0",
 ]
-openai = [
-    "openai-agents @ git+https://github.com/openai/openai-agents-python@83251c385483cfdf89121ecf313880f6076f8917",
-    "temporalio[openai] @ git+https://github.com/temporalio/sdk-python@openai-agents-tests",
+openai-agents = [
+    "openai-agents >= 0.0.19",
+    "temporalio[openai-agents] @ git+https://github.com/temporalio/sdk-python@openai-agents-tests",
     "rich>=14.0.0",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]

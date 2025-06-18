@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+from datetime import timedelta
 
 from temporalio import workflow
 from temporalio.client import Client
@@ -28,7 +29,9 @@ from temporalio.contrib.openai_agents.temporal_openai_agents import (
 
 
 async def main():
-    with set_open_ai_agent_temporal_overrides():
+    with set_open_ai_agent_temporal_overrides(
+        start_to_close_timeout=timedelta(seconds=60),
+    ):
         # Create client connected to server at the given address
         client = await Client.connect(
             "localhost:7233",

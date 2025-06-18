@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from temporalio import workflow
 from temporalio.contrib.openai_agents.temporal_tools import activity_as_tool
 
@@ -17,7 +19,11 @@ class ToolsWorkflow:
         agent = Agent(
             name="Hello world",
             instructions="You are a helpful agent.",
-            tools=[activity_as_tool(get_weather)],
+            tools=[
+                activity_as_tool(
+                    get_weather, start_to_close_timeout=timedelta(seconds=10)
+                )
+            ],
         )
 
         result = await Runner.run(agent, input=question)

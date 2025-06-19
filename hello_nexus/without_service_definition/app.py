@@ -82,7 +82,7 @@ async def execute_caller_workflow(client: Optional[Client] = None) -> str:
         client,
         task_queue=TASK_QUEUE,
         workflows=[CallerWorkflow, HandlerWorkflow],
-        nexus_services=[MyNexusServiceHandler()],
+        nexus_service_handlers=[MyNexusServiceHandler()],
         # TODO(dan): isinstance(op, nexusrpc.contract.Operation) is failing under the
         # sandbox in temporalio/worker/_interceptor.py
         workflow_runner=UnsandboxedWorkflowRunner(),

@@ -52,7 +52,7 @@ async def main(
         client,
         task_queue=TASK_QUEUE,
         workflows=[WorkflowStartedByNexusOperation],
-        nexus_services=[my_nexus_service_handler],
+        nexus_service_handlers=[my_nexus_service_handler],
     ):
         logging.info("Worker started, ctrl+c to exit")
         await interrupt_event.wait()

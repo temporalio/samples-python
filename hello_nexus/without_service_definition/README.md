@@ -15,8 +15,8 @@ Run the following:
 temporal operator namespace create --namespace my-namespace
 temporal operator nexus endpoint create \
   --name my-nexus-endpoint \
-  --target-namespace my-namespace \
-  --target-task-queue my-task-queue
+  --handler-namespace my-namespace \
+  --handler-task-queue my-task-queue
 ```
 
 From the root of the repo, run

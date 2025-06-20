@@ -11,6 +11,7 @@ with workflow.unsafe.imports_passed_through():
         open_ai_data_converter,
     )
 
+
 async def main():
     # Create client connected to server at the given address
     client = await Client.connect(

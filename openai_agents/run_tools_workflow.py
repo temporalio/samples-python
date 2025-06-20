@@ -22,7 +22,6 @@ async def main():
         "What is the weather in Tokio?",
         id="tools-workflow",
         task_queue="openai-agents-task-queue",
-        id_reuse_policy=WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
     )
 
     print(f"Result: {result}")

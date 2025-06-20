@@ -51,7 +51,6 @@ async def main():
             CustomerServiceWorkflow.run,
             id=args.conversation_id,
             task_queue="openai-agents-task-queue",
-            id_reuse_policy=WorkflowIDReusePolicy.ALLOW_DUPLICATE,
         )
         history = []
     print(*history, sep="\n")

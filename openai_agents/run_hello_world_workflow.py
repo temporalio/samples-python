@@ -1,15 +1,22 @@
 import asyncio
-from datetime import timedelta
 
+from temporalio import workflow
 from temporalio.client import Client
 from temporalio.common import WorkflowIDReusePolicy
 
 from openai_agents.workflows.hello_world_workflow import HelloWorldAgent
 
+with workflow.unsafe.imports_passed_through():
+    from temporalio.contrib.openai_agents.open_ai_data_converter import (
+        open_ai_data_converter,
+    )
 
 async def main():
     # Create client connected to server at the given address
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(
+        "localhost:7233",
+        data_converter=open_ai_data_converter,
+    )
 
     # Execute a workflow
     result = await client.execute_workflow(

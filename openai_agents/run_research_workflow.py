@@ -1,7 +1,6 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.common import WorkflowIDReusePolicy
 from temporalio.contrib.openai_agents.open_ai_data_converter import (
     open_ai_data_converter,
 )

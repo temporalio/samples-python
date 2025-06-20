@@ -6,7 +6,7 @@ from temporalio.client import (
     WorkflowQueryRejectedError,
     WorkflowUpdateFailedError,
 )
-from temporalio.common import QueryRejectCondition, WorkflowIDReusePolicy
+from temporalio.common import QueryRejectCondition
 from temporalio.contrib.openai_agents.open_ai_data_converter import (
     open_ai_data_converter,
 )

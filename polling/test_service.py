@@ -26,5 +26,5 @@ async def get_service_result(input):
         # Set the error as BENIGN to indicate it is an expected error.
         # BENIGN errors have activity failure logs downgraded to DEBUG level
         # and do not emit activity failure metrics.
-        category=ApplicationErrorCategory.BENIGN
+        category=ApplicationErrorCategory.BENIGN,
     )

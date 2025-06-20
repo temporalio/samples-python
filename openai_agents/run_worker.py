@@ -39,24 +39,22 @@ async def main():
         )
 
         model_activity = ModelActivity(model_provider=None)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as activity_executor:
-            worker = Worker(
-                client,
-                task_queue="my-task-queue",
-                workflows=[
-                    HelloWorldAgent,
-                    ToolsWorkflow,
-                    ResearchWorkflow,
-                    CustomerServiceWorkflow,
-                    AgentsAsToolsWorkflow,
-                ],
-                activities=[
-                    model_activity.invoke_model_activity,
-                    get_weather,
-                ],
-                activity_executor=activity_executor,
-            )
-            await worker.run()
+        worker = Worker(
+            client,
+            task_queue="openai-agents-task-queue",
+            workflows=[
+                HelloWorldAgent,
+                ToolsWorkflow,
+                ResearchWorkflow,
+                CustomerServiceWorkflow,
+                AgentsAsToolsWorkflow,
+            ],
+            activities=[
+                model_activity.invoke_model_activity,
+                get_weather,
+            ],
+        )
+        await worker.run()
 
 
 if __name__ == "__main__":

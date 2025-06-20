@@ -21,7 +21,7 @@ async def main():
         AgentsAsToolsWorkflow.run,
         "Translate to English: '¿Cómo estás?'",
         id="my-workflow-id",
-        task_queue="my-task-queue",
+        task_queue="openai-agents-task-queue",
         id_reuse_policy=WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
     )
 

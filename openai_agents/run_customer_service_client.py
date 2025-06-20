@@ -50,7 +50,7 @@ async def main():
         await client.start_workflow(
             CustomerServiceWorkflow.run,
             id=args.conversation_id,
-            task_queue="my-task-queue",
+            task_queue="openai-agents-task-queue",
             id_reuse_policy=WorkflowIDReusePolicy.ALLOW_DUPLICATE,
         )
         history = []

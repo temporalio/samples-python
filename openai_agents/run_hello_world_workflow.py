@@ -21,7 +21,7 @@ async def main():
         HelloWorldAgent.run,
         "Tell me about recursion in programming.",
         id="my-workflow-id",
-        task_queue="my-task-queue",
+        task_queue="openai-agents-task-queue",
         id_reuse_policy=WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
     )
     print(f"Result: {result}")

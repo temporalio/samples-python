@@ -50,13 +50,13 @@ async def main():
     client = await Client.connect("localhost:7233")
     async with Worker(
         client,
-        task_queue="hello-task-queue",
+        task_queue="hello-change-log-level-task-queue",
         workflows=[GreetingWorkflow],
     ):
         await client.execute_workflow(
             GreetingWorkflow.run,
-            id="hello-workflow-id",
-            task_queue="hello-task-queue",
+            id="hello-change-log-level-workflow-id",
+            task_queue="hello-change-log-level-task-queue",
         )
 
 

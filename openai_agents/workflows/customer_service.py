@@ -5,7 +5,6 @@ from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
 from pydantic import BaseModel
 from temporalio import workflow
 
-
 ### CONTEXT
 
 

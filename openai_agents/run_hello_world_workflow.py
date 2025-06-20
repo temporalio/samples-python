@@ -1,15 +1,12 @@
 import asyncio
 
-from temporalio import workflow
 from temporalio.client import Client
 from temporalio.common import WorkflowIDReusePolicy
+from temporalio.contrib.openai_agents.open_ai_data_converter import (
+    open_ai_data_converter,
+)
 
 from openai_agents.workflows.hello_world_workflow import HelloWorldAgent
-
-with workflow.unsafe.imports_passed_through():
-    from temporalio.contrib.openai_agents.open_ai_data_converter import (
-        open_ai_data_converter,
-    )
 
 
 async def main():

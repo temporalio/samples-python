@@ -1,24 +1,21 @@
 import argparse
 import asyncio
 
-from temporalio import workflow
 from temporalio.client import (
     Client,
     WorkflowQueryRejectedError,
     WorkflowUpdateFailedError,
 )
 from temporalio.common import QueryRejectCondition, WorkflowIDReusePolicy
+from temporalio.contrib.openai_agents.open_ai_data_converter import (
+    open_ai_data_converter,
+)
 from temporalio.service import RPCError, RPCStatusCode
 
-with workflow.unsafe.imports_passed_through():
-    from temporalio.contrib.openai_agents.open_ai_data_converter import (
-        open_ai_data_converter,
-    )
-
-    from openai_agents.workflows.customer_service_workflow import (
-        CustomerServiceWorkflow,
-        ProcessUserMessageInput,
-    )
+from openai_agents.workflows.customer_service_workflow import (
+    CustomerServiceWorkflow,
+    ProcessUserMessageInput,
+)
 
 
 async def main():

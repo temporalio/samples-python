@@ -2,6 +2,9 @@ import asyncio
 
 from temporalio.client import Client
 from temporalio.common import WorkflowIDReusePolicy
+from temporalio.contrib.openai_agents.open_ai_data_converter import (
+    open_ai_data_converter,
+)
 
 from openai_agents.workflows.research_bot_workflow import ResearchWorkflow
 
@@ -10,6 +13,7 @@ async def main():
     # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",
+        data_converter=open_ai_data_converter,
     )
 
     # Execute a workflow

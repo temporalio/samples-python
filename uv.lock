@@ -2499,6 +2499,11 @@ encryption = [
     { name = "aiohttp" },
     { name = "cryptography" },
 ]
+expense = [
+    { name = "fastapi" },
+    { name = "httpx" },
+    { name = "uvicorn", extra = ["standard"] },
+]
 gevent = [
     { name = "gevent" },
 ]
@@ -2558,6 +2563,11 @@ dsl = [
 encryption = [
     { name = "aiohttp", specifier = ">=3.8.1,<4" },
     { name = "cryptography", specifier = ">=38.0.1,<39" },
+]
+expense = [
+    { name = "fastapi", specifier = ">=0.115.12" },
+    { name = "httpx", specifier = ">=0.25.0,<1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0.post1,<0.25" },
 ]
 gevent = [{ name = "gevent", marker = "python_full_version >= '3.8'", specifier = "==25.4.2" }]
 langchain = [

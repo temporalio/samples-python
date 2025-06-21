@@ -64,6 +64,11 @@ cloud-export-to-parquet = [
     "boto3>=1.34.89,<2",
     "pyarrow>=19.0.1",
 ]
+expense = [
+    "fastapi>=0.115.12",
+    "httpx>=0.25.0,<1",
+    "uvicorn[standard]>=0.24.0.post1,<0.25",
+]
 
 [tool.uv]
 default-groups = [
@@ -71,6 +76,7 @@ default-groups = [
     "bedrock",
     "dsl",
     "encryption",
+    "expense",
     "gevent",
     "langchain",
     "open-telemetry",
@@ -94,6 +100,7 @@ packages = [
     "custom_metric",
     "dsl",
     "encryption",
+    "expense",
     "gevent_async",
     "hello",
     "langchain",

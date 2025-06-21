@@ -22,8 +22,6 @@ with workflow.unsafe.imports_passed_through():
 
 class ResearchManager:
     def __init__(self):
-        # self.console = Console()
-        # self.printer = Printer(self.console)
         self.run_config = RunConfig()
         self.search_agent = new_search_agent()
         self.planner_agent = new_planner_agent()
@@ -48,7 +46,6 @@ class ResearchManager:
 
     async def _perform_searches(self, search_plan: WebSearchPlan) -> list[str]:
         with custom_span("Search the web"):
-            # self.printer.update_item("searching", "Searching...")
             num_completed = 0
             tasks = [
                 asyncio.create_task(self._search(item)) for item in search_plan.searches

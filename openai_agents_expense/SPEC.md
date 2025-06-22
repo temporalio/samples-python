@@ -63,11 +63,18 @@ Each expense report contains:
   - Flight expenses over $500 (regardless of AI assessment)
   - Equipment/hardware over $250 (regardless of AI assessment)
   - Late submissions over 60 days (regardless of AI assessment)
-- **AI-Determined Human Review**:
+- **AI-Determined Human Review** (serious issues requiring investigation or expert judgment):
   - Low confidence in categorization, policy evaluation, or fraud assessment
-  - Policy violations that may have exceptions
-  - Medium to high fraud risk flags
+  - Policy violations that may have exceptions requiring judgment
+  - Medium to high fraud risk flags requiring investigation
+  - **Suspicious vendor patterns** (e.g., vendor not found in web search, potential fraud indicators)
+  - **Conflicting or insufficient information** that cannot be resolved by employee clarification
   - Agent processing failures after retry attempts
+- **AI-Based Rejection with Instructions** (fixable issues where employee can provide clarification):
+  - **Fixable vendor information issues** (e.g., conflicting web search results that employee can clarify)
+  - **Missing required information** that employee can provide (e.g., client name for entertainment)
+  - **Prompt injection or manipulation attempts** (with security policy reminders)
+  - **Policy violations with clear correction path** (e.g., missing receipt for reimbursable amount)
 - **Automatic Rejection**: Clear policy violations with no exceptions allowed and low fraud risk
 
 ## Technical Implementation
@@ -99,20 +106,24 @@ Following a sequential multi-agent orchestration pattern with clear information 
 
 #### 4. DecisionOrchestrationAgent (Private)
 - **Purpose**: Make final approval decisions using all available context, respecting mandatory escalation rules
+- **Decision Types**: 
+  - **Auto-approve/Auto-reject**: Clear cases with high confidence
+  - **Escalate to Human**: Serious issues requiring investigation (fraud suspicion, high-stakes ambiguity, policy exceptions)
+  - **Reject with Instructions**: Fixable issues where employee can provide clarification (conflicting vendor info, missing fields, prompt injection attempts)
 - **Logic**: 
   - First checks for mandatory human review requirements (overrides AI assessment)
   - If no mandatory escalation, combines policy evaluation and fraud assessment 
   - Considers confidence scores from all agents
-  - Decides: auto-approve, auto-reject, or escalate to human
+  - Produces both internal reasoning (for administrators) and external reasoning (for users)
 - **Integration**: Seamlessly integrates with existing Temporal human-in-the-loop pattern
-- **Output**: Structured `FinalDecision` with sanitized reasoning (no fraud details exposed)
+- **Output**: Structured `FinalDecision` with sanitized external reasoning (no fraud details exposed)
 - **Information Access**: Private - sees all context but only outputs sanitized decisions
 - **Dependencies**: Requires `PolicyEvaluation` and `FraudAssessment` results
 
 #### 5. ResponseAgent (Public)
 - **Purpose**: Generate personalized responses to expense submitters
-- **Input**: Final decision + sanitized reasoning + policy evaluation + categorization (fraud details excluded)
-- **Output**: Human-friendly explanation of approval/rejection decision
+- **Input**: Final decision + external reasoning + policy evaluation + categorization (fraud details excluded)
+- **Output**: Human-friendly explanation of approval/rejection decision with appropriate instructions
 - **Information Access**: Public - only sees final decisions, policy explanations, and categorization details
 - **Dependencies**: Requires `FinalDecision`, `PolicyEvaluation`, and `ExpenseCategory` results
 
@@ -138,7 +149,9 @@ class VendorValidation(BaseModel):
     vendor_name: str
     is_legitimate: bool
     confidence_score: float
-    web_search_summary: str  # Summary of web search findings (website, business description, etc.)
+    web_search_summary: str  # Summary of web search findings: website URLs, business description, 
+                            # company information, search result quality ("clear", "conflicting", "missing", "insufficient"),
+                            # and any public legitimacy concerns or verification details
     # Note: risk_indicators moved to FraudAgent for security
 
 class ExpenseCategory(BaseModel):
@@ -180,18 +193,18 @@ class FraudAssessment(BaseModel):
     vendor_risk_indicators: List[str]  # Private risk indicators derived from analysis
 
 class FinalDecision(BaseModel):
-    decision: str  # "approved", "requires_human_review", "rejected"
-    reasoning: str  # Sanitized - combines policy and risk without exposing fraud methods
+    decision: str  # "approved", "requires_human_review", "rejected", "rejected_with_instructions"
+    internal_reasoning: str  # Detailed reasoning for administrators, includes fraud context
+    external_reasoning: str  # Sanitized reasoning for users, no fraud details exposed
     escalation_reason: Optional[str] = None  # Generic reason for human escalation
     is_mandatory_escalation: bool  # Whether escalation is due to mandatory rules
     confidence: float  # Overall confidence in the decision
 
 class ExpenseResponse(BaseModel):
     message: str
-    decision_summary: str
+    decision_summary: str  # Includes any resubmission instructions when applicable
     policy_explanation: Optional[str]  # Clear policy explanations when relevant
     categorization_summary: str  # Summary of categorization and vendor validation
-    next_steps: Optional[str]
 
 class ExpenseStatus(BaseModel):
     expense_id: str
@@ -346,3 +359,5 @@ This sample demonstrates:
 - AI-augmented workflows with seamless human-in-the-loop integration
 - Structured outputs and robust error handling
 - Confidence-based decision making with appropriate escalation strategies
+
+### Error Handling and Retry Logic

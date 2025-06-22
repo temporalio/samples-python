@@ -1,11 +1,12 @@
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi.testclient import TestClient
 from temporalio.client import Client
 from temporalio.testing import WorkflowEnvironment
 
-from expense.ui import app, ExpenseState, all_expenses, token_map, workflow_client
+from expense.ui import ExpenseState, all_expenses, app, token_map, workflow_client
 
 
 class TestExpenseUI:
@@ -38,13 +39,13 @@ class TestExpenseUI:
 
         response = client.get("/list")
         assert response.status_code == 200
-        
+
         # Check sorted order in HTML
         html = response.text
         exp001_pos = html.find("EXP-001")
         exp002_pos = html.find("EXP-002")
         exp003_pos = html.find("EXP-003")
-        
+
         assert exp001_pos < exp002_pos < exp003_pos
 
     def test_list_view_action_buttons_only_for_created(self, client):
@@ -56,15 +57,19 @@ class TestExpenseUI:
 
         response = client.get("/")
         html = response.text
-        
+
         # CREATED expense should have buttons
         assert "APPROVE" in html
         assert "REJECT" in html
         assert "created-expense" in html
-        
+
         # Count actual button elements - should only be for the CREATED expense
-        approve_count = html.count('<button style="background-color:#4CAF50;">APPROVE</button>')
-        reject_count = html.count('<button style="background-color:#f44336;">REJECT</button>')
+        approve_count = html.count(
+            '<button style="background-color:#4CAF50;">APPROVE</button>'
+        )
+        reject_count = html.count(
+            '<button style="background-color:#f44336;">REJECT</button>'
+        )
         assert approve_count == 1
         assert reject_count == 1
 
@@ -85,7 +90,7 @@ class TestExpenseUI:
     def test_create_expense_duplicate_ui(self, client):
         """Test creating duplicate expense via UI"""
         all_expenses["existing"] = ExpenseState.CREATED
-        
+
         response = client.get("/create?id=existing")
         assert response.status_code == 200
         assert response.text == "ID already exists"
@@ -93,7 +98,7 @@ class TestExpenseUI:
     def test_create_expense_duplicate_api(self, client):
         """Test creating duplicate expense via API"""
         all_expenses["existing"] = ExpenseState.CREATED
-        
+
         response = client.get("/create?id=existing&is_api_call=true")
         assert response.status_code == 200
         assert response.text == "ERROR:ID_ALREADY_EXISTS"
@@ -101,7 +106,7 @@ class TestExpenseUI:
     def test_status_check_valid_id(self, client):
         """Test status check for valid expense ID"""
         all_expenses["test-expense"] = ExpenseState.APPROVED
-        
+
         response = client.get("/status?id=test-expense")
         assert response.status_code == 200
         assert response.text == "APPROVED"
@@ -115,8 +120,8 @@ class TestExpenseUI:
     def test_action_approve_ui(self, client):
         """Test approve action via UI"""
         all_expenses["test-expense"] = ExpenseState.CREATED
-        
-        with patch('expense.ui.notify_expense_state_change') as mock_notify:
+
+        with patch("expense.ui.notify_expense_state_change") as mock_notify:
             response = client.get("/action?type=approve&id=test-expense")
             assert response.status_code == 200
             assert all_expenses["test-expense"] == ExpenseState.APPROVED
@@ -126,9 +131,11 @@ class TestExpenseUI:
     def test_action_approve_api(self, client):
         """Test approve action via API"""
         all_expenses["test-expense"] = ExpenseState.CREATED
-        
-        with patch('expense.ui.notify_expense_state_change') as mock_notify:
-            response = client.get("/action?type=approve&id=test-expense&is_api_call=true")
+
+        with patch("expense.ui.notify_expense_state_change") as mock_notify:
+            response = client.get(
+                "/action?type=approve&id=test-expense&is_api_call=true"
+            )
             assert response.status_code == 200
             assert response.text == "SUCCEED"
             assert all_expenses["test-expense"] == ExpenseState.APPROVED
@@ -137,8 +144,8 @@ class TestExpenseUI:
     def test_action_reject_ui(self, client):
         """Test reject action via UI"""
         all_expenses["test-expense"] = ExpenseState.CREATED
-        
-        with patch('expense.ui.notify_expense_state_change') as mock_notify:
+
+        with patch("expense.ui.notify_expense_state_change") as mock_notify:
             response = client.get("/action?type=reject&id=test-expense")
             assert response.status_code == 200
             assert all_expenses["test-expense"] == ExpenseState.REJECTED
@@ -147,7 +154,7 @@ class TestExpenseUI:
     def test_action_payment(self, client):
         """Test payment action"""
         all_expenses["test-expense"] = ExpenseState.APPROVED
-        
+
         response = client.get("/action?type=payment&id=test-expense&is_api_call=true")
         assert response.status_code == 200
         assert response.text == "SUCCEED"
@@ -168,7 +175,7 @@ class TestExpenseUI:
     def test_action_invalid_type_ui(self, client):
         """Test action with invalid type via UI"""
         all_expenses["test-expense"] = ExpenseState.CREATED
-        
+
         response = client.get("/action?type=invalid&id=test-expense")
         assert response.status_code == 200
         assert response.text == "Invalid action type"
@@ -176,7 +183,7 @@ class TestExpenseUI:
     def test_action_invalid_type_api(self, client):
         """Test action with invalid type via API"""
         all_expenses["test-expense"] = ExpenseState.CREATED
-        
+
         response = client.get("/action?type=invalid&id=test-expense&is_api_call=true")
         assert response.status_code == 200
         assert response.text == "ERROR:INVALID_TYPE"
@@ -185,10 +192,9 @@ class TestExpenseUI:
         """Test successful callback registration"""
         all_expenses["test-expense"] = ExpenseState.CREATED
         test_token = "deadbeef"
-        
+
         response = client.post(
-            "/registerCallback?id=test-expense",
-            data={"task_token": test_token}
+            "/registerCallback?id=test-expense", data={"task_token": test_token}
         )
         assert response.status_code == 200
         assert response.text == "SUCCEED"
@@ -197,8 +203,7 @@ class TestExpenseUI:
     def test_register_callback_invalid_id(self, client):
         """Test callback registration with invalid ID"""
         response = client.post(
-            "/registerCallback?id=nonexistent",
-            data={"task_token": "deadbeef"}
+            "/registerCallback?id=nonexistent", data={"task_token": "deadbeef"}
         )
         assert response.status_code == 200
         assert response.text == "ERROR:INVALID_ID"
@@ -206,10 +211,9 @@ class TestExpenseUI:
     def test_register_callback_invalid_state(self, client):
         """Test callback registration with non-CREATED expense"""
         all_expenses["test-expense"] = ExpenseState.APPROVED
-        
+
         response = client.post(
-            "/registerCallback?id=test-expense",
-            data={"task_token": "deadbeef"}
+            "/registerCallback?id=test-expense", data={"task_token": "deadbeef"}
         )
         assert response.status_code == 200
         assert response.text == "ERROR:INVALID_STATE"
@@ -217,10 +221,9 @@ class TestExpenseUI:
     def test_register_callback_invalid_token(self, client):
         """Test callback registration with invalid hex token"""
         all_expenses["test-expense"] = ExpenseState.CREATED
-        
+
         response = client.post(
-            "/registerCallback?id=test-expense",
-            data={"task_token": "invalid-hex"}
+            "/registerCallback?id=test-expense", data={"task_token": "invalid-hex"}
         )
         assert response.status_code == 200
         assert response.text == "ERROR:INVALID_FORM_DATA"
@@ -232,24 +235,27 @@ class TestExpenseUI:
         expense_id = "test-expense"
         test_token = bytes.fromhex("deadbeef")
         token_map[expense_id] = test_token
-        
+
         # Mock workflow client and activity handle
         mock_handle = AsyncMock()
         mock_client = MagicMock()
         mock_client.get_async_activity_handle.return_value = mock_handle
-        
-        with patch('expense.ui.workflow_client', mock_client):
+
+        with patch("expense.ui.workflow_client", mock_client):
             from expense.ui import notify_expense_state_change
+
             await notify_expense_state_change(expense_id, "APPROVED")
-            
-            mock_client.get_async_activity_handle.assert_called_once_with(task_token=test_token)
+
+            mock_client.get_async_activity_handle.assert_called_once_with(
+                task_token=test_token
+            )
             mock_handle.complete.assert_called_once_with("APPROVED")
 
     @pytest.mark.asyncio
     async def test_notify_expense_state_change_invalid_id(self):
         """Test workflow notification with invalid expense ID"""
         from expense.ui import notify_expense_state_change
-        
+
         # Should not raise exception for invalid ID
         await notify_expense_state_change("nonexistent", "APPROVED")
 
@@ -259,39 +265,41 @@ class TestExpenseUI:
         expense_id = "test-expense"
         test_token = bytes.fromhex("deadbeef")
         token_map[expense_id] = test_token
-        
+
         mock_client = MagicMock()
         mock_client.get_async_activity_handle.side_effect = Exception("Client error")
-        
-        with patch('expense.ui.workflow_client', mock_client):
+
+        with patch("expense.ui.workflow_client", mock_client):
             from expense.ui import notify_expense_state_change
+
             # Should not raise exception even if client fails
             await notify_expense_state_change(expense_id, "APPROVED")
 
     def test_state_transitions_complete_workflow(self, client):
         """Test complete expense workflow state transitions"""
         expense_id = "workflow-expense"
-        
+
         # 1. Create expense
         response = client.get(f"/create?id={expense_id}&is_api_call=true")
         assert response.text == "SUCCEED"
         assert all_expenses[expense_id] == ExpenseState.CREATED
-        
+
         # 2. Register callback
         test_token = "deadbeef"
         response = client.post(
-            f"/registerCallback?id={expense_id}",
-            data={"task_token": test_token}
+            f"/registerCallback?id={expense_id}", data={"task_token": test_token}
         )
         assert response.text == "SUCCEED"
-        
+
         # 3. Approve expense
-        with patch('expense.ui.notify_expense_state_change') as mock_notify:
-            response = client.get(f"/action?type=approve&id={expense_id}&is_api_call=true")
+        with patch("expense.ui.notify_expense_state_change") as mock_notify:
+            response = client.get(
+                f"/action?type=approve&id={expense_id}&is_api_call=true"
+            )
             assert response.text == "SUCCEED"
             assert all_expenses[expense_id] == ExpenseState.APPROVED
             mock_notify.assert_called_once_with(expense_id, ExpenseState.APPROVED)
-        
+
         # 4. Process payment
         response = client.get(f"/action?type=payment&id={expense_id}&is_api_call=true")
         assert response.text == "SUCCEED"
@@ -300,10 +308,10 @@ class TestExpenseUI:
     def test_html_response_structure(self, client):
         """Test HTML response contains required elements"""
         all_expenses["test-expense"] = ExpenseState.CREATED
-        
+
         response = client.get("/")
         html = response.text
-        
+
         # Check required HTML elements
         assert "<h1>SAMPLE EXPENSE SYSTEM</h1>" in html
         assert '<a href="/list">HOME</a>' in html
@@ -318,26 +326,26 @@ class TestExpenseUI:
         """Test handling of concurrent operations"""
         import threading
         import time
-        
+
         results = []
-        
+
         def create_expense(expense_id):
             try:
                 response = client.get(f"/create?id={expense_id}&is_api_call=true")
                 results.append((expense_id, response.status_code, response.text))
             except Exception as e:
                 results.append((expense_id, "error", str(e)))
-        
+
         # Create multiple expenses concurrently
         threads = []
         for i in range(5):
             thread = threading.Thread(target=create_expense, args=[f"concurrent-{i}"])
             threads.append(thread)
             thread.start()
-        
+
         for thread in threads:
             thread.join()
-        
+
         # All should succeed
         assert len(results) == 5
         for expense_id, status_code, text in results:
@@ -350,12 +358,12 @@ class TestExpenseUI:
         # Missing required parameters
         response = client.get("/create")  # Missing id
         assert response.status_code == 422  # FastAPI validation error
-        
+
         response = client.get("/action")  # Missing type and id
         assert response.status_code == 422
-        
+
         response = client.get("/status")  # Missing id
         assert response.status_code == 422
-        
+
         response = client.post("/registerCallback")  # Missing id and token
-        assert response.status_code == 422 
+        assert response.status_code == 422

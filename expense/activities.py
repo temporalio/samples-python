@@ -1,7 +1,7 @@
 import httpx
 from temporalio import activity
 
-EXPENSE_SERVER_HOST_PORT = "http://localhost:8099"
+from expense import EXPENSE_SERVER_HOST_PORT
 
 
 @activity.defn
@@ -12,7 +12,7 @@ async def create_expense_activity(expense_id: str) -> None:
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{EXPENSE_SERVER_HOST_PORT}/create",
-            params={"is_api_call": "true", "id": expense_id}
+            params={"is_api_call": "true", "id": expense_id},
         )
         response.raise_for_status()
         body = response.text
@@ -43,12 +43,12 @@ async def wait_for_decision_activity(expense_id: str) -> str:
     task_token = activity_info.task_token
 
     register_callback_url = f"{EXPENSE_SERVER_HOST_PORT}/registerCallback"
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.post(
             register_callback_url,
             params={"id": expense_id},
-            data={"task_token": task_token.hex()}
+            data={"task_token": task_token.hex()},
         )
         response.raise_for_status()
         body = response.text
@@ -58,8 +58,11 @@ async def wait_for_decision_activity(expense_id: str) -> str:
         # register callback succeed
         logger.info(f"Successfully registered callback. ExpenseID: {expense_id}")
 
-        # Raise the complete-async error which will complete this function but
-        # does not consider the activity complete from the workflow perspective
+        # Raise the complete-async error which will return from this function but
+        # does not mark the activity as complete from the workflow perspective.
+        #
+        # Activity completion is signaled in the `notify_expense_state_change`
+        # function in `ui.py`.
         activity.raise_complete_async()
 
     logger.warning(f"Register callback failed. ExpenseStatus: {status}")
@@ -74,7 +77,7 @@ async def payment_activity(expense_id: str) -> None:
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{EXPENSE_SERVER_HOST_PORT}/action",
-            params={"is_api_call": "true", "type": "payment", "id": expense_id}
+            params={"is_api_call": "true", "type": "payment", "id": expense_id},
         )
         response.raise_for_status()
         body = response.text
@@ -83,4 +86,4 @@ async def payment_activity(expense_id: str) -> None:
         activity.logger.info(f"payment_activity succeed ExpenseID: {expense_id}")
         return
 
-    raise Exception(body) 
+    raise Exception(body)

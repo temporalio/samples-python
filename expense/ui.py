@@ -1,11 +1,13 @@
 import asyncio
 from enum import Enum
-from typing import Dict
+from typing import Dict, Optional
 
 import uvicorn
 from fastapi import FastAPI, Form, Query
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from temporalio.client import Client
+
+from expense import EXPENSE_SERVER_HOST, EXPENSE_SERVER_PORT
 
 
 class ExpenseState(str, Enum):
@@ -22,7 +24,7 @@ token_map: Dict[str, bytes] = {}
 app = FastAPI()
 
 # Global client - will be initialized when starting the server
-workflow_client: Client = None
+workflow_client: Optional[Client] = None
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -35,7 +37,7 @@ async def list_handler():
     <table border=1>
         <tr><th>Expense ID</th><th>Status</th><th>Action</th></tr>
     """
-    
+
     # Sort keys for consistent display
     for expense_id in sorted(all_expenses.keys()):
         state = all_expenses[expense_id]
@@ -51,16 +53,14 @@ async def list_handler():
                 </a>
             """
         html += f"<tr><td>{expense_id}</td><td>{state}</td><td>{action_link}</td></tr>"
-    
+
     html += "</table>"
     return html
 
 
 @app.get("/action", response_class=HTMLResponse)
 async def action_handler(
-    type: str = Query(...),
-    id: str = Query(...),
-    is_api_call: str = Query("false")
+    type: str = Query(...), id: str = Query(...), is_api_call: str = Query("false")
 ):
     if id not in all_expenses:
         if is_api_call == "true":
@@ -69,7 +69,7 @@ async def action_handler(
             return PlainTextResponse("Invalid ID")
 
     old_state = all_expenses[id]
-    
+
     if type == "approve":
         all_expenses[id] = ExpenseState.APPROVED
     elif type == "reject":
@@ -84,26 +84,29 @@ async def action_handler(
 
     if is_api_call == "true" or type == "payment":
         # For API calls and payment, just return success
-        if old_state == ExpenseState.CREATED and all_expenses[id] in [ExpenseState.APPROVED, ExpenseState.REJECTED]:
+        if old_state == ExpenseState.CREATED and all_expenses[id] in [
+            ExpenseState.APPROVED,
+            ExpenseState.REJECTED,
+        ]:
             # Report state change
             await notify_expense_state_change(id, all_expenses[id])
-        
+
         print(f"Set state for {id} from {old_state} to {all_expenses[id]}")
         return PlainTextResponse("SUCCEED")
     else:
         # For UI calls, notify and redirect to list
-        if old_state == ExpenseState.CREATED and all_expenses[id] in [ExpenseState.APPROVED, ExpenseState.REJECTED]:
+        if old_state == ExpenseState.CREATED and all_expenses[id] in [
+            ExpenseState.APPROVED,
+            ExpenseState.REJECTED,
+        ]:
             await notify_expense_state_change(id, all_expenses[id])
-        
+
         print(f"Set state for {id} from {old_state} to {all_expenses[id]}")
         return await list_handler()
 
 
 @app.get("/create")
-async def create_handler(
-    id: str = Query(...),
-    is_api_call: str = Query("false")
-):
+async def create_handler(id: str = Query(...), is_api_call: str = Query("false")):
     if id in all_expenses:
         if is_api_call == "true":
             return PlainTextResponse("ERROR:ID_ALREADY_EXISTS")
@@ -111,7 +114,7 @@ async def create_handler(
             return PlainTextResponse("ID already exists")
 
     all_expenses[id] = ExpenseState.CREATED
-    
+
     if is_api_call == "true":
         print(f"Created new expense id: {id}")
         return PlainTextResponse("SUCCEED")
@@ -131,13 +134,10 @@ async def status_handler(id: str = Query(...)):
 
 
 @app.post("/registerCallback")
-async def callback_handler(
-    id: str = Query(...),
-    task_token: str = Form(...)
-):
+async def callback_handler(id: str = Query(...), task_token: str = Form(...)):
     if id not in all_expenses:
         return PlainTextResponse("ERROR:INVALID_ID")
-    
+
     curr_state = all_expenses[id]
     if curr_state != ExpenseState.CREATED:
         return PlainTextResponse("ERROR:INVALID_STATE")
@@ -158,6 +158,10 @@ async def notify_expense_state_change(expense_id: str, state: str):
         print(f"Invalid id: {expense_id}")
         return
 
+    if workflow_client is None:
+        print("Workflow client not initialized")
+        return
+
     token = token_map[expense_id]
     try:
         handle = workflow_client.get_async_activity_handle(task_token=token)
@@ -169,22 +173,21 @@ async def notify_expense_state_change(expense_id: str, state: str):
 
 async def main():
     global workflow_client
-    
+
     # Initialize the workflow client
     workflow_client = await Client.connect("localhost:7233")
-    
-    print("Expense system UI available at http://localhost:8099")
-    
+
+    print(
+        f"Expense system UI available at http://{EXPENSE_SERVER_HOST}:{EXPENSE_SERVER_PORT}"
+    )
+
     # Start the FastAPI server
     config = uvicorn.Config(
-        app,
-        host="0.0.0.0",
-        port=8099,
-        log_level="info"
+        app, host="0.0.0.0", port=EXPENSE_SERVER_PORT, log_level="info"
     )
     server = uvicorn.Server(config)
     await server.serve()
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

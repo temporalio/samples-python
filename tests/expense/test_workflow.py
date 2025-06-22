@@ -13,18 +13,18 @@ from expense.workflow import SampleExpenseWorkflow
 async def test_workflow_with_mock_activities(client: Client, env: WorkflowEnvironment):
     """Test workflow with mocked activities - equivalent to Go Test_WorkflowWithMockActivities"""
     task_queue = f"test-expense-{uuid.uuid4()}"
-    
+
     # Mock the activities to return expected values
     @activity.defn(name="create_expense_activity")
     async def create_expense_mock(expense_id: str) -> None:
         # Mock succeeds by returning None
         return None
-    
+
     @activity.defn(name="wait_for_decision_activity")
     async def wait_for_decision_mock(expense_id: str) -> str:
         # Mock returns APPROVED
         return "APPROVED"
-    
+
     @activity.defn(name="payment_activity")
     async def payment_mock(expense_id: str) -> None:
         # Mock succeeds by returning None
@@ -51,13 +51,13 @@ async def test_workflow_with_mock_activities(client: Client, env: WorkflowEnviro
 async def test_workflow_rejected_expense(client: Client, env: WorkflowEnvironment):
     """Test workflow when expense is rejected - similar to Go test patterns"""
     task_queue = f"test-expense-rejected-{uuid.uuid4()}"
-    
-    # Mock the activities 
+
+    # Mock the activities
     @activity.defn(name="create_expense_activity")
     async def create_expense_mock(expense_id: str) -> None:
         # Mock succeeds by returning None
         return None
-    
+
     @activity.defn(name="wait_for_decision_activity")
     async def wait_for_decision_mock(expense_id: str) -> str:
         # Mock returns REJECTED
@@ -81,10 +81,12 @@ async def test_workflow_rejected_expense(client: Client, env: WorkflowEnvironmen
         assert result == ""
 
 
-async def test_workflow_create_expense_failure(client: Client, env: WorkflowEnvironment):
+async def test_workflow_create_expense_failure(
+    client: Client, env: WorkflowEnvironment
+):
     """Test workflow when create expense activity fails"""
     task_queue = f"test-expense-failure-{uuid.uuid4()}"
-    
+
     # Mock create_expense_activity to fail with non-retryable error
     @activity.defn(name="create_expense_activity")
     async def failing_create_expense(expense_id: str):
@@ -103,4 +105,4 @@ async def test_workflow_create_expense_failure(client: Client, env: WorkflowEnvi
                 "test-expense-id",
                 id=f"test-expense-failure-workflow-{uuid.uuid4()}",
                 task_queue=task_queue,
-            ) 
+            )

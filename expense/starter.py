@@ -11,7 +11,7 @@ async def main():
     client = await Client.connect("localhost:7233")
 
     expense_id = str(uuid.uuid4())
-    
+
     # Start the workflow (don't wait for completion)
     handle = await client.start_workflow(
         SampleExpenseWorkflow.run,
@@ -24,4 +24,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

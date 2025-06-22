@@ -1,35 +1,38 @@
 # Expense
 
-This sample workflow processes an expense request. The key part of this sample is to show how to complete an activity asynchronously.
+This sample workflow processes an expense request. It demonstrates human-in-the loop processing and asynchronous activity completion.
 
-## Sample Description
+## Overview
 
-* Create a new expense report.
-* Wait for the expense report to be approved. This could take an arbitrary amount of time. So the activity's `execute` method has to return before it is actually approved. This is done by raising `activity.AsyncActivityCompleteError` so the framework knows the activity is not completed yet.
-  * When the expense is approved (or rejected), somewhere in the world needs to be notified, and it will need to call `client.get_async_activity_handle().complete()` to tell Temporal service that the activity is now completed.
-  In this sample case, the sample expense system does this job. In real world, you will need to register some listener to the expense system or you will need to have your own polling agent to check for the expense status periodically.
-* After the wait activity is completed, it does the payment for the expense (UI step in this sample case).
+This sample demonstrates the following workflow:
 
-This sample relies on a sample expense system to work.
+1. **Create Expense**: The workflow executes the `create_expense_activity` to initialize a new expense report in the external system.
+
+2. **Wait for Decision**: The workflow calls `wait_for_decision_activity`, which demonstrates asynchronous activity completion. The activity registers itself for external completion using its task token, then calls `activity.raise_complete_async()` to signal that it will complete later without blocking the worker.
+
+3. **Async Completion**: When a human approves or rejects the expense, an external process uses the stored task token to call `workflow_client.get_async_activity_handle(task_token).complete()`, notifying Temporal that the waiting activity has finished and providing the decision result.
+
+4. **Process Payment**: Once the workflow receives the approval decision, it executes the `payment_activity` to complete the simulated expense processing.
+
+This pattern enables human-in-the-loop workflows where activities can wait as long as necessary for external decisions without consuming worker resources or timing out.
 
 ## Steps To Run Sample
 
 * You need a Temporal service running. See the main [README.md](../README.md) for more details.
 * Start the sample expense system UI:
-```bash
-uv run -m expense.ui
-```
+  ```bash
+  uv run -m expense.ui
+  ```
 * Start workflow and activity workers:
-```bash
-uv run -m expense.worker
-```
+  ```bash
+  uv run -m expense.worker
+  ```
 * Start expense workflow execution:
-```bash
-uv run -m expense.starter
-```
+  ```bash
+  uv run -m expense.starter
+  ```
 * When you see the console print out that the expense is created, go to [localhost:8099/list](http://localhost:8099/list) to approve the expense.
 * You should see the workflow complete after you approve the expense. You can also reject the expense.
-* If you see the workflow failed, try to change to a different port number in `ui.py` and `activities.py`. Then rerun everything.
 
 ## Running Tests
 
@@ -43,17 +46,18 @@ uv run pytest expense/test_workflow.py::TestSampleExpenseWorkflow::test_workflow
 
 ## Key Concepts Demonstrated
 
-* **Async Activity Completion**: Using `activity.raise_complete_async()` to indicate an activity will complete asynchronously
 * **Human-in-the-Loop Workflows**: Long-running workflows that wait for human interaction
-* **External System Integration**: HTTP-based communication between activities and external systems
-* **Task Tokens**: Using task tokens to complete activities from external systems
-* **Web UI Integration**: FastAPI-based expense approval system
+* **Async Activity Completion**: Using `activity.raise_complete_async()` to indicate an activity will complete asynchronously, then calling `complete()` on a handle to the async activity.
+* **External System Integration**: Communication between workflows and external systems via web services.
+
+## Troubleshooting
+
+If you see the workflow failed, the cause may be a port conflict. You can try to change to a different port number in `__init__.py`. Then rerun everything.
 
 ## Files
 
 * `workflow.py` - The main expense processing workflow
 * `activities.py` - Three activities: create expense, wait for decision, process payment
-* `ui.py` - FastAPI-based mock expense system with web UI
-* `worker.py` - Worker to run workflows and activities
-* `starter.py` - Client to start workflow executions
-* `test_workflow.py` - Unit tests with mocked activities 
+* `ui.py` - A demonstration expense approval system web UI
+* `worker.py` - Worker to run workflows
+* `starter.py` - Client to start workflow executions by submitting an expense report

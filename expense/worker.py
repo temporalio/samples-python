@@ -3,7 +3,11 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from .activities import create_expense_activity, payment_activity, wait_for_decision_activity
+from .activities import (
+    create_expense_activity,
+    payment_activity,
+    wait_for_decision_activity,
+)
 from .workflow import SampleExpenseWorkflow
 
 
@@ -28,4 +32,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

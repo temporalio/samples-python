@@ -14,6 +14,8 @@ This sample extends the Temporal expense example with OpenAI Agents SDK to demon
 5. **Response Generation**: AI generates personalized response to submitter explaining the decision
 6. **Payment Processing**: If approved, process the payment (same as original sample)
 
+TODO - add ability to check the submissions status
+
 ### Expense Data Model
 Each expense report contains:
 - **expense_id**: Unique identifier
@@ -100,12 +102,21 @@ class ExpenseReport(BaseModel):
     amount: Decimal
     description: str
     vendor: str
-    date: date
+    date: date  # When the expense occurred
     department: str
     employee_id: str
+    # Enhanced fields for business rule support
+    receipt_provided: bool  # For receipt requirements over $75
+    submission_date: date  # To detect late submissions (>60 days)
+    client_name: Optional[str] = None  # Required for entertainment expenses
+    business_justification: Optional[str] = None  # Required for client entertainment
+    is_international_travel: bool = False  # Requires human approval regardless of amount
+    it_pre_approved: bool = False  # Required for equipment/hardware over $250
+    vendor_pre_approved: bool = False  # Required for new vendors over $500
 
 class ExpenseCategory(BaseModel):
     category: str  # One of the 9 categories
+    # TODO spell out categories
     confidence: float
     reasoning: str
 
@@ -114,12 +125,18 @@ class PolicyViolation(BaseModel):
     violation_type: str
     severity: str  # "warning", "requires_review", "rejection"
     details: str
+    threshold_amount: Optional[Decimal] = None  # For dollar-based thresholds
+    approval_required_from: Optional[str] = None  # "manager", "it_department", etc.
+    # TODO - remove different approvers to keep things simple
 
 class ApprovalDecision(BaseModel):
     decision: str  # "approved", "requires_review", "rejected"
     policy_violations: List[PolicyViolation]
     reasoning: str
     requires_human_review: bool
+    escalation_reason: Optional[str] = None  # Specific reason for escalation
+    approval_required_from: Optional[str] = None  # Type of approval needed
+    # TODO - remove types of approval
 
 class FraudFlag(BaseModel):
     flag_type: str
@@ -131,6 +148,18 @@ class FraudAssessment(BaseModel):
     flags: List[FraudFlag]
     reasoning: str  # Carefully guarded to not reveal detection methods
 
+class VendorValidation(BaseModel):
+    vendor_name: str
+    is_legitimate: bool
+    confidence_score: float
+    search_results_summary: str
+    risk_indicators: List[str]
+
+class DepartmentPolicy(BaseModel):
+    department: str
+    category_limits: Dict[str, Decimal]  # Category-specific spending limits
+    special_rules: List[str]  # Department-specific business rules
+
 class ExpenseResponse(BaseModel):
     message: str
     decision_summary: str
@@ -139,16 +168,38 @@ class ExpenseResponse(BaseModel):
 
 ### Guardrails Implementation
 
+# TODO - we need to split up the guardrails and be specific about what agent each one applies to. Also, we need to make a clear distinction between the departmental policies, which are public and which should be explained clearly to submitters, and the fraud detection mechanisms, which should be protected to avoid people from circumventing them. 
+
 #### Input Guardrails
 - **Expense Validation**: Ensure submitted data contains valid expense information
 - **Field Sanitization**: Prevent prompt injection via description, vendor, or other text fields
 - **Data Type Validation**: Verify amounts, dates, and IDs are properly formatted
+- **Business Rule Data Validation**: 
+  - Validate international travel flag consistency with description/vendor
+  - Ensure client name and justification are provided for entertainment expenses
+  - Verify receipt documentation requirements alignment
+  - Validate IT and vendor pre-approval status consistency
+  - Check submission date vs expense date for late submission detection
 
 #### Output Guardrails (Critical for FraudAgent)
 - **Rule Exfiltration Prevention**: Ensure fraud detection reasoning doesn't reveal specific detection methods
 - **Sensitive Information Protection**: Prevent disclosure of internal policies or fraud patterns
 - **Response Appropriateness**: Ensure all responses are professional and appropriate
 - **Fraud Response Protection**: When fraud is detected, ResponseAgent provides only generic guidance ("please contact your manager") without exposing fraud assessment details
+
+#### Policy Protection Guardrails (Critical for PolicyAgent)
+- **Threshold Obfuscation**: Never reveal exact dollar thresholds (e.g., $75 receipt requirement, $250 equipment threshold, $500 vendor/flight limits)
+- **Approval Hierarchy Protection**: Don't disclose specific approval workflows or who approves what
+- **Department Policy Protection**: Avoid revealing department-specific spending limits or rules
+- **Process Details Protection**: Don't expose internal pre-approval processes, vendor database specifics, or IT approval workflows
+- **Timeline Protection**: Don't reveal specific timeframes (e.g., 60-day late submission threshold)
+- **Generic Policy References**: Use phrases like "company policy requires" instead of specific rule details
+
+#### Enhanced Output Guardrails
+- **Policy Reasoning Sanitization**: Ensure policy violation explanations don't reveal internal thresholds or processes
+- **Vendor Validation Protection**: Don't expose search methodology or vendor database details
+- **Escalation Path Protection**: Provide appropriate next steps without revealing internal approval hierarchies
+- **Compliance Language**: Use professional, policy-compliant language that doesn't expose enforcement mechanisms
 
 ### Temporal Workflow Integration
 - **ExpenseWorkflow**: Main workflow orchestrating all agents (replaces human approval step)
@@ -171,7 +222,7 @@ Following the search agent pattern:
 
 This sample demonstrates:
 - Multi-agent orchestration with Temporal durability
-- Sophisticated guardrails for sensitive AI operations
-- Web search integration for enhanced decision-making
-- Human-in-the-loop workflows with AI augmentation
+- Sophisticated guardrails for sensitive AI operations #TODO is there a better way to say "sensitive" here.
+- Web search integration for enhanced decision-making # TODO it's more than decision-making, mention data enrichment too
+- Human-in-the-loop workflows with AI augmentation # TODO - emphasize AI workflows with humans in the loop
 - Structured outputs and robust error handling

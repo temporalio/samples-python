@@ -24,8 +24,8 @@ from nexusrpc.handler import (
     sync_operation_handler,
 )
 from temporalio.nexus.handler import (
-    NexusStartWorkflowRequest,
     TemporalNexusOperationContext,
+    WorkflowOperationToken,
 )
 
 from hello_nexus.basic.handler.db_client import MyDBClient
@@ -45,24 +45,25 @@ class MyNexusServiceHandler:
         self.connected_db_client = connected_db_client
 
     # This is a nexus operation that is backed by a Temporal workflow. The start method
-    # starts a workflow, and returns a nexus operation token that the handler can use to
-    # obtain a workflow handle (for example if a cancel request is subsequently sent by
-    # the caller). The Temporal server takes care of delivering the workflow result to the
-    # calling workflow. The task queue defaults to the task queue being used by the Nexus
-    # worker.
+    # starts a workflow, and returns a nexus operation token synchronously. Meanwhile,
+    # the workflow executes in the background, and the Temporal server takes care of
+    # delivering the eventual workflow result (success or failure) to the calling
+    # workflow.
+    #
+    # The token will be used by the caller if it subsequently wants to cancel the Nexus
+    # operation.
     @temporalio.nexus.handler.workflow_run_operation_handler
     async def my_workflow_run_operation(
         self, ctx: StartOperationContext, input: MyInput
-    ) -> NexusStartWorkflowRequest[MyOutput]:
+    ) -> WorkflowOperationToken[MyOutput]:
         # You could use self.connected_db_client here.
         tctx = TemporalNexusOperationContext.current()
-        return NexusStartWorkflowRequest(
-            tctx.client.start_workflow(
-                WorkflowStartedByNexusOperation.run,
-                input,
-                id=str(uuid.uuid4()),
-                task_queue=tctx.task_queue,
-            )
+        return await tctx.start_workflow(
+            WorkflowStartedByNexusOperation.run,
+            input,
+            id=str(uuid.uuid4()),
+            client=tctx.client,
+            task_queue=tctx.task_queue,
         )
 
     # This is a sync operation. That means that unlike the workflow run operation above,

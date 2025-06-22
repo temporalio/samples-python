@@ -36,7 +36,6 @@ from nexusrpc.handler import (
 )
 from temporalio.nexus.handler import (
     TemporalNexusOperationContext,
-    WorkflowOperationToken,
 )
 
 from hello_nexus.basic.handler.db_client import MyDBClient
@@ -133,18 +132,14 @@ class MyWorkflowRunOperation(OperationHandler[MyInput, MyOutput]):
         self, ctx: StartOperationContext, input: MyInput
     ) -> StartOperationResultAsync:
         tctx = TemporalNexusOperationContext.current()
-        wf_handle = await tctx.client.start_workflow(
+        token = await tctx.start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
             id=str(uuid.uuid4()),
+            client=tctx.client,
             task_queue=tctx.task_queue,
         )
-        # TODO(prerelease) It must be possible to start "normal" workflows in here, and
-        # then finish up with a "nexusified" workflow. It should not be possible to
-        # construct a Nexus token for a non-nexusified workflow.
-
-        token = WorkflowOperationToken.from_workflow_handle(wf_handle).encode()
-        return StartOperationResultAsync(token)
+        return StartOperationResultAsync(token.encode())
 
     async def cancel(self, ctx: CancelOperationContext, token: str) -> None:
         return await temporalio.nexus.handler.cancel_workflow(ctx, token)

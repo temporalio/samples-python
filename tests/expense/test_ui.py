@@ -1,12 +1,9 @@
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
-from temporalio.client import Client
-from temporalio.testing import WorkflowEnvironment
 
-from expense.ui import ExpenseState, all_expenses, app, token_map, workflow_client
+from expense.ui import ExpenseState, all_expenses, app, token_map
 
 
 class TestExpenseUI:
@@ -325,7 +322,6 @@ class TestExpenseUI:
     def test_concurrent_operations(self, client):
         """Test handling of concurrent operations"""
         import threading
-        import time
 
         results = []
 

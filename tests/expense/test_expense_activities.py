@@ -3,12 +3,10 @@ Tests for individual expense activities.
 Focuses on activity behavior, parameters, error handling, and HTTP interactions.
 """
 
-import uuid
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
-from temporalio import activity
 from temporalio.activity import _CompleteAsyncError
 from temporalio.testing import ActivityEnvironment
 

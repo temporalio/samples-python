@@ -6,7 +6,6 @@ Tests end-to-end behavior with realistic HTTP interactions.
 import uuid
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from temporalio import activity
 from temporalio.client import Client
 from temporalio.testing import WorkflowEnvironment

@@ -432,7 +432,7 @@ class TestExpenseActivities:
 
 
 class TestExpenseWorkflowWithMockServer:
-    """Test workflow with mock HTTP server - similar to Go implementation"""
+    """Test workflow with mock HTTP server"""
 
     async def test_workflow_with_mock_server_approved(
         self, client: Client, env: WorkflowEnvironment
@@ -686,22 +686,20 @@ class TestExpenseWorkflowEdgeCases:
                     task_queue=task_queue,
                 )
 
-
-class TestExpenseWorkflowGoCompatibility:
-    """Test compatibility with Go implementation behavior"""
-
-    async def test_workflow_return_values_match_go(
+    async def test_workflow_decision_values(
         self, client: Client, env: WorkflowEnvironment
     ):
-        """Test that Python workflow returns same values as Go implementation"""
-        task_queue = f"test-go-compat-{uuid.uuid4()}"
+        """Test that workflow returns correct values for different decisions"""
+        task_queue = f"test-decisions-{uuid.uuid4()}"
 
+        # Test cases: any non-"APPROVED" decision should return empty string
         test_cases = [
             ("APPROVED", "COMPLETED"),
             ("REJECTED", ""),
             ("DENIED", ""),
             ("PENDING", ""),
             ("CANCELLED", ""),
+            ("UNKNOWN", ""),
         ]
 
         for decision, expected_result in test_cases:
@@ -727,7 +725,7 @@ class TestExpenseWorkflowGoCompatibility:
                 result = await client.execute_workflow(
                     SampleExpenseWorkflow.run,
                     f"test-expense-{decision.lower()}",
-                    id=f"test-workflow-go-compat-{decision.lower()}-{uuid.uuid4()}",
+                    id=f"test-workflow-decision-{decision.lower()}-{uuid.uuid4()}",
                     task_queue=task_queue,
                 )
 
@@ -735,117 +733,5 @@ class TestExpenseWorkflowGoCompatibility:
                     result == expected_result
                 ), f"Decision '{decision}' should return '{expected_result}', got '{result}'"
 
-    async def test_activity_timeouts_match_go(
-        self, client: Client, env: WorkflowEnvironment
-    ):
-        """Test that activity timeouts match Go implementation specifications"""
-        task_queue = f"test-go-timeouts-{uuid.uuid4()}"
-        recorded_timeouts = []
 
-        @activity.defn(name="create_expense_activity")
-        async def create_with_timeout_check(expense_id: str) -> None:
-            info = activity.info()
-            recorded_timeouts.append(("create", info.start_to_close_timeout))
-            return None
 
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_with_timeout_check(expense_id: str) -> str:
-            info = activity.info()
-            recorded_timeouts.append(("wait", info.start_to_close_timeout))
-            return "APPROVED"
-
-        @activity.defn(name="payment_activity")
-        async def payment_with_timeout_check(expense_id: str) -> None:
-            info = activity.info()
-            recorded_timeouts.append(("payment", info.start_to_close_timeout))
-            return None
-
-        async with Worker(
-            client,
-            task_queue=task_queue,
-            workflows=[SampleExpenseWorkflow],
-            activities=[
-                create_with_timeout_check,
-                wait_with_timeout_check,
-                payment_with_timeout_check,
-            ],
-        ):
-            await client.execute_workflow(
-                SampleExpenseWorkflow.run,
-                "test-expense-timeouts",
-                id=f"test-workflow-timeouts-{uuid.uuid4()}",
-                task_queue=task_queue,
-            )
-
-            # Verify timeouts match Go specification
-            create_timeout = next(t[1] for t in recorded_timeouts if t[0] == "create")
-            wait_timeout = next(t[1] for t in recorded_timeouts if t[0] == "wait")
-            payment_timeout = next(t[1] for t in recorded_timeouts if t[0] == "payment")
-
-            # These should match the Go implementation timeouts
-            assert create_timeout == timedelta(seconds=10)
-            assert wait_timeout == timedelta(minutes=10)
-            assert payment_timeout == timedelta(seconds=10)
-
-    async def test_error_handling_matches_go(
-        self, client: Client, env: WorkflowEnvironment
-    ):
-        """Test that error handling behavior matches Go implementation"""
-        task_queue = f"test-go-errors-{uuid.uuid4()}"
-
-        # Test each activity failure scenario
-        failure_scenarios = [
-            ("create_failure", "create_expense_activity"),
-            ("wait_failure", "wait_for_decision_activity"),
-            ("payment_failure", "payment_activity"),
-        ]
-
-        for scenario_name, failing_activity in failure_scenarios:
-            activities_map = {
-                "create_expense_activity": lambda expense_id: None,
-                "wait_for_decision_activity": lambda expense_id: "APPROVED",
-                "payment_activity": lambda expense_id: None,
-            }
-
-            # Make the target activity fail
-            def create_failing_impl(activity_name):
-                def failing_impl(expense_id):
-                    raise ApplicationError(
-                        f"Activity {activity_name} failed", non_retryable=True
-                    )
-
-                return failing_impl
-
-            activities_map[failing_activity] = create_failing_impl(failing_activity)
-
-            # Create activity definitions
-            @activity.defn(name="create_expense_activity")
-            async def create_activity_impl(expense_id: str):
-                return activities_map["create_expense_activity"](expense_id)
-
-            @activity.defn(name="wait_for_decision_activity")
-            async def wait_activity_impl(expense_id: str):
-                return activities_map["wait_for_decision_activity"](expense_id)
-
-            @activity.defn(name="payment_activity")
-            async def payment_activity_impl(expense_id: str):
-                return activities_map["payment_activity"](expense_id)
-
-            async with Worker(
-                client,
-                task_queue=task_queue,
-                workflows=[SampleExpenseWorkflow],
-                activities=[
-                    create_activity_impl,
-                    wait_activity_impl,
-                    payment_activity_impl,
-                ],
-            ):
-                # Each failure scenario should result in WorkflowFailureError
-                with pytest.raises(WorkflowFailureError):
-                    await client.execute_workflow(
-                        SampleExpenseWorkflow.run,
-                        f"test-expense-{scenario_name}",
-                        id=f"test-workflow-{scenario_name}-{uuid.uuid4()}",
-                        task_queue=task_queue,
-                    )

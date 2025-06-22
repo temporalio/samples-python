@@ -1,7 +1,7 @@
 # Expense Workflow and Activities Specification
 
 ## Overview
-The Expense Processing System demonstrates a human-in-the-loop workflow pattern using Temporal. It processes expense requests through a multi-step approval workflow with asynchronous activity completion. The system is implemented in both Python and Go with identical business logic and behavior.
+The Expense Processing System demonstrates a human-in-the-loop workflow pattern using Temporal. It processes expense requests through a multi-step approval workflow with asynchronous activity completion.
 
 ## Business Process Flow
 
@@ -12,7 +12,8 @@ The Expense Processing System demonstrates a human-in-the-loop workflow pattern 
 
 ### Decision Logic
 - **APPROVED**: Continue to payment processing → Return "COMPLETED"
-- **REJECTED**: Skip payment processing → Return empty string ""
+- **Any other value**: Skip payment processing → Return empty string ""
+  - This includes: "REJECTED", "DENIED", "PENDING", "CANCELLED", or any unknown value
 - **ERROR**: Propagate failure to workflow caller
 
 ## Architecture Components
@@ -32,7 +33,7 @@ The Expense Processing System demonstrates a human-in-the-loop workflow pattern 
 
 ### Workflow Definition
 
-#### Python Implementation (`SampleExpenseWorkflow`)
+#### `SampleExpenseWorkflow`
 ```python
 @workflow.defn
 class SampleExpenseWorkflow:
@@ -40,13 +41,8 @@ class SampleExpenseWorkflow:
     async def run(self, expense_id: str) -> str
 ```
 
-#### Go Implementation (`SampleExpenseWorkflow`)
-```go
-func SampleExpenseWorkflow(ctx workflow.Context, expenseID string) (result string, err error)
-```
-
 **Input Parameters**:
-- `expense_id`/`expenseID`: Unique identifier for the expense request
+- `expense_id`: Unique identifier for the expense request
 
 **Return Values**:
 - Success (Approved): `"COMPLETED"`
@@ -64,8 +60,7 @@ func SampleExpenseWorkflow(ctx workflow.Context, expenseID string) (result strin
 
 **Purpose**: Initialize expense record in external system
 
-**Python**: `create_expense_activity(expense_id: str) -> None`
-**Go**: `CreateExpenseActivity(ctx context.Context, expenseID string) error`
+**Function Signature**: `create_expense_activity(expense_id: str) -> None`
 
 **Business Rules**:
 - Validate expense_id is not empty
@@ -74,27 +69,27 @@ func SampleExpenseWorkflow(ctx workflow.Context, expenseID string) (result strin
 - Any other response triggers exception
 
 **Error Handling**:
-- Empty expense_id: `ValueError`/`errors.New`
-- HTTP errors: Propagated to workflow
-- Unexpected response: Exception with response body
+- Empty expense_id: `ValueError` with message "expense id is empty"
+- Whitespace-only expense_id: `ValueError` (same as empty)
+- HTTP errors: `httpx.HTTPStatusError` propagated to workflow
+- Server error responses: `Exception` with specific error message (e.g., "ERROR:ID_ALREADY_EXISTS")
+- Network failures: Connection timeouts and DNS resolution errors propagated
 
 #### 2. Wait for Decision Activity
 
 **Purpose**: Register for async completion and wait for human approval
 
-**Python**: `wait_for_decision_activity(expense_id: str) -> str`
-**Go**: `WaitForDecisionActivity(ctx context.Context, expenseID string) (string, error)`
+**Function Signature**: `wait_for_decision_activity(expense_id: str) -> str`
 
 **Async Completion Pattern**:
-- **Python**: Raises `activity.raise_complete_async()` 
-- **Go**: Returns `activity.ErrResultPending`
+The activity demonstrates asynchronous activity completion. It registers itself for external completion using its task token, then calls `activity.raise_complete_async()` to signal that it will complete later without blocking the worker. This pattern enables human-in-the-loop workflows where activities can wait as long as necessary for external decisions without consuming worker resources or timing out.
 
 **Business Logic**:
 1. Validate expense_id is not empty
 2. Extract activity task token from context
 3. Register callback with external system via HTTP POST
-4. Signal async completion to Temporal
-5. External system later completes activity with decision
+4. Call `activity.raise_complete_async()` to signal async completion
+5. When a human approves or rejects the expense, an external process uses the stored task token to call `workflow_client.get_async_activity_handle(task_token).complete()`, providing the decision result
 
 **HTTP Integration**:
 - **Endpoint**: POST `/registerCallback?id={expense_id}`
@@ -104,7 +99,8 @@ func SampleExpenseWorkflow(ctx workflow.Context, expenseID string) (result strin
 **Completion Values**:
 - `"APPROVED"`: Expense approved for payment
 - `"REJECTED"`: Expense denied
-- Other values: Treated as rejection
+- `"DENIED"`, `"PENDING"`, `"CANCELLED"`: Also treated as rejection
+- Any other value: Treated as rejection (workflow returns empty string)
 
 **Error Scenarios**:
 - Empty expense_id: Immediate validation error
@@ -115,8 +111,7 @@ func SampleExpenseWorkflow(ctx workflow.Context, expenseID string) (result strin
 
 **Purpose**: Process payment for approved expenses
 
-**Python**: `payment_activity(expense_id: str) -> None`
-**Go**: `PaymentActivity(ctx context.Context, expenseID string) error`
+**Function Signature**: `payment_activity(expense_id: str) -> None`
 
 **Business Rules**:
 - Only called for approved expenses
@@ -125,9 +120,10 @@ func SampleExpenseWorkflow(ctx workflow.Context, expenseID string) (result strin
 - Success condition: Response body equals "SUCCEED"
 
 **Error Handling**:
-- Empty expense_id: `ValueError`/`errors.New`
-- HTTP errors: Propagated to workflow
-- Payment failure: Exception with response body
+- Empty expense_id: `ValueError` with message "expense id is empty"
+- HTTP errors: `httpx.HTTPStatusError` propagated to workflow
+- Payment failure: `Exception` with specific error message (e.g., "ERROR:INSUFFICIENT_FUNDS")
+- Network failures: Connection timeouts and DNS resolution errors propagated
 
 ## State Management
 
@@ -164,8 +160,9 @@ func SampleExpenseWorkflow(ctx workflow.Context, expenseID string) (result strin
 
 ### External System Errors
 - **Business Logic Errors**: Duplicate expense IDs, invalid states
-- **Response Format**: Error messages in HTTP response body
+- **Response Format**: Error messages in HTTP response body (e.g., "ERROR:ID_ALREADY_EXISTS")
 - **Handling**: Converted to application errors with descriptive messages
+- **Tested Examples**: "ERROR:INVALID_ID", "ERROR:INSUFFICIENT_FUNDS", "ERROR:INVALID_STATE"
 
 ### Async Completion Errors
 - **Registration Failure**: Activity fails immediately if callback registration fails
@@ -184,17 +181,14 @@ func SampleExpenseWorkflow(ctx workflow.Context, expenseID string) (result strin
 - **Retry**: Follows activity retry policy
 - **Workflow Impact**: Timeout failures propagate to workflow
 
-### Production Considerations
-- **Human Approval**: Consider longer timeouts for real-world approval processes
-- **Business Hours**: May need different timeouts based on operational hours
-- **Escalation**: Implement escalation workflows for timeout scenarios
+
 
 ## Testing Patterns
 
 ### Mock Testing Approach
-Both implementations support comprehensive testing with mocked activities:
+The system supports comprehensive testing with mocked activities:
 
-#### Python Test Patterns
+#### Test Patterns
 ```python
 @activity.defn(name="create_expense_activity")
 async def create_expense_mock(expense_id: str) -> None:
@@ -203,12 +197,11 @@ async def create_expense_mock(expense_id: str) -> None:
 @activity.defn(name="wait_for_decision_activity") 
 async def wait_for_decision_mock(expense_id: str) -> str:
     return "APPROVED"  # Decision mock
-```
 
-#### Go Test Patterns
-```go
-env.OnActivity(CreateExpenseActivity, mock.Anything).Return(nil).Once()
-env.OnActivity(WaitForDecisionActivity, mock.Anything).Return("APPROVED", nil).Once()
+# Testing async completion behavior:
+from temporalio.activity import _CompleteAsyncError
+with pytest.raises(_CompleteAsyncError):
+    await activity_env.run(wait_for_decision_activity, "test-expense")
 ```
 
 ### Test Scenarios
@@ -216,53 +209,37 @@ env.OnActivity(WaitForDecisionActivity, mock.Anything).Return("APPROVED", nil).O
 2. **Rejection Path**: Expense rejected, payment skipped
 3. **Failure Scenarios**: Activity failures at each step
 4. **Mock Server Testing**: HTTP interactions with test server
-5. **Async Completion Testing**: Simulated callback completion
+5. **Async Completion Testing**: Simulated callback completion (expects `_CompleteAsyncError`)
+6. **Decision Value Testing**: All possible decision values (APPROVED, REJECTED, DENIED, PENDING, CANCELLED, UNKNOWN)
+7. **Retryable Failures**: Activities that fail temporarily and then succeed on retry
+8. **Parameter Validation**: Empty and whitespace-only expense IDs
+9. **Logging Behavior**: Verify activity logging works correctly
+10. **Server Error Responses**: Specific error formats like "ERROR:ID_ALREADY_EXISTS"
 
 ### Mock Server Integration
-- **Go Implementation**: Uses `httptest.NewServer` for HTTP mocking
-- **Python Implementation**: Can use similar patterns with test frameworks
+- **HTTP Mocking**: Uses test frameworks to mock HTTP server responses
 - **Delayed Completion**: Simulates human approval delays in tests
 
-## Cross-Language Compatibility
+### Edge Case Testing
+Tests include comprehensive coverage of edge cases and error scenarios:
 
-### Functional Equivalence
-Both Python and Go implementations provide identical:
-- **Business Logic**: Same workflow steps and decision points
-- **External Integration**: Same HTTP endpoints and payloads
-- **Timeout Configuration**: Same duration settings
-- **Error Handling**: Equivalent error scenarios and responses
+#### Retry Behavior Testing
+- **Transient Failures**: Activities that fail on first attempts but succeed after retries
+- **Retry Counting**: Verification that activities retry the expected number of times
+- **Mixed Scenarios**: Different activities failing and recovering independently
 
-### Implementation Differences
-- **Async Patterns**: Language-specific async completion mechanisms
-- **Error Types**: Language-native exception/error handling
-- **HTTP Libraries**: `httpx` (Python) vs `net/http` (Go)
-- **Logging**: Framework-specific logging approaches
+#### Parameter Validation Testing
+- **Empty Strings**: Expense IDs that are completely empty (`""`)
+- **Whitespace-Only**: Expense IDs containing only spaces (`"   "`)
+- **Non-Retryable Errors**: Validation failures that should not be retried
 
-### Interoperability
-- **Task Tokens**: Binary compatible between implementations
-- **HTTP Payloads**: Same format for external system integration
-- **Workflow Results**: Same return value semantics
-- **External System**: Single UI can serve both implementations
+#### Logging Verification
+- **Activity Logging**: Ensures activity.logger.info() calls work correctly
+- **Workflow Logging**: Verification of workflow-level logging behavior
+- **Log Content**: Checking that log messages contain expected information
 
-## Production Deployment Considerations
+#### Server Error Response Testing
+- **Specific Error Codes**: Testing responses like "ERROR:ID_ALREADY_EXISTS"
+- **HTTP Status Errors**: Network-level HTTP errors vs application errors
+- **Error Message Propagation**: Ensuring error details reach the workflow caller
 
-### Scalability
-- **Stateless Activities**: No local state, horizontally scalable
-- **External System**: UI system should support concurrent requests
-- **Task Token Storage**: Consider persistent storage for production UI
-
-### Reliability
-- **Retry Policies**: Configure appropriate retry behavior for each activity
-- **Circuit Breakers**: Consider circuit breaker patterns for external HTTP calls
-- **Monitoring**: Implement metrics and alerting for workflow execution
-
-### Security
-- **Task Token Security**: Protect task tokens from unauthorized access
-- **HTTP Security**: Use HTTPS for production external system integration
-- **Input Validation**: Comprehensive validation of expense IDs and external inputs
-
-### Observability
-- **Workflow Tracing**: Temporal provides built-in workflow execution history
-- **Activity Metrics**: Monitor activity success rates and durations
-- **External System Integration**: Log HTTP interactions for debugging
-- **Human Approval Metrics**: Track approval rates and response times 

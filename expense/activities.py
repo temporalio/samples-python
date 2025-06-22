@@ -28,7 +28,7 @@ async def create_expense_activity(expense_id: str) -> None:
 async def wait_for_decision_activity(expense_id: str) -> str:
     """
     Wait for the expense decision. This activity will complete asynchronously. When this function
-    raises activity.AsyncActivityCompleteError, the Temporal Python SDK recognizes this error, and won't mark this activity
+    calls activity.raise_complete_async(), the Temporal Python SDK recognizes this and won't mark this activity
     as failed or completed. The Temporal server will wait until Client.complete_activity() is called or timeout happened
     whichever happen first. In this sample case, the complete_activity() method is called by our sample expense system when
     the expense is approved.

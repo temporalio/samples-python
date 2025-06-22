@@ -11,7 +11,7 @@ from expense.workflow import SampleExpenseWorkflow
 
 
 async def test_workflow_with_mock_activities(client: Client, env: WorkflowEnvironment):
-    """Test workflow with mocked activities - equivalent to Go Test_WorkflowWithMockActivities"""
+    """Test workflow with mocked activities"""
     task_queue = f"test-expense-{uuid.uuid4()}"
 
     # Mock the activities to return expected values
@@ -49,7 +49,7 @@ async def test_workflow_with_mock_activities(client: Client, env: WorkflowEnviro
 
 
 async def test_workflow_rejected_expense(client: Client, env: WorkflowEnvironment):
-    """Test workflow when expense is rejected - similar to Go test patterns"""
+    """Test workflow when expense is rejected"""
     task_queue = f"test-expense-rejected-{uuid.uuid4()}"
 
     # Mock the activities

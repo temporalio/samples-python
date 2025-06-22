@@ -18,6 +18,12 @@ The Expense System UI is a FastAPI-based web application that provides both a we
 
 ## API Endpoints
 
+### Parameter Validation
+All endpoints use FastAPI's automatic parameter validation:
+- Missing required parameters return HTTP 422 (Unprocessable Entity)
+- Invalid parameter types return HTTP 422 (Unprocessable Entity)
+- This validation occurs before endpoint-specific business logic
+
 ### 1. Home/List View (`GET /` or `GET /list`)
 **Purpose**: Display all expenses in an HTML table format
 
@@ -44,15 +50,15 @@ The Expense System UI is a FastAPI-based web application that provides both a we
 - `approve`: Changes CREATED → APPROVED
 - `reject`: Changes CREATED → REJECTED  
 - `payment`: Changes APPROVED → COMPLETED
-- Invalid IDs return 400 error
-- Invalid action types return 400 error
+- Invalid IDs return HTTP 200 with error message in response body
+- Invalid action types return HTTP 200 with error message in response body
 - State changes from CREATED to APPROVED/REJECTED trigger workflow notifications
 - API calls return "SUCCEED" on success
 - UI calls redirect to list view after success
 
 **Error Handling**:
-- API calls return "ERROR:INVALID_ID" or "ERROR:INVALID_TYPE"
-- UI calls return HTTP 400 with descriptive messages
+- API calls return HTTP 200 with "ERROR:INVALID_ID" or "ERROR:INVALID_TYPE" in response body
+- UI calls return HTTP 200 with descriptive messages like "Invalid ID" or "Invalid action type" in response body
 
 ### 3. Create Expense (`GET /create`)
 **Purpose**: Create a new expense entry
@@ -64,11 +70,11 @@ The Expense System UI is a FastAPI-based web application that provides both a we
 **Business Rules**:
 - Expense ID must be unique
 - New expenses start in CREATED state
-- Duplicate IDs return 400 error
+- Duplicate IDs return HTTP 200 with error message in response body
 
 **Error Handling**:
-- API calls return "ERROR:ID_ALREADY_EXISTS"
-- UI calls return HTTP 400 with descriptive message
+- API calls return HTTP 200 with "ERROR:ID_ALREADY_EXISTS" in response body
+- UI calls return HTTP 200 with descriptive message "ID already exists" in response body
 
 ### 4. Status Check (`GET /status`)
 **Purpose**: Retrieve current expense state
@@ -77,7 +83,7 @@ The Expense System UI is a FastAPI-based web application that provides both a we
 - `id` (required): Expense ID
 
 **Response**: Current expense state as string
-**Error Handling**: Returns "ERROR:INVALID_ID" for unknown IDs
+**Error Handling**: Returns HTTP 200 with "ERROR:INVALID_ID" in response body for unknown IDs
 
 ### 5. Callback Registration (`POST /registerCallback`)
 **Purpose**: Register Temporal workflow callback for expense state changes
@@ -92,9 +98,9 @@ The Expense System UI is a FastAPI-based web application that provides both a we
 - Enables workflow notification on state changes
 
 **Error Handling**:
-- "ERROR:INVALID_ID" for unknown expenses
-- "ERROR:INVALID_STATE" for non-CREATED expenses
-- "ERROR:INVALID_FORM_DATA" for invalid tokens
+- HTTP 200 with "ERROR:INVALID_ID" in response body for unknown expenses
+- HTTP 200 with "ERROR:INVALID_STATE" in response body for non-CREATED expenses
+- HTTP 200 with "ERROR:INVALID_FORM_DATA" in response body for invalid tokens
 
 ## Workflow Integration
 
@@ -128,8 +134,8 @@ The Expense System UI is a FastAPI-based web application that provides both a we
 
 ### Error Recovery
 - Graceful handling of workflow callback failures
-- Input validation on all endpoints
-- Descriptive error messages
+- Input validation on all endpoints (422 for missing/invalid parameters, 200 with error messages for business logic errors)
+- Descriptive error messages in response body
 
 ### Logging
 - State change operations are logged

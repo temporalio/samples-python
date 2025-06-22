@@ -116,9 +116,30 @@ async def generate_expense_response(
         ExpenseResponse with user-friendly message and explanations
     """
     logger = workflow.logger
-    logger.info(f"Generating response for expense {expense_report.expense_id}")
+    
+    # Agent start logging
+    logger.info(
+        f"📝 RESPONSE_AGENT_START: Starting response generation",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "ResponseAgent",
+            "decision": final_decision.decision,
+            "category": categorization.category,
+            "policy_compliant": policy_evaluation.compliant,
+            "stage": "start"
+        }
+    )
     
     # Create the response agent
+    logger.info(
+        f"🤖 AGENT_CREATION: Creating ResponseAgent instance",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "ResponseAgent",
+            "stage": "agent_creation"
+        }
+    )
+    
     agent = create_response_agent()
     
     # Prepare input for the agent (excluding fraud details)
@@ -157,9 +178,40 @@ async def generate_expense_response(
     Generate a complete response that helps the employee understand the decision and any required actions.
     """
     
+    logger.info(
+        f"🎯 AGENT_INPUT: Prepared response agent input",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "ResponseAgent",
+            "decision_type": final_decision.decision,
+            "input_length": len(response_input),
+            "violations_count": len(policy_evaluation.violations),
+            "stage": "input_preparation"
+        }
+    )
+    
     try:
         # Run the agent to get the response
+        logger.info(
+            f"🚀 AGENT_EXECUTION: Running ResponseAgent",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "ResponseAgent",
+                "stage": "execution"
+            }
+        )
+        
         result = await Runner.run(agent, input=response_input)
+        
+        logger.info(
+            f"✅ AGENT_RESPONSE: ResponseAgent execution completed",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "ResponseAgent",
+                "response_length": len(result.final_output) if hasattr(result, 'final_output') else 0,
+                "stage": "response_received"
+            }
+        )
         
         # Parse the agent's response
         import json
@@ -167,6 +219,16 @@ async def generate_expense_response(
         try:
             # Extract JSON from the agent's response
             response_text = result.final_output
+            
+            logger.info(
+                f"🔍 RESPONSE_PARSING: Parsing agent response",
+                extra={
+                    "expense_id": expense_report.expense_id,
+                    "agent": "ResponseAgent",
+                    "response_text_length": len(response_text),
+                    "stage": "response_parsing"
+                }
+            )
             
             # Find JSON in the response
             json_start = response_text.find('{')
@@ -176,8 +238,32 @@ async def generate_expense_response(
                 json_text = response_text[json_start:json_end]
                 parsed_result = json.loads(json_text)
                 
+                logger.info(
+                    f"📊 JSON_PARSED: Successfully parsed response",
+                    extra={
+                        "expense_id": expense_report.expense_id,
+                        "agent": "ResponseAgent",
+                        "has_message": "message" in parsed_result,
+                        "has_decision_summary": "decision_summary" in parsed_result,
+                        "has_policy_explanation": "policy_explanation" in parsed_result,
+                        "has_categorization_summary": "categorization_summary" in parsed_result,
+                        "stage": "json_parsing_success"
+                    }
+                )
+                
                 # Validate and sanitize the response
                 validated_result = _validate_response_content(parsed_result, final_decision)
+                
+                logger.info(
+                    f"✅ RESPONSE_VALIDATED: Response content validated",
+                    extra={
+                        "expense_id": expense_report.expense_id,
+                        "agent": "ResponseAgent",
+                        "validation_applied": True,
+                        "message_length": len(validated_result["message"]),
+                        "stage": "validation_complete"
+                    }
+                )
                 
                 # Create expense response result
                 expense_response = ExpenseResponse(
@@ -187,104 +273,143 @@ async def generate_expense_response(
                     categorization_summary=validated_result["categorization_summary"]
                 )
                 
-                logger.info(f"Response generated for expense {expense_report.expense_id}")
+                logger.info(
+                    f"✅ RESPONSE_AGENT_SUCCESS: Response generation completed successfully",
+                    extra={
+                        "expense_id": expense_report.expense_id,
+                        "agent": "ResponseAgent",
+                        "message_length": len(expense_response.message),
+                        "has_policy_explanation": expense_response.policy_explanation is not None,
+                        "stage": "success"
+                    }
+                )
+                
                 return expense_response
                 
             else:
                 raise ValueError("No valid JSON found in agent response")
                 
         except (json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.error(f"Failed to parse response agent output: {e}")
-            logger.error(f"Agent response was: {result.final_output}")
+            logger.error(
+                f"🚨 PARSING_ERROR: Failed to parse ResponseAgent output",
+                extra={
+                    "expense_id": expense_report.expense_id,
+                    "agent": "ResponseAgent",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "response_preview": result.final_output[:200] if hasattr(result, 'final_output') else "No output",
+                    "stage": "parsing_error"
+                }
+            )
             
             # Create fallback response
             fallback_response = _fallback_expense_response(
                 expense_report, categorization, policy_evaluation, final_decision
             )
-            logger.warning(f"Using fallback response")
+            
+            logger.warning(
+                f"⚠️ RESPONSE_FALLBACK: Using fallback response due to parsing error",
+                extra={
+                    "expense_id": expense_report.expense_id,
+                    "agent": "ResponseAgent",
+                    "fallback_decision": final_decision.decision,
+                    "stage": "fallback_parsing"
+                }
+            )
+            
             return fallback_response
             
     except Exception as e:
-        logger.error(f"ResponseAgent failed for expense {expense_report.expense_id}: {e}")
+        logger.error(
+            f"🚨 RESPONSE_AGENT_ERROR: ResponseAgent execution failed",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "ResponseAgent",
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "stage": "execution_error"
+            }
+        )
         
         # Create fallback response
         fallback_response = _fallback_expense_response(
             expense_report, categorization, policy_evaluation, final_decision
         )
-        logger.warning(f"Using fallback response due to agent failure")
+        
+        logger.warning(
+            f"⚠️ RESPONSE_FALLBACK: Using fallback response due to agent failure",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "ResponseAgent",
+                "fallback_decision": final_decision.decision,
+                "stage": "fallback_execution"
+            }
+        )
+        
         return fallback_response
 
 
 def _validate_response_content(parsed_result: dict, final_decision: FinalDecision) -> dict:
     """
-    Validate that the response content is appropriate and secure.
+    Validate and sanitize response content for security and consistency.
     
     Args:
         parsed_result: Parsed response from agent
-        final_decision: The final decision made
+        final_decision: Final decision for context
         
     Returns:
-        Validated and sanitized response
+        Validated response content
     """
-    # Forbidden terms that should not appear in user responses
-    forbidden_terms = [
-        "fraud", "suspicious", "risk", "flag", "detection", "assessment", 
-        "security", "threat", "investigation", "algorithm", "pattern"
-    ]
+    logger = workflow.logger
     
-    # Sanitize message
-    message = parsed_result.get("message", "")
-    message_lower = message.lower()
+    logger.info(
+        f"🔍 VALIDATION_START: Starting response content validation",
+        extra={
+            "agent": "ResponseAgent",
+            "decision": final_decision.decision,
+            "validation_stage": "start"
+        }
+    )
     
-    if any(term in message_lower for term in forbidden_terms):
-        # Replace with generic message based on decision type
-        decision = final_decision.decision
-        
-        if decision == "approved":
-            message = "Your expense has been approved and will be processed for payment."
-        elif decision == "final_rejection":
-            message = "Your expense cannot be approved due to policy requirements. Please review our expense policy for guidance on reimbursable expenses."
-        elif decision == "rejected_with_instructions":
-            message = "Your expense requires additional information before it can be processed. Please review the submission requirements and resubmit with the necessary details."
-        else:  # requires_human_review
-            message = "Your expense has been submitted for review. Our team will examine the submission and contact you if additional information is needed."
-    
-    # Sanitize decision summary
-    decision_summary = parsed_result.get("decision_summary", "")
-    summary_lower = decision_summary.lower()
-    
-    if any(term in summary_lower for term in forbidden_terms):
-        decision = final_decision.decision
-        
-        if decision == "approved":
-            decision_summary = "Approved - Expense approved for payment processing"
-        elif decision == "final_rejection":
-            decision_summary = "Rejected - Does not meet policy requirements"
-        elif decision == "rejected_with_instructions":
-            decision_summary = "Additional Information Needed - Please resubmit with required details"
-        else:  # requires_human_review
-            decision_summary = "Under Review - Additional review required"
-    
-    # Sanitize policy explanation
-    policy_explanation = parsed_result.get("policy_explanation", "")
-    if policy_explanation:
-        policy_lower = policy_explanation.lower()
-        if any(term in policy_lower for term in forbidden_terms):
-            policy_explanation = "Please refer to the employee handbook for detailed expense policy information."
-    
-    # Sanitize categorization summary
-    categorization_summary = parsed_result.get("categorization_summary", "")
-    cat_summary_lower = categorization_summary.lower()
-    
-    if any(term in cat_summary_lower for term in forbidden_terms):
-        categorization_summary = "Expense categorization completed based on description and vendor information."
-    
-    return {
-        "message": message,
-        "decision_summary": decision_summary,
-        "policy_explanation": policy_explanation if policy_explanation else None,
-        "categorization_summary": categorization_summary
+    # Ensure required fields exist
+    validated = {
+        "message": parsed_result.get("message", "Your expense has been processed."),
+        "decision_summary": parsed_result.get("decision_summary", f"Decision: {final_decision.decision}"),
+        "policy_explanation": parsed_result.get("policy_explanation"),
+        "categorization_summary": parsed_result.get("categorization_summary", "Expense categorized for processing.")
     }
+    
+    # Sanitize content - remove any fraud-related terms that shouldn't be in public responses
+    fraud_terms = ["fraud", "suspicious", "risk assessment", "detection", "flag", "security concern"]
+    
+    for field_name, content in validated.items():
+        if content and isinstance(content, str):
+            original_content = content
+            for term in fraud_terms:
+                if term.lower() in content.lower():
+                    # Replace with generic language
+                    content = content.replace(term, "review")
+                    logger.warning(
+                        f"⚠️ CONTENT_SANITIZED: Removed sensitive term from response",
+                        extra={
+                            "agent": "ResponseAgent",
+                            "field": field_name,
+                            "removed_term": term,
+                            "validation_stage": "sanitization"
+                        }
+                    )
+            validated[field_name] = content
+    
+    logger.info(
+        f"✅ VALIDATION_COMPLETE: Response content validation completed",
+        extra={
+            "agent": "ResponseAgent",
+            "validated_fields": list(validated.keys()),
+            "validation_stage": "complete"
+        }
+    )
+    
+    return validated
 
 
 def _fallback_expense_response(
@@ -305,6 +430,19 @@ def _fallback_expense_response(
     Returns:
         Basic ExpenseResponse with appropriate messaging
     """
+    logger = workflow.logger
+    
+    logger.info(
+        f"🔧 FALLBACK_START: Starting fallback response generation",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "ResponseAgent",
+            "decision": final_decision.decision,
+            "fallback_method": "template_based",
+            "stage": "fallback_start"
+        }
+    )
+    
     decision = final_decision.decision
     
     # Generate appropriate message based on decision type
@@ -312,13 +450,43 @@ def _fallback_expense_response(
         message = f"Your expense for ${expense_report.amount} has been approved and will be processed for payment. The expense was correctly categorized and meets all policy requirements."
         decision_summary = "Approved - Expense approved for payment processing"
         
+        logger.info(
+            f"📝 APPROVAL_MESSAGE: Generated approval message",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "ResponseAgent",
+                "amount": str(expense_report.amount),
+                "stage": "approval_message"
+            }
+        )
+        
     elif decision == "final_rejection":
         message = f"Your expense for ${expense_report.amount} cannot be approved as it does not meet company policy requirements. Please review our expense policy for guidance on reimbursable expenses."
         decision_summary = "Rejected - Does not meet policy requirements"
         
+        logger.info(
+            f"❌ REJECTION_MESSAGE: Generated rejection message",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "ResponseAgent",
+                "amount": str(expense_report.amount),
+                "stage": "rejection_message"
+            }
+        )
+        
     elif decision == "rejected_with_instructions":
         message = f"Your expense for ${expense_report.amount} requires additional information before it can be processed. Please review the submission requirements and resubmit with the necessary details."
         decision_summary = "Additional Information Needed - Please resubmit with required details"
+        
+        logger.info(
+            f"📋 INSTRUCTIONS_MESSAGE: Generated instructions message",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "ResponseAgent",
+                "amount": str(expense_report.amount),
+                "stage": "instructions_message"
+            }
+        )
         
     else:  # requires_human_review
         if final_decision.is_mandatory_escalation:
@@ -327,6 +495,17 @@ def _fallback_expense_response(
         else:
             message = f"Your expense for ${expense_report.amount} has been submitted for additional review. Our team will examine the submission and contact you if additional information is needed."
             decision_summary = "Under Review - Additional review required"
+        
+        logger.info(
+            f"👥 REVIEW_MESSAGE: Generated review message",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "ResponseAgent",
+                "amount": str(expense_report.amount),
+                "is_mandatory": final_decision.is_mandatory_escalation,
+                "stage": "review_message"
+            }
+        )
     
     # Policy explanation
     policy_explanation = None
@@ -339,9 +518,23 @@ def _fallback_expense_response(
     vendor_status = "verified" if categorization.vendor_validation.is_legitimate else "could not be verified"
     categorization_summary = f"Categorized as {categorization.category}. Vendor {expense_report.vendor} {vendor_status} through validation process."
     
-    return ExpenseResponse(
+    fallback_response = ExpenseResponse(
         message=message,
         decision_summary=decision_summary,
         policy_explanation=policy_explanation,
         categorization_summary=categorization_summary
-    ) 
+    )
+    
+    logger.info(
+        f"✅ FALLBACK_COMPLETE: Fallback response generation completed",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "ResponseAgent",
+            "decision": decision,
+            "message_length": len(fallback_response.message),
+            "has_policy_explanation": fallback_response.policy_explanation is not None,
+            "stage": "fallback_complete"
+        }
+    )
+    
+    return fallback_response 

@@ -2,27 +2,70 @@
 Starter for the OpenAI Agents Expense Processing Sample.
 
 This script starts expense workflows with AI agent processing.
+
+Usage:
+  python starter.py                    # Process first expense, don't wait
+  python starter.py -e 2              # Process expense 2, don't wait  
+  python starter.py -e all -w          # Process all expenses and wait for completion
+  python starter.py --expense 1 --wait # Process expense 1 and wait for completion
 """
 
+import argparse
 import asyncio
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
 from temporalio.client import Client
+from temporalio.contrib.pydantic import pydantic_data_converter
 
 from openai_agents_expense import TASK_QUEUE, WORKFLOW_ID_PREFIX
 from openai_agents_expense.models import ExpenseReport
 from openai_agents_expense.workflows.expense_workflow import ExpenseWorkflow
 
 
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Start OpenAI Agents Expense Processing workflows",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  %(prog)s                    # Process first expense, don't wait
+  %(prog)s -e 2              # Process expense 2, don't wait  
+  %(prog)s -e all -w          # Process all expenses and wait for completion
+  %(prog)s --expense 1 --wait # Process expense 1 and wait for completion
+        """
+    )
+    
+    parser.add_argument(
+        "-e", "--expense",
+        choices=["1", "2", "3", "all"],
+        default="1",
+        help="Which expense to process: 1, 2, 3, or 'all' (default: 1)"
+    )
+    
+    parser.add_argument(
+        "-w", "--wait",
+        action="store_true",
+        help="Wait for workflow completion and show results"
+    )
+    
+    return parser.parse_args()
+
+
 async def main():
     """Start an expense workflow with AI processing."""
+    args = parse_args()
+    
     print("OpenAI Agents Expense Processing Sample - Starter")
     print("=" * 50)
     
-    # Connect to Temporal server
-    client = await Client.connect("localhost:7233")
+    # Connect to Temporal server with pydantic data converter
+    client = await Client.connect(
+        "localhost:7233",
+        data_converter=pydantic_data_converter
+    )
     
     # Create sample expense reports for demonstration
     sample_expenses = [
@@ -79,19 +122,17 @@ async def main():
     for i, expense in enumerate(sample_expenses, 1):
         print(f"{i}. {expense.expense_id}: ${expense.amount} - {expense.description}")
     
-    print("\nSelect an expense to process (1-3), or press Enter for all:")
-    choice = input().strip()
-    
+    # Process expenses based on command line argument
     expenses_to_process = []
-    if choice == "":
+    if args.expense == "all":
         expenses_to_process = sample_expenses
-        print("Processing all sample expenses...")
-    elif choice in ["1", "2", "3"]:
-        expenses_to_process = [sample_expenses[int(choice) - 1]]
-        print(f"Processing expense {choice}...")
+        print(f"\nProcessing all sample expenses...")
+    elif args.expense in ["1", "2", "3"]:
+        expenses_to_process = [sample_expenses[int(args.expense) - 1]]
+        print(f"\nProcessing expense {args.expense}...")
     else:
-        print("Invalid choice. Processing first expense...")
         expenses_to_process = [sample_expenses[0]]
+        print(f"\nProcessing first expense (default)...")
     
     # Process each selected expense
     for expense in expenses_to_process:
@@ -115,32 +156,30 @@ async def main():
             print(f"Workflow started: {workflow_id}")
             print(f"You can track progress at: http://localhost:8233/namespaces/default/workflows/{workflow_id}")
             
-            # Option to wait for completion
-            if len(expenses_to_process) == 1:
-                print("\nWait for completion? (y/n):")
-                wait = input().strip().lower()
-                
-                if wait == "y":
-                    print("Waiting for workflow completion...")
+            # Wait for completion if requested
+            if args.wait:
+                print("Waiting for workflow completion...")
+                try:
+                    result = await handle.result()
+                    print(f"Workflow completed with result: {result}")
+                    
+                    # Get final status
+                    status = await handle.query(ExpenseWorkflow.get_status)
+                    print(f"\nFinal Status: {status.current_status}")
+                    
+                    # Get processing result if available
                     try:
-                        result = await handle.result()
-                        print(f"Workflow completed with result: {result}")
+                        processing_result = await handle.query(ExpenseWorkflow.get_processing_result)
+                        if processing_result:
+                            print(f"Decision: {processing_result.final_decision.decision}")
+                            print(f"Response: {processing_result.expense_response.message}")
+                    except:
+                        pass
                         
-                        # Get final status
-                        status = await handle.query(ExpenseWorkflow.get_status)
-                        print(f"\nFinal Status: {status.current_status}")
-                        
-                        # Get processing result if available
-                        try:
-                            processing_result = await handle.query(ExpenseWorkflow.get_processing_result)
-                            if processing_result:
-                                print(f"Decision: {processing_result.final_decision.decision}")
-                                print(f"Response: {processing_result.expense_response.message}")
-                        except:
-                            pass
-                            
-                    except Exception as e:
-                        print(f"Workflow failed: {e}")
+                except Exception as e:
+                    print(f"Workflow failed: {e}")
+            else:
+                print("Use --wait/-w flag to wait for completion and see results")
                         
         except Exception as e:
             print(f"Failed to start workflow: {e}")
@@ -150,7 +189,9 @@ async def main():
     print("Monitor progress:")
     print("1. Temporal Web UI: http://localhost:8233")
     print("2. Expense UI (for human review): http://localhost:8099/list")
-    print("\nNote: Make sure the worker is running to process these workflows.")
+    print(f"\nNote: Make sure the worker is running to process these workflows.")
+    if not args.wait:
+        print("Tip: Use --wait/-w flag to automatically wait for completion and see results")
 
 
 if __name__ == "__main__":

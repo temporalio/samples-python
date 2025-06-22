@@ -106,9 +106,30 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
         ExpenseCategory with categorization results and vendor validation
     """
     logger = workflow.logger
-    logger.info(f"Categorizing expense {expense_report.expense_id}")
+    
+    # Agent start logging
+    logger.info(
+        f"📋 CATEGORY_AGENT_START: Starting expense categorization",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "CategoryAgent",
+            "vendor": expense_report.vendor,
+            "description": expense_report.description,
+            "amount": str(expense_report.amount),
+            "stage": "start"
+        }
+    )
     
     # Create the categorization agent
+    logger.info(
+        f"🤖 AGENT_CREATION: Creating CategoryAgent instance",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "CategoryAgent",
+            "stage": "agent_creation"
+        }
+    )
+    
     agent = create_category_agent()
     
     # Prepare input for the agent
@@ -130,9 +151,39 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
     First, search for information about the vendor "{expense_report.vendor}" to validate their legitimacy and gather business context. Then categorize the expense based on the description and vendor information found.
     """
     
+    logger.info(
+        f"🎯 AGENT_INPUT: Prepared agent input",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "CategoryAgent",
+            "vendor_to_search": expense_report.vendor,
+            "input_length": len(expense_input),
+            "stage": "input_preparation"
+        }
+    )
+    
     try:
         # Run the agent to get categorization results
+        logger.info(
+            f"🚀 AGENT_EXECUTION: Running CategoryAgent",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "CategoryAgent",
+                "stage": "execution"
+            }
+        )
+        
         result = await Runner.run(agent, input=expense_input)
+        
+        logger.info(
+            f"✅ AGENT_RESPONSE: CategoryAgent execution completed",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "CategoryAgent",
+                "response_length": len(result.final_output) if hasattr(result, 'final_output') else 0,
+                "stage": "response_received"
+            }
+        )
         
         # Parse the agent's response
         import json
@@ -141,6 +192,16 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
             # Extract JSON from the agent's response
             response_text = result.final_output
             
+            logger.info(
+                f"🔍 RESPONSE_PARSING: Parsing agent response",
+                extra={
+                    "expense_id": expense_report.expense_id,
+                    "agent": "CategoryAgent",
+                    "response_text_length": len(response_text),
+                    "stage": "response_parsing"
+                }
+            )
+            
             # Find JSON in the response (agent might include additional text)
             json_start = response_text.find('{')
             json_end = response_text.rfind('}') + 1
@@ -148,6 +209,18 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
             if json_start != -1 and json_end > json_start:
                 json_text = response_text[json_start:json_end]
                 parsed_result = json.loads(json_text)
+                
+                logger.info(
+                    f"📊 JSON_PARSED: Successfully parsed agent response",
+                    extra={
+                        "expense_id": expense_report.expense_id,
+                        "agent": "CategoryAgent",
+                        "parsed_category": parsed_result.get("category", "unknown"),
+                        "parsed_confidence": parsed_result.get("confidence", 0.0),
+                        "vendor_legitimate": parsed_result.get("vendor_validation", {}).get("is_legitimate", False),
+                        "stage": "json_parsing_success"
+                    }
+                )
                 
                 # Create vendor validation object
                 vendor_validation = VendorValidation(
@@ -165,27 +238,79 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
                     vendor_validation=vendor_validation
                 )
                 
-                logger.info(f"Categorization completed: {category_result.category} (confidence: {category_result.confidence})")
+                logger.info(
+                    f"✅ CATEGORY_AGENT_SUCCESS: Categorization completed successfully",
+                    extra={
+                        "expense_id": expense_report.expense_id,
+                        "agent": "CategoryAgent",
+                        "category": category_result.category,
+                        "confidence": category_result.confidence,
+                        "vendor_legitimate": category_result.vendor_validation.is_legitimate,
+                        "vendor_confidence": category_result.vendor_validation.confidence_score,
+                        "stage": "success"
+                    }
+                )
+                
                 return category_result
                 
             else:
                 raise ValueError("No valid JSON found in agent response")
                 
         except (json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.error(f"Failed to parse agent response: {e}")
-            logger.error(f"Agent response was: {result.final_output}")
+            logger.error(
+                f"🚨 PARSING_ERROR: Failed to parse CategoryAgent response",
+                extra={
+                    "expense_id": expense_report.expense_id,
+                    "agent": "CategoryAgent",
+                    "error": str(e),
+                    "error_type": type(e).__name__,
+                    "response_preview": result.final_output[:200] if hasattr(result, 'final_output') else "No output",
+                    "stage": "parsing_error"
+                }
+            )
             
             # Create fallback result with low confidence
             fallback_category = _fallback_categorization(expense_report)
-            logger.warning(f"Using fallback categorization: {fallback_category.category}")
+            
+            logger.warning(
+                f"⚠️ CATEGORY_FALLBACK: Using fallback categorization due to parsing error",
+                extra={
+                    "expense_id": expense_report.expense_id,
+                    "agent": "CategoryAgent",
+                    "fallback_category": fallback_category.category,
+                    "fallback_confidence": fallback_category.confidence,
+                    "stage": "fallback_parsing"
+                }
+            )
+            
             return fallback_category
             
     except Exception as e:
-        logger.error(f"CategoryAgent failed for expense {expense_report.expense_id}: {e}")
+        logger.error(
+            f"🚨 CATEGORY_AGENT_ERROR: CategoryAgent execution failed",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "CategoryAgent",
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "stage": "execution_error"
+            }
+        )
         
         # Create fallback result
         fallback_category = _fallback_categorization(expense_report)
-        logger.warning(f"Using fallback categorization due to agent failure: {fallback_category.category}")
+        
+        logger.warning(
+            f"⚠️ CATEGORY_FALLBACK: Using fallback categorization due to agent failure",
+            extra={
+                "expense_id": expense_report.expense_id,
+                "agent": "CategoryAgent",
+                "fallback_category": fallback_category.category,
+                "fallback_confidence": fallback_category.confidence,
+                "stage": "fallback_execution"
+            }
+        )
+        
         return fallback_category
 
 
@@ -199,28 +324,71 @@ def _fallback_categorization(expense_report: ExpenseReport) -> ExpenseCategory:
     Returns:
         Basic ExpenseCategory with low confidence
     """
+    logger = workflow.logger
+    
+    logger.info(
+        f"🔧 FALLBACK_START: Starting fallback categorization",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "CategoryAgent",
+            "fallback_method": "keyword_based",
+            "stage": "fallback_start"
+        }
+    )
+    
     # Simple keyword-based fallback categorization
     description_lower = expense_report.description.lower()
     vendor_lower = expense_report.vendor.lower()
     
+    logger.info(
+        f"🔍 KEYWORD_ANALYSIS: Analyzing keywords for categorization",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "CategoryAgent",
+            "description": description_lower,
+            "vendor": vendor_lower,
+            "stage": "keyword_analysis"
+        }
+    )
+    
     if any(word in description_lower for word in ["flight", "hotel", "travel", "taxi", "uber"]):
         category = "Travel & Transportation"
+        matching_keywords = [word for word in ["flight", "hotel", "travel", "taxi", "uber"] if word in description_lower]
     elif any(word in description_lower for word in ["meal", "lunch", "dinner", "restaurant"]):
         category = "Meals & Entertainment"
+        matching_keywords = [word for word in ["meal", "lunch", "dinner", "restaurant"] if word in description_lower]
     elif any(word in description_lower for word in ["office", "supplies", "paper", "pen"]):
         category = "Office Supplies"
+        matching_keywords = [word for word in ["office", "supplies", "paper", "pen"] if word in description_lower]
     elif any(word in description_lower for word in ["software", "subscription", "license", "cloud"]):
         category = "Software & Technology"
+        matching_keywords = [word for word in ["software", "subscription", "license", "cloud"] if word in description_lower]
     elif any(word in description_lower for word in ["equipment", "computer", "hardware"]):
         category = "Equipment & Hardware"
+        matching_keywords = [word for word in ["equipment", "computer", "hardware"] if word in description_lower]
     elif any(word in description_lower for word in ["consulting", "legal", "professional"]):
         category = "Professional Services"
+        matching_keywords = [word for word in ["consulting", "legal", "professional"] if word in description_lower]
     elif any(word in description_lower for word in ["training", "education", "course", "conference"]):
         category = "Training & Education"
+        matching_keywords = [word for word in ["training", "education", "course", "conference"] if word in description_lower]
     elif any(word in description_lower for word in ["marketing", "advertising", "promotion"]):
         category = "Marketing & Advertising"
+        matching_keywords = [word for word in ["marketing", "advertising", "promotion"] if word in description_lower]
     else:
         category = "Other"
+        matching_keywords = []
+    
+    logger.info(
+        f"🎯 CATEGORY_DETERMINED: Fallback category determined",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "CategoryAgent",
+            "determined_category": category,
+            "matching_keywords": matching_keywords,
+            "stage": "category_determination"
+        }
+    )
     
     # Create basic vendor validation with low confidence
     vendor_validation = VendorValidation(
@@ -230,9 +398,23 @@ def _fallback_categorization(expense_report: ExpenseReport) -> ExpenseCategory:
         web_search_summary=f"Fallback categorization - vendor {expense_report.vendor} could not be verified due to agent processing failure."
     )
     
-    return ExpenseCategory(
+    fallback_result = ExpenseCategory(
         category=category,
         confidence=0.4,  # Low confidence for fallback
         reasoning=f"Fallback categorization based on keywords in description. Original agent processing failed. Category '{category}' assigned based on description '{expense_report.description}' but vendor validation was not performed.",
         vendor_validation=vendor_validation
-    ) 
+    )
+    
+    logger.info(
+        f"✅ FALLBACK_COMPLETE: Fallback categorization completed",
+        extra={
+            "expense_id": expense_report.expense_id,
+            "agent": "CategoryAgent",
+            "fallback_category": fallback_result.category,
+            "fallback_confidence": fallback_result.confidence,
+            "vendor_legitimate": fallback_result.vendor_validation.is_legitimate,
+            "stage": "fallback_complete"
+        }
+    )
+    
+    return fallback_result 

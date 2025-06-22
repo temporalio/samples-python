@@ -10,6 +10,7 @@ import logging
 from temporalio import workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
+from temporalio.contrib.pydantic import pydantic_data_converter
 
 # Import workflow and activities
 from openai_agents_expense import TASK_QUEUE
@@ -28,8 +29,11 @@ async def main():
     """Main worker function."""
     logging.basicConfig(level=logging.INFO)
     
-    # Connect to Temporal server
-    client = await Client.connect("localhost:7233")
+    # Connect to Temporal server with pydantic data converter
+    client = await Client.connect(
+        "localhost:7233",
+        data_converter=pydantic_data_converter
+    )
     
     # Create worker with both workflows and activities
     worker = Worker(

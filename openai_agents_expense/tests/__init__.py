@@ -1,1 +1,5 @@
-# Tests for OpenAI Agents Expense Processing Sample 
+"""OpenAI Agents Expense Processing test package"""
+
+from .helpers import new_worker
+
+__all__ = ["new_worker"] 

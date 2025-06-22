@@ -11,7 +11,7 @@ from temporalio import workflow, activity
 from temporalio.client import Client
 from temporalio.contrib.openai_agents.invoke_model_activity import ModelActivity
 from temporalio.contrib.openai_agents.temporal_openai_agents import set_open_ai_agent_temporal_overrides
-from tests.helpers import new_worker
+from openai_agents_expense.tests.helpers import new_worker
 
 # Import the expense workflow components - will be imported dynamically in tests to avoid issues
 # These imports will be done inside test functions after the Python version check
@@ -171,7 +171,8 @@ class TestCategoryAgent:
             pytest.skip("OpenAI support has type errors on 3.9 and 3.11")
         
         from openai_agents_expense.models import ExpenseCategory, VendorValidation
-        from openai_agents_expense.agents.category_agent import CategoryAgent
+        # Note: The actual AI agents are functions, not classes
+        # from openai_agents_expense.ai_agents.category_agent import categorize_expense
         
         expense = create_test_expense_report()
         

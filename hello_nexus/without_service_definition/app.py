@@ -9,11 +9,14 @@ import asyncio
 import uuid
 from typing import Optional
 
-from nexusrpc.handler import service_handler
+from nexusrpc.handler import StartOperationContext, service_handler
 from temporalio import workflow
-from temporalio.client import Client, WorkflowHandle
-from temporalio.nexus import StartOperationContext
-from temporalio.nexus.handler import workflow_run_operation_handler
+from temporalio.client import Client
+from temporalio.nexus.handler import (
+    NexusStartWorkflowRequest,
+    TemporalNexusOperationContext,
+    workflow_run_operation_handler,
+)
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 from temporalio.workflow import NexusClient
 
@@ -44,12 +47,15 @@ class MyNexusServiceHandler:
     @workflow_run_operation_handler
     async def my_workflow_run_operation(
         self, ctx: StartOperationContext, name: str
-    ) -> WorkflowHandle[HandlerWorkflow, str]:
-        return await ctx.client.start_workflow(
-            HandlerWorkflow.run,
-            name,
-            id=str(uuid.uuid4()),
-            task_queue=ctx.task_queue,
+    ) -> NexusStartWorkflowRequest[str]:
+        tctx = TemporalNexusOperationContext.current()
+        return NexusStartWorkflowRequest(
+            tctx.client.start_workflow(
+                HandlerWorkflow.run,
+                name,
+                id=str(uuid.uuid4()),
+                task_queue=tctx.task_queue,
+            )
         )
 
 

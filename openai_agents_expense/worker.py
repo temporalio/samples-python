@@ -10,10 +10,11 @@ import logging
 import sys
 from datetime import timedelta
 
-from temporalio import workflow
 from temporalio.client import Client
 from temporalio.worker import Worker
-from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.contrib.openai_agents.open_ai_data_converter import (
+    open_ai_data_converter,
+)
 from temporalio.contrib.openai_agents.invoke_model_activity import ModelActivity
 from temporalio.contrib.openai_agents.temporal_openai_agents import (
     set_open_ai_agent_temporal_overrides,
@@ -38,18 +39,23 @@ async def main():
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
+    # Set Temporal logging level (simple approach)
+    temporal_log_level = logging.DEBUG
+    temporal_logger = logging.getLogger("temporalio")
+    temporal_logger.setLevel(temporal_log_level)
+    
     logger.info("Starting OpenAI Agents Expense worker...")
     
     try:
         with set_open_ai_agent_temporal_overrides(
             start_to_close_timeout=timedelta(seconds=60),
         ):
-            # Connect to Temporal server with pydantic data converter
+            # Connect to Temporal server with OpenAI data converter
             client = await Client.connect(
                 "localhost:7233",
-                data_converter=pydantic_data_converter
+                data_converter=open_ai_data_converter
             )
-            logger.info("Connected to Temporal server with pydantic data converter")
+            logger.info("Connected to Temporal server with OpenAI data converter")
             
             # Initialize ModelActivity for LLM invocation (required by AI agents)
             model_activity = ModelActivity()
@@ -78,12 +84,14 @@ async def main():
             
             logger.info("Worker configuration:")
             logger.info(f"  - Task Queue: {TASK_QUEUE}")
+            # TODO avoid hardcoding numbers in the output below
             logger.info("  - Workflows: 1 registered (ExpenseWorkflow)")
             logger.info("  - Activities: 4 registered (1 LLM + 1 web_search + 3 expense activities)")
             logger.info("  - Max Cached Workflows: 100")
             logger.info("  - Activity Executor: ThreadPoolExecutor(100)")
             logger.info("  - OpenAI Agent Timeout: 60 seconds")
-            logger.info("  - Data Converter: Pydantic")
+            logger.info("  - Data Converter: OpenAI")
+            logger.info(f"  - Temporal Python SDK Logging: {temporal_log_level}")
             logger.info("\nWorker supports:")
             logger.info("  - ExpenseWorkflow (AI-enhanced expense processing)")
             logger.info("  - LLM Activity: invoke_model_activity (core AI functionality)")

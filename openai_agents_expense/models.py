@@ -131,7 +131,6 @@ class ExpenseStatus(BaseModel):
     current_status: str  # "submitted", "processing", "under_review", "approved", "final_rejection", "rejected_with_instructions", "paid"
     processing_history: List[str]
     last_updated: datetime
-    estimated_completion: Optional[datetime]
 
 
 # Decision workflow results for internal orchestration

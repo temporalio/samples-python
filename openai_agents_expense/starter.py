@@ -143,8 +143,9 @@ async def main():
         print(f"Vendor: {expense.vendor}")
         print(f"Amount: ${expense.amount}")
         
-        # Create workflow ID
-        workflow_id = f"{WORKFLOW_ID_PREFIX}-{expense.expense_id}"
+        # Create workflow ID with UUID for uniqueness
+        unique_id = str(uuid.uuid4())
+        workflow_id = f"{WORKFLOW_ID_PREFIX}-{expense.expense_id}-{unique_id}"
         
         try:
             # Start the workflow
@@ -162,21 +163,19 @@ async def main():
             if args.wait:
                 print("Waiting for workflow completion...")
                 try:
+                    # Query the workflow BEFORE waiting for completion
+                    try:
+                        status = await handle.query(ExpenseWorkflow.get_status)
+                        print(f"Current Status: {status.current_status}")
+                    except Exception as e:
+                        print(f"Could not get status: {e}")
+                    
+                    # Now wait for completion
                     result = await handle.result()
                     print(f"Workflow completed with result: {result}")
                     
-                    # Get final status
-                    status = await handle.query(ExpenseWorkflow.get_status)
-                    print(f"\nFinal Status: {status.current_status}")
-                    
-                    # Get processing result if available
-                    try:
-                        processing_result = await handle.query(ExpenseWorkflow.get_processing_result)
-                        if processing_result:
-                            print(f"Decision: {processing_result.final_decision.decision}")
-                            print(f"Response: {processing_result.expense_response.message}")
-                    except:
-                        pass
+                    # Try to get processing result, but don't query after completion
+                    print("Workflow processing completed successfully!")
                         
                 except Exception as e:
                     print(f"Workflow failed: {e}")

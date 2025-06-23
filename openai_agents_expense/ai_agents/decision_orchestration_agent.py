@@ -10,13 +10,15 @@ This agent is responsible for:
 
 from temporalio import workflow, activity
 
+# Import models at module level for consistent type identity
+from openai_agents_expense.models import (
+    ExpenseReport, ExpenseCategory, PolicyEvaluation, 
+    FraudAssessment, FinalDecision
+)
+
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
-    from openai_agents_expense.models import (
-        ExpenseReport, ExpenseCategory, PolicyEvaluation, 
-        FraudAssessment, FinalDecision
-    )
 
 
 def create_decision_orchestration_agent() -> Agent:
@@ -182,7 +184,7 @@ async def make_final_decision(
                 
                 # Validate and sanitize the decision
                 validated_result = _validate_decision_compliance(
-                    parsed_result, expense_report, policy_evaluation, fraud_assessment
+                    parsed_result, expense_report, categorization, policy_evaluation, fraud_assessment
                 )
                 
                 # Create final decision result
@@ -226,6 +228,7 @@ async def make_final_decision(
 def _validate_decision_compliance(
     parsed_result: dict,
     expense_report: ExpenseReport,
+    categorization: ExpenseCategory,
     policy_evaluation: PolicyEvaluation,
     fraud_assessment: FraudAssessment
 ) -> dict:
@@ -235,6 +238,7 @@ def _validate_decision_compliance(
     Args:
         parsed_result: Parsed decision from agent
         expense_report: Original expense report
+        categorization: Categorization results
         policy_evaluation: Policy evaluation results
         fraud_assessment: Fraud assessment results
         

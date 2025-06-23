@@ -11,13 +11,15 @@ This agent is responsible for:
 from datetime import timedelta, date
 from temporalio import workflow, activity
 
+# Import models at module level for consistent type identity
+from openai_agents_expense.models import (
+    ExpenseReport, ExpenseCategory, PolicyEvaluation, 
+    PolicyViolation
+)
+
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
-    from openai_agents_expense.models import (
-        ExpenseReport, ExpenseCategory, PolicyEvaluation, 
-        PolicyViolation
-    )
 
 
 def create_policy_evaluation_agent() -> Agent:

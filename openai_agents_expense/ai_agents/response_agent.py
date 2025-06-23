@@ -10,13 +10,15 @@ This agent is responsible for:
 
 from temporalio import workflow, activity
 
+# Import models at module level for consistent type identity
+from openai_agents_expense.models import (
+    ExpenseReport, ExpenseCategory, PolicyEvaluation, 
+    FinalDecision, ExpenseResponse
+)
+
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
-    from openai_agents_expense.models import (
-        ExpenseReport, ExpenseCategory, PolicyEvaluation, 
-        FinalDecision, ExpenseResponse
-    )
 
 
 def create_response_agent() -> Agent:

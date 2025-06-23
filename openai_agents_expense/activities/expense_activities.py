@@ -61,7 +61,8 @@ async def create_expense_activity(expense_id: str) -> None:
         }
     )
 
-    if body == "SUCCEED":
+    # To ensure the activity is idempotent, we accept the case where the expense id already exists
+    if body == "SUCCEED" or body == "ERROR:ID_ALREADY_EXISTS":
         activity.logger.info(
             f"✅ CREATE_EXPENSE_SUCCESS: Expense entry created successfully",
             extra={

@@ -12,14 +12,16 @@ from datetime import timedelta
 from temporalio import workflow, activity
 from temporalio.contrib.openai_agents.temporal_tools import activity_as_tool
 
+# Import models at module level for consistent type identity
+from openai_agents_expense.models import (
+    ExpenseReport, ExpenseCategory, FraudAssessment, 
+    FraudFlag
+)
+
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
     from openai_agents_expense.activities.web_search import web_search_activity
-    from openai_agents_expense.models import (
-        ExpenseReport, ExpenseCategory, FraudAssessment, 
-        FraudFlag
-    )
 
 
 def create_fraud_agent() -> Agent:

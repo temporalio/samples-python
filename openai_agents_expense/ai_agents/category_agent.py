@@ -8,20 +8,40 @@ This agent is responsible for:
 4. Information Access: Public - safe to share categorization logic and vendor research with users
 """
 
-from datetime import timedelta
 from temporalio import workflow
-from temporalio.contrib.openai_agents.temporal_tools import activity_as_tool
+# from temporalio.contrib.openai_agents.temporal_tools import activity_as_tool
+from agents import WebSearchTool
+from pydantic import BaseModel
+from typing import Dict, Any
+
+# Import models at module level for consistent type identity
+from openai_agents_expense.models import ExpenseReport, ExpenseCategory, VendorValidation
 
 # Import agent components and activities
 with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
-    from openai_agents_expense.activities.web_search import web_search_activity
-    from openai_agents_expense.models import ExpenseReport, ExpenseCategory, VendorValidation
+    # from openai_agents_expense.activities.web_search import web_search_activity
+
+
+class VendorValidationOutput(BaseModel):
+    """Structured vendor validation output for strict JSON schema"""
+    vendor_name: str
+    is_legitimate: bool
+    confidence_score: float
+    web_search_summary: str
+
+
+class CategoryAgentOutput(BaseModel):
+    """Structured output from CategoryAgent"""
+    category: str
+    confidence: float
+    reasoning: str
+    vendor_validation: VendorValidationOutput
 
 
 def create_category_agent() -> Agent:
     """
-    Create the CategoryAgent with web search capabilities.
+    Create the CategoryAgent with web search capabilities and structured output.
     
     Returns:
         Configured Agent instance for expense categorization
@@ -59,39 +79,33 @@ def create_category_agent() -> Agent:
     - Medium confidence (0.7-0.89): Some ambiguity in category or vendor validation
     - Low confidence (<0.7): Unclear description, unverifiable vendor, or category uncertainty
 
-    RESPONSE FORMAT:
-    Always respond with a JSON object containing:
-    {
-        "category": "exact category name from the 9 options",
-        "confidence": float between 0 and 1,
-        "reasoning": "detailed explanation including web search findings",
-        "vendor_validation": {
-            "vendor_name": "vendor name",
-            "is_legitimate": boolean,
-            "confidence_score": float between 0 and 1,
-            "web_search_summary": "summary of web search findings with URLs and business details"
-        }
-    }
-
     IMPORTANT GUIDELINES:
     - Be transparent about web search findings (you are a public agent)
     - Include specific details like website URLs and business descriptions
     - If vendor cannot be verified, clearly state this with search results
     - Focus on business categorization accuracy
     - Provide educational value in your reasoning
+    
+    The vendor_validation object should contain:
+    - vendor_name: string
+    - is_legitimate: boolean
+    - confidence_score: float between 0 and 1
+    - web_search_summary: string with search findings, URLs, and business details
     """
     
     return Agent(
         name="CategoryAgent",
         instructions=instructions,
         tools=[
-            activity_as_tool(
-                web_search_activity,
-                start_to_close_timeout=timedelta(seconds=30),
-                tool_name="web_search",
-                tool_description="Search the web for vendor information and business validation"
-            )
-        ]
+            WebSearchTool(),
+            # activity_as_tool(
+            #     web_search_activity,
+            #     start_to_close_timeout=timedelta(seconds=30),
+            #     tool_name="web_search",
+            #     tool_description="Search the web for vendor information and business validation"
+            # )
+        ],
+        output_type=CategoryAgentOutput,
     )
 
 
@@ -106,28 +120,18 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
         ExpenseCategory with categorization results and vendor validation
     """
     
-    
     # Agent start logging
     workflow.logger.info(
-        f"📋 CATEGORY_AGENT_START: Starting expense categorization",
-        extra={
-            "expense_id": expense_report.expense_id,
-            "agent": "CategoryAgent",
-            "vendor": expense_report.vendor,
-            "description": expense_report.description,
-            "amount": str(expense_report.amount),
-            "stage": "start"
-        }
+        f"📋 CATEGORY_AGENT_START: Starting expense categorization - "
+        f"expense_id={expense_report.expense_id}, agent=CategoryAgent, "
+        f"vendor={expense_report.vendor}, description={expense_report.description}, "
+        f"amount=${expense_report.amount}, stage=start"
     )
     
     # Create the categorization agent
     workflow.logger.info(
-        f"🤖 AGENT_CREATION: Creating CategoryAgent instance",
-        extra={
-            "expense_id": expense_report.expense_id,
-            "agent": "CategoryAgent",
-            "stage": "agent_creation"
-        }
+        f"🤖 AGENT_CREATION: Creating CategoryAgent instance - "
+        f"expense_id={expense_report.expense_id}, agent=CategoryAgent, stage=agent_creation"
     )
     
     agent = create_category_agent()
@@ -152,269 +156,74 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
     """
     
     workflow.logger.info(
-        f"🎯 AGENT_INPUT: Prepared agent input",
-        extra={
-            "expense_id": expense_report.expense_id,
-            "agent": "CategoryAgent",
-            "vendor_to_search": expense_report.vendor,
-            "input_length": len(expense_input),
-            "stage": "input_preparation"
-        }
+        f"🎯 AGENT_INPUT: Prepared agent input - "
+        f"expense_id={expense_report.expense_id}, agent=CategoryAgent, "
+        f"vendor_to_search={expense_report.vendor}, input_length={len(expense_input)}, "
+        f"stage=input_preparation"
+    )
+    
+    # Run the agent to get categorization results
+    workflow.logger.info(
+        f"🚀 AGENT_EXECUTION: Running CategoryAgent - "
+        f"expense_id={expense_report.expense_id}, agent=CategoryAgent, stage=execution"
     )
     
     try:
-        # Run the agent to get categorization results
-        workflow.logger.info(
-            f"🚀 AGENT_EXECUTION: Running CategoryAgent",
-            extra={
-                "expense_id": expense_report.expense_id,
-                "agent": "CategoryAgent",
-                "stage": "execution"
-            }
-        )
-        
         result = await Runner.run(agent, input=expense_input)
-        
-        workflow.logger.info(
-            f"✅ AGENT_RESPONSE: CategoryAgent execution completed",
-            extra={
-                "expense_id": expense_report.expense_id,
-                "agent": "CategoryAgent",
-                "response_length": len(result.final_output) if hasattr(result, 'final_output') else 0,
-                "stage": "response_received"
-            }
-        )
-        
-        # Parse the agent's response
-        import json
-        
-        try:
-            # Extract JSON from the agent's response
-            response_text = result.final_output
-            
-            workflow.logger.info(
-                f"🔍 RESPONSE_PARSING: Parsing agent response",
-                extra={
-                    "expense_id": expense_report.expense_id,
-                    "agent": "CategoryAgent",
-                    "response_text_length": len(response_text),
-                    "stage": "response_parsing"
-                }
-            )
-            
-            # Find JSON in the response (agent might include additional text)
-            json_start = response_text.find('{')
-            json_end = response_text.rfind('}') + 1
-            
-            if json_start != -1 and json_end > json_start:
-                json_text = response_text[json_start:json_end]
-                parsed_result = json.loads(json_text)
-                
-                workflow.logger.info(
-                    f"📊 JSON_PARSED: Successfully parsed agent response",
-                    extra={
-                        "expense_id": expense_report.expense_id,
-                        "agent": "CategoryAgent",
-                        "parsed_category": parsed_result.get("category", "unknown"),
-                        "parsed_confidence": parsed_result.get("confidence", 0.0),
-                        "vendor_legitimate": parsed_result.get("vendor_validation", {}).get("is_legitimate", False),
-                        "stage": "json_parsing_success"
-                    }
-                )
-                
-                # Create vendor validation object
-                vendor_validation = VendorValidation(
-                    vendor_name=parsed_result["vendor_validation"]["vendor_name"],
-                    is_legitimate=parsed_result["vendor_validation"]["is_legitimate"],
-                    confidence_score=parsed_result["vendor_validation"]["confidence_score"],
-                    web_search_summary=parsed_result["vendor_validation"]["web_search_summary"]
-                )
-                
-                # Create categorization result
-                category_result = ExpenseCategory(
-                    category=parsed_result["category"],
-                    confidence=parsed_result["confidence"],
-                    reasoning=parsed_result["reasoning"],
-                    vendor_validation=vendor_validation
-                )
-                
-                workflow.logger.info(
-                    f"✅ CATEGORY_AGENT_SUCCESS: Categorization completed successfully",
-                    extra={
-                        "expense_id": expense_report.expense_id,
-                        "agent": "CategoryAgent",
-                        "category": category_result.category,
-                        "confidence": category_result.confidence,
-                        "vendor_legitimate": category_result.vendor_validation.is_legitimate,
-                        "vendor_confidence": category_result.vendor_validation.confidence_score,
-                        "stage": "success"
-                    }
-                )
-                
-                return category_result
-                
-            else:
-                raise ValueError("No valid JSON found in agent response")
-                
-        except (json.JSONDecodeError, KeyError, TypeError) as e:
-            workflow.logger.error(
-                f"🚨 PARSING_ERROR: Failed to parse CategoryAgent response",
-                extra={
-                    "expense_id": expense_report.expense_id,
-                    "agent": "CategoryAgent",
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                    "response_preview": result.final_output[:200] if hasattr(result, 'final_output') else "No output",
-                    "stage": "parsing_error"
-                }
-            )
-            
-            # Create fallback result with low confidence
-            fallback_category = _fallback_categorization(expense_report)
-            
-            workflow.logger.warning(
-                f"⚠️ CATEGORY_FALLBACK: Using fallback categorization due to parsing error",
-                extra={
-                    "expense_id": expense_report.expense_id,
-                    "agent": "CategoryAgent",
-                    "fallback_category": fallback_category.category,
-                    "fallback_confidence": fallback_category.confidence,
-                    "stage": "fallback_parsing"
-                }
-            )
-            
-            return fallback_category
-            
     except Exception as e:
+        workflow.logger.error(f"🚨🚨🚨 AGENT_ERROR: Error running CategoryAgent - "
+                              f"expense_id={expense_report.expense_id}, agent=CategoryAgent, "
+                              f"error={str(e)}")
+        raise e
+    
+    workflow.logger.info(
+        f"✅ AGENT_RESPONSE: CategoryAgent execution completed - "
+        f"expense_id={expense_report.expense_id}, agent=CategoryAgent, "
+        f"stage=response_received"
+    )
+    
+    # Extract structured response from agent
+    output = result.final_output
+    workflow.logger.info(f"📊📊📊📊 Output: {output}")
+    
+    if not isinstance(output, CategoryAgentOutput):
         workflow.logger.error(
-            f"🚨 CATEGORY_AGENT_ERROR: CategoryAgent execution failed",
-            extra={
-                "expense_id": expense_report.expense_id,
-                "agent": "CategoryAgent",
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "stage": "execution_error"
-            }
+            f"🚨 INVALID_OUTPUT_TYPE: Expected CategoryAgentOutput, got {type(output)} - "
+            f"expense_id={expense_report.expense_id}, agent=CategoryAgent, stage=output_validation"
         )
-        
-        # Create fallback result
-        fallback_category = _fallback_categorization(expense_report)
-        
-        workflow.logger.warning(
-            f"⚠️ CATEGORY_FALLBACK: Using fallback categorization due to agent failure",
-            extra={
-                "expense_id": expense_report.expense_id,
-                "agent": "CategoryAgent",
-                "fallback_category": fallback_category.category,
-                "fallback_confidence": fallback_category.confidence,
-                "stage": "fallback_execution"
-            }
-        )
-        
-        return fallback_category
-
-
-def _fallback_categorization(expense_report: ExpenseReport) -> ExpenseCategory:
-    """
-    Provide fallback categorization when the agent fails.
-    
-    Args:
-        expense_report: The expense report to categorize
-        
-    Returns:
-        Basic ExpenseCategory with low confidence
-    """
-    
+        raise ValueError(f"Expected CategoryAgentOutput, got {type(output)}") from e
     
     workflow.logger.info(
-        f"🔧 FALLBACK_START: Starting fallback categorization",
-        extra={
-            "expense_id": expense_report.expense_id,
-            "agent": "CategoryAgent",
-            "fallback_method": "keyword_based",
-            "stage": "fallback_start"
-        }
+        f"📊 STRUCTURED_OUTPUT: Successfully received structured response - "
+        f"expense_id={expense_report.expense_id}, agent=CategoryAgent, "
+        f"parsed_category={output.category}, parsed_confidence={output.confidence}, "
+        f"vendor_legitimate={output.vendor_validation.is_legitimate}, "
+        f"stage=structured_parsing_success"
     )
     
-    # Simple keyword-based fallback categorization
-    description_lower = expense_report.description.lower()
-    vendor_lower = expense_report.vendor.lower()
-    
-    workflow.logger.info(
-        f"🔍 KEYWORD_ANALYSIS: Analyzing keywords for categorization",
-        extra={
-            "expense_id": expense_report.expense_id,
-            "agent": "CategoryAgent",
-            "description": description_lower,
-            "vendor": vendor_lower,
-            "stage": "keyword_analysis"
-        }
-    )
-    
-    if any(word in description_lower for word in ["flight", "hotel", "travel", "taxi", "uber"]):
-        category = "Travel & Transportation"
-        matching_keywords = [word for word in ["flight", "hotel", "travel", "taxi", "uber"] if word in description_lower]
-    elif any(word in description_lower for word in ["meal", "lunch", "dinner", "restaurant"]):
-        category = "Meals & Entertainment"
-        matching_keywords = [word for word in ["meal", "lunch", "dinner", "restaurant"] if word in description_lower]
-    elif any(word in description_lower for word in ["office", "supplies", "paper", "pen"]):
-        category = "Office Supplies"
-        matching_keywords = [word for word in ["office", "supplies", "paper", "pen"] if word in description_lower]
-    elif any(word in description_lower for word in ["software", "subscription", "license", "cloud"]):
-        category = "Software & Technology"
-        matching_keywords = [word for word in ["software", "subscription", "license", "cloud"] if word in description_lower]
-    elif any(word in description_lower for word in ["equipment", "computer", "hardware"]):
-        category = "Equipment & Hardware"
-        matching_keywords = [word for word in ["equipment", "computer", "hardware"] if word in description_lower]
-    elif any(word in description_lower for word in ["consulting", "legal", "professional"]):
-        category = "Professional Services"
-        matching_keywords = [word for word in ["consulting", "legal", "professional"] if word in description_lower]
-    elif any(word in description_lower for word in ["training", "education", "course", "conference"]):
-        category = "Training & Education"
-        matching_keywords = [word for word in ["training", "education", "course", "conference"] if word in description_lower]
-    elif any(word in description_lower for word in ["marketing", "advertising", "promotion"]):
-        category = "Marketing & Advertising"
-        matching_keywords = [word for word in ["marketing", "advertising", "promotion"] if word in description_lower]
-    else:
-        category = "Other"
-        matching_keywords = []
-    
-    workflow.logger.info(
-        f"🎯 CATEGORY_DETERMINED: Fallback category determined",
-        extra={
-            "expense_id": expense_report.expense_id,
-            "agent": "CategoryAgent",
-            "determined_category": category,
-            "matching_keywords": matching_keywords,
-            "stage": "category_determination"
-        }
-    )
-    
-    # Create basic vendor validation with low confidence
+    # Create vendor validation object from structured data
+    vendor_data = output.vendor_validation
     vendor_validation = VendorValidation(
-        vendor_name=expense_report.vendor,
-        is_legitimate=False,  # Cannot verify without web search
-        confidence_score=0.3,
-        web_search_summary=f"Fallback categorization - vendor {expense_report.vendor} could not be verified due to agent processing failure."
+        vendor_name=vendor_data.vendor_name,
+        is_legitimate=vendor_data.is_legitimate,
+        confidence_score=vendor_data.confidence_score,
+        web_search_summary=vendor_data.web_search_summary
     )
     
-    fallback_result = ExpenseCategory(
-        category=category,
-        confidence=0.4,  # Low confidence for fallback
-        reasoning=f"Fallback categorization based on keywords in description. Original agent processing failed. Category '{category}' assigned based on description '{expense_report.description}' but vendor validation was not performed.",
+    # Create categorization result
+    category_result = ExpenseCategory(
+        category=output.category,
+        confidence=output.confidence,
+        reasoning=output.reasoning,
         vendor_validation=vendor_validation
     )
     
     workflow.logger.info(
-        f"✅ FALLBACK_COMPLETE: Fallback categorization completed",
-        extra={
-            "expense_id": expense_report.expense_id,
-            "agent": "CategoryAgent",
-            "fallback_category": fallback_result.category,
-            "fallback_confidence": fallback_result.confidence,
-            "vendor_legitimate": fallback_result.vendor_validation.is_legitimate,
-            "stage": "fallback_complete"
-        }
+        f"✅ CATEGORY_AGENT_SUCCESS: Categorization completed successfully - "
+        f"expense_id={expense_report.expense_id}, agent=CategoryAgent, "
+        f"category={category_result.category}, confidence={category_result.confidence}, "
+        f"vendor_legitimate={category_result.vendor_validation.is_legitimate}, "
+        f"vendor_confidence={category_result.vendor_validation.confidence_score}, stage=success"
     )
     
-    return fallback_result 
+    return category_result

@@ -9,15 +9,22 @@ This workflow coordinates:
 5. Human-in-the-loop integration for escalated cases
 """
 
-from datetime import datetime, timedelta
+import asyncio
+from datetime import timedelta
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-# Import models and agent functions
+# Import models at module level (safe for workflows)
+from openai_agents_expense.models import (
+    ExpenseReport, ExpenseProcessingResult, ExpenseStatus,
+    ExpenseCategory, PolicyEvaluation, FraudAssessment, 
+    FinalDecision, ExpenseResponse, PolicyViolation
+)
+
+# Import activities and agent functions
 with workflow.unsafe.imports_passed_through():
-    from openai_agents_expense.models import (
-        ExpenseReport, ExpenseProcessingResult, ExpenseStatus
-    )
+    from openai_agents_expense.activities.expense_activities import create_expense_activity
+    from openai_agents_expense.activities import wait_for_decision_activity, payment_activity
     from openai_agents_expense.ai_agents.category_agent import categorize_expense
     from openai_agents_expense.ai_agents.policy_evaluation_agent import evaluate_policy_compliance
     from openai_agents_expense.ai_agents.fraud_agent import assess_fraud_risk
@@ -36,8 +43,7 @@ class ExpenseWorkflow:
             expense_id="",
             current_status="submitted",
             processing_history=["Expense submitted for processing"],
-            last_updated=workflow.now(),
-            estimated_completion=None
+            last_updated=workflow.now()
         )
         self._processing_result: ExpenseProcessingResult = None
     
@@ -75,6 +81,32 @@ class ExpenseWorkflow:
         self._update_status("processing", "AI agents processing expense report")
         
         try:
+            # Step 0: Create expense in the server (required for human-in-the-loop integration)
+            # Use workflow patching to maintain compatibility with existing workflow executions
+            logger.info(
+                f"🏗️ EXPENSE_CREATION: Creating expense entry in server for {expense_report.expense_id}",
+                extra={
+                    "expense_id": expense_report.expense_id,
+                    "workflow_stage": "expense_creation",
+                    "step": 0
+                }
+            )
+            
+            await workflow.execute_activity(
+                create_expense_activity,
+                expense_report.expense_id,
+                start_to_close_timeout=timedelta(seconds=30),
+            )
+            
+            logger.info(
+                f"✅ EXPENSE_CREATED: Expense entry created successfully for {expense_report.expense_id}",
+                extra={
+                    "expense_id": expense_report.expense_id,
+                    "workflow_stage": "expense_creation_complete",
+                    "step": 0
+                }
+            )
+
             # Step 1: CategoryAgent - Categorize expense and validate vendor
             logger.info(
                 f"📋 AGENT_START: CategoryAgent processing expense {expense_report.expense_id}",
@@ -104,7 +136,8 @@ class ExpenseWorkflow:
                     "step": 1
                 }
             )
-            
+        
+
             # Check if categorization confidence triggers escalation
             if categorization.confidence < 0.70:
                 logger.warning(
@@ -136,7 +169,7 @@ class ExpenseWorkflow:
             fraud_task = assess_fraud_risk(expense_report, categorization)
             
             # Wait for both to complete
-            policy_evaluation, fraud_assessment = await workflow.gather(policy_task, fraud_task)
+            policy_evaluation, fraud_assessment = await asyncio.gather(policy_task, fraud_task)
             parallel_duration = (workflow.now() - parallel_start_time).total_seconds()
             
             logger.info(
@@ -155,7 +188,7 @@ class ExpenseWorkflow:
                     "step": 2
                 }
             )
-            
+
             # Check confidence levels for escalation
             confidence_issues = []
             if policy_evaluation.confidence < 0.80:
@@ -235,7 +268,7 @@ class ExpenseWorkflow:
                     "step": 3
                 }
             )
-            
+
             # Step 4: Handle decision based on type
             logger.info(
                 f"🔀 DECISION_BRANCH: Processing decision '{final_decision.decision}' for {expense_report.expense_id}",
@@ -589,7 +622,7 @@ class ExpenseWorkflow:
         
         except Exception as e:
             logger.error(
-                f"🚨 WORKFLOW_ERROR: Expense processing failed for {expense_report.expense_id}",
+                f"🚨 WORKFLOW_ERROR: Expense processing failed for {expense_report.expense_id}. Error: {str(e)}\nTraceback: {e.__traceback__}",
                 extra={
                     "expense_id": expense_report.expense_id,
                     "error": str(e),
@@ -663,7 +696,7 @@ class ExpenseWorkflow:
                 )
                 
                 self._update_status("failed", "Processing and escalation failed")
-                raise ApplicationError(f"Expense processing failed: {str(e)}")
+                raise ApplicationError(f"Expense processing failed: {str(e)}") from e
     
     @workflow.query
     def get_status(self) -> ExpenseStatus:
@@ -690,7 +723,6 @@ class ExpenseWorkflow:
         try:
             # Use the same async completion pattern as the original expense sample
             # This integrates with the existing expense UI system
-            from openai_agents_expense.activities import wait_for_decision_activity
             
             logger.info(
                 f"⏳ ACTIVITY_START: Waiting for human decision on {expense_id}",
@@ -746,7 +778,6 @@ class ExpenseWorkflow:
         
         try:
             # Use the existing payment activity from this package (self-contained)
-            from openai_agents_expense.activities import payment_activity
             
             logger.info(
                 f"💳 ACTIVITY_START: Processing payment for {expense_id}",
@@ -805,8 +836,6 @@ class ExpenseWorkflow:
             }
         )
         
-        from openai_agents_expense.models import FinalDecision, PolicyEvaluation, PolicyViolation
-        
         # Create a simple approval decision for response generation
         approval_decision = FinalDecision(
             decision="approved",
@@ -862,14 +891,6 @@ class ExpenseWorkflow:
         status_message = f"{timestamp}: {message}"
         self._status.processing_history.append(status_message)
         self._status.last_updated = workflow.now()
-        
-        # Set estimated completion based on status
-        if status == "under_review":
-            self._status.estimated_completion = workflow.now() + timedelta(hours=4)
-        elif status in ["approved", "final_rejection", "rejected_with_instructions"]:
-            self._status.estimated_completion = workflow.now()
-        elif status == "paid":
-            self._status.estimated_completion = None
         
         logger.info(
             f"📊 STATUS_UPDATE: Status changed for {self._status.expense_id}",

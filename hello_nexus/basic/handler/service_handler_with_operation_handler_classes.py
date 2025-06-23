@@ -20,8 +20,6 @@ from __future__ import annotations
 
 import uuid
 
-import temporalio.common
-import temporalio.nexus.handler
 from nexusrpc.handler import (
     CancelOperationContext,
     FetchOperationInfoContext,
@@ -35,7 +33,8 @@ from nexusrpc.handler import (
     service_handler,
 )
 from temporalio.nexus.handler import (
-    TemporalNexusOperationContext,
+    TemporalOperationContext,
+    cancel_operation,
 )
 
 from hello_nexus.basic.handler.db_client import MyDBClient
@@ -131,18 +130,16 @@ class MyWorkflowRunOperation(OperationHandler[MyInput, MyOutput]):
     async def start(
         self, ctx: StartOperationContext, input: MyInput
     ) -> StartOperationResultAsync:
-        tctx = TemporalNexusOperationContext.current()
+        tctx = TemporalOperationContext.current()
         token = await tctx.start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
             id=str(uuid.uuid4()),
-            client=tctx.client,
-            task_queue=tctx.task_queue,
         )
         return StartOperationResultAsync(token.encode())
 
     async def cancel(self, ctx: CancelOperationContext, token: str) -> None:
-        return await temporalio.nexus.handler.cancel_workflow(ctx, token)
+        return await cancel_operation(token)
 
     async def fetch_info(
         self, ctx: FetchOperationInfoContext, token: str

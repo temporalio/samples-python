@@ -9,13 +9,18 @@ import asyncio
 import uuid
 from typing import Optional
 
-from nexusrpc.handler import StartOperationContext, service_handler
+from nexusrpc.handler import (
+    OperationHandler,
+    StartOperationContext,
+    operation_handler,
+    service_handler,
+)
 from temporalio import workflow
 from temporalio.client import Client
 from temporalio.nexus.handler import (
-    TemporalNexusOperationContext,
+    TemporalOperationContext,
     WorkflowOperationToken,
-    workflow_run_operation_handler,
+    WorkflowRunOperationHandler,
 )
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 from temporalio.workflow import NexusClient
@@ -37,25 +42,29 @@ class HandlerWorkflow:
 
 
 # Here we define a nexus service by providing a service handler implementation without a
-# service contract.
+# service contract. This nexus service has one operation.
 @service_handler
 class MyNexusServiceHandler:
-    # The nexus service has one operation. When using the workflow_run_operation_handler
-    # decorator, your start method must return a WorkflowHandle directly, using the
-    # temporalio.nexus.handler.start_workflow helper. (Temporal server takes care of
-    # delivering the workflow result to the caller, using the Nexus RPC callback mechanism).
-    @workflow_run_operation_handler
-    async def my_workflow_run_operation(
-        self, ctx: StartOperationContext, name: str
-    ) -> WorkflowOperationToken[str]:
-        tctx = TemporalNexusOperationContext.current()
-        return await tctx.start_workflow(
-            HandlerWorkflow.run,
-            name,
-            id=str(uuid.uuid4()),
-            client=tctx.client,
-            task_queue=tctx.task_queue,
-        )
+    # Here we implement a Nexus operation backed by a Temporal workflow. The start
+    # method must use TemporalOperationContext.start_workflow to start the workflow,
+    # which returns a WorkflowOperationToken. (Temporal server will then take care of
+    # delivering the workflow result to the caller, using the Nexus RPC callback
+    # mechanism).
+    @operation_handler
+    def my_workflow_run_operation(
+        self,
+    ) -> OperationHandler[str, str]:
+        async def start(
+            ctx: StartOperationContext, name: str
+        ) -> WorkflowOperationToken[str]:
+            tctx = TemporalOperationContext.current()
+            return await tctx.start_workflow(
+                HandlerWorkflow.run,
+                name,
+                id=str(uuid.uuid4()),
+            )
+
+        return WorkflowRunOperationHandler(start)
 
 
 #

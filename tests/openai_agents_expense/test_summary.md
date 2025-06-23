@@ -65,26 +65,35 @@ Located in: `tests/test_models.py`
 
 ## 🔧 **Test Infrastructure** 
 
+### **Test Location**: `tests/openai_agents_expense/`
+Following the repository standard, all tests are now located in the main `tests/` directory under the `openai_agents_expense/` subdirectory.
+
 ### **Working Test Files**:
 - `test_agents_unit_simple.py` - Simplified agent tests focused on imports and creation
 - `test_basic_integration.py` - Integration tests for core functionality
 - `test_models.py` - Data model validation tests  
 - `conftest.py` - Test configuration and fixtures
+- `helpers.py` - Test helper functions
+- `pytest.ini` - Pytest configuration
 
 ### **Backup Files** (non-functional):
 - `test_agents_unit.py.backup` - Complex mocking tests (moved due to OpenAI Agent complexity)
 - `test_expense_workflow.py.backup` - Full workflow tests (moved due to setup complexity)
 
-### **Test Commands**:
+### **Test Commands** (from repository root):
 ```bash
 # Run all tests
-python -m pytest tests/ -v
+uv run pytest tests/openai_agents_expense/ -v
 
-# Run specific test types  
-python run_tests.py --type unit --verbose
+# Run specific test files
+uv run pytest tests/openai_agents_expense/test_models.py -v
+uv run pytest tests/openai_agents_expense/test_agents_unit_simple.py -v
 
 # Run with coverage
-python run_tests.py --type unit --coverage
+uv run pytest tests/openai_agents_expense/ --cov=openai_agents_expense
+
+# Run tests matching a pattern
+uv run pytest tests/openai_agents_expense/ -k "agent_imports"
 ```
 
 ## 🚀 **Self-Contained Usage Verification**

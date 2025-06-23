@@ -1,10 +1,9 @@
 """
-This file demonstrates how to define operation handlers by using the "shorthand"
-decorators sync_operation_handler and workflow_run_operation_handler. In this style you
-implement the `start` method only. workflow_run_operation_handler implements `cancel` for
-you automatically, but apart from that, the other operation methods (`fetch_info`,
-`fetch_result`, and `cancel` for sync_operation_handler) are all automatically created
-with "raise NotImplementedError" implementations.
+This file demonstrates how to define operation handlers by using a "shorthand" style in
+which you implement the `start` method only. WorkflowRunOperationHandler implements
+`cancel` for you automatically, but apart from that, the other operation methods
+(`fetch_info`, `fetch_result`, and `cancel` for SyncOperationHandler) are all
+automatically created with "raise NotImplementedError" implementations.
 
 See hello_nexus/basic/handler/service_handler_with_operation_handler_classes.py for the
 alternative "fully manual" style where you implement an OperationHandler class directly.
@@ -14,18 +13,17 @@ from __future__ import annotations
 
 import uuid
 
-import nexusrpc.handler
-import temporalio.common
-import temporalio.nexus
-import temporalio.nexus.handler
 from nexusrpc.handler import (
+    OperationHandler,
     StartOperationContext,
+    SyncOperationHandler,
+    operation_handler,
     service_handler,
-    sync_operation_handler,
 )
 from temporalio.nexus.handler import (
-    TemporalNexusOperationContext,
+    TemporalOperationContext,
     WorkflowOperationToken,
+    WorkflowRunOperationHandler,
 )
 
 from hello_nexus.basic.handler.db_client import MyDBClient
@@ -52,27 +50,33 @@ class MyNexusServiceHandler:
     #
     # The token will be used by the caller if it subsequently wants to cancel the Nexus
     # operation.
-    @temporalio.nexus.handler.workflow_run_operation_handler
-    async def my_workflow_run_operation(
-        self, ctx: StartOperationContext, input: MyInput
-    ) -> WorkflowOperationToken[MyOutput]:
-        # You could use self.connected_db_client here.
-        tctx = TemporalNexusOperationContext.current()
-        return await tctx.start_workflow(
-            WorkflowStartedByNexusOperation.run,
-            input,
-            id=str(uuid.uuid4()),
-            client=tctx.client,
-            task_queue=tctx.task_queue,
-        )
+    @operation_handler
+    def my_workflow_run_operation(
+        self,
+    ) -> OperationHandler[MyInput, MyOutput]:
+        async def start(
+            ctx: StartOperationContext, input: MyInput
+        ) -> WorkflowOperationToken[MyOutput]:
+            # You could use self.connected_db_client here.
+            tctx = TemporalOperationContext.current()
+            return await tctx.start_workflow(
+                WorkflowStartedByNexusOperation.run,
+                input,
+                id=str(uuid.uuid4()),
+            )
+
+        return WorkflowRunOperationHandler(start)
 
     # This is a sync operation. That means that unlike the workflow run operation above,
     # in this case the `start` method returns the final operation result. Sync operations
     # are free to make arbitrary network calls, or perform CPU-bound computations. Total
     # execution duration must not exceed 10s.
-    @sync_operation_handler
-    async def my_sync_operation(
-        self, ctx: nexusrpc.handler.StartOperationContext, input: MyInput
-    ) -> MyOutput:
-        # You could use self.connected_db_client here.
-        return MyOutput(message=f"Hello {input.name} from sync operation!")
+    @operation_handler
+    def my_sync_operation(
+        self,
+    ) -> OperationHandler[MyInput, MyOutput]:
+        async def start(ctx: StartOperationContext, input: MyInput) -> MyOutput:
+            # You could use self.connected_db_client here.
+            return MyOutput(message=f"Hello {input.name} from sync operation!")
+
+        return SyncOperationHandler(start)

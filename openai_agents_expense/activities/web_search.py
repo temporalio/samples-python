@@ -25,10 +25,10 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
     Returns:
         Dictionary containing search results and analysis
     """
-    logger = activity.logger
+    
     
     # Activity start logging
-    logger.info(
+    activity.logger.info(
         f"🔍 WEB_SEARCH_START: Starting web search",
         extra={
             "query": query,
@@ -42,7 +42,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
     sanitized_query = _sanitize_search_query(query)
     
     if sanitized_query != query:
-        logger.info(
+        activity.logger.info(
             f"🧹 QUERY_SANITIZED: Search query was sanitized",
             extra={
                 "original_query": query,
@@ -54,7 +54,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
     
     try:
         # Simulate web search using a mock search service
-        logger.info(
+        activity.logger.info(
             f"🌐 SEARCH_EXECUTING: Performing web search",
             extra={
                 "query": sanitized_query,
@@ -67,7 +67,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
         # In a real implementation, this would use a proper search API like Google Custom Search, Bing, etc.
         search_results = await _mock_web_search(sanitized_query, max_results)
         
-        logger.info(
+        activity.logger.info(
             f"📊 SEARCH_RESULTS: Web search completed",
             extra={
                 "query": sanitized_query,
@@ -79,7 +79,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
         )
         
         # Analyze search results for vendor validation
-        logger.info(
+        activity.logger.info(
             f"🔬 ANALYSIS_START: Analyzing search results",
             extra={
                 "query": sanitized_query,
@@ -91,7 +91,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
         
         analysis = _analyze_search_results(sanitized_query, search_results)
         
-        logger.info(
+        activity.logger.info(
             f"✅ ANALYSIS_COMPLETE: Search analysis completed",
             extra={
                 "query": sanitized_query,
@@ -111,7 +111,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
             "result_count": len(search_results)
         }
         
-        logger.info(
+        activity.logger.info(
             f"🎯 WEB_SEARCH_SUCCESS: Web search activity completed successfully",
             extra={
                 "query": sanitized_query,
@@ -126,7 +126,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
         return final_result
         
     except Exception as e:
-        logger.error(
+        activity.logger.error(
             f"🚨 WEB_SEARCH_ERROR: Web search failed",
             extra={
                 "query": sanitized_query,
@@ -151,7 +151,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, any
             "result_count": 0
         }
         
-        logger.info(
+        activity.logger.info(
             f"⚠️ WEB_SEARCH_FALLBACK: Returning fallback results due to search failure",
             extra={
                 "query": sanitized_query,
@@ -187,7 +187,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
     
     In a real implementation, this would call actual search APIs.
     """
-    logger = activity.logger
+    
     
     # Simulate network delay
     await asyncio.sleep(0.5)
@@ -197,7 +197,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
     
     query_lower = query.lower()
     
-    logger.info(
+    activity.logger.info(
         f"🤖 MOCK_SEARCH: Generating mock search results",
         extra={
             "query": query,
@@ -224,7 +224,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
             }
         ]
         
-        logger.info(
+        activity.logger.info(
             f"🏪 MOCK_MAJOR_RETAILER: Generated results for major retailer",
             extra={
                 "query": query,
@@ -252,7 +252,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
             }
         ]
         
-        logger.info(
+        activity.logger.info(
             f"✈️ MOCK_AIRLINE: Generated results for airline",
             extra={
                 "query": query,
@@ -284,7 +284,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
                 }
             ]
         
-        logger.info(
+        activity.logger.info(
             f"🏢 MOCK_PROFESSIONAL: Generated results for professional services",
             extra={
                 "query": query,
@@ -299,7 +299,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
     elif any(term in query_lower for term in ["totally legit", "fake", "scam"]):
         mock_results = []  # No results for suspicious vendors
         
-        logger.warning(
+        activity.logger.warning(
             f"🚩 MOCK_SUSPICIOUS: No results for suspicious vendor query",
             extra={
                 "query": query,
@@ -327,7 +327,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
             }
         ]
         
-        logger.info(
+        activity.logger.info(
             f"🍽️ MOCK_CONFLICTING: Generated conflicting results for restaurant",
             extra={
                 "query": query,
@@ -350,7 +350,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
             }
         ]
         
-        logger.info(
+        activity.logger.info(
             f"📋 MOCK_GENERIC: Generated generic results",
             extra={
                 "query": query,
@@ -363,7 +363,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
     
     final_results = mock_results[:max_results]
     
-    logger.info(
+    activity.logger.info(
         f"🎯 MOCK_COMPLETE: Mock search results generated",
         extra={
             "query": query,
@@ -389,9 +389,9 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
     Returns:
         Analysis dictionary with legitimacy assessment
     """
-    logger = activity.logger
     
-    logger.info(
+    
+    activity.logger.info(
         f"🔍 ANALYSIS_START: Starting search results analysis",
         extra={
             "query": query,
@@ -402,7 +402,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
     )
     
     if not results:
-        logger.warning(
+        activity.logger.warning(
             f"⚠️ NO_RESULTS: No search results to analyze",
             extra={
                 "query": query,
@@ -425,7 +425,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
     business_listings = [r for r in results if r.get("type") in ["business_listing", "directory_listing"]]
     location_info = [r for r in results if r.get("type") == "location_info"]
     
-    logger.info(
+    activity.logger.info(
         f"📊 RESULT_ANALYSIS: Categorized search results",
         extra={
             "query": query,
@@ -451,7 +451,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
     elif any(term in query_lower for term in ["airlines", "airways"]):
         business_type = "airline"
     
-    logger.info(
+    activity.logger.info(
         f"🏷️ BUSINESS_TYPE: Determined business type",
         extra={
             "query": query,
@@ -464,7 +464,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
     # Calculate legitimacy based on result quality
     if official_websites:
         legitimacy_indicators.append("official_website_found")
-        logger.info(
+        activity.logger.info(
             f"✅ OFFICIAL_WEBSITE: Found official website",
             extra={
                 "query": query,
@@ -476,7 +476,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
         
     if location_info:
         legitimacy_indicators.append("location_information_available")
-        logger.info(
+        activity.logger.info(
             f"📍 LOCATION_INFO: Found location information",
             extra={
                 "query": query,
@@ -488,7 +488,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
         
     if len(results) >= 3:
         legitimacy_indicators.append("multiple_references_found")
-        logger.info(
+        activity.logger.info(
             f"📚 MULTIPLE_REFS: Found multiple references",
             extra={
                 "query": query,
@@ -503,7 +503,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
     if any("closed" in r["snippet"].lower() for r in results) and any("open" in r["snippet"].lower() for r in results):
         conflicting_status = True
         legitimacy_indicators.append("conflicting_business_status")
-        logger.warning(
+        activity.logger.warning(
             f"⚠️ CONFLICTING_STATUS: Found conflicting business status",
             extra={
                 "query": query,
@@ -528,7 +528,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
     
     confidence_score = max(0.0, min(1.0, confidence_score))
     
-    logger.info(
+    activity.logger.info(
         f"📊 CONFIDENCE_CALC: Calculated confidence score",
         extra={
             "query": query,
@@ -566,7 +566,7 @@ def _analyze_search_results(query: str, results: List[Dict[str, str]]) -> Dict[s
         "legitimacy_indicators": legitimacy_indicators
     }
     
-    logger.info(
+    activity.logger.info(
         f"✅ ANALYSIS_COMPLETE: Search results analysis completed",
         extra={
             "query": query,

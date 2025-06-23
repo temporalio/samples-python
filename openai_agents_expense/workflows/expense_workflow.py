@@ -690,7 +690,7 @@ class ExpenseWorkflow:
         try:
             # Use the same async completion pattern as the original expense sample
             # This integrates with the existing expense UI system
-            from expense.activities import wait_for_decision_activity
+            from openai_agents_expense.activities import wait_for_decision_activity
             
             logger.info(
                 f"⏳ ACTIVITY_START: Waiting for human decision on {expense_id}",
@@ -745,8 +745,8 @@ class ExpenseWorkflow:
         logger = workflow.logger
         
         try:
-            # Use the existing payment activity from the original expense sample
-            from expense.activities import payment_activity
+            # Use the existing payment activity from this package (self-contained)
+            from openai_agents_expense.activities import payment_activity
             
             logger.info(
                 f"💳 ACTIVITY_START: Processing payment for {expense_id}",

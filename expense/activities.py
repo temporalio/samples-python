@@ -11,10 +11,10 @@ async def create_expense_activity(expense_id: str) -> None:
     """
     Create a new expense entry in the expense system.
     """
-    logger = activity.logger
+    
     
     # Activity start logging
-    logger.info(
+    activity.logger.info(
         f"📝 CREATE_EXPENSE_START: Creating expense entry",
         extra={
             "expense_id": expense_id,
@@ -24,7 +24,7 @@ async def create_expense_activity(expense_id: str) -> None:
     )
     
     if not expense_id:
-        logger.error(
+        activity.logger.error(
             f"🚨 CREATE_EXPENSE_ERROR: Empty expense ID",
             extra={
                 "expense_id": expense_id,
@@ -35,7 +35,7 @@ async def create_expense_activity(expense_id: str) -> None:
         )
         raise ValueError("expense id is empty")
 
-    logger.info(
+    activity.logger.info(
         f"🌐 HTTP_REQUEST: Making HTTP request to expense server",
         extra={
             "expense_id": expense_id,
@@ -53,7 +53,7 @@ async def create_expense_activity(expense_id: str) -> None:
         response.raise_for_status()
         body = response.text
 
-    logger.info(
+    activity.logger.info(
         f"📨 HTTP_RESPONSE: Received response from expense server",
         extra={
             "expense_id": expense_id,
@@ -65,7 +65,7 @@ async def create_expense_activity(expense_id: str) -> None:
     )
 
     if body == "SUCCEED":
-        logger.info(
+        activity.logger.info(
             f"✅ CREATE_EXPENSE_SUCCESS: Expense entry created successfully",
             extra={
                 "expense_id": expense_id,
@@ -75,7 +75,7 @@ async def create_expense_activity(expense_id: str) -> None:
         )
         return
 
-    logger.error(
+    activity.logger.error(
         f"🚨 CREATE_EXPENSE_FAILURE: Failed to create expense entry",
         extra={
             "expense_id": expense_id,
@@ -96,10 +96,10 @@ async def wait_for_decision_activity(expense_id: str) -> str:
     whichever happen first. In this sample case, the complete_activity() method is called by our sample expense system when
     the expense is approved.
     """
-    logger = activity.logger
+    
     
     # Activity start logging
-    logger.info(
+    activity.logger.info(
         f"⏳ WAIT_DECISION_START: Starting async wait for human decision",
         extra={
             "expense_id": expense_id,
@@ -110,7 +110,7 @@ async def wait_for_decision_activity(expense_id: str) -> str:
     )
     
     if not expense_id:
-        logger.error(
+        activity.logger.error(
             f"🚨 WAIT_DECISION_ERROR: Empty expense ID",
             extra={
                 "expense_id": expense_id,
@@ -125,7 +125,7 @@ async def wait_for_decision_activity(expense_id: str) -> str:
     activity_info = activity.info()
     task_token = activity_info.task_token
 
-    logger.info(
+    activity.logger.info(
         f"🔑 TASK_TOKEN: Generated task token for async completion",
         extra={
             "expense_id": expense_id,
@@ -139,7 +139,7 @@ async def wait_for_decision_activity(expense_id: str) -> str:
 
     register_callback_url = f"{EXPENSE_SERVER_HOST_PORT}/registerCallback"
 
-    logger.info(
+    activity.logger.info(
         f"📞 CALLBACK_REGISTRATION: Registering callback for async completion",
         extra={
             "expense_id": expense_id,
@@ -158,7 +158,7 @@ async def wait_for_decision_activity(expense_id: str) -> str:
         response.raise_for_status()
         body = response.text
 
-    logger.info(
+    activity.logger.info(
         f"📨 CALLBACK_RESPONSE: Received callback registration response",
         extra={
             "expense_id": expense_id,
@@ -172,7 +172,7 @@ async def wait_for_decision_activity(expense_id: str) -> str:
     status = body
     if status == "SUCCEED":
         # register callback succeed
-        logger.info(
+        activity.logger.info(
             f"✅ CALLBACK_SUCCESS: Callback registered successfully, entering async wait",
             extra={
                 "expense_id": expense_id,
@@ -189,7 +189,7 @@ async def wait_for_decision_activity(expense_id: str) -> str:
         # function in `ui.py`.
         activity.raise_complete_async()
 
-    logger.warning(
+    activity.logger.warning(
         f"⚠️ CALLBACK_FAILURE: Failed to register callback",
         extra={
             "expense_id": expense_id,
@@ -199,7 +199,7 @@ async def wait_for_decision_activity(expense_id: str) -> str:
         }
     )
     
-    logger.error(
+    activity.logger.error(
         f"🚨 WAIT_DECISION_FAILURE: Wait for decision activity failed",
         extra={
             "expense_id": expense_id,
@@ -216,10 +216,10 @@ async def payment_activity(expense_id: str) -> None:
     """
     Process payment for an approved expense.
     """
-    logger = activity.logger
+    
     
     # Activity start logging
-    logger.info(
+    activity.logger.info(
         f"💳 PAYMENT_START: Starting payment processing",
         extra={
             "expense_id": expense_id,
@@ -229,7 +229,7 @@ async def payment_activity(expense_id: str) -> None:
     )
     
     if not expense_id:
-        logger.error(
+        activity.logger.error(
             f"🚨 PAYMENT_ERROR: Empty expense ID",
             extra={
                 "expense_id": expense_id,
@@ -240,7 +240,7 @@ async def payment_activity(expense_id: str) -> None:
         )
         raise ValueError("expense id is empty")
 
-    logger.info(
+    activity.logger.info(
         f"🌐 HTTP_REQUEST: Making payment request to expense server",
         extra={
             "expense_id": expense_id,
@@ -262,7 +262,7 @@ async def payment_activity(expense_id: str) -> None:
         response.raise_for_status()
         body = response.text
 
-    logger.info(
+    activity.logger.info(
         f"📨 HTTP_RESPONSE: Received payment response from expense server",
         extra={
             "expense_id": expense_id,
@@ -274,7 +274,7 @@ async def payment_activity(expense_id: str) -> None:
     )
 
     if body == "SUCCEED":
-        logger.info(
+        activity.logger.info(
             f"✅ PAYMENT_SUCCESS: Payment processed successfully",
             extra={
                 "expense_id": expense_id,
@@ -284,7 +284,7 @@ async def payment_activity(expense_id: str) -> None:
         )
         return
 
-    logger.error(
+    activity.logger.error(
         f"🚨 PAYMENT_FAILURE: Payment processing failed",
         extra={
             "expense_id": expense_id,

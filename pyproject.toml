@@ -106,6 +106,7 @@ packages = [
     "langchain",
     "message_passing",
     "open_telemetry",
+    "openai_agents_expense",
     "patching",
     "polling",
     "prometheus",

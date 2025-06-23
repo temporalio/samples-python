@@ -91,14 +91,19 @@ Systematic thresholds trigger human escalation:
 ## Prerequisites
 
 - Temporal server [running locally](https://docs.temporal.io/cli/server#start-dev)
-- Required dependencies: `uv sync --group openai-agents`
+- Required dependencies: `uv sync --group openai-agents --group expense` or `pip install -e ".[openai-agents,expense]"`
 - OpenAI API key: `export OPENAI_API_KEY=your_key_here`
 
 ## Running the Sample
 
+**Note**: This example is now **self-contained** and includes all necessary components from the basic expense example.
+
 ### 1. Start the Expense UI (for human review)
 ```bash
-uv run -m expense.ui
+# Self-contained UI included in this example
+uv run -m openai_agents_expense.ui
+# Or use the convenience script:
+cd openai_agents_expense && python run_ui.py
 ```
 
 ### 2. Start the Worker
@@ -162,6 +167,15 @@ Each scenario includes:
 - **Confidence-Based Quality**: Systematic thresholds for reliability
 - **Decision Auditability**: Complete processing history and reasoning
 
+## Self-Contained Architecture
+
+**This example is completely self-contained** and does not depend on external examples. The following components were copied and adapted from the basic `expense` example to make this standalone:
+
+- ✅ **Web UI** (`ui.py`) - Complete expense management interface
+- ✅ **Basic Activities** (`activities/expense_activities.py`) - Core expense processing activities  
+- ✅ **UI Runner** (`run_ui.py`) - Convenient UI startup script
+- ✅ **All Dependencies** - Uses existing `expense` dependency group from pyproject.toml
+
 ## File Structure
 
 ```
@@ -169,15 +183,19 @@ openai_agents_expense/
 ├── models.py                     # Pydantic data models
 ├── worker.py                     # Temporal worker
 ├── starter.py                    # Workflow starter
+├── ui.py                         # Self-contained expense management UI
+├── run_ui.py                     # UI server startup script
 ├── README.md                     # This file
-├── agents/                       # AI agent implementations
+├── SETUP.md                      # Detailed setup guide
+├── ai_agents/                    # AI agent implementations
 │   ├── category_agent.py
 │   ├── policy_evaluation_agent.py
 │   ├── fraud_agent.py
 │   ├── decision_orchestration_agent.py
 │   └── response_agent.py
 ├── activities/                   # Temporal activities
-│   └── web_search.py
+│   ├── web_search.py             # Web search for vendor validation
+│   └── expense_activities.py     # Basic expense processing activities
 ├── workflows/                    # Temporal workflows
 │   └── expense_workflow.py
 └── scenarios/                    # Test scenarios

@@ -17,7 +17,9 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from temporalio.client import Client
-from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.contrib.openai_agents.open_ai_data_converter import (
+    open_ai_data_converter,
+)
 
 from openai_agents_expense import TASK_QUEUE, WORKFLOW_ID_PREFIX
 from openai_agents_expense.models import ExpenseReport
@@ -61,10 +63,10 @@ async def main():
     print("OpenAI Agents Expense Processing Sample - Starter")
     print("=" * 50)
     
-    # Connect to Temporal server with pydantic data converter
+    # Connect to Temporal server with OpenAI agents data converter
     client = await Client.connect(
         "localhost:7233",
-        data_converter=pydantic_data_converter
+        data_converter=open_ai_data_converter
     )
     
     # Create sample expense reports for demonstration

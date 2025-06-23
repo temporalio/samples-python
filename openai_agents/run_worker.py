@@ -33,7 +33,7 @@ async def main():
             data_converter=open_ai_data_converter,
         )
 
-        model_activity = ModelActivity(model_provider=None)
+        model_activity = ModelActivity()
         worker = Worker(
             client,
             task_queue="openai-agents-task-queue",

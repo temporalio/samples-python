@@ -8,7 +8,7 @@ This agent is responsible for:
 4. Information Access: Private - sees all context but only outputs sanitized decisions
 """
 
-from temporalio import workflow
+from temporalio import workflow, activity
 
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
@@ -91,6 +91,7 @@ def create_decision_orchestration_agent() -> Agent:
     )
 
 
+@activity.defn
 async def make_final_decision(
     expense_report: ExpenseReport,
     categorization: ExpenseCategory,
@@ -109,8 +110,8 @@ async def make_final_decision(
     Returns:
         FinalDecision with approval decision and reasoning
     """
-    logger = workflow.logger
-    logger.info(f"Making final decision for expense {expense_report.expense_id}")
+    
+    activity.logger.info(f"Making final decision for expense {expense_report.expense_id}")
     
     # Create the decision orchestration agent
     agent = create_decision_orchestration_agent()
@@ -194,31 +195,31 @@ async def make_final_decision(
                     confidence=validated_result["confidence"]
                 )
                 
-                logger.info(f"Final decision made: {final_decision.decision} (confidence: {final_decision.confidence})")
+                activity.logger.info(f"Final decision made: {final_decision.decision} (confidence: {final_decision.confidence})")
                 return final_decision
                 
             else:
                 raise ValueError("No valid JSON found in agent response")
                 
         except (json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.error(f"Failed to parse decision agent response: {e}")
-            logger.error(f"Agent response was: {result.final_output}")
+            activity.logger.error(f"Failed to parse decision agent response: {e}")
+            activity.logger.error(f"Agent response was: {result.final_output}")
             
             # Create fallback decision
             fallback_decision = _fallback_final_decision(
                 expense_report, categorization, policy_evaluation, fraud_assessment
             )
-            logger.warning(f"Using fallback final decision: {fallback_decision.decision}")
+            activity.logger.warning(f"Using fallback final decision: {fallback_decision.decision}")
             return fallback_decision
             
     except Exception as e:
-        logger.error(f"DecisionOrchestrationAgent failed for expense {expense_report.expense_id}: {e}")
+        activity.logger.error(f"DecisionOrchestrationAgent failed for expense {expense_report.expense_id}: {e}")
         
         # Create fallback decision
         fallback_decision = _fallback_final_decision(
             expense_report, categorization, policy_evaluation, fraud_assessment
         )
-        logger.warning(f"Using fallback final decision due to agent failure: {fallback_decision.decision}")
+        activity.logger.warning(f"Using fallback final decision due to agent failure: {fallback_decision.decision}")
         return fallback_decision
 
 

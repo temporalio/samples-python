@@ -9,7 +9,7 @@ This agent is responsible for:
 """
 
 from datetime import timedelta, date
-from temporalio import workflow
+from temporalio import workflow, activity
 
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
@@ -99,6 +99,7 @@ def create_policy_evaluation_agent() -> Agent:
     )
 
 
+@activity.defn
 async def evaluate_policy_compliance(
     expense_report: ExpenseReport, 
     categorization: ExpenseCategory
@@ -113,8 +114,8 @@ async def evaluate_policy_compliance(
     Returns:
         PolicyEvaluation with compliance results
     """
-    logger = workflow.logger
-    logger.info(f"Evaluating policy compliance for expense {expense_report.expense_id}")
+    
+    activity.logger.info(f"Evaluating policy compliance for expense {expense_report.expense_id}")
     
     # Create the policy evaluation agent
     agent = create_policy_evaluation_agent()
@@ -190,27 +191,27 @@ async def evaluate_policy_compliance(
                     confidence=parsed_result["confidence"]
                 )
                 
-                logger.info(f"Policy evaluation completed: {'Compliant' if policy_result.compliant else 'Non-compliant'} (confidence: {policy_result.confidence})")
+                activity.logger.info(f"Policy evaluation completed: {'Compliant' if policy_result.compliant else 'Non-compliant'} (confidence: {policy_result.confidence})")
                 return policy_result
                 
             else:
                 raise ValueError("No valid JSON found in agent response")
                 
         except (json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.error(f"Failed to parse agent response: {e}")
-            logger.error(f"Agent response was: {result.final_output}")
+            activity.logger.error(f"Failed to parse agent response: {e}")
+            activity.logger.error(f"Agent response was: {result.final_output}")
             
             # Create fallback result
             fallback_policy = _fallback_policy_evaluation(expense_report, categorization)
-            logger.warning(f"Using fallback policy evaluation")
+            activity.logger.warning(f"Using fallback policy evaluation")
             return fallback_policy
             
     except Exception as e:
-        logger.error(f"PolicyEvaluationAgent failed for expense {expense_report.expense_id}: {e}")
+        activity.logger.error(f"PolicyEvaluationAgent failed for expense {expense_report.expense_id}: {e}")
         
         # Create fallback result
         fallback_policy = _fallback_policy_evaluation(expense_report, categorization)
-        logger.warning(f"Using fallback policy evaluation due to agent failure")
+        activity.logger.warning(f"Using fallback policy evaluation due to agent failure")
         return fallback_policy
 
 

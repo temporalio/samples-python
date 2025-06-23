@@ -105,10 +105,10 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
     Returns:
         ExpenseCategory with categorization results and vendor validation
     """
-    logger = workflow.logger
+    
     
     # Agent start logging
-    logger.info(
+    workflow.logger.info(
         f"📋 CATEGORY_AGENT_START: Starting expense categorization",
         extra={
             "expense_id": expense_report.expense_id,
@@ -121,7 +121,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
     )
     
     # Create the categorization agent
-    logger.info(
+    workflow.logger.info(
         f"🤖 AGENT_CREATION: Creating CategoryAgent instance",
         extra={
             "expense_id": expense_report.expense_id,
@@ -151,7 +151,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
     First, search for information about the vendor "{expense_report.vendor}" to validate their legitimacy and gather business context. Then categorize the expense based on the description and vendor information found.
     """
     
-    logger.info(
+    workflow.logger.info(
         f"🎯 AGENT_INPUT: Prepared agent input",
         extra={
             "expense_id": expense_report.expense_id,
@@ -164,7 +164,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
     
     try:
         # Run the agent to get categorization results
-        logger.info(
+        workflow.logger.info(
             f"🚀 AGENT_EXECUTION: Running CategoryAgent",
             extra={
                 "expense_id": expense_report.expense_id,
@@ -175,7 +175,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
         
         result = await Runner.run(agent, input=expense_input)
         
-        logger.info(
+        workflow.logger.info(
             f"✅ AGENT_RESPONSE: CategoryAgent execution completed",
             extra={
                 "expense_id": expense_report.expense_id,
@@ -192,7 +192,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
             # Extract JSON from the agent's response
             response_text = result.final_output
             
-            logger.info(
+            workflow.logger.info(
                 f"🔍 RESPONSE_PARSING: Parsing agent response",
                 extra={
                     "expense_id": expense_report.expense_id,
@@ -210,7 +210,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
                 json_text = response_text[json_start:json_end]
                 parsed_result = json.loads(json_text)
                 
-                logger.info(
+                workflow.logger.info(
                     f"📊 JSON_PARSED: Successfully parsed agent response",
                     extra={
                         "expense_id": expense_report.expense_id,
@@ -238,7 +238,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
                     vendor_validation=vendor_validation
                 )
                 
-                logger.info(
+                workflow.logger.info(
                     f"✅ CATEGORY_AGENT_SUCCESS: Categorization completed successfully",
                     extra={
                         "expense_id": expense_report.expense_id,
@@ -257,7 +257,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
                 raise ValueError("No valid JSON found in agent response")
                 
         except (json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.error(
+            workflow.logger.error(
                 f"🚨 PARSING_ERROR: Failed to parse CategoryAgent response",
                 extra={
                     "expense_id": expense_report.expense_id,
@@ -272,7 +272,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
             # Create fallback result with low confidence
             fallback_category = _fallback_categorization(expense_report)
             
-            logger.warning(
+            workflow.logger.warning(
                 f"⚠️ CATEGORY_FALLBACK: Using fallback categorization due to parsing error",
                 extra={
                     "expense_id": expense_report.expense_id,
@@ -286,7 +286,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
             return fallback_category
             
     except Exception as e:
-        logger.error(
+        workflow.logger.error(
             f"🚨 CATEGORY_AGENT_ERROR: CategoryAgent execution failed",
             extra={
                 "expense_id": expense_report.expense_id,
@@ -300,7 +300,7 @@ async def categorize_expense(expense_report: ExpenseReport) -> ExpenseCategory:
         # Create fallback result
         fallback_category = _fallback_categorization(expense_report)
         
-        logger.warning(
+        workflow.logger.warning(
             f"⚠️ CATEGORY_FALLBACK: Using fallback categorization due to agent failure",
             extra={
                 "expense_id": expense_report.expense_id,
@@ -324,9 +324,9 @@ def _fallback_categorization(expense_report: ExpenseReport) -> ExpenseCategory:
     Returns:
         Basic ExpenseCategory with low confidence
     """
-    logger = workflow.logger
     
-    logger.info(
+    
+    workflow.logger.info(
         f"🔧 FALLBACK_START: Starting fallback categorization",
         extra={
             "expense_id": expense_report.expense_id,
@@ -340,7 +340,7 @@ def _fallback_categorization(expense_report: ExpenseReport) -> ExpenseCategory:
     description_lower = expense_report.description.lower()
     vendor_lower = expense_report.vendor.lower()
     
-    logger.info(
+    workflow.logger.info(
         f"🔍 KEYWORD_ANALYSIS: Analyzing keywords for categorization",
         extra={
             "expense_id": expense_report.expense_id,
@@ -379,7 +379,7 @@ def _fallback_categorization(expense_report: ExpenseReport) -> ExpenseCategory:
         category = "Other"
         matching_keywords = []
     
-    logger.info(
+    workflow.logger.info(
         f"🎯 CATEGORY_DETERMINED: Fallback category determined",
         extra={
             "expense_id": expense_report.expense_id,
@@ -405,7 +405,7 @@ def _fallback_categorization(expense_report: ExpenseReport) -> ExpenseCategory:
         vendor_validation=vendor_validation
     )
     
-    logger.info(
+    workflow.logger.info(
         f"✅ FALLBACK_COMPLETE: Fallback categorization completed",
         extra={
             "expense_id": expense_report.expense_id,

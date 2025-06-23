@@ -9,7 +9,7 @@ This agent is responsible for:
 """
 
 from datetime import timedelta
-from temporalio import workflow
+from temporalio import workflow, activity
 from temporalio.contrib.openai_agents.temporal_tools import activity_as_tool
 
 # Import agent components and models
@@ -108,6 +108,7 @@ def create_fraud_agent() -> Agent:
     )
 
 
+@activity.defn
 async def assess_fraud_risk(
     expense_report: ExpenseReport, 
     categorization: ExpenseCategory
@@ -122,8 +123,8 @@ async def assess_fraud_risk(
     Returns:
         FraudAssessment with sanitized fraud analysis
     """
-    logger = workflow.logger
-    logger.info(f"Assessing fraud risk for expense {expense_report.expense_id}")
+    
+    activity.logger.info(f"Assessing fraud risk for expense {expense_report.expense_id}")
     
     # Create the fraud detection agent
     agent = create_fraud_agent()
@@ -194,27 +195,27 @@ async def assess_fraud_risk(
                     vendor_risk_indicators=validated_result["vendor_risk_indicators"]
                 )
                 
-                logger.info(f"Fraud assessment completed: {fraud_result.overall_risk} risk (confidence: {fraud_result.confidence})")
+                activity.logger.info(f"Fraud assessment completed: {fraud_result.overall_risk} risk (confidence: {fraud_result.confidence})")
                 return fraud_result
                 
             else:
                 raise ValueError("No valid JSON found in agent response")
                 
         except (json.JSONDecodeError, KeyError, TypeError) as e:
-            logger.error(f"Failed to parse fraud agent response: {e}")
-            logger.error(f"Agent response was: {result.final_output}")
+            activity.logger.error(f"Failed to parse fraud agent response: {e}")
+            activity.logger.error(f"Agent response was: {result.final_output}")
             
             # Create fallback result with security protection
             fallback_fraud = _fallback_fraud_assessment(expense_report, categorization)
-            logger.warning(f"Using fallback fraud assessment")
+            activity.logger.warning(f"Using fallback fraud assessment")
             return fallback_fraud
             
     except Exception as e:
-        logger.error(f"FraudAgent failed for expense {expense_report.expense_id}: {e}")
+        activity.logger.error(f"FraudAgent failed for expense {expense_report.expense_id}: {e}")
         
         # Create fallback result
         fallback_fraud = _fallback_fraud_assessment(expense_report, categorization)
-        logger.warning(f"Using fallback fraud assessment due to agent failure")
+        activity.logger.warning(f"Using fallback fraud assessment due to agent failure")
         return fallback_fraud
 
 

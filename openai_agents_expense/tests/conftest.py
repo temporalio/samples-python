@@ -11,7 +11,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def client():
     """Create a Temporal client for testing"""
     # Only import temporal if we're running integration tests

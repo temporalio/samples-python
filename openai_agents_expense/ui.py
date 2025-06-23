@@ -1,11 +1,18 @@
 import asyncio
+import logging
+from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, Optional
 
 import uvicorn
-from fastapi import FastAPI, Form, Query
+from fastapi import Body, FastAPI, Form, Query
 from fastapi.responses import HTMLResponse, PlainTextResponse
 from temporalio.client import Client
+
+from openai_agents_expense.models import ExpenseProcessingResult
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 # Use the constant from this package
 EXPENSE_SERVER_HOST = "localhost"
@@ -13,11 +20,26 @@ EXPENSE_SERVER_PORT = 8099
 EXPENSE_SERVER_HOST_PORT = f"http://{EXPENSE_SERVER_HOST}:{EXPENSE_SERVER_PORT}"
 
 
-class ExpenseState(str, Enum):
-    CREATED = "CREATED"
+RESPONSE_SUCCESS = PlainTextResponse("SUCCEED")
+RESPONSE_ERROR_ID_ALREADY_EXISTS = PlainTextResponse("ERROR:ID_ALREADY_EXISTS")
+RESPONSE_ERROR_INVALID_ID = PlainTextResponse("ERROR:INVALID_ID")
+RESPONSE_ERROR_INVALID_TYPE = PlainTextResponse("ERROR:INVALID_TYPE")
+RESPONSE_ERROR_INVALID_STATE = PlainTextResponse("ERROR:INVALID_STATE")
+RESPONSE_ERROR_INVALID_FORM_DATA = PlainTextResponse("ERROR:INVALID_FORM_DATA")
+
+
+class ExpenseReviewState(str, Enum):
+    CREATED = "NOT_STARTED"
+    REQUIRES_REVIEW = "REQUIRES_REVIEW"
     APPROVED = "APPROVED"
     REJECTED = "REJECTED"
-    COMPLETED = "COMPLETED"
+    PAID = "PAID"
+
+
+@dataclass
+class ExpenseState:
+    summary: Optional[ExpenseProcessingResult]
+    expense_review_state: ExpenseReviewState
 
 
 # Use memory store for this sample expense system
@@ -38,14 +60,14 @@ async def list_handler():
     <a href="/list">HOME</a>
     <h3>All expense requests (AI + Human Review):</h3>
     <table border=1>
-        <tr><th>Expense ID</th><th>Status</th><th>Action</th></tr>
+        <tr><th>Expense ID</th><th>Status</th><th>Action</th><th>Summary</th></tr>
     """
 
     # Sort keys for consistent display
     for expense_id in sorted(all_expenses.keys()):
         state = all_expenses[expense_id]
         action_link = ""
-        if state == ExpenseState.CREATED:
+        if state.expense_review_state == ExpenseReviewState.REQUIRES_REVIEW:
             action_link = f"""
                 <a href="/action?type=approve&id={expense_id}">
                     <button style="background-color:#4CAF50;">APPROVE</button>
@@ -55,7 +77,8 @@ async def list_handler():
                     <button style="background-color:#f44336;">REJECT</button>
                 </a>
             """
-        html += f"<tr><td>{expense_id}</td><td>{state}</td><td>{action_link}</td></tr>"
+        summary = state.summary.model_dump_json() if state.summary else "Pending"
+        html += f"<tr><td>{expense_id}</td><td>{state.expense_review_state}</td><td>{action_link}</td><td>{summary}</td></tr>"
 
     html += "</table>"
     html += """
@@ -69,102 +92,115 @@ async def list_handler():
     return html
 
 
+@app.post("/payment/{id}")
+async def payment_handler(id: str):
+    if id not in all_expenses:
+        return RESPONSE_ERROR_INVALID_ID
+    
+    all_expenses[id].expense_review_state = ExpenseReviewState.PAID
+    logger.info(f"Payment received for {id}")
+    return RESPONSE_SUCCESS
+
 @app.get("/action", response_class=HTMLResponse)
 async def action_handler(
     type: str = Query(...), id: str = Query(...), is_api_call: str = Query("false")
 ):
     if id not in all_expenses:
-        if is_api_call == "true":
-            return PlainTextResponse("ERROR:INVALID_ID")
-        else:
-            return PlainTextResponse("Invalid ID")
+        return RESPONSE_ERROR_INVALID_ID
 
-    old_state = all_expenses[id]
+    starting_state = all_expenses[id].expense_review_state
 
     if type == "approve":
-        all_expenses[id] = ExpenseState.APPROVED
+        updated_state = ExpenseReviewState.APPROVED
     elif type == "reject":
-        all_expenses[id] = ExpenseState.REJECTED
-    elif type == "payment":
-        all_expenses[id] = ExpenseState.COMPLETED
+        updated_state = ExpenseReviewState.REJECTED
     else:
-        if is_api_call == "true":
-            return PlainTextResponse("ERROR:INVALID_TYPE")
-        else:
-            return PlainTextResponse("Invalid action type")
+        return RESPONSE_ERROR_INVALID_TYPE
+
+    all_expenses[id].expense_review_state = updated_state
 
     if is_api_call == "true" or type == "payment":
-        # For API calls and payment, just return success
-        if old_state == ExpenseState.CREATED and all_expenses[id] in [
-            ExpenseState.APPROVED,
-            ExpenseState.REJECTED,
+        # For API calls, just return success
+        if starting_state == ExpenseReviewState.REQUIRES_REVIEW and updated_state in [
+            ExpenseReviewState.APPROVED,
+            ExpenseReviewState.REJECTED,
         ]:
             # Report state change
-            await notify_expense_state_change(id, all_expenses[id])
+            await notify_expense_state_change(id, updated_state.value)
 
-        print(f"Set state for {id} from {old_state} to {all_expenses[id]}")
-        return PlainTextResponse("SUCCEED")
+        print(
+            f"Set state for {id} from {starting_state.value} to {updated_state.value}"
+        )
+        return RESPONSE_SUCCESS
     else:
         # For UI calls, notify and redirect to list
-        if old_state == ExpenseState.CREATED and all_expenses[id] in [
-            ExpenseState.APPROVED,
-            ExpenseState.REJECTED,
+        if starting_state == ExpenseReviewState.REQUIRES_REVIEW and updated_state in [
+            ExpenseReviewState.APPROVED,
+            ExpenseReviewState.REJECTED,
         ]:
-            await notify_expense_state_change(id, all_expenses[id])
+            await notify_expense_state_change(id, updated_state.value)
 
-        print(f"Set state for {id} from {old_state} to {all_expenses[id]}")
+        print(
+            f"Set state for {id} from {starting_state.value} to {updated_state.value}"
+        )
         return await list_handler()
 
 
-@app.get("/create")
-async def create_handler(id: str = Query(...), is_api_call: str = Query("false")):
+@app.post("/create/{id}")
+async def create_handler(id: str):
     if id in all_expenses:
-        if is_api_call == "true":
-            return PlainTextResponse("ERROR:ID_ALREADY_EXISTS")
-        else:
-            return PlainTextResponse("ID already exists")
+        return RESPONSE_ERROR_ID_ALREADY_EXISTS
 
-    all_expenses[id] = ExpenseState.CREATED
+    # Create new ExpenseState object
+    all_expenses[id] = ExpenseState(
+        summary=None, expense_review_state=ExpenseReviewState.CREATED
+    )
 
-    if is_api_call == "true":
-        print(f"Created new expense id: {id}")
-        return PlainTextResponse("SUCCEED")
-    else:
-        print(f"Created new expense id: {id}")
-        return await list_handler()
+    return RESPONSE_SUCCESS
+
+
+@app.post("/update/{id}")
+async def update_handler(id: str, expense_data: ExpenseProcessingResult = Body(...)):
+    if id not in all_expenses:
+        return RESPONSE_ERROR_INVALID_ID
+
+    all_expenses[id].summary = expense_data
+    return RESPONSE_SUCCESS
 
 
 @app.get("/status")
 async def status_handler(id: str = Query(...)):
     if id not in all_expenses:
-        return PlainTextResponse("ERROR:INVALID_ID")
+        return RESPONSE_ERROR_INVALID_ID
 
     state = all_expenses[id]
     print(f"Checking status for {id}: {state}")
-    return PlainTextResponse(state.value)
+    return PlainTextResponse(state.expense_review_state.value)
 
 
-@app.post("/registerCallback")
-async def callback_handler(id: str = Query(...), task_token: str = Form(...)):
+@app.post("/request_review/{id}")
+async def review_handler(id: str, task_token: str = Form(...)):
     if id not in all_expenses:
-        return PlainTextResponse("ERROR:INVALID_ID")
-
-    curr_state = all_expenses[id]
-    if curr_state != ExpenseState.CREATED:
-        return PlainTextResponse("ERROR:INVALID_STATE")
+        return RESPONSE_ERROR_INVALID_ID
 
     # Convert hex string back to bytes
     try:
         task_token_bytes = bytes.fromhex(task_token)
     except ValueError:
-        return PlainTextResponse("ERROR:INVALID_FORM_DATA")
+        return RESPONSE_ERROR_INVALID_FORM_DATA
 
-    print(f"Registered callback for ID={id}, token={task_token}")
+    curr_state = all_expenses[id].expense_review_state
+    if curr_state != ExpenseReviewState.CREATED:
+        return RESPONSE_ERROR_INVALID_STATE
+
+    all_expenses[id].expense_review_state = ExpenseReviewState.REQUIRES_REVIEW
+
+    print(f"Review requested for ID={id}, token={task_token}")
     token_map[id] = task_token_bytes
-    return PlainTextResponse("SUCCEED")
+    return RESPONSE_SUCCESS
 
 
-async def notify_expense_state_change(expense_id: str, state: str):
+async def notify_expense_state_change(expense_id: str, state: ExpenseReviewState):
     if expense_id not in token_map:
         print(f"Invalid id: {expense_id}")
         return
@@ -176,7 +212,7 @@ async def notify_expense_state_change(expense_id: str, state: str):
     token = token_map[expense_id]
     try:
         handle = workflow_client.get_async_activity_handle(task_token=token)
-        await handle.complete(state)
+        await handle.complete(str(state))
         print(f"Successfully complete activity: {token.hex()}")
     except Exception as err:
         print(f"Failed to complete activity with error: {err}")
@@ -201,4 +237,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    asyncio.run(main())

@@ -103,6 +103,7 @@ Systematic thresholds trigger human escalation:
 # Self-contained UI included in this example
 uv run -m openai_agents_expense.ui
 # Or use the convenience script:
+# TODO - don't really need the convenience script
 cd openai_agents_expense && python run_ui.py
 ```
 

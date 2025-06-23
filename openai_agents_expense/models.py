@@ -7,20 +7,36 @@ including expense reports, agent outputs, and decision results.
 
 from datetime import date, datetime
 from decimal import Decimal
+from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel
+
+
+class ExpenseStatusEnum(str, Enum):
+    """
+    Valid expense status values.
+    """
+
+    SUBMITTED = "submitted"
+    PROCESSING = "processing"
+    MANAGER_REVIEW = "manager_review"
+    APPROVED = "approved"
+    FINAL_REJECTION = "final_rejection"
+    REJECTED_WITH_INSTRUCTIONS = "rejected_with_instructions"
+    PAID = "paid"
 
 
 class ExpenseReport(BaseModel):
     """
     Core expense report data submitted by employees.
     """
+
     expense_id: str
     amount: Decimal
     description: str
     vendor: str
-    date: date  # When the expense occurred
+    expense_date: date  # When the expense occurred
     department: str
     employee_id: str
     # Enhanced fields for business rule support
@@ -28,31 +44,35 @@ class ExpenseReport(BaseModel):
     submission_date: date  # To detect late submissions (>60 days)
     client_name: Optional[str] = None  # Required for entertainment expenses
     business_justification: Optional[str] = None  # Required for entertainment expenses
-    is_international_travel: bool = False  # Requires human approval regardless of amount
+    is_international_travel: bool = (
+        False  # Requires human approval regardless of amount
+    )
 
 
 class VendorValidation(BaseModel):
     """
     Results of vendor validation through web search.
     """
+
     vendor_name: str
     is_legitimate: bool
     confidence_score: float
-    web_search_summary: str  # Summary of web search findings: website URLs, business description, 
-                            # company information, search result quality ("clear", "conflicting", "missing", "insufficient"),
-                            # and any public legitimacy concerns or verification details
+    web_search_summary: str  # Summary of web search findings: website URLs, business description,
+    # company information, search result quality ("clear", "conflicting", "missing", "insufficient"),
+    # and any public legitimacy concerns or verification details
 
 
 class ExpenseCategory(BaseModel):
     """
     Categorization results from CategoryAgent.
     """
-    category: str  # One of: "Travel & Transportation", "Meals & Entertainment", "Office Supplies", 
-                  # "Software & Technology", "Marketing & Advertising", "Professional Services", 
-                  # "Training & Education", "Equipment & Hardware", "Other"
+
+    category: str  # One of: "Travel & Transportation", "Meals & Entertainment", "Office Supplies",
+    # "Software & Technology", "Marketing & Advertising", "Professional Services",
+    # "Training & Education", "Equipment & Hardware", "Other"
     confidence: float
-    reasoning: str  # Includes vendor validation details: website URLs, business description summary, 
-                   # company information found via web search, and any public legitimacy concerns
+    reasoning: str  # Includes vendor validation details: website URLs, business description summary,
+    # company information found via web search, and any public legitimacy concerns
     vendor_validation: VendorValidation
 
 
@@ -60,6 +80,7 @@ class PolicyViolation(BaseModel):
     """
     Individual policy violation details.
     """
+
     rule_name: str
     violation_type: str
     severity: str  # "warning", "requires_review", "rejection"
@@ -71,6 +92,7 @@ class PolicyEvaluation(BaseModel):
     """
     Policy evaluation results from PolicyEvaluationAgent.
     """
+
     compliant: bool
     violations: List[PolicyViolation]
     reasoning: str
@@ -84,6 +106,7 @@ class FraudFlag(BaseModel):
     """
     Individual fraud detection flag.
     """
+
     flag_type: str
     risk_level: str  # "low", "medium", "high"
     details: str  # Carefully sanitized to not reveal detection methods
@@ -93,6 +116,7 @@ class FraudAssessment(BaseModel):
     """
     Fraud assessment results from FraudAgent (Private - security critical).
     """
+
     overall_risk: str  # "low", "medium", "high"
     flags: List[FraudFlag]
     reasoning: str  # Heavily guarded to not reveal detection methods
@@ -101,10 +125,11 @@ class FraudAssessment(BaseModel):
     vendor_risk_indicators: List[str]  # Private risk indicators derived from analysis
 
 
-class FinalDecision(BaseModel):
+class AgentDecision(BaseModel):
     """
     Final decision from DecisionOrchestrationAgent.
     """
+
     decision: str  # "approved", "requires_human_review", "final_rejection", "rejected_with_instructions"
     internal_reasoning: str  # Detailed reasoning for administrators, includes fraud context
     external_reasoning: str  # Sanitized reasoning for users, no fraud details exposed
@@ -117,7 +142,7 @@ class ExpenseResponse(BaseModel):
     """
     Final response message from ResponseAgent.
     """
-    message: str
+
     decision_summary: str  # Includes any resubmission instructions when applicable
     policy_explanation: Optional[str]  # Clear policy explanations when relevant
     categorization_summary: str  # Summary of categorization and vendor validation
@@ -127,9 +152,8 @@ class ExpenseStatus(BaseModel):
     """
     Current status of expense processing.
     """
-    expense_id: str
-    current_status: str  # "submitted", "processing", "under_review", "approved", "final_rejection", "rejected_with_instructions", "paid"
-    processing_history: List[str]
+
+    current_status: ExpenseStatusEnum
     last_updated: datetime
 
 
@@ -138,10 +162,53 @@ class ExpenseProcessingResult(BaseModel):
     """
     Complete processing result combining all agent outputs.
     """
+
     expense_report: ExpenseReport
     categorization: ExpenseCategory
     policy_evaluation: PolicyEvaluation
     fraud_assessment: FraudAssessment  # Internal only
-    final_decision: FinalDecision
-    expense_response: ExpenseResponse
-    status: ExpenseStatus 
+    agent_decision: AgentDecision
+    expense_response: Optional[ExpenseResponse] = None
+
+
+# Activity input models
+class PolicyEvaluationInput(BaseModel):
+    """Input for policy evaluation activity."""
+
+    expense_report: ExpenseReport
+    categorization: ExpenseCategory
+
+
+class FraudAssessmentInput(BaseModel):
+    """Input for fraud assessment activity."""
+
+    expense_report: ExpenseReport
+    categorization: ExpenseCategory
+
+
+class AgentDecisionInput(BaseModel):
+    """Input for final decision activity."""
+
+    expense_report: ExpenseReport
+    categorization: ExpenseCategory
+    policy_evaluation: PolicyEvaluation
+    fraud_assessment: FraudAssessment
+
+
+class ExpenseResponseInput(BaseModel):
+    """Input for expense response generation activity."""
+
+    expense_report: ExpenseReport
+    categorization: ExpenseCategory
+    policy_evaluation: PolicyEvaluation
+    agent_decision: AgentDecision
+    final_decision: ExpenseStatusEnum
+
+class UpdateExpenseActivityInput(BaseModel):
+    expense_id: str
+    # expense_data: ExpenseProcessingResult
+    expense_report: ExpenseReport
+    categorization: ExpenseCategory
+    policy_evaluation: PolicyEvaluation
+    fraud_assessment: FraudAssessment  # Internal only
+    agent_decision: AgentDecision

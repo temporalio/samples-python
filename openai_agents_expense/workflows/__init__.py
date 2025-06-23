@@ -7,6 +7,4 @@ multiple AI agents for enhanced expense processing with guardrails.
 
 from .expense_workflow import ExpenseWorkflow
 
-__all__ = [
-    "ExpenseWorkflow"
-] 
+__all__ = ["ExpenseWorkflow"]

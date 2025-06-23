@@ -19,4 +19,4 @@ if __name__ == "__main__":
     print("Starting OpenAI Agents Expense UI...")
     print("The UI will be available at http://localhost:8099")
     print("Press Ctrl+C to stop the server")
-    asyncio.run(main()) 
+    asyncio.run(main())

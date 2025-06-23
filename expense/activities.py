@@ -11,18 +11,17 @@ async def create_expense_activity(expense_id: str) -> None:
     """
     Create a new expense entry in the expense system.
     """
-    
-    
+
     # Activity start logging
     activity.logger.info(
         f"📝 CREATE_EXPENSE_START: Creating expense entry",
         extra={
             "expense_id": expense_id,
             "activity": "create_expense_activity",
-            "stage": "start"
-        }
+            "stage": "start",
+        },
     )
-    
+
     if not expense_id:
         activity.logger.error(
             f"🚨 CREATE_EXPENSE_ERROR: Empty expense ID",
@@ -30,8 +29,8 @@ async def create_expense_activity(expense_id: str) -> None:
                 "expense_id": expense_id,
                 "activity": "create_expense_activity",
                 "stage": "validation_error",
-                "error": "expense id is empty"
-            }
+                "error": "expense id is empty",
+            },
         )
         raise ValueError("expense id is empty")
 
@@ -41,10 +40,10 @@ async def create_expense_activity(expense_id: str) -> None:
             "expense_id": expense_id,
             "activity": "create_expense_activity",
             "stage": "http_request",
-            "url": f"{EXPENSE_SERVER_HOST_PORT}/create"
-        }
+            "url": f"{EXPENSE_SERVER_HOST_PORT}/create",
+        },
     )
-    
+
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{EXPENSE_SERVER_HOST_PORT}/create",
@@ -60,8 +59,8 @@ async def create_expense_activity(expense_id: str) -> None:
             "activity": "create_expense_activity",
             "stage": "http_response",
             "response_text": body,
-            "status_code": response.status_code
-        }
+            "status_code": response.status_code,
+        },
     )
 
     if body == "SUCCEED":
@@ -70,8 +69,8 @@ async def create_expense_activity(expense_id: str) -> None:
             extra={
                 "expense_id": expense_id,
                 "activity": "create_expense_activity",
-                "stage": "success"
-            }
+                "stage": "success",
+            },
         )
         return
 
@@ -81,8 +80,8 @@ async def create_expense_activity(expense_id: str) -> None:
             "expense_id": expense_id,
             "activity": "create_expense_activity",
             "stage": "failure",
-            "response_text": body
-        }
+            "response_text": body,
+        },
     )
     raise Exception(body)
 
@@ -96,8 +95,7 @@ async def wait_for_decision_activity(expense_id: str) -> str:
     whichever happen first. In this sample case, the complete_activity() method is called by our sample expense system when
     the expense is approved.
     """
-    
-    
+
     # Activity start logging
     activity.logger.info(
         f"⏳ WAIT_DECISION_START: Starting async wait for human decision",
@@ -105,10 +103,10 @@ async def wait_for_decision_activity(expense_id: str) -> str:
             "expense_id": expense_id,
             "activity": "wait_for_decision_activity",
             "stage": "start",
-            "async_completion": True
-        }
+            "async_completion": True,
+        },
     )
-    
+
     if not expense_id:
         activity.logger.error(
             f"🚨 WAIT_DECISION_ERROR: Empty expense ID",
@@ -116,8 +114,8 @@ async def wait_for_decision_activity(expense_id: str) -> str:
                 "expense_id": expense_id,
                 "activity": "wait_for_decision_activity",
                 "stage": "validation_error",
-                "error": "expense id is empty"
-            }
+                "error": "expense id is empty",
+            },
         )
         raise ValueError("expense id is empty")
 
@@ -133,8 +131,8 @@ async def wait_for_decision_activity(expense_id: str) -> str:
             "stage": "task_token_generation",
             "task_token_length": len(task_token.hex()),
             "workflow_id": activity_info.workflow_id,
-            "activity_id": activity_info.activity_id
-        }
+            "activity_id": activity_info.activity_id,
+        },
     )
 
     register_callback_url = f"{EXPENSE_SERVER_HOST_PORT}/registerCallback"
@@ -145,8 +143,8 @@ async def wait_for_decision_activity(expense_id: str) -> str:
             "expense_id": expense_id,
             "activity": "wait_for_decision_activity",
             "stage": "callback_registration",
-            "callback_url": register_callback_url
-        }
+            "callback_url": register_callback_url,
+        },
     )
 
     async with httpx.AsyncClient() as client:
@@ -165,8 +163,8 @@ async def wait_for_decision_activity(expense_id: str) -> str:
             "activity": "wait_for_decision_activity",
             "stage": "callback_response",
             "response_text": body,
-            "status_code": response.status_code
-        }
+            "status_code": response.status_code,
+        },
     )
 
     status = body
@@ -178,8 +176,8 @@ async def wait_for_decision_activity(expense_id: str) -> str:
                 "expense_id": expense_id,
                 "activity": "wait_for_decision_activity",
                 "stage": "callback_success",
-                "async_completion_mode": True
-            }
+                "async_completion_mode": True,
+            },
         )
 
         # Raise the complete-async error which will return from this function but
@@ -195,18 +193,18 @@ async def wait_for_decision_activity(expense_id: str) -> str:
             "expense_id": expense_id,
             "activity": "wait_for_decision_activity",
             "stage": "callback_failure",
-            "response_status": status
-        }
+            "response_status": status,
+        },
     )
-    
+
     activity.logger.error(
         f"🚨 WAIT_DECISION_FAILURE: Wait for decision activity failed",
         extra={
             "expense_id": expense_id,
             "activity": "wait_for_decision_activity",
             "stage": "failure",
-            "response_status": status
-        }
+            "response_status": status,
+        },
     )
     raise Exception(f"register callback failed status: {status}")
 
@@ -216,18 +214,17 @@ async def payment_activity(expense_id: str) -> None:
     """
     Process payment for an approved expense.
     """
-    
-    
+
     # Activity start logging
     activity.logger.info(
         f"💳 PAYMENT_START: Starting payment processing",
         extra={
             "expense_id": expense_id,
             "activity": "payment_activity",
-            "stage": "start"
-        }
+            "stage": "start",
+        },
     )
-    
+
     if not expense_id:
         activity.logger.error(
             f"🚨 PAYMENT_ERROR: Empty expense ID",
@@ -235,8 +232,8 @@ async def payment_activity(expense_id: str) -> None:
                 "expense_id": expense_id,
                 "activity": "payment_activity",
                 "stage": "validation_error",
-                "error": "expense id is empty"
-            }
+                "error": "expense id is empty",
+            },
         )
         raise ValueError("expense id is empty")
 
@@ -246,8 +243,8 @@ async def payment_activity(expense_id: str) -> None:
             "expense_id": expense_id,
             "activity": "payment_activity",
             "stage": "http_request",
-            "url": f"{EXPENSE_SERVER_HOST_PORT}/action"
-        }
+            "url": f"{EXPENSE_SERVER_HOST_PORT}/action",
+        },
     )
 
     async with httpx.AsyncClient() as client:
@@ -269,8 +266,8 @@ async def payment_activity(expense_id: str) -> None:
             "activity": "payment_activity",
             "stage": "http_response",
             "response_text": body,
-            "status_code": response.status_code
-        }
+            "status_code": response.status_code,
+        },
     )
 
     if body == "SUCCEED":
@@ -279,8 +276,8 @@ async def payment_activity(expense_id: str) -> None:
             extra={
                 "expense_id": expense_id,
                 "activity": "payment_activity",
-                "stage": "success"
-            }
+                "stage": "success",
+            },
         )
         return
 
@@ -290,7 +287,7 @@ async def payment_activity(expense_id: str) -> None:
             "expense_id": expense_id,
             "activity": "payment_activity",
             "stage": "failure",
-            "response_text": body
-        }
+            "response_text": body,
+        },
     )
     raise Exception(body)

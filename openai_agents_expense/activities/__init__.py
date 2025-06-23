@@ -6,16 +6,18 @@ This package contains Temporal activities used by the AI agents:
 - Basic expense activities for UI integration and expense processing
 """
 
-from .web_search import web_search_activity
 from .expense_activities import (
+    UpdateExpenseActivityInput,
     create_expense_activity,
-    wait_for_decision_activity,
     payment_activity,
+    update_expense_activity,
+    wait_for_decision_activity,
 )
 
 __all__ = [
-    "web_search_activity",
-    "create_expense_activity", 
+    "create_expense_activity",
     "wait_for_decision_activity",
     "payment_activity",
-] 
+    "update_expense_activity",
+    "UpdateExpenseActivityInput",
+]

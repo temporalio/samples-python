@@ -54,7 +54,7 @@ class GreetingPayloadConverter(CompositePayloadConverter):
         # Just add ours as first before the defaults
         super().__init__(
             GreetingEncodingPayloadConverter(),
-            *DefaultPayloadConverter.default_encoding_payload_converters
+            *DefaultPayloadConverter.default_encoding_payload_converters,
         )
 
 

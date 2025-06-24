@@ -8,7 +8,6 @@ This agent is responsible for:
 4. Information Access: Public - safe to share categorization logic and vendor research with users
 """
 
-
 # Import agent components and activities
 from agents import Agent, WebSearchTool
 from pydantic import BaseModel

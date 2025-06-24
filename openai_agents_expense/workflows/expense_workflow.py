@@ -37,7 +37,6 @@ with workflow.unsafe.imports_passed_through():
         FraudAssessmentInput,
         PolicyEvaluation,
         PolicyEvaluationInput,
-        PolicyViolation,
         UpdateExpenseActivityInput,
     )
 
@@ -229,7 +228,6 @@ class ExpenseWorkflow:
             fraud_assessment=fraud_assessment,
             agent_decision=agent_decision,
             expense_response=expense_response,
-            final_decision=final_decision,
         )
 
         # Make payment if needed
@@ -241,49 +239,6 @@ class ExpenseWorkflow:
             f"🏁🏁🏁 WORKFLOW_END: {expense_report.expense_id} completed with final decision {final_decision} and decision summary: {expense_response.decision_summary}"
         )
         return expense_response.decision_summary
-
-    async def _process_decision(
-        self,
-        expense_report: ExpenseReport,
-        categorization: ExpenseCategory,
-        policy_evaluation: PolicyEvaluation,
-        fraud_assessment: FraudAssessment,
-        agent_decision: AgentDecision,
-    ) -> str:
-        """Process the final decision and return workflow result."""
-        workflow.logger.info(
-            f"🔀 DECISION_BRANCH: Processing '{agent_decision.decision}' for {expense_report.expense_id}"
-        )
-
-        if agent_decision.decision == "requires_human_review":
-            return await self._handle_human_review(expense_report.expense_id)
-
-        elif agent_decision.decision == "approved":
-            return await self._handle_auto_approval(
-                expense_report,
-                categorization,
-                policy_evaluation,
-                fraud_assessment,
-                agent_decision,
-            )
-
-        elif agent_decision.decision == "final_rejection":
-            return await self._handle_final_rejection(
-                expense_report,
-                categorization,
-                policy_evaluation,
-                fraud_assessment,
-                agent_decision,
-            )
-
-        else:  # rejected_with_instructions
-            return await self._handle_rejection_with_instructions(
-                expense_report,
-                categorization,
-                policy_evaluation,
-                fraud_assessment,
-                agent_decision,
-            )
 
     async def _handle_human_review(
         self,
@@ -321,42 +276,6 @@ class ExpenseWorkflow:
             )
             return "REJECTED"
 
-    async def _generate_response(
-        self,
-        expense_report: ExpenseReport,
-        categorization: ExpenseCategory,
-        policy_evaluation: PolicyEvaluation,
-        agent_decision: AgentDecision,
-    ) -> ExpenseResponse:
-        """Generate response using ResponseAgent."""
-        logger = workflow.logger
-        workflow.logger.info(
-            f"📝 AGENT_START: ResponseAgent generating response for {expense_report.expense_id}"
-        )
-
-        # Ensure proper serialization for Pydantic models
-        response_input = ExpenseResponseInput(
-            expense_report=expense_report,
-            categorization=ExpenseCategory.model_validate(categorization.model_dump()),
-            policy_evaluation=PolicyEvaluation.model_validate(
-                policy_evaluation.model_dump()
-            ),
-            agent_decision=AgentDecision.model_validate(agent_decision.model_dump()),
-        )
-
-        response = await Runner.run(
-            create_response_agent(),
-            input=response_input.model_dump_json(),
-        )
-
-        expense_response = ExpenseResponse.model_validate(
-            response.final_output.model_dump()
-        )
-        workflow.logger.info(
-            f"✅ AGENT_COMPLETE: ResponseAgent finished | response={expense_response}"
-        )
-        return expense_response
-
     async def _process_payment(self, expense_id: str) -> None:
         """Process payment for approved expense."""
         workflow.logger.info(f"💳 ACTIVITY_START: Processing payment for {expense_id}")
@@ -377,58 +296,3 @@ class ExpenseWorkflow:
             )
             # Note: We need to define additional status enum values for payment error states
             # self._update_status("approved_payment_failed", f"Approved but payment failed: {str(e)}")
-
-    async def _handle_auto_approval(
-        self,
-        expense_report: ExpenseReport,
-        categorization: ExpenseCategory,
-        policy_evaluation: PolicyEvaluation,
-        fraud_assessment: FraudAssessment,
-        agent_decision: AgentDecision,
-    ) -> str:
-        """Handle auto-approved expenses."""
-        workflow.logger.info(
-            f"✅ AUTO_APPROVAL: Processing auto-approved expense {expense_report.expense_id}"
-        )
-
-        self._update_status(ExpenseStatusEnum.APPROVED)
-
-        # Process payment
-        await self._process_payment(expense_report.expense_id)
-        self._update_status(ExpenseStatusEnum.PAID)
-
-        return "APPROVED"
-
-    async def _handle_final_rejection(
-        self,
-        expense_report: ExpenseReport,
-        categorization: ExpenseCategory,
-        policy_evaluation: PolicyEvaluation,
-        fraud_assessment: FraudAssessment,
-        agent_decision: AgentDecision,
-    ) -> str:
-        """Handle finally rejected expenses."""
-        workflow.logger.info(
-            f"❌ FINAL_REJECTION: Processing final rejection for expense {expense_report.expense_id}"
-        )
-
-        self._update_status(ExpenseStatusEnum.FINAL_REJECTION)
-
-        return "REJECTED"
-
-    async def _handle_rejection_with_instructions(
-        self,
-        expense_report: ExpenseReport,
-        categorization: ExpenseCategory,
-        policy_evaluation: PolicyEvaluation,
-        fraud_assessment: FraudAssessment,
-        agent_decision: AgentDecision,
-    ) -> str:
-        """Handle rejection with instructions for resubmission."""
-        workflow.logger.info(
-            f"📋 REJECTION_WITH_INSTRUCTIONS: Processing rejection with instructions for expense {expense_report.expense_id}"
-        )
-
-        self._update_status(ExpenseStatusEnum.REJECTED_WITH_INSTRUCTIONS)
-
-        return "REJECTED_WITH_INSTRUCTIONS"

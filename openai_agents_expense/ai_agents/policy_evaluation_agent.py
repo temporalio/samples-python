@@ -8,17 +8,13 @@ This agent is responsible for:
 4. Information Access: Public - policy explanations are transparent to employees
 """
 
-from datetime import date, timedelta
-from decimal import Decimal
-
-from pydantic import BaseModel
-from temporalio import activity, workflow
+from temporalio import workflow
 
 from openai_agents_expense.models import PolicyEvaluation
 
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
-    from agents import Agent, Runner
+    from agents import Agent
 
 
 def create_policy_evaluation_agent() -> Agent:

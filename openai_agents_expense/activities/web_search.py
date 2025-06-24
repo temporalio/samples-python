@@ -9,7 +9,6 @@ import asyncio
 import re
 from typing import Any, Dict, List
 
-import httpx
 from temporalio import activity
 
 
@@ -28,7 +27,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
 
     # Activity start logging
     activity.logger.info(
-        f"🔍 WEB_SEARCH_START: Starting web search",
+        "🔍 WEB_SEARCH_START: Starting web search",
         extra={
             "query": query,
             "max_results": max_results,
@@ -42,7 +41,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
 
     if sanitized_query != query:
         activity.logger.info(
-            f"🧹 QUERY_SANITIZED: Search query was sanitized",
+            "🧹 QUERY_SANITIZED: Search query was sanitized",
             extra={
                 "original_query": query,
                 "sanitized_query": sanitized_query,
@@ -54,7 +53,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
     try:
         # Simulate web search using a mock search service
         activity.logger.info(
-            f"🌐 SEARCH_EXECUTING: Performing web search",
+            "🌐 SEARCH_EXECUTING: Performing web search",
             extra={
                 "query": sanitized_query,
                 "max_results": max_results,
@@ -67,7 +66,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
         search_results = await _mock_web_search(sanitized_query, max_results)
 
         activity.logger.info(
-            f"📊 SEARCH_RESULTS: Web search completed",
+            "📊 SEARCH_RESULTS: Web search completed",
             extra={
                 "query": sanitized_query,
                 "results_count": len(search_results),
@@ -79,7 +78,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
 
         # Analyze search results for vendor validation
         activity.logger.info(
-            f"🔬 ANALYSIS_START: Analyzing search results",
+            "🔬 ANALYSIS_START: Analyzing search results",
             extra={
                 "query": sanitized_query,
                 "results_count": len(search_results),
@@ -91,7 +90,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
         analysis = _analyze_search_results(sanitized_query, search_results)
 
         activity.logger.info(
-            f"✅ ANALYSIS_COMPLETE: Search analysis completed",
+            "✅ ANALYSIS_COMPLETE: Search analysis completed",
             extra={
                 "query": sanitized_query,
                 "is_legitimate": analysis["is_legitimate"],
@@ -111,7 +110,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
         }
 
         activity.logger.info(
-            f"🎯 WEB_SEARCH_SUCCESS: Web search activity completed successfully",
+            "🎯 WEB_SEARCH_SUCCESS: Web search activity completed successfully",
             extra={
                 "query": sanitized_query,
                 "results_count": len(search_results),
@@ -126,7 +125,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
 
     except Exception as e:
         activity.logger.error(
-            f"🚨 WEB_SEARCH_ERROR: Web search failed",
+            "🚨 WEB_SEARCH_ERROR: Web search failed",
             extra={
                 "query": sanitized_query,
                 "error": str(e),
@@ -151,7 +150,7 @@ async def web_search_activity(query: str, max_results: int = 5) -> Dict[str, Any
         }
 
         activity.logger.info(
-            f"⚠️ WEB_SEARCH_FALLBACK: Returning fallback results due to search failure",
+            "⚠️ WEB_SEARCH_FALLBACK: Returning fallback results due to search failure",
             extra={
                 "query": sanitized_query,
                 "fallback_result": True,
@@ -196,7 +195,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
     query_lower = query.lower()
 
     activity.logger.info(
-        f"🤖 MOCK_SEARCH: Generating mock search results",
+        "🤖 MOCK_SEARCH: Generating mock search results",
         extra={
             "query": query,
             "query_lower": query_lower,
@@ -226,7 +225,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
         ]
 
         activity.logger.info(
-            f"🏪 MOCK_MAJOR_RETAILER: Generated results for major retailer",
+            "🏪 MOCK_MAJOR_RETAILER: Generated results for major retailer",
             extra={
                 "query": query,
                 "vendor_type": "major_retailer",
@@ -257,7 +256,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
         ]
 
         activity.logger.info(
-            f"✈️ MOCK_AIRLINE: Generated results for airline",
+            "✈️ MOCK_AIRLINE: Generated results for airline",
             extra={
                 "query": query,
                 "vendor_type": "airline",
@@ -292,7 +291,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
             ]
 
         activity.logger.info(
-            f"🏢 MOCK_PROFESSIONAL: Generated results for professional services",
+            "🏢 MOCK_PROFESSIONAL: Generated results for professional services",
             extra={
                 "query": query,
                 "vendor_type": "professional_services",
@@ -307,7 +306,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
         mock_results = []  # No results for suspicious vendors
 
         activity.logger.warning(
-            f"🚩 MOCK_SUSPICIOUS: No results for suspicious vendor query",
+            "🚩 MOCK_SUSPICIOUS: No results for suspicious vendor query",
             extra={
                 "query": query,
                 "vendor_type": "suspicious",
@@ -335,7 +334,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
         ]
 
         activity.logger.info(
-            f"🍽️ MOCK_CONFLICTING: Generated conflicting results for restaurant",
+            "🍽️ MOCK_CONFLICTING: Generated conflicting results for restaurant",
             extra={
                 "query": query,
                 "vendor_type": "restaurant_conflicting",
@@ -358,7 +357,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
         ]
 
         activity.logger.info(
-            f"📋 MOCK_GENERIC: Generated generic results",
+            "📋 MOCK_GENERIC: Generated generic results",
             extra={
                 "query": query,
                 "vendor_type": "generic",
@@ -371,7 +370,7 @@ async def _mock_web_search(query: str, max_results: int) -> List[Dict[str, str]]
     final_results = mock_results[:max_results]
 
     activity.logger.info(
-        f"🎯 MOCK_COMPLETE: Mock search results generated",
+        "🎯 MOCK_COMPLETE: Mock search results generated",
         extra={
             "query": query,
             "total_results": len(mock_results),
@@ -400,7 +399,7 @@ def _analyze_search_results(
     """
 
     activity.logger.info(
-        f"🔍 ANALYSIS_START: Starting search results analysis",
+        "🔍 ANALYSIS_START: Starting search results analysis",
         extra={
             "query": query,
             "results_count": len(results),
@@ -411,7 +410,7 @@ def _analyze_search_results(
 
     if not results:
         activity.logger.warning(
-            f"⚠️ NO_RESULTS: No search results to analyze",
+            "⚠️ NO_RESULTS: No search results to analyze",
             extra={
                 "query": query,
                 "results_count": 0,
@@ -436,7 +435,7 @@ def _analyze_search_results(
     location_info = [r for r in results if r.get("type") == "location_info"]
 
     activity.logger.info(
-        f"📊 RESULT_ANALYSIS: Categorized search results",
+        "📊 RESULT_ANALYSIS: Categorized search results",
         extra={
             "query": query,
             "official_websites": len(official_websites),
@@ -462,7 +461,7 @@ def _analyze_search_results(
         business_type = "airline"
 
     activity.logger.info(
-        f"🏷️ BUSINESS_TYPE: Determined business type",
+        "🏷️ BUSINESS_TYPE: Determined business type",
         extra={
             "query": query,
             "business_type": business_type,
@@ -475,7 +474,7 @@ def _analyze_search_results(
     if official_websites:
         legitimacy_indicators.append("official_website_found")
         activity.logger.info(
-            f"✅ OFFICIAL_WEBSITE: Found official website",
+            "✅ OFFICIAL_WEBSITE: Found official website",
             extra={
                 "query": query,
                 "official_websites_count": len(official_websites),
@@ -487,7 +486,7 @@ def _analyze_search_results(
     if location_info:
         legitimacy_indicators.append("location_information_available")
         activity.logger.info(
-            f"📍 LOCATION_INFO: Found location information",
+            "📍 LOCATION_INFO: Found location information",
             extra={
                 "query": query,
                 "location_info_count": len(location_info),
@@ -499,7 +498,7 @@ def _analyze_search_results(
     if len(results) >= 3:
         legitimacy_indicators.append("multiple_references_found")
         activity.logger.info(
-            f"📚 MULTIPLE_REFS: Found multiple references",
+            "📚 MULTIPLE_REFS: Found multiple references",
             extra={
                 "query": query,
                 "references_count": len(results),
@@ -516,7 +515,7 @@ def _analyze_search_results(
         conflicting_status = True
         legitimacy_indicators.append("conflicting_business_status")
         activity.logger.warning(
-            f"⚠️ CONFLICTING_STATUS: Found conflicting business status",
+            "⚠️ CONFLICTING_STATUS: Found conflicting business status",
             extra={
                 "query": query,
                 "conflicting_status": True,
@@ -541,7 +540,7 @@ def _analyze_search_results(
     confidence_score = max(0.0, min(1.0, confidence_score))
 
     activity.logger.info(
-        f"📊 CONFIDENCE_CALC: Calculated confidence score",
+        "📊 CONFIDENCE_CALC: Calculated confidence score",
         extra={
             "query": query,
             "confidence_score": confidence_score,
@@ -562,11 +561,11 @@ def _analyze_search_results(
 
     # Generate summary
     if conflicting_status:
-        summary = f"Conflicting results found. Multiple search results show mixed information about business status."
+        summary = "Conflicting results found. Multiple search results show mixed information about business status."
     elif official_websites:
         summary = f"Clear results found. {query} has official website and business presence with established operations."
     elif not results:
-        summary = f"No results found. Web search returned no business listings or verification of existence."
+        summary = "No results found. Web search returned no business listings or verification of existence."
     else:
         summary = (
             f"Mixed results found. Limited business information available for {query}."
@@ -581,7 +580,7 @@ def _analyze_search_results(
     }
 
     activity.logger.info(
-        f"✅ ANALYSIS_COMPLETE: Search results analysis completed",
+        "✅ ANALYSIS_COMPLETE: Search results analysis completed",
         extra={
             "query": query,
             "is_legitimate": is_legitimate,

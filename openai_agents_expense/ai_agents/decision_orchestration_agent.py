@@ -8,12 +8,11 @@ This agent is responsible for:
 4. Information Access: Private - sees all context but only outputs sanitized decisions
 """
 
-from temporalio import activity, workflow
+from temporalio import workflow
 
 # Import models at module level for consistent type identity
 from openai_agents_expense.models import (
     AgentDecision,
-    AgentDecisionInput,
     ExpenseCategory,
     ExpenseReport,
     FraudAssessment,
@@ -22,7 +21,7 @@ from openai_agents_expense.models import (
 
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
-    from agents import Agent, Runner
+    from agents import Agent
 
 
 def create_decision_orchestration_agent() -> Agent:
@@ -109,7 +108,7 @@ def _validate_decision_compliance(
         Validated and corrected decision
     """
     # Check mandatory escalation rules first
-    is_mandatory_escalation = policy_evaluation.mandatory_human_review
+    is_mandatory_escalation = policy_evaluation.requires_human_review
 
     # Override decision if mandatory escalation is required
     if (
@@ -200,7 +199,7 @@ def _fallback_agent_decision(
         Conservative fallback AgentDecision
     """
     # Conservative fallback - escalate to human review for safety
-    decision = "requires_human_review"
+    decision: str = "requires_human_review"
 
     # Check if there are serious policy violations that would require rejection
     if not policy_evaluation.compliant and len(policy_evaluation.violations) > 0:
@@ -216,13 +215,26 @@ def _fallback_agent_decision(
     if fraud_assessment.overall_risk == "high":
         decision = "requires_human_review"
 
+    # Cast to proper literal type for mypy
+    from typing import Literal, cast
+
+    decision_literal = cast(
+        Literal[
+            "approved",
+            "requires_human_review",
+            "final_rejection",
+            "rejected_with_instructions",
+        ],
+        decision,
+    )
+
     return AgentDecision(
-        decision=decision,
+        decision=decision_literal,
         internal_reasoning="Fallback decision due to agent processing failure. Conservative approach applied.",
         external_reasoning="This expense requires additional review to ensure compliance with company policies due to processing complexity.",
         escalation_reason="system_processing_failure"
         if decision == "requires_human_review"
         else None,
-        is_mandatory_escalation=policy_evaluation.mandatory_human_review,
+        is_mandatory_escalation=policy_evaluation.requires_human_review,
         confidence=0.3,  # Low confidence for fallback decisions
     )

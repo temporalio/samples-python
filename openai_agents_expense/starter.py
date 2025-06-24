@@ -5,7 +5,7 @@ This script starts expense workflows with AI agent processing.
 
 Usage:
   python starter.py                    # Process first expense, don't wait
-  python starter.py -e 2              # Process expense 2, don't wait  
+  python starter.py -e 2              # Process expense 2, don't wait
   python starter.py -e all -w          # Process all expenses and wait for completion
   python starter.py --expense 1 --wait # Process expense 1 and wait for completion
 """
@@ -13,7 +13,7 @@ Usage:
 import argparse
 import asyncio
 import uuid
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 
 from temporalio.client import Client
@@ -127,13 +127,13 @@ async def main():
     expenses_to_process = []
     if args.expense == "all":
         expenses_to_process = sample_expenses
-        print(f"\nProcessing all sample expenses...")
+        print("\nProcessing all sample expenses...")
     elif args.expense in ["1", "2", "3"]:
         expenses_to_process = [sample_expenses[int(args.expense) - 1]]
         print(f"\nProcessing expense {args.expense}...")
     else:
         expenses_to_process = [sample_expenses[0]]
-        print(f"\nProcessing first expense (default)...")
+        print("\nProcessing first expense (default)...")
 
     # Process each selected expense
     for expense in expenses_to_process:
@@ -194,7 +194,7 @@ async def main():
     print("Monitor progress:")
     print("1. Temporal Web UI: http://localhost:8233")
     print("2. Expense UI (for human review): http://localhost:8099/list")
-    print(f"\nNote: Make sure the worker is running to process these workflows.")
+    print("\nNote: Make sure the worker is running to process these workflows.")
     if not args.wait:
         print(
             "Tip: Use --wait/-w flag to automatically wait for completion and see results"

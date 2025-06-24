@@ -168,7 +168,9 @@ class PolicyEvaluation(BaseModel):
         max_length=1500,
     )
     confidence: float = Field(
-        description="Confidence score for the policy evaluation", ge=0.0, le=1.0,
+        description="Confidence score for the policy evaluation",
+        ge=0.0,
+        le=1.0,
     )
 
 
@@ -213,7 +215,9 @@ class FraudAssessment(BaseModel):
         description="Whether human review is required based on fraud risk level",
     )
     confidence: float = Field(
-        description="Confidence score for the fraud assessment", ge=0.0, le=1.0,
+        description="Confidence score for the fraud assessment",
+        ge=0.0,
+        le=1.0,
     )
     vendor_risk_indicators: List[str] = Field(
         description="Private risk indicators derived from vendor analysis",
@@ -251,7 +255,9 @@ class AgentDecision(BaseModel):
         description="Whether escalation is due to mandatory rules",
     )
     confidence: float = Field(
-        description="Overall confidence in the decision", ge=0.0, le=1.0,
+        description="Overall confidence in the decision",
+        ge=0.0,
+        le=1.0,
     )
 
 

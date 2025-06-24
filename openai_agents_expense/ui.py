@@ -127,7 +127,7 @@ async def action_handler(
             ExpenseReviewState.REJECTED,
         ]:
             # Report state change
-            await notify_expense_state_change(id, updated_state.value)
+            await notify_expense_state_change(id, updated_state)
 
         print(
             f"Set state for {id} from {starting_state.value} to {updated_state.value}"
@@ -139,7 +139,7 @@ async def action_handler(
             ExpenseReviewState.APPROVED,
             ExpenseReviewState.REJECTED,
         ]:
-            await notify_expense_state_change(id, updated_state.value)
+            await notify_expense_state_change(id, updated_state)
 
         print(
             f"Set state for {id} from {starting_state.value} to {updated_state.value}"
@@ -213,7 +213,7 @@ async def notify_expense_state_change(expense_id: str, state: ExpenseReviewState
     token = token_map[expense_id]
     try:
         handle = workflow_client.get_async_activity_handle(task_token=token)
-        await handle.complete(str(state))
+        await handle.complete(state.value)
         print(f"Successfully complete activity: {token.hex()}")
     except Exception as err:
         print(f"Failed to complete activity with error: {err}")

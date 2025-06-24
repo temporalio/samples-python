@@ -8,17 +8,14 @@ This agent is responsible for:
 4. Information Access: Private - fraud detection methods must be protected
 """
 
-from datetime import timedelta
-
 from agents import WebSearchTool
 from temporalio import workflow
-from temporalio.contrib.openai_agents.temporal_tools import activity_as_tool
 
 from openai_agents_expense.models import FraudAssessment
 
 # Import agent components and models
 with workflow.unsafe.imports_passed_through():
-    from agents import Agent, Runner
+    from agents import Agent
 
 
 def create_fraud_agent() -> Agent:

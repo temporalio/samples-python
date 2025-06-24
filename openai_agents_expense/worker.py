@@ -33,7 +33,6 @@ from openai_agents_expense.activities.expense_activities import update_expense_a
 from openai_agents_expense.workflows.expense_workflow import ExpenseWorkflow
 
 
-
 async def main():
     """Main worker function with proper configuration and error handling."""
     # Configure logging
@@ -86,32 +85,6 @@ async def main():
             logger.info("Worker configuration:")
             logger.info(f"  - Task Queue: {TASK_QUEUE}")
             # TODO avoid hardcoding numbers in the output below
-            logger.info("  - Workflows: 1 registered (ExpenseWorkflow)")
-            logger.info(
-                "  - Activities: 8 registered (1 LLM + 1 web_search + 4 AI agents + 3 expense activities)"
-            )
-            logger.info("  - Max Cached Workflows: 100")
-            logger.info("  - Activity Executor: ThreadPoolExecutor(100)")
-            logger.info("  - OpenAI Agent Timeout: 60 seconds")
-            logger.info("  - Data Converter: OpenAI")
-            logger.info(f"  - Temporal Python SDK Logging: {temporal_log_level}")
-            logger.info("\nWorker supports:")
-            logger.info("  - ExpenseWorkflow (AI-enhanced expense processing)")
-            logger.info(
-                "  - LLM Activity: invoke_model_activity (core AI functionality)"
-            )
-            logger.info("  - Web search activity for vendor validation")
-            logger.info("  - AI Agent Activities:")
-            logger.info("    * evaluate_policy_compliance (PolicyEvaluationAgent)")
-            logger.info("    * assess_fraud_risk (FraudAgent)")
-            logger.info("    * make_agent_decision (DecisionOrchestrationAgent)")
-            logger.info("    * generate_expense_response (ResponseAgent)")
-            logger.info(
-                "  - Original expense activities for human-in-the-loop integration"
-            )
-            logger.info(
-                "  - AI agents run within workflow context via temporal overrides"
-            )
             logger.info("\nPress Ctrl+C to stop the worker")
 
             # Run the worker

@@ -10,10 +10,9 @@ from openai_agents_expense.models import (
     ExpenseReport,
     FraudAssessment,
     PolicyEvaluation,
+    UpdateExpenseActivityInput,
 )
 
-
-from openai_agents_expense.models import UpdateExpenseActivityInput
 
 @activity.defn
 async def create_expense_activity(expense_report: ExpenseReport) -> None:
@@ -234,14 +233,12 @@ async def payment_activity(expense_id: str) -> None:
     Process payment for an approved expense.
     """
 
-
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{EXPENSE_SERVER_HOST_PORT}/payment/{expense_id}",
         )
         response.raise_for_status()
         body = response.text
-
 
     if body == "SUCCEED":
         activity.logger.info(

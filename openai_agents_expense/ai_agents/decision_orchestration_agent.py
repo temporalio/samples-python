@@ -39,7 +39,7 @@ def create_decision_orchestration_agent() -> Agent:
     1. "approved" - Clear cases with high confidence and policy compliance
     2. "final_rejection" - Clear policy violations with no exceptions allowed
     3. "requires_human_review" - Serious issues requiring investigation (fraud suspicion, high-stakes ambiguity, policy exceptions)
-    4. "rejected_with_instructions" - Fixable issues where employee can provide clarification
+    4. "rejected_with_instructions" - Fixable issues where employee can provide clarification and resubmit
 
     MANDATORY ESCALATION RULES (override AI assessment):
     These ALWAYS result in "requires_human_review" regardless of other factors:
@@ -72,17 +72,6 @@ def create_decision_orchestration_agent() -> Agent:
     - External reasoning: Must exclude fraud details, provide sanitized explanations
     - Never reveal fraud detection methods or specific risk factors to users
 
-    RESPONSE FORMAT:
-    Always respond with a JSON object containing:
-    {
-        "decision": "approved|requires_human_review|final_rejection|rejected_with_instructions",
-        "internal_reasoning": "detailed reasoning for administrators, includes fraud context",
-        "external_reasoning": "sanitized reasoning for users, no fraud details exposed",
-        "escalation_reason": "generic reason for human escalation or null",
-        "is_mandatory_escalation": boolean,
-        "confidence": float between 0 and 1
-    }
-
     CRITICAL GUIDELINES:
     - Mandatory escalation rules always take precedence
     - Protect fraud detection information in external communications
@@ -98,148 +87,7 @@ def create_decision_orchestration_agent() -> Agent:
     )
 
 
-@activity.defn
-async def make_agent_decision(input_data: AgentDecisionInput) -> AgentDecision:
-    """
-    Make the final expense approval decision by orchestrating all inputs.
-
-    Args:
-        input_data: FinalDecisionInput containing all agent results
-
-    Returns:
-        FinalDecision with approval decision and reasoning
-    """
-    expense_report = input_data.expense_report
-    categorization = input_data.categorization
-    policy_evaluation = input_data.policy_evaluation
-    fraud_assessment = input_data.fraud_assessment
-
-    activity.logger.info(
-        f"Making final decision for expense {expense_report.expense_id}"
-    )
-
-    # Create the decision orchestration agent
-    agent = create_decision_orchestration_agent()
-
-    # Prepare comprehensive input for the agent
-    decision_input = f"""
-    Please make the final approval decision for this expense by analyzing all available information:
-    
-    EXPENSE DETAILS:
-    - Expense ID: {expense_report.expense_id}
-    - Amount: ${expense_report.amount}
-    - Description: {expense_report.description}
-    - Vendor: {expense_report.vendor}
-    - International Travel: {'Yes' if expense_report.is_international_travel else 'No'}
-    
-    CATEGORIZATION RESULTS:
-    - Category: {categorization.category}
-    - Confidence: {categorization.confidence}
-    - Vendor Legitimate: {'Yes' if categorization.vendor_validation.is_legitimate else 'No'}
-    - Categorization Reasoning: {categorization.reasoning}
-    
-    POLICY EVALUATION RESULTS:
-    - Compliant: {'Yes' if policy_evaluation.compliant else 'No'}
-    - Violations Count: {len(policy_evaluation.violations)}
-    - Mandatory Human Review: {'Yes' if policy_evaluation.mandatory_human_review else 'No'}
-    - Policy Confidence: {policy_evaluation.confidence}
-    - Violations: {[f"{v.rule_name} ({v.severity})" for v in policy_evaluation.violations]}
-    
-    FRAUD ASSESSMENT RESULTS:
-    - Overall Risk: {fraud_assessment.overall_risk}
-    - Flags Count: {len(fraud_assessment.flags)}
-    - Requires Human Review: {'Yes' if fraud_assessment.requires_human_review else 'No'}
-    - Fraud Confidence: {fraud_assessment.confidence}
-    - Flag Types: {[f.flag_type for f in fraud_assessment.flags]}
-    
-    CONFIDENCE ANALYSIS:
-    - CategoryAgent: {categorization.confidence} (threshold: 0.70)
-    - PolicyEvaluationAgent: {policy_evaluation.confidence} (threshold: 0.80)
-    - FraudAgent: {fraud_assessment.confidence} (threshold: 0.65)
-    
-    CRITICAL REMINDERS:
-    1. Check mandatory escalation rules FIRST - they override all other assessments
-    2. Apply confidence thresholds for AI-driven escalation
-    3. Protect fraud information in external reasoning
-    4. Distinguish between fixable issues and serious concerns requiring investigation
-    
-    Make your final decision considering all factors and confidence levels.
-    """
-
-    try:
-        # Run the agent to get the final decision
-        result = await Runner.run(agent, input=decision_input)
-
-        # Parse the agent's response
-        import json
-
-        try:
-            # Extract JSON from the agent's response
-            response_text = result.final_output
-
-            # Find JSON in the response
-            json_start = response_text.find("{")
-            json_end = response_text.rfind("}") + 1
-
-            if json_start != -1 and json_end > json_start:
-                json_text = response_text[json_start:json_end]
-                parsed_result = json.loads(json_text)
-
-                # Validate and sanitize the decision
-                validated_result = _validate_decision_compliance(
-                    parsed_result,
-                    expense_report,
-                    categorization,
-                    policy_evaluation,
-                    fraud_assessment,
-                )
-
-                # Create final decision result
-                agent_decision = AgentDecision(
-                    decision=validated_result["decision"],
-                    internal_reasoning=validated_result["internal_reasoning"],
-                    external_reasoning=validated_result["external_reasoning"],
-                    escalation_reason=validated_result.get("escalation_reason"),
-                    is_mandatory_escalation=validated_result["is_mandatory_escalation"],
-                    confidence=validated_result["confidence"],
-                )
-
-                activity.logger.info(
-                    f"Final decision made: {agent_decision.decision} (confidence: {agent_decision.confidence})"
-                )
-                return agent_decision
-
-            else:
-                raise ValueError("No valid JSON found in agent response")
-
-        except (json.JSONDecodeError, KeyError, TypeError) as e:
-            activity.logger.error(f"Failed to parse decision agent response: {e}")
-            activity.logger.error(f"Agent response was: {result.final_output}")
-
-            # Create fallback decision
-            fallback_decision = _fallback_agent_decision(
-                expense_report, categorization, policy_evaluation, fraud_assessment
-            )
-            activity.logger.warning(
-                f"Using fallback final decision: {fallback_decision.decision}"
-            )
-            return fallback_decision
-
-    except Exception as e:
-        activity.logger.error(
-            f"DecisionOrchestrationAgent failed for expense {expense_report.expense_id}: {e}"
-        )
-
-        # Create fallback decision
-        fallback_decision = _fallback_agent_decision(
-            expense_report, categorization, policy_evaluation, fraud_assessment
-        )
-        activity.logger.warning(
-            f"Using fallback final decision due to agent failure: {fallback_decision.decision}"
-        )
-        return fallback_decision
-
-
+# TODO - implement this as a guardrail
 def _validate_decision_compliance(
     parsed_result: dict,
     expense_report: ExpenseReport,
@@ -353,22 +201,28 @@ def _fallback_agent_decision(
     """
     # Conservative fallback - escalate to human review for safety
     decision = "requires_human_review"
-    
+
     # Check if there are serious policy violations that would require rejection
     if not policy_evaluation.compliant and len(policy_evaluation.violations) > 0:
-        serious_violations = [v for v in policy_evaluation.violations if v.severity in ["critical", "high"]]
+        serious_violations = [
+            v
+            for v in policy_evaluation.violations
+            if v.severity in ["critical", "high"]
+        ]
         if serious_violations:
             decision = "final_rejection"
-    
+
     # Check fraud risk
     if fraud_assessment.overall_risk == "high":
         decision = "requires_human_review"
-    
+
     return AgentDecision(
         decision=decision,
         internal_reasoning="Fallback decision due to agent processing failure. Conservative approach applied.",
         external_reasoning="This expense requires additional review to ensure compliance with company policies due to processing complexity.",
-        escalation_reason="system_processing_failure" if decision == "requires_human_review" else None,
+        escalation_reason="system_processing_failure"
+        if decision == "requires_human_review"
+        else None,
         is_mandatory_escalation=policy_evaluation.mandatory_human_review,
         confidence=0.3,  # Low confidence for fallback decisions
     )

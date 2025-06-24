@@ -60,31 +60,12 @@ def create_policy_evaluation_agent() -> Agent:
     - "documentation_missing": Required documentation not provided
     - "threshold_exceeded": Amount exceeds policy threshold
     - "information_missing": Required information not provided
+    - "mandatory_review": Requires mandatory human review per policy rules
 
     SEVERITY LEVELS:
     - "warning": Minor issue that should be noted
     - "requires_review": Issue that needs human evaluation
     - "rejection": Clear violation requiring rejection
-
-    RESPONSE FORMAT:
-    Always respond with a JSON object containing:
-    {
-        "compliant": boolean,
-        "violations": [
-            {
-                "rule_name": "specific policy rule name",
-                "violation_type": "policy_violation|documentation_missing|threshold_exceeded|information_missing",
-                "severity": "warning|requires_review|rejection",
-                "details": "specific explanation of the violation",
-                "threshold_amount": null or decimal amount if applicable
-            }
-        ],
-        "reasoning": "detailed explanation of policy evaluation",
-        "requires_human_review": boolean (based on policy complexity, not fraud),
-        "mandatory_human_review": boolean (based on mandatory escalation rules),
-        "policy_explanation": "clear explanation of applicable policies for employee education",
-        "confidence": float between 0 and 1
-    }
 
     IMPORTANT GUIDELINES:
     - Be transparent about all policy requirements (this is a public agent)

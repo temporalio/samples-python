@@ -71,12 +71,6 @@ def create_category_agent() -> Agent:
     - If vendor cannot be verified, clearly state this with search results
     - Focus on business categorization accuracy
     - Provide educational value in your reasoning
-    
-    The vendor_validation object should contain:
-    - vendor_name: string
-    - is_legitimate: boolean
-    - confidence_score: float between 0 and 1
-    - web_search_summary: string with search findings, URLs, and business details
     """
 
     return Agent(

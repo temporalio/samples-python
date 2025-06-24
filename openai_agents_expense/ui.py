@@ -96,10 +96,11 @@ async def list_handler():
 async def payment_handler(id: str):
     if id not in all_expenses:
         return RESPONSE_ERROR_INVALID_ID
-    
+
     all_expenses[id].expense_review_state = ExpenseReviewState.PAID
     logger.info(f"Payment received for {id}")
     return RESPONSE_SUCCESS
+
 
 @app.get("/action", response_class=HTMLResponse)
 async def action_handler(

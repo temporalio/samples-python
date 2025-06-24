@@ -8,9 +8,9 @@ including expense reports, agent outputs, and decision results.
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import List, Optional
+from typing import List, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ExpenseStatusEnum(str, Enum):
@@ -32,20 +32,40 @@ class ExpenseReport(BaseModel):
     Core expense report data submitted by employees.
     """
 
-    expense_id: str
-    amount: Decimal
-    description: str
-    vendor: str
-    expense_date: date  # When the expense occurred
-    department: str
-    employee_id: str
-    # Enhanced fields for business rule support
-    receipt_provided: bool  # For receipt requirements over $75 (trust this flag)
-    submission_date: date  # To detect late submissions (>60 days)
-    client_name: Optional[str] = None  # Required for entertainment expenses
-    business_justification: Optional[str] = None  # Required for entertainment expenses
-    is_international_travel: bool = (
-        False  # Requires human approval regardless of amount
+    expense_id: str = Field(
+        description="Unique identifier for the expense report", min_length=1
+    )
+    amount: Decimal = Field(description="Expense amount in USD", gt=0, decimal_places=2)
+    description: str = Field(
+        description="Description of the expense", min_length=1, max_length=500
+    )
+    vendor: str = Field(
+        description="Vendor or merchant name", min_length=1, max_length=200
+    )
+    expense_date: date = Field(description="Date when the expense occurred")
+    department: str = Field(
+        description="Employee's department", min_length=1, max_length=100
+    )
+    employee_id: str = Field(description="Employee identifier", min_length=1)
+    receipt_provided: bool = Field(
+        description="Whether a receipt was provided (required for expenses over $75)"
+    )
+    submission_date: date = Field(
+        description="Date when the expense was submitted (used to detect late submissions over 60 days)"
+    )
+    client_name: Optional[str] = Field(
+        default=None,
+        description="Client name (required for entertainment expenses)",
+        max_length=200,
+    )
+    business_justification: Optional[str] = Field(
+        default=None,
+        description="Business justification (required for entertainment expenses)",
+        max_length=1000,
+    )
+    is_international_travel: bool = Field(
+        default=False,
+        description="Whether this expense is related to international travel (requires human approval regardless of amount)",
     )
 
 
@@ -54,12 +74,19 @@ class VendorValidation(BaseModel):
     Results of vendor validation through web search.
     """
 
-    vendor_name: str
-    is_legitimate: bool
-    confidence_score: float
-    web_search_summary: str  # Summary of web search findings: website URLs, business description,
-    # company information, search result quality ("clear", "conflicting", "missing", "insufficient"),
-    # and any public legitimacy concerns or verification details
+    vendor_name: str = Field(
+        description="Name of the vendor being validated", min_length=1, max_length=200
+    )
+    is_legitimate: bool = Field(
+        description="Whether the vendor appears to be legitimate"
+    )
+    confidence_score: float = Field(
+        description="Confidence score for the validation result", ge=0.0, le=1.0
+    )
+    web_search_summary: str = Field(
+        description="Summary of web search findings: website URLs, business description, company information, search result quality (clear/conflicting/missing/insufficient), and any public legitimacy concerns or verification details",
+        min_length=1,
+    )
 
 
 class ExpenseCategory(BaseModel):
@@ -67,13 +94,21 @@ class ExpenseCategory(BaseModel):
     Categorization results from CategoryAgent.
     """
 
-    category: str  # One of: "Travel & Transportation", "Meals & Entertainment", "Office Supplies",
-    # "Software & Technology", "Marketing & Advertising", "Professional Services",
-    # "Training & Education", "Equipment & Hardware", "Other"
-    confidence: float
-    reasoning: str  # Includes vendor validation details: website URLs, business description summary,
-    # company information found via web search, and any public legitimacy concerns
-    vendor_validation: VendorValidation
+    category: str = Field(
+        description="Expense category (e.g., Travel & Transportation, Meals & Entertainment, Office Supplies, Software & Technology, Marketing & Advertising, Professional Services, Training & Education, Equipment & Hardware, Other)",
+        min_length=1,
+        max_length=100,
+    )
+    confidence: float = Field(
+        description="Confidence score for the categorization", ge=0.0, le=1.0
+    )
+    reasoning: str = Field(
+        description="Reasoning for the categorization, includes vendor validation details: website URLs, business description summary, company information found via web search, and any public legitimacy concerns",
+        min_length=1,
+    )
+    vendor_validation: VendorValidation = Field(
+        description="Vendor validation results from web search"
+    )
 
 
 class PolicyViolation(BaseModel):
@@ -81,11 +116,30 @@ class PolicyViolation(BaseModel):
     Individual policy violation details.
     """
 
-    rule_name: str
-    violation_type: str
-    severity: str  # "warning", "requires_review", "rejection"
-    details: str
-    threshold_amount: Optional[Decimal] = None  # For dollar-based thresholds
+    rule_name: str = Field(
+        description="Name of the policy rule that was violated",
+        min_length=1,
+        max_length=100,
+    )
+    violation_type: str = Field(
+        description="Type of violation (e.g., 'policy_violation', 'documentation_missing', 'threshold_exceeded', 'information_missing', 'mandatory_review')",
+        min_length=1,
+        max_length=50,
+    )
+    severity: Literal["warning", "requires_review", "rejection"] = Field(
+        description="Severity level of the violation"
+    )
+    details: str = Field(
+        description="Detailed explanation of the violation",
+        min_length=1,
+        max_length=1000,
+    )
+    threshold_amount: Optional[Decimal] = Field(
+        default=None,
+        description="Dollar threshold associated with this violation, if applicable",
+        gt=0,
+        decimal_places=2,
+    )
 
 
 class PolicyEvaluation(BaseModel):
@@ -93,13 +147,29 @@ class PolicyEvaluation(BaseModel):
     Policy evaluation results from PolicyEvaluationAgent.
     """
 
-    compliant: bool
-    violations: List[PolicyViolation]
-    reasoning: str
-    requires_human_review: bool  # Based on policy complexity, not fraud
-    mandatory_human_review: bool  # Based on mandatory escalation rules
-    policy_explanation: str  # Clear explanation of applicable policies
-    confidence: float
+    compliant: bool = Field(
+        description="Whether the expense is compliant with all policies",
+    )
+    violations: List[PolicyViolation] = Field(
+        description="List of policy violations found, empty if compliant",
+        default_factory=list,
+    )
+    reasoning: str = Field(
+        description="Detailed reasoning for the policy evaluation decision",
+        min_length=1,
+        max_length=2000,
+    )
+    requires_human_review: bool = Field(
+        description="Whether human review is required based on escalation rules or policy complexity(not fraud)",
+    )
+    policy_explanation: str = Field(
+        description="Clear explanation of applicable policies and their requirements",
+        min_length=1,
+        max_length=1500,
+    )
+    confidence: float = Field(
+        description="Confidence score for the policy evaluation", ge=0.0, le=1.0,
+    )
 
 
 class FraudFlag(BaseModel):
@@ -107,9 +177,19 @@ class FraudFlag(BaseModel):
     Individual fraud detection flag.
     """
 
-    flag_type: str
-    risk_level: str  # "low", "medium", "high"
-    details: str  # Carefully sanitized to not reveal detection methods
+    flag_type: str = Field(
+        description="Type of fraud flag (e.g., 'duplicate_expense', 'suspicious_vendor', 'unusual_pattern')",
+        min_length=1,
+        max_length=50,
+    )
+    risk_level: Literal["low", "medium", "high"] = Field(
+        description="Risk level associated with this flag",
+    )
+    details: str = Field(
+        description="Sanitized details about the flag, carefully avoiding exposure of detection methods",
+        min_length=1,
+        max_length=500,
+    )
 
 
 class FraudAssessment(BaseModel):
@@ -117,12 +197,28 @@ class FraudAssessment(BaseModel):
     Fraud assessment results from FraudAgent (Private - security critical).
     """
 
-    overall_risk: str  # "low", "medium", "high"
-    flags: List[FraudFlag]
-    reasoning: str  # Heavily guarded to not reveal detection methods
-    requires_human_review: bool  # Based on fraud risk level
-    confidence: float
-    vendor_risk_indicators: List[str]  # Private risk indicators derived from analysis
+    overall_risk: Literal["low", "medium", "high"] = Field(
+        description="Overall fraud risk assessment"
+    )
+    flags: List[FraudFlag] = Field(
+        description="List of fraud flags identified, empty if no flags",
+        default_factory=list,
+    )
+    reasoning: str = Field(
+        description="Internal reasoning for fraud assessment (heavily guarded to protect detection methods)",
+        min_length=1,
+        max_length=2000,
+    )
+    requires_human_review: bool = Field(
+        description="Whether human review is required based on fraud risk level",
+    )
+    confidence: float = Field(
+        description="Confidence score for the fraud assessment", ge=0.0, le=1.0,
+    )
+    vendor_risk_indicators: List[str] = Field(
+        description="Private risk indicators derived from vendor analysis",
+        default_factory=list,
+    )
 
 
 class AgentDecision(BaseModel):
@@ -130,12 +226,33 @@ class AgentDecision(BaseModel):
     Final decision from DecisionOrchestrationAgent.
     """
 
-    decision: str  # "approved", "requires_human_review", "final_rejection", "rejected_with_instructions"
-    internal_reasoning: str  # Detailed reasoning for administrators, includes fraud context
-    external_reasoning: str  # Sanitized reasoning for users, no fraud details exposed
-    escalation_reason: Optional[str] = None  # Generic reason for human escalation
-    is_mandatory_escalation: bool  # Whether escalation is due to mandatory rules
-    confidence: float  # Overall confidence in the decision
+    decision: Literal[
+        "approved",
+        "requires_human_review",
+        "final_rejection",
+        "rejected_with_instructions",
+    ] = Field(description="Final decision on the expense")
+    internal_reasoning: str = Field(
+        description="Detailed reasoning for administrators, includes fraud context",
+        min_length=1,
+        max_length=3000,
+    )
+    external_reasoning: str = Field(
+        description="Sanitized reasoning for users, no fraud details exposed",
+        min_length=1,
+        max_length=1500,
+    )
+    escalation_reason: Optional[str] = Field(
+        default=None,
+        description="Generic reason for human escalation",
+        max_length=500,
+    )
+    is_mandatory_escalation: bool = Field(
+        description="Whether escalation is due to mandatory rules",
+    )
+    confidence: float = Field(
+        description="Overall confidence in the decision", ge=0.0, le=1.0,
+    )
 
 
 class ExpenseResponse(BaseModel):
@@ -143,9 +260,21 @@ class ExpenseResponse(BaseModel):
     Final response message from ResponseAgent.
     """
 
-    decision_summary: str  # Includes any resubmission instructions when applicable
-    policy_explanation: Optional[str]  # Clear policy explanations when relevant
-    categorization_summary: str  # Summary of categorization and vendor validation
+    decision_summary: str = Field(
+        description="Summary of the decision including any resubmission instructions when applicable",
+        min_length=1,
+        max_length=1000,
+    )
+    policy_explanation: Optional[str] = Field(
+        default=None,
+        description="Clear policy explanations when relevant to the decision",
+        max_length=1500,
+    )
+    categorization_summary: str = Field(
+        description="Summary of expense categorization and vendor validation results",
+        min_length=1,
+        max_length=800,
+    )
 
 
 class ExpenseStatus(BaseModel):
@@ -203,6 +332,7 @@ class ExpenseResponseInput(BaseModel):
     policy_evaluation: PolicyEvaluation
     agent_decision: AgentDecision
     final_decision: ExpenseStatusEnum
+
 
 class UpdateExpenseActivityInput(BaseModel):
     expense_id: str

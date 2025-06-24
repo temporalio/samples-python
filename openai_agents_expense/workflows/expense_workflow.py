@@ -20,7 +20,8 @@ from temporalio import workflow
 from openai_agents_expense.ai_agents.decision_orchestration_agent import (
     create_decision_orchestration_agent,
 )
-#TODO - not really necessary to pass these through but seeing if it helps with sandboxing issues
+
+# TODO - not really necessary to pass these through but seeing if it helps with sandboxing issues
 with workflow.unsafe.imports_passed_through():
     from openai_agents_expense.models import (
         AgentDecision,
@@ -37,7 +38,7 @@ with workflow.unsafe.imports_passed_through():
         PolicyEvaluation,
         PolicyEvaluationInput,
         PolicyViolation,
-        UpdateExpenseActivityInput
+        UpdateExpenseActivityInput,
     )
 
 # Import activities and agent functions
@@ -62,7 +63,7 @@ with workflow.unsafe.imports_passed_through():
 @workflow.defn(sandboxed=False)
 class ExpenseWorkflow:
     """
-    Main expense processing workflow with OpenAI Agents integration.
+    Main expense processing workflow using OpenAI Agents.
     """
 
     def __init__(self):
@@ -77,6 +78,16 @@ class ExpenseWorkflow:
         self._status.current_status = status
         self._status.last_updated = workflow.now()
         # workflow.logger.info(f"📊 STATUS_UPDATE: {self._status.current_status} → {status}")
+
+    @workflow.query
+    def get_status(self) -> ExpenseStatus:
+        """Get current expense processing status."""
+        return self._status
+
+    @workflow.query
+    def get_processing_result(self) -> Optional[ExpenseProcessingResult]:
+        """Get complete processing result."""
+        return self._processing_result
 
     @workflow.run
     async def run(self, expense_report: ExpenseReport) -> str:
@@ -97,7 +108,6 @@ class ExpenseWorkflow:
         # Initialize status tracking
         self._update_status(ExpenseStatusEnum.PROCESSING)
 
-        # try:
         # Step 0: Create expense in server
         workflow.logger.info(
             f"🏗️ EXPENSE_CREATION: Creating expense entry for {expense_report.expense_id}"
@@ -118,7 +128,7 @@ class ExpenseWorkflow:
         )
         categorization: ExpenseCategory = category_result.final_output
 
-        # TODO: why is this needed?
+        # TODO: would model_rebuild suffice? why is this needed at all?
         categorization = ExpenseCategory.model_validate(categorization.model_dump())
         workflow.logger.info(
             f"✅ AGENT_COMPLETE: CategoryAgent finished | categorization={categorization} >>> {type(categorization)} >>> {categorization.model_dump_json()}"
@@ -177,14 +187,6 @@ class ExpenseWorkflow:
         )
 
         # Update the expense state in the UI server
-        # expense_processing_result = ExpenseProcessingResult(
-        #     expense_report=expense_report,
-        #     categorization=categorization,
-        #     policy_evaluation=policy_evaluation,
-        #     fraud_assessment=fraud_assessment,
-        #     agent_decision=agent_decision,
-        # )
-        # expense_processing_result = ExpenseProcessingResult.model_validate(expense_processing_result.model_dump())
         update_expense_activity_input = UpdateExpenseActivityInput(
             expense_id=expense_report.expense_id,
             expense_report=expense_report,
@@ -299,15 +301,13 @@ class ExpenseWorkflow:
             f"⏳ HUMAN_WAIT: Waiting for human decision on {expense_id}"
         )
         human_decision = await workflow.execute_activity(
-                wait_for_decision_activity,
-                expense_id,
-                start_to_close_timeout=timedelta(minutes=30),
-            )
-        workflow.logger.info(
-            f"👤 HUMAN_DECISION: {human_decision} for {expense_id}"
+            wait_for_decision_activity,
+            expense_id,
+            start_to_close_timeout=timedelta(minutes=30),
         )
+        workflow.logger.info(f"👤 HUMAN_DECISION: {human_decision} for {expense_id}")
 
-        #TODO - make these codes constants
+        # TODO - make these codes constants
         if human_decision == "APPROVED":
             self._update_status(ExpenseStatusEnum.APPROVED)
             workflow.logger.info(
@@ -349,22 +349,13 @@ class ExpenseWorkflow:
             input=response_input.model_dump_json(),
         )
 
-        expense_response = ExpenseResponse.model_validate(response.final_output.model_dump())
+        expense_response = ExpenseResponse.model_validate(
+            response.final_output.model_dump()
+        )
         workflow.logger.info(
             f"✅ AGENT_COMPLETE: ResponseAgent finished | response={expense_response}"
         )
         return expense_response
-
-    @workflow.query
-    def get_status(self) -> ExpenseStatus:
-        """Get current expense processing status."""
-        return self._status
-
-    @workflow.query
-    def get_processing_result(self) -> Optional[ExpenseProcessingResult]:
-        """Get complete processing result."""
-        return self._processing_result
-
 
     async def _process_payment(self, expense_id: str) -> None:
         """Process payment for approved expense."""
@@ -399,13 +390,13 @@ class ExpenseWorkflow:
         workflow.logger.info(
             f"✅ AUTO_APPROVAL: Processing auto-approved expense {expense_report.expense_id}"
         )
-        
+
         self._update_status(ExpenseStatusEnum.APPROVED)
-        
+
         # Process payment
         await self._process_payment(expense_report.expense_id)
         self._update_status(ExpenseStatusEnum.PAID)
-        
+
         return "APPROVED"
 
     async def _handle_final_rejection(
@@ -420,9 +411,9 @@ class ExpenseWorkflow:
         workflow.logger.info(
             f"❌ FINAL_REJECTION: Processing final rejection for expense {expense_report.expense_id}"
         )
-        
+
         self._update_status(ExpenseStatusEnum.FINAL_REJECTION)
-        
+
         return "REJECTED"
 
     async def _handle_rejection_with_instructions(
@@ -437,7 +428,7 @@ class ExpenseWorkflow:
         workflow.logger.info(
             f"📋 REJECTION_WITH_INSTRUCTIONS: Processing rejection with instructions for expense {expense_report.expense_id}"
         )
-        
+
         self._update_status(ExpenseStatusEnum.REJECTED_WITH_INSTRUCTIONS)
-        
+
         return "REJECTED_WITH_INSTRUCTIONS"

@@ -21,8 +21,6 @@ with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
 
 
-
-
 def create_fraud_agent() -> Agent:
     """
     Create the FraudAgent with strict security guardrails.
@@ -69,23 +67,6 @@ def create_fraud_agent() -> Agent:
     - "role_confusion_attempt": Attempts to impersonate roles
     - "vendor_status_uncertainty": Conflicting vendor information
     - "vague_description": Insufficient detail for verification
-
-    RESPONSE FORMAT:
-    Always respond with a JSON object containing:
-    {
-        "overall_risk": "low|medium|high",
-        "flags": [
-            {
-                "flag_type": "exact flag type from list above",
-                "risk_level": "low|medium|high",
-                "details": "generic description without revealing detection methods"
-            }
-        ],
-        "reasoning": "generic risk assessment without exposing detection logic",
-        "requires_human_review": boolean,
-        "confidence": float between 0 and 1,
-        "vendor_risk_indicators": ["generic_indicator_1", "generic_indicator_2"]
-    }
 
     CRITICAL SECURITY GUIDELINES:
     - All details must be generic and non-revealing

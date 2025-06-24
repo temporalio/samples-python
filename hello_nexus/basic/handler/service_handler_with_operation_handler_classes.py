@@ -34,7 +34,7 @@ from nexusrpc.handler import (
 )
 from temporalio.nexus.handler import (
     cancel_operation,
-    temporal_operation_context,
+    start_workflow,
 )
 
 from hello_nexus.basic.handler.db_client import MyDBClient
@@ -130,8 +130,7 @@ class MyWorkflowRunOperation(OperationHandler[MyInput, MyOutput]):
     async def start(
         self, ctx: StartOperationContext, input: MyInput
     ) -> StartOperationResultAsync:
-        tctx = temporal_operation_context.get()
-        token = await tctx.start_workflow(
+        token = await start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
             id=str(uuid.uuid4()),

@@ -18,9 +18,9 @@ from nexusrpc.handler import (
 from temporalio import workflow
 from temporalio.client import Client
 from temporalio.nexus.handler import (
-    TemporalOperationContext,
     WorkflowOperationToken,
     WorkflowRunOperationHandler,
+    temporal_operation_context,
 )
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 from temporalio.workflow import NexusClient
@@ -57,7 +57,7 @@ class MyNexusServiceHandler:
         async def start(
             ctx: StartOperationContext, name: str
         ) -> WorkflowOperationToken[str]:
-            tctx = TemporalOperationContext.current()
+            tctx = temporal_operation_context.get()
             return await tctx.start_workflow(
                 HandlerWorkflow.run,
                 name,

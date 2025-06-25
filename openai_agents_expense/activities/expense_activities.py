@@ -2,11 +2,7 @@ import httpx
 from temporalio import activity
 
 from openai_agents_expense import EXPENSE_SERVER_HOST_PORT
-from openai_agents_expense.models import (
-    ExpenseProcessingResult,
-    ExpenseReport,
-    UpdateExpenseActivityInput,
-)
+from openai_agents_expense.models import ExpenseReport, ExpenseStatusType, UpdateExpenseActivityInput
 
 
 @activity.defn
@@ -99,17 +95,12 @@ async def update_expense_activity(
     Update the expense entry in the expense system.
     """
     async with httpx.AsyncClient() as client:
-        expense_processing_result = ExpenseProcessingResult(
-            expense_report=update_expense_activity_input.expense_report,
-            categorization=update_expense_activity_input.categorization,
-            policy_evaluation=update_expense_activity_input.policy_evaluation,
-            fraud_assessment=update_expense_activity_input.fraud_assessment,
-            agent_decision=update_expense_activity_input.agent_decision,
-        )
 
         response = await client.post(
             f"{EXPENSE_SERVER_HOST_PORT}/update/{update_expense_activity_input.expense_id}",
-            json=expense_processing_result.model_dump(mode='json'),
+            json=update_expense_activity_input.expense_processing_result.model_dump(
+                mode="json"
+            ),
         )
         response.raise_for_status()
         body = response.text
@@ -126,7 +117,7 @@ async def update_expense_activity(
 
 
 @activity.defn
-async def wait_for_decision_activity(expense_id: str) -> str:
+async def wait_for_decision_activity(expense_id: str) -> ExpenseStatusType:
     """
     Wait for the expense decision. This activity will complete asynchronously. When this function
     calls activity.raise_complete_async(), the Temporal Python SDK recognizes this and won't mark this activity

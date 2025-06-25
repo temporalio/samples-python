@@ -162,7 +162,7 @@ class TestModelsIntegration:
         from openai_agents_expense.models import (
             AgentDecision,
             ExpenseCategory,
-            ExpenseProcessingResult,
+            ExpenseProcessingData,
             ExpenseReport,
             ExpenseResponse,
             ExpenseStatus,
@@ -183,7 +183,7 @@ class TestModelsIntegration:
         assert isinstance(FraudFlag, type)
         assert isinstance(AgentDecision, type)
         assert isinstance(ExpenseResponse, type)
-        assert isinstance(ExpenseProcessingResult, type)
+        assert isinstance(ExpenseProcessingData, type)
         assert isinstance(ExpenseStatus, type)
 
 

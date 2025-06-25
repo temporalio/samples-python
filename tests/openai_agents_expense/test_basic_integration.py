@@ -26,7 +26,7 @@ def test_basic_imports():
         from openai_agents_expense.models import (
             AgentDecision,
             ExpenseCategory,
-            ExpenseProcessingResult,
+            ExpenseProcessingData,
             ExpenseReport,
             ExpenseResponse,
             ExpenseStatus,
@@ -45,7 +45,7 @@ def test_basic_imports():
                 AgentDecision,
                 ExpenseResponse,
                 ExpenseStatus,
-                ExpenseProcessingResult,
+                ExpenseProcessingData,
             ]
         )
     except ImportError as e:

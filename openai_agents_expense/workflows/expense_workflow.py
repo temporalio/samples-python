@@ -27,12 +27,12 @@ with workflow.unsafe.imports_passed_through():
         AgentDecision,
         AgentDecisionInput,
         ExpenseCategory,
-        ExpenseProcessingResult,
+        ExpenseProcessingData,
         ExpenseReport,
         ExpenseResponse,
         ExpenseResponseInput,
         ExpenseStatus,
-        ExpenseStatusEnum,
+        ExpenseStatusType,
         FraudAssessment,
         FraudAssessmentInput,
         PolicyEvaluation,
@@ -67,15 +67,27 @@ class ExpenseWorkflow:
 
     def __init__(self):
         self._status = ExpenseStatus(
-            current_status=ExpenseStatusEnum.SUBMITTED,
+            current_status="submitted",
             last_updated=workflow.now(),
         )
-        self._processing_result: Optional[ExpenseProcessingResult] = None
+        self._processing_result = ExpenseProcessingData()
 
-    def _update_status(self, status: ExpenseStatusEnum) -> None:
+    async def _update_status(self, status: ExpenseStatusType, **kwargs) -> None:
         """Update expense processing status."""
         self._status.current_status = status
         self._status.last_updated = workflow.now()
+        self._processing_result.update(expense_status=status, **kwargs)
+
+        # Update the expense state in the UI server
+        await workflow.execute_activity(
+            update_expense_activity,
+            UpdateExpenseActivityInput( 
+                expense_id=self._processing_result.expense_report.expense_id if self._processing_result.expense_report else "",
+                expense_processing_result=self._processing_result,
+            ),
+            start_to_close_timeout=timedelta(seconds=30),
+        )
+
         # workflow.logger.info(f"📊 STATUS_UPDATE: {self._status.current_status} → {status}")
 
     @workflow.query
@@ -84,7 +96,7 @@ class ExpenseWorkflow:
         return self._status
 
     @workflow.query
-    def get_processing_result(self) -> Optional[ExpenseProcessingResult]:
+    def get_processing_result(self) -> Optional[ExpenseProcessingData]:
         """Get complete processing result."""
         return self._processing_result
 
@@ -104,9 +116,6 @@ class ExpenseWorkflow:
             f"🚀 WORKFLOW_START: Processing expense {expense_report.expense_id}"
         )
 
-        # Initialize status tracking
-        self._update_status(ExpenseStatusEnum.PROCESSING)
-
         # Step 0: Create expense in server
         workflow.logger.info(
             f"🏗️ EXPENSE_CREATION: Creating expense entry for {expense_report.expense_id}"
@@ -117,6 +126,12 @@ class ExpenseWorkflow:
             start_to_close_timeout=timedelta(seconds=30),
         )
         workflow.logger.info(f"✅ EXPENSE_CREATED: {expense_report.expense_id}")
+
+        # Initialize status tracking
+        await self._update_status(
+            "processing",
+            expense_report=expense_report,
+        )
 
         # Step 1: CategoryAgent - Categorize expense and validate vendor
         workflow.logger.info(
@@ -131,6 +146,10 @@ class ExpenseWorkflow:
         categorization = ExpenseCategory.model_validate(categorization.model_dump())
         workflow.logger.info(
             f"✅ AGENT_COMPLETE: CategoryAgent finished | categorization={categorization} >>> {type(categorization)} >>> {categorization.model_dump_json()}"
+        )
+        await self._update_status(
+            "processing",
+            categorization=categorization,
         )
 
         # Step 2: Parallel processing - PolicyEvaluationAgent and FraudAgent
@@ -160,6 +179,11 @@ class ExpenseWorkflow:
         fraud_assessment = FraudAssessment.model_validate(
             fraud_result.final_output.model_dump()
         )
+        await self._update_status(
+            "processing",
+            policy_evaluation=policy_evaluation,
+            fraud_assessment=fraud_assessment,
+        )
         workflow.logger.info(
             f"✅ PARALLEL_COMPLETE: Policy and fraud assessment finished | policy_evaluation={policy_evaluation} | fraud_assessment={fraud_assessment}"
         )
@@ -181,28 +205,21 @@ class ExpenseWorkflow:
         agent_decision = AgentDecision.model_validate(
             agent_decision_result.final_output.model_dump()
         )
-        workflow.logger.info(
-            f"✅ AGENT_COMPLETE: DecisionOrchestrationAgent finished | agent_decision={agent_decision}"
-        )
-
-        # Update the expense state in the UI server
-        update_expense_activity_input = UpdateExpenseActivityInput(
-            expense_id=expense_report.expense_id,
-            expense_report=expense_report,
-            categorization=categorization,
-            policy_evaluation=policy_evaluation,
-            fraud_assessment=fraud_assessment,
+        await self._update_status(
+            "processing",
             agent_decision=agent_decision,
         )
-        await workflow.execute_activity(
-            update_expense_activity,
-            update_expense_activity_input,
-            start_to_close_timeout=timedelta(seconds=30),
+        workflow.logger.info(
+            f"✅ AGENT_COMPLETE: DecisionOrchestrationAgent finished | agent_decision={agent_decision}"
         )
 
         # Get human approval if needed
         if agent_decision.decision == "requires_human_review":
             await self._handle_human_review(expense_report.expense_id)
+        else:
+            await self._update_status(
+                agent_decision.decision,
+            )
         final_decision = self._status.current_status
 
         # Generate the response for the end-user
@@ -219,21 +236,17 @@ class ExpenseWorkflow:
         expense_response: ExpenseResponse = ExpenseResponse.model_validate(
             response.final_output.model_dump()
         )
-
-        # Store the final processing result
-        self._processing_result = ExpenseProcessingResult(
-            expense_report=expense_report,
-            categorization=categorization,
-            policy_evaluation=policy_evaluation,
-            fraud_assessment=fraud_assessment,
-            agent_decision=agent_decision,
+        await self._update_status(
+            final_decision,
             expense_response=expense_response,
         )
-
         # Make payment if needed
-        if final_decision == ExpenseStatusEnum.APPROVED:
+        if final_decision == "approved":
+            workflow.logger.info(f"💳 PAYMENT_START: Processing payment for {expense_report.expense_id}")
             await self._process_payment(expense_report.expense_id)
-            self._update_status(ExpenseStatusEnum.PAID)
+            await self._update_status("paid")
+        else:
+            workflow.logger.info(f"💳 PAYMENT_SKIPPED: Payment not processed for {expense_report.expense_id} because final decision is {final_decision}")
 
         workflow.logger.info(
             f"🏁🏁🏁 WORKFLOW_END: {expense_report.expense_id} completed with final decision {final_decision} and decision summary: {expense_response.decision_summary}"
@@ -249,13 +262,13 @@ class ExpenseWorkflow:
             f"👥 HUMAN_ESCALATION: Escalating {expense_id} to human review"
         )
 
-        self._update_status(ExpenseStatusEnum.MANAGER_REVIEW)
+        await self._update_status("manager_review")
 
         # Wait for human decision
         workflow.logger.info(
             f"⏳ HUMAN_WAIT: Waiting for human decision on {expense_id}"
         )
-        human_decision = await workflow.execute_activity(
+        human_decision: ExpenseStatusType = await workflow.execute_activity(
             wait_for_decision_activity,
             expense_id,
             start_to_close_timeout=timedelta(minutes=30),
@@ -263,14 +276,14 @@ class ExpenseWorkflow:
         workflow.logger.info(f"👤 HUMAN_DECISION: {human_decision} for {expense_id}")
 
         # TODO - make these codes constants
-        if human_decision == "APPROVED":
-            self._update_status(ExpenseStatusEnum.APPROVED)
+        if human_decision == "approved":
+            await self._update_status("approved")
             workflow.logger.info(
                 f"🎉 WORKFLOW_SUCCESS: {expense_id} approved by human and paid"
             )
             return "COMPLETED"
         else:
-            self._update_status(ExpenseStatusEnum.FINAL_REJECTION)
+            await self._update_status("final_rejection")
             workflow.logger.info(
                 f"🏁 WORKFLOW_END: {expense_id} rejected by human reviewer"
             )

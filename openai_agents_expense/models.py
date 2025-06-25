@@ -7,24 +7,21 @@ including expense reports, agent outputs, and decision results.
 
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
 from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-
-class ExpenseStatusEnum(str, Enum):
-    """
-    Valid expense status values.
-    """
-
-    SUBMITTED = "submitted"
-    PROCESSING = "processing"
-    MANAGER_REVIEW = "manager_review"
-    APPROVED = "approved"
-    FINAL_REJECTION = "final_rejection"
-    REJECTED_WITH_INSTRUCTIONS = "rejected_with_instructions"
-    PAID = "paid"
+# Valid expense status values
+ExpenseStatusType = Literal[
+    "uninitialized",
+    "submitted",
+    "processing",
+    "manager_review",
+    "approved",
+    "final_rejection",
+    "rejected_with_instructions",
+    "paid",
+]
 
 
 class ExpenseReport(BaseModel):
@@ -288,22 +285,27 @@ class ExpenseStatus(BaseModel):
     Current status of expense processing.
     """
 
-    current_status: ExpenseStatusEnum
+    current_status: ExpenseStatusType
     last_updated: datetime
 
 
 # Decision workflow results for internal orchestration
-class ExpenseProcessingResult(BaseModel):
+class ExpenseProcessingData(BaseModel):
     """
     Complete processing result combining all agent outputs.
     """
-
-    expense_report: ExpenseReport
-    categorization: ExpenseCategory
-    policy_evaluation: PolicyEvaluation
-    fraud_assessment: FraudAssessment  # Internal only
-    agent_decision: AgentDecision
+    expense_status: ExpenseStatusType = "uninitialized"
+    expense_report: Optional[ExpenseReport] = None
+    categorization: Optional[ExpenseCategory] = None
+    policy_evaluation: Optional[PolicyEvaluation] = None
+    fraud_assessment: Optional[FraudAssessment] = None  # Internal only
+    agent_decision: Optional[AgentDecision] = None
     expense_response: Optional[ExpenseResponse] = None
+
+    def update(self, **kwargs):
+        """Update the processing result with new data."""
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
 
 # Activity input models
@@ -337,14 +339,9 @@ class ExpenseResponseInput(BaseModel):
     categorization: ExpenseCategory
     policy_evaluation: PolicyEvaluation
     agent_decision: AgentDecision
-    final_decision: ExpenseStatusEnum
+    final_decision: ExpenseStatusType
 
 
 class UpdateExpenseActivityInput(BaseModel):
     expense_id: str
-    # expense_data: ExpenseProcessingResult
-    expense_report: ExpenseReport
-    categorization: ExpenseCategory
-    policy_evaluation: PolicyEvaluation
-    fraud_assessment: FraudAssessment  # Internal only
-    agent_decision: AgentDecision
+    expense_processing_result: ExpenseProcessingData

@@ -6,7 +6,7 @@ It extends the basic expense sample with multi-agent orchestration, fraud detect
 """
 
 
-from .models import ExpenseProcessingResult, ExpenseReport, ExpenseStatus
+from .models import ExpenseProcessingData, ExpenseReport, ExpenseStatus
 
 # Configuration constants
 EXPENSE_SERVER_HOST_PORT = "http://localhost:8099"
@@ -16,10 +16,9 @@ WORKFLOW_ID_PREFIX = "openai-agents-expense-workflow"
 # Export main classes and functions
 __all__ = [
     "ExpenseReport",
-    "ExpenseProcessingResult",
+    "ExpenseProcessingData",
     "ExpenseStatus",
     "EXPENSE_SERVER_HOST_PORT",
     "TASK_QUEUE",
     "WORKFLOW_ID_PREFIX",
 ]
-

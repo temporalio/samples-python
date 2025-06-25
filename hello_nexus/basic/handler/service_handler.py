@@ -64,7 +64,7 @@ class MyNexusServiceHandler:
                 id=str(uuid.uuid4()),
             )
 
-        return WorkflowRunOperationHandler(start)
+        return WorkflowRunOperationHandler.from_callable(start)
 
     # This is a sync operation. That means that unlike the workflow run operation above,
     # in this case the `start` method returns the final operation result. Sync operations
@@ -78,4 +78,4 @@ class MyNexusServiceHandler:
             # You could use self.connected_db_client here.
             return MyOutput(message=f"Hello {input.name} from sync operation!")
 
-        return SyncOperationHandler(start)
+        return SyncOperationHandler.from_callable(start)

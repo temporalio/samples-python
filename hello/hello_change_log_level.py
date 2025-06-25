@@ -1,5 +1,8 @@
 """
 Changes the log level of workflow task failures from WARN to ERROR.
+
+Note that the __temporal_error_identifier attribute was added in
+version 1.13.0 of the Python SDK.
 """
 
 import asyncio
@@ -11,8 +14,6 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 # --- Begin logging set‑up ----------------------------------------------------------
-_WORKFLOW_TASK_FAILURE_LOG_PREFIX = "Failed activation on workflow"
-
 logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO,
@@ -22,9 +23,11 @@ logging.basicConfig(
 
 class CustomLogFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
+        # Note that the __temporal_error_identifier attribute was added in
+        # version 1.13.0 of the Python SDK.
         if (
-            record.msg.startswith(_WORKFLOW_TASK_FAILURE_LOG_PREFIX)
-            and record.levelno < logging.ERROR
+            hasattr(record, "__temporal_error_identifier")
+            and getattr(record, "__temporal_error_identifier") == "WorkflowTaskFailure"
         ):
             record.levelno = logging.ERROR
             record.levelname = logging.getLevelName(logging.ERROR)

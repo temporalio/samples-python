@@ -60,23 +60,6 @@ class MyNexusServiceHandlerUsingOperationHandlerClasses:
         return MyWorkflowRunOperation()
 
 
-# This is a Nexus operation that responds synchronously to all requests.
-class MySyncOperation(SyncOperationHandler[MyInput, MyOutput]):
-    # You can add an __init__ method taking any required arguments, since you are in
-    # control of instantiating the OperationHandler inside the operation handler method
-    # above decorated with @operation_handler.
-
-    # Unlike the workflow run operation below, the `start` method for a sync operation
-    # returns the final operation result. Sync operations are free to make arbitrary
-    # network calls, or perform CPU-bound computations. Total execution duration must not
-    # exceed 10s. async def start(
-    async def start(
-        self, ctx: StartOperationContext, input: MyInput
-    ) -> StartOperationResultSync[MyOutput]:
-        output = MyOutput(message=f"Hello {input.name} from sync operation!")
-        return StartOperationResultSync(output)
-
-
 # This is a Nexus operation that is backed by a Temporal workflow. That means that it
 # responds asynchronously to all requests: it starts a workflow and responds with a token
 # that the handler can associate with the worklow is started.
@@ -101,3 +84,29 @@ class MyWorkflowRunOperation(WorkflowRunOperationHandler[MyInput, MyOutput]):
             id=str(uuid.uuid4()),
         )
         return StartOperationResultAsync(token.encode())
+
+
+# This is a Nexus operation that responds synchronously to all requests. That means that
+# unlike the workflow run operation above, in this case the `start` method returns the
+# final operation result.
+#
+# Here it is implemented by subclassing SyncOperationHandler and overriding the start
+# method. See service_handler.py for an alternative style using
+# SyncOperationHandler.from_callable.
+#
+# Sync operations are free to make arbitrary network calls, or perform CPU-bound
+# computations. Total execution duration must not exceed 10s.
+class MySyncOperation(SyncOperationHandler[MyInput, MyOutput]):
+    # You can add an __init__ method taking any required arguments, since you are in
+    # control of instantiating the OperationHandler inside the operation handler method
+    # above decorated with @operation_handler.
+
+    # Unlike the workflow run operation below, the `start` method for a sync operation
+    # returns the final operation result. Sync operations are free to make arbitrary
+    # network calls, or perform CPU-bound computations. Total execution duration must not
+    # exceed 10s. async def start(
+    async def start(
+        self, ctx: StartOperationContext, input: MyInput
+    ) -> StartOperationResultSync[MyOutput]:
+        output = MyOutput(message=f"Hello {input.name} from sync operation!")
+        return StartOperationResultSync(output)

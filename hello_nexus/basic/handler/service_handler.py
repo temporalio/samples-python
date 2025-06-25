@@ -43,10 +43,9 @@ class MyNexusServiceHandler:
         self.connected_db_client = connected_db_client
 
     # This is a nexus operation that is backed by a Temporal workflow. The start method
-    # starts a workflow, and returns a nexus operation token synchronously. Meanwhile,
-    # the workflow executes in the background, and the Temporal server takes care of
-    # delivering the eventual workflow result (success or failure) to the calling
-    # workflow.
+    # starts a workflow, and returns a nexus operation token. Meanwhile, the workflow
+    # executes in the background; Temporal server takes care of delivering the eventual
+    # workflow result (success or failure) to the calling workflow.
     #
     # The token will be used by the caller if it subsequently wants to cancel the Nexus
     # operation.
@@ -66,10 +65,16 @@ class MyNexusServiceHandler:
 
         return WorkflowRunOperationHandler.from_callable(start)
 
-    # This is a sync operation. That means that unlike the workflow run operation above,
-    # in this case the `start` method returns the final operation result. Sync operations
-    # are free to make arbitrary network calls, or perform CPU-bound computations. Total
-    # execution duration must not exceed 10s.
+    # This is a Nexus operation that responds synchronously to all requests. That means
+    # that unlike the workflow run operation above, in this case the `start` method
+    # returns the final operation result.
+    #
+    # Here it is implemented using SyncOperationHandler.from_callable.
+    # See service_handler_with_operation_handler_classes.py for an alternative style
+    # involving subclassing SyncOperationHandler and overriding the start method.
+    #
+    # Sync operations are free to make arbitrary network calls, or perform CPU-bound
+    # computations. Total execution duration must not exceed 10s.
     @operation_handler
     def my_sync_operation(
         self,

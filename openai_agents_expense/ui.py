@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from dataclasses import dataclass
-from enum import Enum
 from typing import Dict, Optional
 
 import uvicorn
@@ -26,7 +25,6 @@ RESPONSE_ERROR_INVALID_ID = PlainTextResponse("ERROR:INVALID_ID")
 RESPONSE_ERROR_INVALID_TYPE = PlainTextResponse("ERROR:INVALID_TYPE")
 RESPONSE_ERROR_INVALID_STATE = PlainTextResponse("ERROR:INVALID_STATE")
 RESPONSE_ERROR_INVALID_FORM_DATA = PlainTextResponse("ERROR:INVALID_FORM_DATA")
-
 
 
 @dataclass
@@ -123,9 +121,7 @@ async def action_handler(
             # Report state change
             await notify_expense_state_change(id, updated_state)
 
-        print(
-            f"Set state for {id} from {starting_state} to {updated_state}"
-        )
+        print(f"Set state for {id} from {starting_state} to {updated_state}")
         return RESPONSE_SUCCESS
     else:
         # For UI calls, notify and redirect to list
@@ -135,9 +131,7 @@ async def action_handler(
         ]:
             await notify_expense_state_change(id, updated_state)
 
-        print(
-            f"Set state for {id} from {starting_state} to {updated_state}"
-        )
+        print(f"Set state for {id} from {starting_state} to {updated_state}")
         return await list_handler()
 
 
@@ -147,9 +141,7 @@ async def create_handler(id: str):
         return RESPONSE_ERROR_ID_ALREADY_EXISTS
 
     # Create new ExpenseState object
-    all_expenses[id] = ExpenseState(
-        summary=None, expense_review_state="uninitialized"
-    )
+    all_expenses[id] = ExpenseState(summary=None, expense_review_state="uninitialized")
 
     return RESPONSE_SUCCESS
 

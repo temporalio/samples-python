@@ -2,7 +2,11 @@ import httpx
 from temporalio import activity
 
 from openai_agents_expense import EXPENSE_SERVER_HOST_PORT
-from openai_agents_expense.models import ExpenseReport, ExpenseStatusType, UpdateExpenseActivityInput
+from openai_agents_expense.models import (
+    ExpenseReport,
+    ExpenseStatusType,
+    UpdateExpenseActivityInput,
+)
 
 
 @activity.defn

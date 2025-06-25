@@ -81,8 +81,10 @@ class ExpenseWorkflow:
         # Update the expense state in the UI server
         await workflow.execute_activity(
             update_expense_activity,
-            UpdateExpenseActivityInput( 
-                expense_id=self._processing_result.expense_report.expense_id if self._processing_result.expense_report else "",
+            UpdateExpenseActivityInput(
+                expense_id=self._processing_result.expense_report.expense_id
+                if self._processing_result.expense_report
+                else "",
                 expense_processing_result=self._processing_result,
             ),
             start_to_close_timeout=timedelta(seconds=30),
@@ -242,11 +244,15 @@ class ExpenseWorkflow:
         )
         # Make payment if needed
         if final_decision == "approved":
-            workflow.logger.info(f"💳 PAYMENT_START: Processing payment for {expense_report.expense_id}")
+            workflow.logger.info(
+                f"💳 PAYMENT_START: Processing payment for {expense_report.expense_id}"
+            )
             await self._process_payment(expense_report.expense_id)
             await self._update_status("paid")
         else:
-            workflow.logger.info(f"💳 PAYMENT_SKIPPED: Payment not processed for {expense_report.expense_id} because final decision is {final_decision}")
+            workflow.logger.info(
+                f"💳 PAYMENT_SKIPPED: Payment not processed for {expense_report.expense_id} because final decision is {final_decision}"
+            )
 
         workflow.logger.info(
             f"🏁🏁🏁 WORKFLOW_END: {expense_report.expense_id} completed with final decision {final_decision} and decision summary: {expense_response.decision_summary}"

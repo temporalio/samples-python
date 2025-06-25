@@ -294,6 +294,7 @@ class ExpenseProcessingData(BaseModel):
     """
     Complete processing result combining all agent outputs.
     """
+
     expense_status: ExpenseStatusType = "uninitialized"
     expense_report: Optional[ExpenseReport] = None
     categorization: Optional[ExpenseCategory] = None

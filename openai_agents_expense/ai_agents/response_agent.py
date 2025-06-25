@@ -60,6 +60,12 @@ def create_response_agent() -> Agent:
     - Timeline expectations when appropriate
     - Reassurance about legitimate expenses
 
+    5. HUMAN DECISION:
+    - When escalated for human review, the "final_decision" field indicates the decision of the human reviewer.
+    - The "final_decision" field is a string that can be "approved", "final_rejection"
+    - If the "final_decision" is "approved", then provide a generic explanation of why the expense was approved.
+    - If the "final_decision" is "final_rejection", then provide a generic explanation of why the expense was rejected.
+
     CONTENT GUIDELINES:
     - Include policy explanations for educational value
     - Summarize categorization findings transparently

@@ -12,8 +12,9 @@ Usage:
 
 import argparse
 import asyncio
+import time
 import uuid
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from temporalio.client import Client
@@ -58,11 +59,80 @@ Examples:
     return parser.parse_args()
 
 
+def format_expense_details(expense: ExpenseReport) -> str:
+    """Format expense details for display."""
+    lines = [
+        f"┌─── Expense Report: {expense.expense_id} ───",
+        f"│ Description: {expense.description}",
+        f"│ Amount:      ${expense.amount}",
+        f"│ Vendor:      {expense.vendor}",
+        f"│ Department:  {expense.department}",
+        f"│ Employee:    {expense.employee_id}",
+        f"│ Date:        {expense.expense_date}",
+        f"│ Receipt:     {'✓ Provided' if expense.receipt_provided else '✗ Missing'}",
+    ]
+    
+    if expense.client_name:
+        lines.append(f"│ Client:      {expense.client_name}")
+    
+    if expense.business_justification:
+        lines.append(f"│ Justification: {expense.business_justification}")
+    
+    if expense.is_international_travel:
+        lines.append(f"│ Travel:      🌍 International")
+    
+    lines.append("└" + "─" * (len(lines[0]) - 1))
+    
+    return "\n".join(lines)
+
+
+def print_section_header(title: str):
+    """Print a nicely formatted section header."""
+    print(f"\n{title}")
+    print("─" * len(title))
+
+
+
+def format_result_with_decision(result: str) -> tuple[str, str]:
+    """Analyze result and return decision type and formatted message."""
+    result_lower = result.lower()
+    
+    if "approved" in result_lower and "escalat" not in result_lower:
+        decision = "✅ APPROVED"
+        icon = "✅"
+    elif "escalat" in result_lower or "review" in result_lower:
+        decision = "🔍 ESCALATED"
+        icon = "🔍"
+    elif "reject" in result_lower or "denied" in result_lower:
+        decision = "❌ REJECTED"
+        icon = "❌"
+    else:
+        decision = "📋 PROCESSED"
+        icon = "📋"
+    
+    return decision, icon
+
+
+def print_workflow_result(expense_id: str, result: str, elapsed_time: float, status: str = None):
+    """Print workflow completion result in a nice format."""
+    decision, icon = format_result_with_decision(result)
+    
+    print_section_header("Processing Complete")
+    print(f"Expense ID: {expense_id}")
+    print(f"Decision:   {decision}")
+    print(f"Result:     {result}")
+    print(f"Duration:   {elapsed_time:.1f} seconds")
+    if status:
+        print(f"Status:     {status}")
+    print(f"{icon} Processing completed successfully!")
+
+
+
 async def main():
     """Start an expense workflow with AI processing."""
     args = parse_args()
 
-    print("OpenAI Agents Expense Processing Sample - Starter")
+    print("🏢 OpenAI Agents Expense Processing Sample")
     print("=" * 50)
 
     # Connect to Temporal server with OpenAI agents data converter
@@ -119,28 +189,40 @@ async def main():
         ),
     ]
 
-    print("Available sample expenses:")
-    for i, expense in enumerate(sample_expenses, 1):
-        print(f"{i}. {expense.expense_id}: ${expense.amount} - {expense.description}")
+    # Only show expense menu when processing all expenses
+    if args.expense == "all":
+        print_section_header("Available Sample Expenses")
+        for i, expense in enumerate(sample_expenses, 1):
+            status_hint = ""
+            if i == 1:
+                status_hint = " (likely approved)"
+            elif i == 2:
+                status_hint = " (international - may escalate)"
+            elif i == 3:
+                status_hint = " (suspicious vendor - may escalate)"
+            print(f"{i}. {expense.expense_id}: ${expense.amount} - {expense.description}{status_hint}")
+        print("\nProcessing all sample expenses...")
+    else:
+        expense_num = int(args.expense) if args.expense.isdigit() else 1
+        print(f"Processing expense #{expense_num}...")
 
     # Process expenses based on command line argument
     expenses_to_process = []
     if args.expense == "all":
         expenses_to_process = sample_expenses
-        print("\nProcessing all sample expenses...")
     elif args.expense in ["1", "2", "3"]:
         expenses_to_process = [sample_expenses[int(args.expense) - 1]]
-        print(f"\nProcessing expense {args.expense}...")
     else:
         expenses_to_process = [sample_expenses[0]]
-        print("\nProcessing first expense (default)...")
 
     # Process each selected expense
+    processed_count = 0
+    total_amount = Decimal("0.00")
+    processing_results = []
+    
     for expense in expenses_to_process:
-        print(f"\nStarting workflow for expense: {expense.expense_id}")
-        print(f"Description: {expense.description}")
-        print(f"Vendor: {expense.vendor}")
-        print(f"Amount: ${expense.amount}")
+        print_section_header(f"Submitting Expense Report")
+        print(format_expense_details(expense))
 
         # Create workflow ID with UUID for uniqueness
         unique_id = str(uuid.uuid4())
@@ -151,6 +233,7 @@ async def main():
 
         try:
             # Start the workflow
+            start_time = time.time()
             handle = await client.start_workflow(
                 ExpenseWorkflow.run,
                 expense_copy,
@@ -158,47 +241,74 @@ async def main():
                 task_queue=TASK_QUEUE,
             )
 
-            print(f"Workflow started: {workflow_id}")
-            print(
-                f"You can track progress at: http://localhost:8233/namespaces/default/workflows/{workflow_id}"
-            )
-
-            # Wait for completion if requested
+            print(f"\n🚀 Workflow started successfully!")
+            print(f"Workflow ID: {workflow_id}")
+            print(f"Started at:  {datetime.now().strftime('%H:%M:%S')}")
+            
+            # Show monitoring options right after submission
+            print(f"\n📊 Monitor Progress:")
+            print(f"   • Temporal Web UI: http://localhost:8233/namespaces/default/workflows/{workflow_id}")
+            print(f"   • Expense Review UI: http://localhost:8099/list")
+            
             if args.wait:
-                print("Waiting for workflow completion...")
+                print("\n⏳ Processing expense through AI agents...")
+                
                 try:
-                    # Query the workflow BEFORE waiting for completion
+                    # Query the workflow status
                     try:
                         status = await handle.query(ExpenseWorkflow.get_status)
-                        print(f"Current Status: {status.current_status}")
+                        print(f"Current status: {status.current_status}")
                     except Exception as e:
-                        print(f"Could not get status: {e}")
+                        print(f"Note: Could not query status - {e}")
 
-                    # Now wait for completion
+                    # Wait for completion
                     result = await handle.result()
-                    print(f"Workflow completed with result: {result}")
-
-                    # Try to get processing result, but don't query after completion
-                    print("Workflow processing completed successfully!")
+                    elapsed_time = time.time() - start_time
+                    
+                    print_workflow_result(expense.expense_id, result, elapsed_time)
+                    processed_count += 1
+                    total_amount += expense.amount
+                    
+                    decision, _ = format_result_with_decision(result)
+                    processing_results.append({
+                        'expense_id': expense.expense_id,
+                        'amount': expense.amount,
+                        'decision': decision,
+                        'duration': elapsed_time
+                    })
 
                 except Exception as e:
-                    print(f"Workflow failed: {e}")
+                    print(f"❌ Workflow failed: {e}")
             else:
-                print("Use --wait/-w flag to wait for completion and see results")
+                print("\n📋 Workflow submitted and running in background")
 
         except Exception as e:
-            print(f"Failed to start workflow: {e}")
+            print(f"❌ Failed to start workflow: {e}")
 
+    # Enhanced final summary
     print("\n" + "=" * 50)
-    print("Expense workflows started!")
-    print("Monitor progress:")
-    print("1. Temporal Web UI: http://localhost:8233")
-    print("2. Expense UI (for human review): http://localhost:8099/list")
-    print("\nNote: Make sure the worker is running to process these workflows.")
-    if not args.wait:
-        print(
-            "Tip: Use --wait/-w flag to automatically wait for completion and see results"
-        )
+    if args.wait and processed_count > 0:
+        print(f"✅ Successfully processed {processed_count} expense report(s)!")
+        print(f"💰 Total amount processed: ${total_amount}")
+        
+        if len(processing_results) > 1:
+            print_section_header("Processing Summary")
+            for result in processing_results:
+                print(f"   {result['expense_id']}: {result['decision']} (${result['amount']}, {result['duration']:.1f}s)")
+        
+        # Show average processing time
+        if processing_results:
+            avg_time = sum(r['duration'] for r in processing_results) / len(processing_results)
+            print(f"⏱️  Average processing time: {avg_time:.1f} seconds")
+            
+    elif args.wait:
+        print("⚠️  No expenses were successfully processed")
+    else:
+        print(f"📤 {len(expenses_to_process)} expense workflow(s) submitted!")
+        total_submitted = sum(expense.amount for expense in expenses_to_process)
+        print(f"💰 Total amount submitted: ${total_submitted}")
+    
+    print("\n⚙️  Note: Ensure the worker is running to process workflows")
 
 
 if __name__ == "__main__":

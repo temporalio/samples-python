@@ -21,21 +21,15 @@ from __future__ import annotations
 import uuid
 
 from nexusrpc.handler import (
-    CancelOperationContext,
-    FetchOperationInfoContext,
-    FetchOperationResultContext,
     OperationHandler,
-    OperationInfo,
     StartOperationContext,
     StartOperationResultAsync,
     StartOperationResultSync,
+    SyncOperationHandler,
     operation_handler,
     service_handler,
 )
-from temporalio.nexus.handler import (
-    cancel_operation,
-    start_workflow,
-)
+from temporalio.nexus.handler import WorkflowRunOperationHandler, start_workflow
 
 from hello_nexus.basic.handler.db_client import MyDBClient
 from hello_nexus.basic.handler.service_handler import MyInput, MyNexusService, MyOutput
@@ -67,7 +61,7 @@ class MyNexusServiceHandlerUsingOperationHandlerClasses:
 
 
 # This is a Nexus operation that responds synchronously to all requests.
-class MySyncOperation(OperationHandler[MyInput, MyOutput]):
+class MySyncOperation(SyncOperationHandler[MyInput, MyOutput]):
     # You can add an __init__ method taking any required arguments, since you are in
     # control of instantiating the OperationHandler inside the operation handler method
     # above decorated with @operation_handler.
@@ -82,45 +76,16 @@ class MySyncOperation(OperationHandler[MyInput, MyOutput]):
         output = MyOutput(message=f"Hello {input.name} from sync operation!")
         return StartOperationResultSync(output)
 
-    async def fetch_info(
-        self,
-        ctx: FetchOperationInfoContext,
-        token: str,
-    ) -> OperationInfo:
-        raise NotImplementedError(
-            "fetch_info is not supported when a Nexus operation is called by a Temporal workflow"
-        )
-
-    async def fetch_result(
-        self,
-        ctx: FetchOperationResultContext,
-        token: str,
-    ) -> MyOutput:
-        raise NotImplementedError(
-            "fetch_result is not supported when a Nexus operation is called by a Temporal workflow, "
-            "but this sample does not demonstrate result fetching"
-        )
-
-    async def cancel(
-        self,
-        ctx: CancelOperationContext,
-        token: str,
-    ) -> None:
-        raise NotImplementedError(
-            "cancel is supported when a Nexus operation is called by a Temporal workflow, "
-            "but this sample does not demonstrate cancellation"
-        )
-
 
 # This is a Nexus operation that is backed by a Temporal workflow. That means that it
 # responds asynchronously to all requests: it starts a workflow and responds with a token
 # that the handler can associate with the worklow is started.
-class MyWorkflowRunOperation(OperationHandler[MyInput, MyOutput]):
+class MyWorkflowRunOperation(WorkflowRunOperationHandler[MyInput, MyOutput]):
     # You can add an __init__ method taking any required arguments, since you are in
     # control of instantiating the OperationHandler inside the operation handler method
     # above decorated with @operation_handler.
 
-    # The start method starts a workflow, and returns a WorkflowRunOperationResult that it
+    # The start method starts a workflow, and returns a StartOperationResultAsync that it
     # creates from the workflow handle. This return value contains the Nexus operation
     # token that the handler can use to obtain a handle and interact with the workflow on
     # future requests (for example if a cancel request is subsequently sent by the
@@ -136,21 +101,3 @@ class MyWorkflowRunOperation(OperationHandler[MyInput, MyOutput]):
             id=str(uuid.uuid4()),
         )
         return StartOperationResultAsync(token.encode())
-
-    async def cancel(self, ctx: CancelOperationContext, token: str) -> None:
-        return await cancel_operation(token)
-
-    async def fetch_info(
-        self, ctx: FetchOperationInfoContext, token: str
-    ) -> OperationInfo:
-        raise NotImplementedError(
-            "fetch_info is not supported when a Nexus operation is called by a Temporal workflow"
-        )
-
-    async def fetch_result(
-        self, ctx: FetchOperationResultContext, token: str
-    ) -> MyOutput:
-        raise NotImplementedError(
-            "fetch_result is not supported when a Nexus operation is called by a Temporal workflow, "
-            "but this sample does not demonstrate result fetching"
-        )

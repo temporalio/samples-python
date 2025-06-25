@@ -63,7 +63,7 @@ class MyNexusServiceHandler:
                 id=str(uuid.uuid4()),
             )
 
-        return WorkflowRunOperationHandler(start)
+        return WorkflowRunOperationHandler.from_callable(start)
 
 
 #

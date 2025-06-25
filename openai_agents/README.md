@@ -10,6 +10,7 @@ See the [module documentation](https://github.com/temporalio/sdk-python/blob/mai
 ## Overview
 
 The integration combines:
+
 - **Temporal workflows** for orchestrating agent control flow and state management
 - **OpenAI Agents SDK** for AI agent creation and tool interactions
 
@@ -24,15 +25,25 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 ## Running the Examples
 
 1. **Start the worker** (supports all samples):
+
    ```bash
    uv run openai_agents/run_worker.py
    ```
+
+2. **Run Web UI**
+
+   ```bash
+   uv run openai_agents/web_server.py
+   ```
+
+OR
 
 2. **Run individual samples** in separate terminals:
 
 ### Basic Agent Examples
 
 - **Hello World Agent** - Simple agent that responds in haikus:
+
   ```bash
   uv run openai_agents/run_hello_world_workflow.py
   ```
@@ -45,12 +56,15 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 ### Advanced Multi-Agent Examples
 
 - **Research Workflow** - Multi-agent research system with specialized roles:
+
   ```bash
   uv run openai_agents/run_research_workflow.py
   ```
+
   Features a planner agent, search agent, and writer agent working together.
 
 - **Customer Service Workflow** - Customer service agent with escalation capabilities (interactive):
+
   ```bash
   uv run openai_agents/run_customer_service_client.py --conversation-id my-conversation-123
   ```
@@ -59,4 +73,3 @@ This approach ensures that AI agent workflows are durable, observable, and can h
   ```bash
   uv run openai_agents/run_agents_as_tools_workflow.py
   ```
-

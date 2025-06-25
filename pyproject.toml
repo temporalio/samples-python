@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = "~=3.9"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.12.0,<2"]
+dependencies = ["temporalio>=1.13.0,<2"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -40,13 +40,17 @@ langchain = [
     "langchain-openai>=0.0.6,<0.0.7 ; python_version >= '3.8.1' and python_version < '4.0'",
     "langsmith>=0.1.22,<0.2 ; python_version >= '3.8.1' and python_version < '4.0'",
     "openai>=1.4.0,<2",
-    "fastapi>=0.105.0,<0.106",
+    "fastapi>=0.115.12",
     "tqdm>=4.62.0,<5",
     "uvicorn[standard]>=0.24.0.post1,<0.25",
 ]
 open-telemetry = [
     "temporalio[opentelemetry]",
     "opentelemetry-exporter-otlp-proto-grpc==1.18.0",
+]
+openai-agents = [
+    "openai-agents >= 0.0.19",
+    "temporalio[openai-agents] >= 1.13.0",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=1.11.0,<2"]
@@ -146,4 +150,3 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "opentelemetry.*"
 ignore_errors = true
-

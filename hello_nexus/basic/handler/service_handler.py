@@ -13,13 +13,9 @@ from __future__ import annotations
 
 import uuid
 
-from nexusrpc.handler import (
-    StartOperationContext,
-    service_handler,
-    sync_operation_handler,
-)
+from nexusrpc.handler import StartOperationContext, service_handler, sync_operation
 from temporalio import nexus
-from temporalio.nexus import workflow_run_operation_handler
+from temporalio.nexus import workflow_run_operation
 
 from hello_nexus.basic.handler.db_client import MyDBClient
 from hello_nexus.basic.handler.workflows import WorkflowStartedByNexusOperation
@@ -44,7 +40,7 @@ class MyNexusServiceHandler:
     #
     # The token will be used by the caller if it subsequently wants to cancel the Nexus
     # operation.
-    @workflow_run_operation_handler
+    @workflow_run_operation
     async def my_workflow_run_operation(
         self, ctx: StartOperationContext, input: MyInput
     ) -> nexus.WorkflowHandle[MyOutput]:
@@ -65,7 +61,7 @@ class MyNexusServiceHandler:
     #
     # Sync operations are free to make arbitrary network calls, or perform CPU-bound
     # computations. Total execution duration must not exceed 10s.
-    @sync_operation_handler
+    @sync_operation
     async def my_sync_operation(
         self, ctx: StartOperationContext, input: MyInput
     ) -> MyOutput:

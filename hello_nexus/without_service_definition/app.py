@@ -15,7 +15,7 @@ from nexusrpc.handler import (
 )
 from temporalio import nexus, workflow
 from temporalio.client import Client
-from temporalio.nexus import workflow_run_operation_handler
+from temporalio.nexus import workflow_run_operation
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 from temporalio.workflow import NexusClient
 
@@ -44,7 +44,7 @@ class MyNexusServiceHandler:
     # which returns a WorkflowOperationToken. (Temporal server will then take care of
     # delivering the workflow result to the caller, using the Nexus RPC callback
     # mechanism).
-    @workflow_run_operation_handler
+    @workflow_run_operation
     async def my_workflow_run_operation(
         self, ctx: StartOperationContext, name: str
     ) -> nexus.WorkflowHandle[str]:

@@ -5,8 +5,8 @@ from typing import Optional
 from temporalio.client import Client
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
-from hello_nexus.basic.caller.workflows import CallerWorkflow
-from hello_nexus.basic.service import MyOutput
+from hello_nexus.caller.workflows import CallerWorkflow
+from hello_nexus.service import MyOutput
 
 NAMESPACE = "hello-nexus-basic-caller-namespace"
 TASK_QUEUE = "hello-nexus-basic-caller-task-queue"

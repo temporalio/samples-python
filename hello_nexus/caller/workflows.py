@@ -2,7 +2,7 @@ from temporalio import workflow
 from temporalio.workflow import NexusClient
 
 with workflow.unsafe.imports_passed_through():
-    from hello_nexus.basic.service import MyInput, MyNexusService, MyOutput
+    from hello_nexus.service import MyInput, MyNexusService, MyOutput
 
 NEXUS_ENDPOINT = "hello-nexus-basic-nexus-endpoint"
 

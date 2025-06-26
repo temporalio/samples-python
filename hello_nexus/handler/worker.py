@@ -5,9 +5,9 @@ from typing import Optional
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from hello_nexus.basic.handler.db_client import MyDBClient
-from hello_nexus.basic.handler.service_handler import MyNexusServiceHandler
-from hello_nexus.basic.handler.workflows import WorkflowStartedByNexusOperation
+from hello_nexus.handler.db_client import MyDBClient
+from hello_nexus.handler.service_handler import MyNexusServiceHandler
+from hello_nexus.handler.workflows import WorkflowStartedByNexusOperation
 
 interrupt_event = asyncio.Event()
 

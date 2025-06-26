@@ -20,16 +20,19 @@ from __future__ import annotations
 
 import uuid
 
+from nexusrpc import OperationInfo
 from nexusrpc.handler import (
+    CancelOperationContext,
+    FetchOperationInfoContext,
+    FetchOperationResultContext,
     OperationHandler,
     StartOperationContext,
     StartOperationResultAsync,
     StartOperationResultSync,
-    SyncOperationHandler,
     operation_handler,
     service_handler,
 )
-from temporalio.nexus.handler import WorkflowRunOperationHandler, start_workflow
+from temporalio import nexus
 
 from hello_nexus.basic.handler.db_client import MyDBClient
 from hello_nexus.basic.handler.service_handler import MyInput, MyNexusService, MyOutput
@@ -63,7 +66,7 @@ class MyNexusServiceHandlerUsingOperationHandlerClasses:
 # This is a Nexus operation that is backed by a Temporal workflow. That means that it
 # responds asynchronously to all requests: it starts a workflow and responds with a token
 # that the handler can associate with the worklow is started.
-class MyWorkflowRunOperation(WorkflowRunOperationHandler[MyInput, MyOutput]):
+class MyWorkflowRunOperation(OperationHandler[MyInput, MyOutput]):
     # You can add an __init__ method taking any required arguments, since you are in
     # control of instantiating the OperationHandler inside the operation handler method
     # above decorated with @operation_handler.
@@ -78,12 +81,25 @@ class MyWorkflowRunOperation(WorkflowRunOperationHandler[MyInput, MyOutput]):
     async def start(
         self, ctx: StartOperationContext, input: MyInput
     ) -> StartOperationResultAsync:
-        token = await start_workflow(
+        handle = await nexus.start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
             id=str(uuid.uuid4()),
         )
-        return StartOperationResultAsync(token.encode())
+        return StartOperationResultAsync(handle.to_token())
+
+    async def fetch_info(
+        self, ctx: FetchOperationInfoContext, input: MyInput
+    ) -> OperationInfo:
+        raise NotImplementedError
+
+    async def cancel(self, ctx: CancelOperationContext, input: MyInput) -> None:
+        raise NotImplementedError
+
+    async def fetch_result(
+        self, ctx: FetchOperationResultContext, input: MyInput
+    ) -> MyOutput:
+        raise NotImplementedError
 
 
 # This is a Nexus operation that responds synchronously to all requests. That means that
@@ -96,7 +112,7 @@ class MyWorkflowRunOperation(WorkflowRunOperationHandler[MyInput, MyOutput]):
 #
 # Sync operations are free to make arbitrary network calls, or perform CPU-bound
 # computations. Total execution duration must not exceed 10s.
-class MySyncOperation(SyncOperationHandler[MyInput, MyOutput]):
+class MySyncOperation(OperationHandler[MyInput, MyOutput]):
     # You can add an __init__ method taking any required arguments, since you are in
     # control of instantiating the OperationHandler inside the operation handler method
     # above decorated with @operation_handler.
@@ -110,3 +126,16 @@ class MySyncOperation(SyncOperationHandler[MyInput, MyOutput]):
     ) -> StartOperationResultSync[MyOutput]:
         output = MyOutput(message=f"Hello {input.name} from sync operation!")
         return StartOperationResultSync(output)
+
+    async def fetch_info(
+        self, ctx: FetchOperationInfoContext, input: MyInput
+    ) -> OperationInfo:
+        raise NotImplementedError
+
+    async def cancel(self, ctx: CancelOperationContext, input: MyInput) -> None:
+        raise NotImplementedError
+
+    async def fetch_result(
+        self, ctx: FetchOperationResultContext, input: MyInput
+    ) -> MyOutput:
+        raise NotImplementedError

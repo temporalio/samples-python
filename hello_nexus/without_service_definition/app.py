@@ -10,18 +10,12 @@ import uuid
 from typing import Optional
 
 from nexusrpc.handler import (
-    OperationHandler,
     StartOperationContext,
-    operation_handler,
     service_handler,
 )
-from temporalio import workflow
+from temporalio import nexus, workflow
 from temporalio.client import Client
-from temporalio.nexus.handler import (
-    WorkflowOperationToken,
-    WorkflowRunOperationHandler,
-    start_workflow,
-)
+from temporalio.nexus import workflow_run_operation_handler
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 from temporalio.workflow import NexusClient
 
@@ -50,20 +44,15 @@ class MyNexusServiceHandler:
     # which returns a WorkflowOperationToken. (Temporal server will then take care of
     # delivering the workflow result to the caller, using the Nexus RPC callback
     # mechanism).
-    @operation_handler
-    def my_workflow_run_operation(
-        self,
-    ) -> OperationHandler[str, str]:
-        async def start(
-            ctx: StartOperationContext, name: str
-        ) -> WorkflowOperationToken[str]:
-            return await start_workflow(
-                HandlerWorkflow.run,
-                name,
-                id=str(uuid.uuid4()),
-            )
-
-        return WorkflowRunOperationHandler.from_callable(start)
+    @workflow_run_operation_handler
+    async def my_workflow_run_operation(
+        self, ctx: StartOperationContext, name: str
+    ) -> nexus.WorkflowHandle[str]:
+        return await nexus.start_workflow(
+            HandlerWorkflow.run,
+            name,
+            id=str(uuid.uuid4()),
+        )
 
 
 #

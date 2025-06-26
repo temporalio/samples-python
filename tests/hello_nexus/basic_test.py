@@ -5,7 +5,6 @@ from temporalio.client import Client
 import hello_nexus.basic.caller.app
 import hello_nexus.basic.caller.workflows
 import hello_nexus.basic.handler.worker
-import hello_nexus.without_service_definition.app
 from tests.hello_nexus.helpers import create_nexus_endpoint, delete_nexus_endpoint
 
 

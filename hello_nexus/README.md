@@ -12,4 +12,3 @@ The samples in this directory form an introduction to Nexus.
 ### Samples
 
 - [basic](./basic) - Nexus service definition, operation handlers, and calling workflows.
-- [without_service_definition](./without_service_definition) - A Nexus service implementation without a service definition 

@@ -38,7 +38,7 @@ class HandlerWorkflow:
 # Here we define a nexus service by providing a service handler implementation without a
 # service contract. This nexus service has one operation.
 @service_handler
-class MyNexusServiceHandler:
+class MyNexusService:
     # Here we implement a Nexus operation backed by a Temporal workflow. The start
     # method must use TemporalOperationContext.start_workflow to start the workflow,
     # which returns a WorkflowOperationToken. (Temporal server will then take care of
@@ -70,9 +70,9 @@ class CallerWorkflow:
         # Normally, the first argument to both these calls would reference a service
         # contract class, but they can also reference your service handler class, as here.
 
-        nexus_client = NexusClient(MyNexusServiceHandler, endpoint=NEXUS_ENDPOINT)
+        nexus_client = NexusClient(MyNexusService, endpoint=NEXUS_ENDPOINT)
         return await nexus_client.execute_operation(
-            MyNexusServiceHandler.my_workflow_run_operation, message
+            MyNexusService.my_workflow_run_operation, message
         )
 
 
@@ -84,7 +84,7 @@ async def execute_caller_workflow(client: Optional[Client] = None) -> str:
         client,
         task_queue=TASK_QUEUE,
         workflows=[CallerWorkflow, HandlerWorkflow],
-        nexus_service_handlers=[MyNexusServiceHandler()],
+        nexus_service_handlers=[MyNexusService()],
         # TODO(dan): isinstance(op, nexusrpc.contract.Operation) is failing under the
         # sandbox in temporalio/worker/_interceptor.py
         workflow_runner=UnsandboxedWorkflowRunner(),

@@ -1,14 +1,37 @@
-# Nexus
+This sample shows how to define a Nexus service, implement the operation handlers, and
+call the operations from a workflow.
 
-Temporal Nexus is a feature of the Temporal platform designed to connect durable executions across team, namespace,
-region, and cloud boundaries. It promotes a more modular architecture for sharing a subset of your team’s capabilities
-via well-defined service API contracts for other teams to use. These can abstract underlying Temporal primitives such as
-Workflows, or execute arbitrary code.
+### Sample directory structure
 
-Learn more at [temporal.io/nexus](https://temporal.io/nexus).
+- [service.py](./service.py) - shared Nexus service definition
+- [caller](./caller) - a caller workflow that executes Nexus operations, together with a worker and starter code
+- [handler](./handler) - Nexus operation handlers, together with a workflow used by one of the Nexus operations, and a worker that polls for both workflow and Nexus tasks.
 
-The samples in this directory form an introduction to Nexus. 
 
-### Samples
+### Instructions
 
-- [basic](./basic) - Nexus service definition, operation handlers, and calling workflows.
+Start a Temporal server. (See the main samples repo [README](../README.md)).
+
+Run the following:
+
+```
+temporal operator namespace create --namespace hello-nexus-basic-handler-namespace
+temporal operator namespace create --namespace hello-nexus-basic-caller-namespace
+
+temporal operator nexus endpoint create \
+  --name hello-nexus-basic-nexus-endpoint \
+  --target-namespace hello-nexus-basic-handler-namespace \
+  --target-task-queue my-handler-task-queue \
+  --description-file endpoint_description.md
+```
+
+In one terminal, in this directory, run the Temporal worker in the handler namespace:
+```
+uv run handler/worker.py
+```
+
+In another terminal, in this directory, run the Temporal worker in the caller namespace and start the caller
+workflow:
+```
+uv run caller/app.py
+```

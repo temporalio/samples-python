@@ -8,7 +8,7 @@ import uuid
 
 from nexusrpc.handler import StartOperationContext, service_handler, sync_operation
 from temporalio import nexus
-from temporalio.nexus import workflow_run_operation
+from temporalio.nexus import WorkflowRunOperationContext, workflow_run_operation
 
 from hello_nexus.basic.handler.db_client import MyDBClient
 from hello_nexus.basic.handler.workflows import WorkflowStartedByNexusOperation
@@ -35,10 +35,10 @@ class MyNexusServiceHandler:
     # operation.
     @workflow_run_operation
     async def my_workflow_run_operation(
-        self, ctx: StartOperationContext, input: MyInput
+        self, ctx: WorkflowRunOperationContext, input: MyInput
     ) -> nexus.WorkflowHandle[MyOutput]:
         # You could use self.connected_db_client here.
-        return await nexus.start_workflow(
+        return await ctx.start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
             id=str(uuid.uuid4()),

@@ -21,7 +21,7 @@ from temporalio.workflow import NexusClient
 
 NAMESPACE = "my-namespace"
 TASK_QUEUE = "my-task-queue"
-NEXUS_ENDPOINT = "my-nexus-endpoint"
+NEXUS_ENDPOINT = "hello-nexus-basic-nexus-endpoint"
 
 #
 # Handler

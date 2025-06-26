@@ -14,7 +14,7 @@ Run the following:
 ```
 temporal operator namespace create --namespace my-namespace
 temporal operator nexus endpoint create \
-  --name my-nexus-endpoint \
+  --name hello-nexus-basic-nexus-endpoint \
   --handler-namespace my-namespace \
   --handler-task-queue my-task-queue
 ```

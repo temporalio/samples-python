@@ -11,7 +11,7 @@ from hello_nexus.basic.handler.workflows import WorkflowStartedByNexusOperation
 
 interrupt_event = asyncio.Event()
 
-NAMESPACE = "my-handler-namespace"
+NAMESPACE = "hello-nexus-basic-handler-namespace"
 TASK_QUEUE = "my-handler-task-queue"
 
 

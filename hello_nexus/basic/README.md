@@ -15,12 +15,12 @@ Start a Temporal server. (See the main samples repo [README](../../README.md)).
 Run the following:
 
 ```
-temporal operator namespace create --namespace my-handler-namespace
-temporal operator namespace create --namespace my-caller-namespace
+temporal operator namespace create --namespace hello-nexus-basic-handler-namespace
+temporal operator namespace create --namespace hello-nexus-basic-caller-namespace
 
 temporal operator nexus endpoint create \
-  --name my-nexus-endpoint \
-  --target-namespace my-handler-namespace \
+  --name hello-nexus-basic-nexus-endpoint \
+  --target-namespace hello-nexus-basic-handler-namespace \
   --target-task-queue my-handler-task-queue \
   --description-file endpoint_description.md
 ```

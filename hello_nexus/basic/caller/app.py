@@ -8,8 +8,8 @@ from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 from hello_nexus.basic.caller.workflows import CallerWorkflow
 from hello_nexus.basic.service import MyOutput
 
-NAMESPACE = "my-caller-namespace"
-TASK_QUEUE = "my-caller-task-queue"
+NAMESPACE = "hello-nexus-basic-caller-namespace"
+TASK_QUEUE = "hello-nexus-basic-caller-task-queue"
 
 
 async def execute_caller_workflow(

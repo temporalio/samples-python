@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 
 from temporalio.client import Client
-from temporalio.worker import UnsandboxedWorkflowRunner, Worker
+from temporalio.worker import Worker
 
 from hello_nexus.caller.workflows import CallerWorkflow
 from hello_nexus.service import MyOutput
@@ -24,9 +24,6 @@ async def execute_caller_workflow(
         client,
         task_queue=TASK_QUEUE,
         workflows=[CallerWorkflow],
-        # TODO(dan): isinstance(op, nexusrpc.contract.Operation) is failing under the
-        # sandbox in temporalio/worker/_interceptor.py
-        workflow_runner=UnsandboxedWorkflowRunner(),
     ):
         return await client.execute_workflow(
             CallerWorkflow.run,

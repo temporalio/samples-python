@@ -7,9 +7,6 @@ from temporalio.worker import Worker
 
 from hello_nexus.basic.handler.db_client import MyDBClient
 from hello_nexus.basic.handler.service_handler import MyNexusServiceHandler
-from hello_nexus.basic.handler.service_handler_with_operation_handler_classes import (
-    MyNexusServiceHandlerUsingOperationHandlerClasses,
-)
 from hello_nexus.basic.handler.workflows import WorkflowStartedByNexusOperation
 
 interrupt_event = asyncio.Event()
@@ -18,12 +15,7 @@ NAMESPACE = "my-handler-namespace"
 TASK_QUEUE = "my-handler-task-queue"
 
 
-async def main(
-    client: Optional[Client] = None,
-    # Change this to use the service handler defined in
-    # hello_nexus/basic/handler/service_handler_with_operation_handler_classes.py
-    use_operation_handler_classes: bool = False,
-):
+async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)
 
     client = client or await Client.connect(
@@ -36,14 +28,6 @@ async def main(
     # requests. In this example we provide a database client object to the service hander.
     connected_db_client = MyDBClient.connect()
 
-    my_nexus_service_handler = (
-        MyNexusServiceHandlerUsingOperationHandlerClasses(
-            connected_db_client=connected_db_client
-        )
-        if use_operation_handler_classes
-        else MyNexusServiceHandler(connected_db_client=connected_db_client)
-    )
-
     # Start the worker, passing the Nexus service handler instance, in addition to the
     # workflow classes that are started by your nexus operations, and any activities
     # needed. This Worker will poll for both workflow tasks and Nexus tasks (this example
@@ -52,7 +36,9 @@ async def main(
         client,
         task_queue=TASK_QUEUE,
         workflows=[WorkflowStartedByNexusOperation],
-        nexus_service_handlers=[my_nexus_service_handler],
+        nexus_service_handlers=[
+            MyNexusServiceHandler(connected_db_client=connected_db_client)
+        ],
     ):
         logging.info("Worker started, ctrl+c to exit")
         await interrupt_event.wait()

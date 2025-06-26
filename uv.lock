@@ -1420,7 +1420,6 @@ requires-dist = [{ name = "typing-extensions", specifier = ">=4.12.2" }]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "httpx", specifier = ">=0.28.1" },
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pydoctor", specifier = ">=25.4.0" },
     { name = "pyright", specifier = ">=1.1.400" },

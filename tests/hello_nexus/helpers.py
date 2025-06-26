@@ -6,8 +6,6 @@ import temporalio.api.nexus
 import temporalio.api.nexus.v1
 import temporalio.api.operatorservice
 import temporalio.api.operatorservice.v1
-import temporalio.nexus
-import temporalio.nexus.handler
 from temporalio.client import Client
 
 

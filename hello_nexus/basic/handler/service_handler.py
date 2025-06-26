@@ -1,12 +1,5 @@
 """
-This file demonstrates how to define operation handlers by using a "shorthand" style in
-which you implement the `start` method only. WorkflowRunOperationHandler implements
-`cancel` for you automatically, but apart from that, the other operation methods
-(`fetch_info`, `fetch_result`, and `cancel` for SyncOperationHandler) are all
-automatically created with "raise NotImplementedError" implementations.
-
-See hello_nexus/basic/handler/service_handler_with_operation_handler_classes.py for the
-alternative "fully manual" style where you implement an OperationHandler class directly.
+This file demonstrates how to implement a Nexus service.
 """
 
 from __future__ import annotations
@@ -54,10 +47,6 @@ class MyNexusServiceHandler:
     # This is a Nexus operation that responds synchronously to all requests. That means
     # that unlike the workflow run operation above, in this case the `start` method
     # returns the final operation result.
-    #
-    # Here it is implemented using SyncOperationHandler.from_callable.
-    # See service_handler_with_operation_handler_classes.py for an alternative style
-    # involving subclassing SyncOperationHandler and overriding the start method.
     #
     # Sync operations are free to make arbitrary network calls, or perform CPU-bound
     # computations. Total execution duration must not exceed 10s.

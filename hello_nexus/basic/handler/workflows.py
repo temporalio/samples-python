@@ -1,6 +1,7 @@
 from temporalio import workflow
 
-from hello_nexus.basic.service import MyInput, MyOutput
+with workflow.unsafe.imports_passed_through():
+    from hello_nexus.basic.service import MyInput, MyOutput
 
 
 # This is the workflow that is started by the `my_workflow_run_operation` nexus operation.

@@ -10,7 +10,7 @@ call the operations from a workflow.
 
 ### Instructions
 
-Start a Temporal server.
+Start a Temporal server. (See the main samples repo [README](../../README.md)).
 
 Run the following:
 
@@ -22,16 +22,16 @@ temporal operator nexus endpoint create \
   --name my-nexus-endpoint \
   --target-namespace my-handler-namespace \
   --target-task-queue my-handler-task-queue \
-  --description-file ./hello_nexus/basic/endpoint_description.md
+  --description-file endpoint_description.md
 ```
 
-In one terminal, run the Temporal worker in the handler namespace:
+In one terminal, in this directory, run the Temporal worker in the handler namespace:
 ```
-uv run hello_nexus/basic/handler/worker.py
+uv run handler/worker.py
 ```
 
-In another terminal, run the Temporal worker in the caller namespace and start the caller
+In another terminal, in this directory, run the Temporal worker in the caller namespace and start the caller
 workflow:
 ```
-uv run hello_nexus/basic/caller/app.py
+uv run caller/app.py
 ```

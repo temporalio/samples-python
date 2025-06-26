@@ -40,10 +40,9 @@ class HandlerWorkflow:
 @service_handler
 class MyNexusService:
     # Here we implement a Nexus operation backed by a Temporal workflow. The start
-    # method must use TemporalOperationContext.start_workflow to start the workflow,
-    # which returns a WorkflowOperationToken. (Temporal server will then take care of
-    # delivering the workflow result to the caller, using the Nexus RPC callback
-    # mechanism).
+    # method must use nexus.start_workflow to start the workflow. (Temporal server will
+    # then take care of delivering the workflow result to the caller, using the Nexus
+    # RPC callback mechanism).
     @workflow_run_operation
     async def my_workflow_run_operation(
         self, ctx: StartOperationContext, name: str

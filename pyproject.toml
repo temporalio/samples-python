@@ -76,7 +76,6 @@ default-groups = [
     "bedrock",
     "dsl",
     "encryption",
-    "expense",
     "gevent",
     "langchain",
     "open-telemetry",

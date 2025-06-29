@@ -7,7 +7,6 @@ from contextlib import asynccontextmanager
 from typing import Any, List, Optional, Type
 
 from temporalio.client import Client
-from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.worker import Worker
 
 

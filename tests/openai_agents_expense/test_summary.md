@@ -59,7 +59,6 @@ Located in: `tests/test_models.py`
 ### ✅ **Self-Contained Components**
 - **✅ Web UI** (`ui.py`) - Complete expense management interface
 - **✅ Basic Activities** (`activities/expense_activities.py`) - Core expense processing
-- **✅ UI Runner** (`run_ui.py`) - Convenient startup script  
 - **✅ All Dependencies** - Uses existing `expense` + `openai-agents` groups
 - **✅ Package Exports** - Proper `__init__.py` and `__all__` declarations
 

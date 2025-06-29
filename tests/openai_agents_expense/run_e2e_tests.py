@@ -12,7 +12,6 @@ Usage:
 """
 
 import argparse
-import asyncio
 import os
 import subprocess
 import sys
@@ -66,7 +65,7 @@ def check_temporal_server():
         async def test_connection():
             try:
                 # Simply try to connect - this will fail if server is not running
-                client = await Client.connect("localhost:7233")
+                await Client.connect("localhost:7233")
                 return True
             except Exception as e:
                 print(f"❌ Cannot connect to Temporal server: {e}")
@@ -106,9 +105,7 @@ def run_tests(test_args):
     cmd.extend(test_args)
 
     try:
-        result = subprocess.run(
-            cmd, check=True, cwd=Path(__file__).parent.parent.parent
-        )
+        subprocess.run(cmd, check=True, cwd=Path(__file__).parent.parent.parent)
         print("✅ All E2E tests passed!")
         return True
     except subprocess.CalledProcessError as e:

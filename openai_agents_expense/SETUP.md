@@ -17,7 +17,6 @@ This example contains all the necessary components:
 To make this example self-contained, the following components were copied and adapted:
 - `ui.py` - Web-based expense management interface
 - `expense_activities.py` - Basic expense processing activities
-- `run_ui.py` - UI server startup script
 
 ## Quick Start
 
@@ -54,8 +53,6 @@ In a new terminal, start the expense management UI:
 # From the openai_agents_expense directory
 python -m openai_agents_expense.ui
 
-# Or use the convenience script
-python run_ui.py
 ```
 
 The UI will be available at http://localhost:8099
@@ -174,7 +171,7 @@ This example is completely self-contained and does not depend on external exampl
 ```
 openai_agents_expense/
 ├── ui.py                    # Web-based expense management UI
-├── run_ui.py               # UI server startup script  
+  
 ├── activities/
 │   ├── expense_activities.py   # Basic expense processing activities
 │   └── web_search.py          # Web search activity for AI agents

@@ -3,9 +3,8 @@ Simple unit tests for the expense processing models and basic functionality.
 These tests don't require OpenAI SDK and should work on all Python versions.
 """
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
-from typing import List
 
 import pytest
 
@@ -20,7 +19,7 @@ def test_expense_report_creation():
         amount=Decimal("45.00"),
         description="Office supplies - pens, paper, folders",
         vendor="Staples Inc",
-        date=date.today(),
+        expense_date=date.today(),
         department="Engineering",
         employee_id="EMP-123",
         receipt_provided=True,
@@ -87,7 +86,6 @@ def test_policy_evaluation_model():
         violations=[],
         reasoning="All policies satisfied",
         requires_human_review=False,
-        mandatory_human_review=False,
         policy_explanation="Standard approval under $75",
         confidence=0.92,
     )
@@ -109,7 +107,6 @@ def test_policy_evaluation_model():
         violations=[violation],
         reasoning="International travel requires review",
         requires_human_review=True,
-        mandatory_human_review=True,
         policy_explanation="International travel policy",
         confidence=0.98,
     )
@@ -196,13 +193,12 @@ def test_expense_response_model():
     from openai_agents_expense.models import ExpenseResponse
 
     response = ExpenseResponse(
-        message="Your expense has been approved!",
         decision_summary="Approved - Standard office supplies",
         policy_explanation="Office supplies under $75 auto-approved",
         categorization_summary="Office Supplies from legitimate vendor",
     )
 
-    assert "approved" in response.message.lower()
+    assert "approved" in response.decision_summary.lower()
     assert "Approved" in response.decision_summary
     assert "Office Supplies" in response.categorization_summary
 

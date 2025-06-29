@@ -102,9 +102,6 @@ Systematic thresholds trigger human escalation:
 ```bash
 # Self-contained UI included in this example
 uv run -m openai_agents_expense.ui
-# Or use the convenience script:
-# TODO - don't really need the convenience script
-cd openai_agents_expense && python run_ui.py
 ```
 
 ### 2. Start the Worker
@@ -174,7 +171,6 @@ Each scenario includes:
 
 - ✅ **Web UI** (`ui.py`) - Complete expense management interface
 - ✅ **Basic Activities** (`activities/expense_activities.py`) - Core expense processing activities  
-- ✅ **UI Runner** (`run_ui.py`) - Convenient UI startup script
 - ✅ **All Dependencies** - Uses existing `expense` dependency group from pyproject.toml
 
 ## File Structure
@@ -185,7 +181,6 @@ openai_agents_expense/
 ├── worker.py                     # Temporal worker
 ├── starter.py                    # Workflow starter
 ├── ui.py                         # Self-contained expense management UI
-├── run_ui.py                     # UI server startup script
 ├── README.md                     # This file
 ├── SETUP.md                      # Detailed setup guide
 ├── ai_agents/                    # AI agent implementations

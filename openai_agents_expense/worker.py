@@ -25,11 +25,13 @@ from openai_agents_expense import TASK_QUEUE
 
 # Import the expense activities from this package (self-contained)
 from openai_agents_expense.activities import (
+    cleanup_http_client,
     create_expense_activity,
+    initialize_http_client,
     payment_activity,
-    wait_for_decision_activity,
+    register_for_decision_activity,
+    update_expense_activity,
 )
-from openai_agents_expense.activities.expense_activities import update_expense_activity
 from openai_agents_expense.workflows.expense_workflow import ExpenseWorkflow
 
 
@@ -45,6 +47,9 @@ async def main():
     temporal_logger.setLevel(temporal_log_level)
 
     logger.info("Starting OpenAI Agents Expense worker...")
+
+    # Initialize HTTP client before starting worker
+    await initialize_http_client()
 
     try:
         with set_open_ai_agent_temporal_overrides(
@@ -70,7 +75,7 @@ async def main():
                     model_activity.invoke_model_activity,
                     # UI and payment integration activities
                     create_expense_activity,
-                    wait_for_decision_activity,
+                    register_for_decision_activity,
                     payment_activity,
                     update_expense_activity,
                 ],
@@ -95,6 +100,9 @@ async def main():
     except Exception as e:
         logger.error(f"Worker failed to start: {e}")
         sys.exit(1)
+    finally:
+        # Cleanup HTTP client when worker shuts down
+        await cleanup_http_client()
 
 
 if __name__ == "__main__":

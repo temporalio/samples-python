@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 from datetime import timedelta
 
+from temporalio import workflow
 from temporalio.client import Client
 from temporalio.contrib.openai_agents.invoke_model_activity import ModelActivity
 from temporalio.contrib.openai_agents.open_ai_data_converter import (
@@ -31,7 +33,7 @@ async def main():
             data_converter=open_ai_data_converter,
         )
 
-        model_activity = ModelActivity()
+        model_activity = ModelActivity(model_provider=None)
         worker = Worker(
             client,
             task_queue="openai-agents-task-queue",

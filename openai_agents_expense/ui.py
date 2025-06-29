@@ -163,6 +163,7 @@ class ExpenseState:
 # Use memory store for this sample expense system
 all_expenses: Dict[str, ExpenseState] = {}
 token_map: Dict[str, bytes] = {}
+workflow_map: Dict[str, str] = {}  # Maps expense_id to workflow_id
 
 app = FastAPI()
 
@@ -194,24 +195,26 @@ async def list_handler():
 
     # Sort by creation time (newest first)
     sorted_expense_ids = sorted(
-        all_expenses.keys(), 
-        key=lambda x: all_expenses[x].created_at, 
-        reverse=True
+        all_expenses.keys(), key=lambda x: all_expenses[x].created_at, reverse=True
     )
     for expense_id in sorted_expense_ids:
         state = all_expenses[expense_id]
         action_link = ""
         if state.expense_review_state == "manager_review":
-            action_link = f"""
-                <a href="/action?type=approve&id={expense_id}">
-                    <button style="background-color:#4CAF50;">APPROVE</button>
-                </a>
-                &nbsp;&nbsp;
-                <a href="/action?type=reject&id={expense_id}">
-                    <button style="background-color:#f44336;">REJECT</button>
-                </a>
-            """
-        summary = format_expense_summary(state.summary)
+            action_link = (
+                f'<form method="post" action="/action" style="display:inline;">'
+                f'<input type="hidden" name="type" value="approve">'
+                f'<input type="hidden" name="id" value="{expense_id}">'
+                '<button type="submit" style="background-color:#4CAF50;">APPROVE</button>'
+                "</form>"
+                "&nbsp;&nbsp;"
+                f'<form method="post" action="/action" style="display:inline;">'
+                f'<input type="hidden" name="type" value="reject">'
+                f'<input type="hidden" name="id" value="{expense_id}">'
+                '<button type="submit" style="background-color:#f44336;">REJECT</button>'
+                "</form>"
+            )
+        summary = format_expense_summary(state.summary) if state.summary else "Pending"
         html += f'<tr style="border-bottom: 1px solid #ddd;"><td style="padding: 10px; vertical-align: top;">{expense_id}</td><td style="padding: 10px; vertical-align: top;">{state.expense_review_state}</td><td style="padding: 10px; vertical-align: top;">{action_link}</td><td style="padding: 10px; vertical-align: top;">{summary}</td></tr>'
 
     html += "</table>"
@@ -238,9 +241,9 @@ async def payment_handler(id: str):
     return RESPONSE_SUCCESS
 
 
-@app.get("/action", response_class=HTMLResponse)
+@app.post("/action")
 async def action_handler(
-    type: str = Query(...), id: str = Query(...), is_api_call: str = Query("false")
+    type: str = Form(...), id: str = Form(...), is_api_call: str = Form("false")
 ):
     if id not in all_expenses:
         return RESPONSE_ERROR_INVALID_ID
@@ -252,6 +255,8 @@ async def action_handler(
         updated_state = "approved"
     elif type == "reject":
         updated_state = "final_rejection"
+    elif type == "payment":
+        updated_state = "paid"
     else:
         return RESPONSE_ERROR_INVALID_TYPE
 
@@ -277,7 +282,7 @@ async def action_handler(
             await notify_expense_state_change(id, updated_state)
 
         print(f"Set state for {id} from {starting_state} to {updated_state}")
-        return RedirectResponse(url="/list", status_code=302)
+        return RedirectResponse(url="/list", status_code=303)
 
 
 @app.post("/create/{id}")
@@ -287,11 +292,19 @@ async def create_handler(id: str):
 
     # Create new ExpenseState object
     all_expenses[id] = ExpenseState(
-        summary=None, 
-        expense_review_state="uninitialized",
-        created_at=datetime.now()
+        summary=None, expense_review_state="uninitialized", created_at=datetime.now()
     )
 
+    return RESPONSE_SUCCESS
+
+
+@app.post("/registerWorkflow")
+async def register_workflow_handler(id: str = Query(...), workflow_id: str = Form(...)):
+    if id not in all_expenses:
+        return PlainTextResponse("ERROR:INVALID_ID")
+
+    print(f"Registered workflow for ID={id}, workflow_id={workflow_id}")
+    workflow_map[id] = workflow_id
     return RESPONSE_SUCCESS
 
 
@@ -337,21 +350,24 @@ async def review_handler(id: str, task_token: str = Form(...)):
 
 
 async def notify_expense_state_change(expense_id: str, state: ExpenseStatusType):
-    if expense_id not in token_map:
-        print(f"Invalid id: {expense_id}")
+    if expense_id not in workflow_map:
+        print(f"No workflow registered for expense ID: {expense_id}")
         return
 
     if workflow_client is None:
         print("Workflow client not initialized")
         return
 
-    token = token_map[expense_id]
+    workflow_id = workflow_map[expense_id]
     try:
-        handle = workflow_client.get_async_activity_handle(task_token=token)
-        await handle.complete(state)
-        print(f"Successfully complete activity: {token.hex()}")
+        # Send signal to workflow
+        handle = workflow_client.get_workflow_handle(workflow_id)
+        await handle.signal("expense_decision_signal", state)
+        print(
+            f"Successfully sent signal to workflow: {workflow_id} with decision: {state}"
+        )
     except Exception as err:
-        print(f"Failed to complete activity with error: {err}")
+        print(f"Failed to send signal to workflow with error: {err}")
 
 
 async def main():

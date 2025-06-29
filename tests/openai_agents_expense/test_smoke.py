@@ -6,13 +6,8 @@ These tests verify the E2E test framework works without making slow OpenAI API c
 
 import os
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
 
 import pytest
-
-from openai_agents_expense import TASK_QUEUE, WORKFLOW_ID_PREFIX
-from openai_agents_expense.models import ExpenseReport
-from openai_agents_expense.workflows.expense_workflow import ExpenseWorkflow
 
 
 class TestSmokeTests:
@@ -53,14 +48,14 @@ class TestSmokeTests:
             from openai_agents_expense.activities import (
                 create_expense_activity,
                 payment_activity,
-                wait_for_decision_activity,
+                register_for_decision_activity,
                 web_search_activity,
             )
 
             assert all(
                 [
                     create_expense_activity,
-                    wait_for_decision_activity,
+                    register_for_decision_activity,
                     payment_activity,
                     web_search_activity,
                 ]
@@ -68,26 +63,26 @@ class TestSmokeTests:
 
             # Test AI agents import
             from openai_agents_expense.ai_agents.category_agent import (
-                categorize_expense,
+                create_category_agent,
             )
             from openai_agents_expense.ai_agents.decision_orchestration_agent import (
-                make_agent_decision,
+                create_decision_orchestration_agent,
             )
-            from openai_agents_expense.ai_agents.fraud_agent import assess_fraud_risk
+            from openai_agents_expense.ai_agents.fraud_agent import create_fraud_agent
             from openai_agents_expense.ai_agents.policy_evaluation_agent import (
-                evaluate_policy_compliance,
+                create_policy_evaluation_agent,
             )
             from openai_agents_expense.ai_agents.response_agent import (
-                generate_expense_response,
+                create_response_agent,
             )
 
             assert all(
                 [
-                    categorize_expense,
-                    evaluate_policy_compliance,
-                    assess_fraud_risk,
-                    make_agent_decision,
-                    generate_expense_response,
+                    create_category_agent,
+                    create_policy_evaluation_agent,
+                    create_fraud_agent,
+                    create_decision_orchestration_agent,
+                    create_response_agent,
                 ]
             )
 
@@ -108,7 +103,7 @@ class TestSmokeTests:
             amount=Decimal("45.00"),
             description="Test office supplies",
             vendor="Test Vendor",
-            date=date(2024, 1, 15),
+            expense_date=date(2024, 1, 15),
             department="Engineering",
             employee_id="EMP-TEST",
             receipt_provided=True,
@@ -181,7 +176,7 @@ class TestSmokeTests:
             amount=Decimal("45.00"),
             description="Test office supplies",
             vendor="Test Vendor",
-            date=date(2024, 1, 15),
+            expense_date=date(2024, 1, 15),
             department="Engineering",
             employee_id="EMP-TEST",
             receipt_provided=True,

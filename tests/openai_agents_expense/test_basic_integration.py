@@ -2,7 +2,6 @@
 Basic integration tests to verify imports and structure work correctly.
 """
 
-import sys
 from datetime import date
 from decimal import Decimal
 
@@ -51,31 +50,29 @@ def test_basic_imports():
     except ImportError as e:
         pytest.fail(f"Could not import models: {e}")
 
-    # Test AI agent function imports
+    # Test AI agent creator function imports
     try:
-        from openai_agents_expense.ai_agents.category_agent import categorize_expense
+        from openai_agents_expense.ai_agents.category_agent import create_category_agent
         from openai_agents_expense.ai_agents.decision_orchestration_agent import (
-            make_agent_decision,
+            create_decision_orchestration_agent,
         )
-        from openai_agents_expense.ai_agents.fraud_agent import assess_fraud_risk
+        from openai_agents_expense.ai_agents.fraud_agent import create_fraud_agent
         from openai_agents_expense.ai_agents.policy_evaluation_agent import (
-            evaluate_policy_compliance,
+            create_policy_evaluation_agent,
         )
-        from openai_agents_expense.ai_agents.response_agent import (
-            generate_expense_response,
-        )
+        from openai_agents_expense.ai_agents.response_agent import create_response_agent
 
         assert all(
             [
-                categorize_expense,
-                evaluate_policy_compliance,
-                assess_fraud_risk,
-                make_agent_decision,
-                generate_expense_response,
+                create_category_agent,
+                create_policy_evaluation_agent,
+                create_fraud_agent,
+                create_decision_orchestration_agent,
+                create_response_agent,
             ]
         )
     except ImportError as e:
-        pytest.fail(f"Could not import AI agent functions: {e}")
+        pytest.fail(f"Could not import AI agent creator functions: {e}")
 
     # Test activity imports
     try:
@@ -95,7 +92,7 @@ def test_expense_report_creation():
         amount=Decimal("125.50"),
         description="Test expense for logging verification",
         vendor="Test Vendor LLC",
-        date=date.today(),
+        expense_date=date.today(),
         department="Engineering",
         employee_id="EMP-TEST",
         receipt_provided=True,
@@ -153,41 +150,43 @@ async def test_web_search_activity():
     assert "legitimacy_indicators" in analysis
 
 
-def test_ai_agent_function_signatures():
-    """Test that AI agent functions have expected signatures for logging"""
-    # Just verify functions are callable (they're async so we can't easily test return values)
-    import inspect
-
-    from openai_agents_expense.ai_agents.category_agent import categorize_expense
+def test_ai_agent_creator_functions():
+    """Test that AI agent creator functions work correctly"""
+    from openai_agents_expense.ai_agents.category_agent import create_category_agent
     from openai_agents_expense.ai_agents.decision_orchestration_agent import (
-        make_agent_decision,
+        create_decision_orchestration_agent,
     )
-    from openai_agents_expense.ai_agents.fraud_agent import assess_fraud_risk
+    from openai_agents_expense.ai_agents.fraud_agent import create_fraud_agent
     from openai_agents_expense.ai_agents.policy_evaluation_agent import (
-        evaluate_policy_compliance,
+        create_policy_evaluation_agent,
     )
-    from openai_agents_expense.ai_agents.response_agent import generate_expense_response
+    from openai_agents_expense.ai_agents.response_agent import create_response_agent
 
-    assert inspect.iscoroutinefunction(categorize_expense)
-    assert inspect.iscoroutinefunction(evaluate_policy_compliance)
-    assert inspect.iscoroutinefunction(assess_fraud_risk)
-    assert inspect.iscoroutinefunction(make_agent_decision)
-    assert inspect.iscoroutinefunction(generate_expense_response)
+    # Test that creator functions return Agent objects and are callable
+    category_agent = create_category_agent()
+    policy_agent = create_policy_evaluation_agent()
+    fraud_agent = create_fraud_agent()
+    decision_agent = create_decision_orchestration_agent()
+    response_agent = create_response_agent()
 
-    # Check expected parameter counts
-    assert len(inspect.signature(categorize_expense).parameters) == 1  # expense_report
-    assert (
-        len(inspect.signature(evaluate_policy_compliance).parameters) == 2
-    )  # expense_report, categorization
-    assert (
-        len(inspect.signature(assess_fraud_risk).parameters) == 2
-    )  # expense_report, categorization
-    assert (
-        len(inspect.signature(make_agent_decision).parameters) == 4
-    )  # expense_report, categorization, policy_eval, fraud_assessment
-    assert (
-        len(inspect.signature(generate_expense_response).parameters) == 4
-    )  # expense_report, categorization, policy_eval, agent_decision
+    # Verify all agents have the expected attributes
+    for agent in [
+        category_agent,
+        policy_agent,
+        fraud_agent,
+        decision_agent,
+        response_agent,
+    ]:
+        assert hasattr(agent, "name")
+        assert hasattr(agent, "instructions")
+        assert hasattr(agent, "output_type")
+
+    # Verify specific agent names
+    assert category_agent.name == "CategoryAgent"
+    assert policy_agent.name == "PolicyEvaluationAgent"
+    assert fraud_agent.name == "FraudAgent"
+    assert decision_agent.name == "DecisionOrchestrationAgent"
+    assert response_agent.name == "ResponseAgent"
 
 
 if __name__ == "__main__":

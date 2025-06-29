@@ -18,61 +18,57 @@ class TestAgentImports:
 
     def test_category_agent_imports(self):
         """Test CategoryAgent components can be imported"""
-        from openai_agents_expense.ai_agents.category_agent import (
-            categorize_expense,
-            create_category_agent,
-        )
+        from openai_agents_expense.ai_agents.category_agent import create_category_agent
 
         # Verify functions exist and are callable
-        assert callable(categorize_expense)
         assert callable(create_category_agent)
 
     def test_policy_evaluation_agent_imports(self):
         """Test PolicyEvaluationAgent components can be imported"""
         from openai_agents_expense.ai_agents.policy_evaluation_agent import (
-            evaluate_policy_compliance,
+            create_policy_evaluation_agent,
         )
 
-        assert callable(evaluate_policy_compliance)
+        assert callable(create_policy_evaluation_agent)
 
     def test_fraud_agent_imports(self):
         """Test FraudAgent components can be imported"""
-        from openai_agents_expense.ai_agents.fraud_agent import assess_fraud_risk
+        from openai_agents_expense.ai_agents.fraud_agent import create_fraud_agent
 
-        assert callable(assess_fraud_risk)
+        assert callable(create_fraud_agent)
 
     def test_decision_orchestration_agent_imports(self):
         """Test DecisionOrchestrationAgent components can be imported"""
         from openai_agents_expense.ai_agents.decision_orchestration_agent import (
-            make_agent_decision,
+            create_decision_orchestration_agent,
         )
 
-        assert callable(make_agent_decision)
+        assert callable(create_decision_orchestration_agent)
 
     def test_response_agent_imports(self):
         """Test ResponseAgent components can be imported"""
-        from openai_agents_expense.ai_agents.response_agent import (
-            generate_expense_response,
-        )
+        from openai_agents_expense.ai_agents.response_agent import create_response_agent
 
-        assert callable(generate_expense_response)
+        assert callable(create_response_agent)
 
     def test_all_agents_via_package_import(self):
-        """Test all agent functions can be imported via the package"""
-        from openai_agents_expense.ai_agents import (
-            assess_fraud_risk,
-            categorize_expense,
-            evaluate_policy_compliance,
-            generate_expense_response,
-            make_agent_decision,
+        """Test all agent creator functions can be imported via individual modules"""
+        from openai_agents_expense.ai_agents.category_agent import create_category_agent
+        from openai_agents_expense.ai_agents.decision_orchestration_agent import (
+            create_decision_orchestration_agent,
         )
+        from openai_agents_expense.ai_agents.fraud_agent import create_fraud_agent
+        from openai_agents_expense.ai_agents.policy_evaluation_agent import (
+            create_policy_evaluation_agent,
+        )
+        from openai_agents_expense.ai_agents.response_agent import create_response_agent
 
         # Verify all functions are callable
-        assert callable(categorize_expense)
-        assert callable(evaluate_policy_compliance)
-        assert callable(assess_fraud_risk)
-        assert callable(make_agent_decision)
-        assert callable(generate_expense_response)
+        assert callable(create_category_agent)
+        assert callable(create_policy_evaluation_agent)
+        assert callable(create_fraud_agent)
+        assert callable(create_decision_orchestration_agent)
+        assert callable(create_response_agent)
 
 
 class TestAgentCreation:
@@ -143,7 +139,7 @@ class TestModelsIntegration:
             amount=Decimal("45.00"),
             description="Test expense",
             vendor="Test Vendor",
-            date=date.today(),
+            expense_date=date.today(),
             department="Engineering",
             employee_id="EMP-123",
             receipt_provided=True,
@@ -195,13 +191,13 @@ class TestActivitiesIntegration:
         from openai_agents_expense.activities import (
             create_expense_activity,
             payment_activity,
-            wait_for_decision_activity,
+            register_for_decision_activity,
             web_search_activity,
         )
 
         # Verify activities are callable
         assert callable(create_expense_activity)
-        assert callable(wait_for_decision_activity)
+        assert callable(register_for_decision_activity)
         assert callable(payment_activity)
         assert callable(web_search_activity)
 
@@ -237,13 +233,9 @@ class TestUIIntegration:
 
     def test_ui_imports(self):
         """Test UI components can be imported"""
-        from openai_agents_expense.ui import ExpenseReviewState, main
+        from openai_agents_expense.ui import main
 
         assert callable(main)
-        assert hasattr(ExpenseReviewState, "CREATED")
-        assert hasattr(ExpenseReviewState, "APPROVED")
-        assert hasattr(ExpenseReviewState, "REJECTED")
-        assert hasattr(ExpenseReviewState, "COMPLETED")
 
 
 class TestSelfContainedConfiguration:

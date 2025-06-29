@@ -34,30 +34,7 @@ def get_http_client() -> httpx.AsyncClient:
 
 @activity.defn
 async def create_expense_activity(expense_id: str) -> None:
-    """
-    Create a new expense entry in the expense system.
-    """
-
-    # Activity start logging
-    activity.logger.info(
-        f"📝 CREATE_EXPENSE_START: Creating expense entry",
-        extra={
-            "expense_id": expense_id,
-            "activity": "create_expense_activity",
-            "stage": "start",
-        },
-    )
-
     if not expense_id:
-        activity.logger.error(
-            f"🚨 CREATE_EXPENSE_ERROR: Empty expense ID",
-            extra={
-                "expense_id": expense_id,
-                "activity": "create_expense_activity",
-                "stage": "validation_error",
-                "error": "expense id is empty",
-            },
-        )
         raise ValueError("expense id is empty")
 
     client = get_http_client()
@@ -77,37 +54,10 @@ async def create_expense_activity(expense_id: str) -> None:
 
     body = response.text
 
-    activity.logger.info(
-        f"📨 HTTP_RESPONSE: Received response from expense server",
-        extra={
-            "expense_id": expense_id,
-            "activity": "create_expense_activity",
-            "stage": "http_response",
-            "response_text": body,
-            "status_code": response.status_code,
-        },
-    )
-
     if body == "SUCCEED":
-        activity.logger.info(
-            f"✅ CREATE_EXPENSE_SUCCESS: Expense entry created successfully",
-            extra={
-                "expense_id": expense_id,
-                "activity": "create_expense_activity",
-                "stage": "success",
-            },
-        )
+        activity.logger.info(f"Expense created. ExpenseID: {expense_id}")
         return
 
-    activity.logger.error(
-        f"🚨 CREATE_EXPENSE_FAILURE: Failed to create expense entry",
-        extra={
-            "expense_id": expense_id,
-            "activity": "create_expense_activity",
-            "stage": "failure",
-            "response_text": body,
-        },
-    )
     raise Exception(body)
 
 
@@ -143,30 +93,7 @@ async def register_for_decision_activity(expense_id: str) -> None:
 
 @activity.defn
 async def payment_activity(expense_id: str) -> None:
-    """
-    Process payment for an approved expense.
-    """
-
-    # Activity start logging
-    activity.logger.info(
-        f"💳 PAYMENT_START: Starting payment processing",
-        extra={
-            "expense_id": expense_id,
-            "activity": "payment_activity",
-            "stage": "start",
-        },
-    )
-
     if not expense_id:
-        activity.logger.error(
-            f"🚨 PAYMENT_ERROR: Empty expense ID",
-            extra={
-                "expense_id": expense_id,
-                "activity": "payment_activity",
-                "stage": "validation_error",
-                "error": "expense id is empty",
-            },
-        )
         raise ValueError("expense id is empty")
 
     client = get_http_client()
@@ -186,35 +113,8 @@ async def payment_activity(expense_id: str) -> None:
 
     body = response.text
 
-    activity.logger.info(
-        f"📨 HTTP_RESPONSE: Received payment response from expense server",
-        extra={
-            "expense_id": expense_id,
-            "activity": "payment_activity",
-            "stage": "http_response",
-            "response_text": body,
-            "status_code": response.status_code,
-        },
-    )
-
     if body == "SUCCEED":
-        activity.logger.info(
-            f"✅ PAYMENT_SUCCESS: Payment processed successfully",
-            extra={
-                "expense_id": expense_id,
-                "activity": "payment_activity",
-                "stage": "success",
-            },
-        )
+        activity.logger.info(f"payment_activity succeed ExpenseID: {expense_id}")
         return
 
-    activity.logger.error(
-        f"🚨 PAYMENT_FAILURE: Payment processing failed",
-        extra={
-            "expense_id": expense_id,
-            "activity": "payment_activity",
-            "stage": "failure",
-            "response_text": body,
-        },
-    )
     raise Exception(body)

@@ -18,7 +18,8 @@ async def client():
     try:
         from temporalio.testing import WorkflowEnvironment
 
-        async with WorkflowEnvironment.start_time_skipping() as env:
+        env = await WorkflowEnvironment.start_time_skipping()
+        async with env:
             yield env.client
     except ImportError:
         # Skip if temporal is not available
@@ -36,7 +37,7 @@ def sample_expense_report():
             amount=Decimal("45.00"),
             description="Office supplies - pens, paper, folders",
             vendor="Staples Inc",
-            date=date.today(),
+            expense_date=date.today(),
             department="Engineering",
             employee_id="EMP-123",
             receipt_provided=True,
@@ -59,7 +60,7 @@ def international_travel_expense():
         amount=Decimal("400.00"),
         description="Flight to London for business meeting",
         vendor="British Airways",
-        date=date.today(),
+        expense_date=date.today(),
         department="Sales",
         employee_id="EMP-456",
         receipt_provided=True,
@@ -80,7 +81,7 @@ def suspicious_vendor_expense():
         amount=Decimal("200.00"),
         description="Business meal with client",
         vendor="Joe's Totally Legit Restaurant LLC",
-        date=date.today(),
+        expense_date=date.today(),
         department="Marketing",
         employee_id="EMP-789",
         receipt_provided=True,
@@ -127,7 +128,6 @@ def compliant_policy_evaluation():
         violations=[],
         reasoning="Office supplies expense under $75, fully compliant with all policies",
         requires_human_review=False,
-        mandatory_human_review=False,
         policy_explanation="Office supplies under $75 are automatically approved when from legitimate vendors",
         confidence=0.92,
     )

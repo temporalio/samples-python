@@ -48,8 +48,8 @@ with workflow.unsafe.imports_passed_through():
         UpdateExpenseActivityInput,
         create_expense_activity,
         payment_activity,
+        register_for_decision_activity,
         update_expense_activity,
-        wait_for_decision_activity,
     )
     from openai_agents_expense.ai_agents.category_agent import create_category_agent
     from openai_agents_expense.ai_agents.fraud_agent import create_fraud_agent
@@ -71,6 +71,12 @@ class ExpenseWorkflow:
             last_updated=workflow.now(),
         )
         self._processing_result = ExpenseProcessingData()
+        self.expense_decision: str = ""
+
+    @workflow.signal
+    async def expense_decision_signal(self, decision: str) -> None:
+        """Signal handler for expense decision."""
+        self.expense_decision = decision
 
     async def _update_status(self, status: ExpenseStatusType, **kwargs) -> None:
         """Update expense processing status."""
@@ -124,7 +130,7 @@ class ExpenseWorkflow:
         )
         await workflow.execute_activity(
             create_expense_activity,
-            expense_report,
+            expense_report.expense_id,
             start_to_close_timeout=timedelta(seconds=30),
         )
         workflow.logger.info(f"✅ EXPENSE_CREATED: {expense_report.expense_id}")
@@ -270,15 +276,26 @@ class ExpenseWorkflow:
 
         await self._update_status("manager_review")
 
-        # Wait for human decision
+        # Register for decision and wait for signal
+        try:
+            await workflow.execute_activity(
+                register_for_decision_activity,
+                expense_id,
+                start_to_close_timeout=timedelta(seconds=10),
+            )
+        except Exception as err:
+            workflow.logger.exception(f"Failed to register for decision: {err}")
+            raise
+
+        # Wait for human decision via signal
         workflow.logger.info(
-            f"⏳ HUMAN_WAIT: Waiting for human decision on {expense_id}"
+            f"⏳ HUMAN_WAIT: Waiting for human decision signal on {expense_id}"
         )
-        human_decision: ExpenseStatusType = await workflow.execute_activity(
-            wait_for_decision_activity,
-            expense_id,
-            start_to_close_timeout=timedelta(minutes=30),
+        await workflow.wait_condition(
+            lambda: self.expense_decision != "", timeout=timedelta(minutes=30)
         )
+
+        human_decision = self.expense_decision
         workflow.logger.info(f"👤 HUMAN_DECISION: {human_decision} for {expense_id}")
 
         # TODO - make these codes constants

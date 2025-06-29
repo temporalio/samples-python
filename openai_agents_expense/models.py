@@ -9,7 +9,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # Valid expense status values
 ExpenseStatusType = Literal[
@@ -133,10 +133,17 @@ class PolicyViolation(BaseModel):
     )
     threshold_amount: Optional[Decimal] = Field(
         default=None,
-        description="Dollar threshold associated with this violation, if applicable",
+        description="Dollar threshold associated with this violation, if applicable (use null for non-applicable)",
         gt=0,
         decimal_places=2,
     )
+
+    @field_validator("threshold_amount", mode="before")
+    @classmethod
+    def validate_threshold_amount(cls, v):
+        if v == "N/A" or v == "":
+            return None
+        return v
 
 
 class PolicyEvaluation(BaseModel):

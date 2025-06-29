@@ -58,6 +58,10 @@ def create_policy_evaluation_agent() -> Agent:
     - "information_missing": Required information not provided
     - "mandatory_review": Requires mandatory human review per policy rules
 
+    THRESHOLD AMOUNTS:
+    - Use actual dollar amounts for threshold violations (e.g., 500.00 for $500 flight limit)
+    - Use null (not "N/A") when no specific threshold applies to the violation
+
     SEVERITY LEVELS:
     - "warning": Minor issue that should be noted
     - "requires_review": Issue that needs human evaluation

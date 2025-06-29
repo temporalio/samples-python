@@ -98,6 +98,7 @@ async def update_expense_activity(
     """
     Update the expense entry in the expense system.
     """
+    # raise Exception("test2")
     async with httpx.AsyncClient() as client:
 
         response = await client.post(

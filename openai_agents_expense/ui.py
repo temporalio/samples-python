@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Dict, Optional
 
 import uvicorn
@@ -156,6 +157,7 @@ RESPONSE_ERROR_INVALID_FORM_DATA = PlainTextResponse("ERROR:INVALID_FORM_DATA")
 class ExpenseState:
     summary: Optional[ExpenseProcessingData]
     expense_review_state: ExpenseStatusType
+    created_at: datetime
 
 
 # Use memory store for this sample expense system
@@ -190,8 +192,13 @@ async def list_handler():
         </tr>
     """
 
-    # Sort keys for consistent display
-    for expense_id in sorted(all_expenses.keys()):
+    # Sort by creation time (newest first)
+    sorted_expense_ids = sorted(
+        all_expenses.keys(), 
+        key=lambda x: all_expenses[x].created_at, 
+        reverse=True
+    )
+    for expense_id in sorted_expense_ids:
         state = all_expenses[expense_id]
         action_link = ""
         if state.expense_review_state == "manager_review":
@@ -279,7 +286,11 @@ async def create_handler(id: str):
         return RESPONSE_ERROR_ID_ALREADY_EXISTS
 
     # Create new ExpenseState object
-    all_expenses[id] = ExpenseState(summary=None, expense_review_state="uninitialized")
+    all_expenses[id] = ExpenseState(
+        summary=None, 
+        expense_review_state="uninitialized",
+        created_at=datetime.now()
+    )
 
     return RESPONSE_SUCCESS
 

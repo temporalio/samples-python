@@ -1,0 +1,12 @@
+# E2E Test Requirements for OpenAI Agents Expense Processing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0
+fastapi>=0.100.0
+python-dotenv>=1.0.0
+temporalio>=1.5.0
+
+# Optional for more detailed test reporting
+pytest-html>=3.1.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0 

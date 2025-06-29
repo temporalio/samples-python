@@ -3,6 +3,7 @@ Tests for the SampleExpenseWorkflow orchestration logic.
 Focuses on workflow behavior, decision paths, and error propagation.
 """
 
+import asyncio
 import uuid
 from datetime import timedelta
 
@@ -16,6 +17,45 @@ from temporalio.worker import Worker
 from expense.workflow import SampleExpenseWorkflow
 
 
+class MockExpenseUI:
+    """Mock UI that simulates the expense approval system"""
+
+    def __init__(self, client: Client):
+        self.client = client
+        self.workflow_map: dict[str, str] = {}
+        self.scheduled_decisions: dict[str, str] = {}
+
+    def register_workflow(self, expense_id: str, workflow_id: str):
+        """Register a workflow for an expense (simulates UI registration)"""
+        self.workflow_map[expense_id] = workflow_id
+
+    def schedule_decision(self, expense_id: str, decision: str, delay: float = 0.1):
+        """Schedule a decision to be made after a delay (simulates human decision)"""
+        self.scheduled_decisions[expense_id] = decision
+
+        async def send_decision():
+            await asyncio.sleep(delay)
+            if expense_id in self.workflow_map:
+                workflow_id = self.workflow_map[expense_id]
+                handle = self.client.get_workflow_handle(workflow_id)
+                await handle.signal("expense_decision_signal", decision)
+
+        asyncio.create_task(send_decision())
+
+    def create_register_activity(self):
+        """Create a register activity that works with this mock UI"""
+
+        @activity.defn(name="register_for_decision_activity")
+        async def register_decision_activity(expense_id: str) -> None:
+            # Simulate automatic decision if one was scheduled
+            if expense_id in self.scheduled_decisions:
+                # Decision will be sent by the scheduled task
+                pass
+            return None
+
+        return register_decision_activity
+
+
 class TestWorkflowPaths:
     """Test main workflow execution paths"""
 
@@ -24,14 +64,17 @@ class TestWorkflowPaths:
     ):
         """Test complete approved expense workflow - Happy Path"""
         task_queue = f"test-expense-approved-{uuid.uuid4()}"
+        workflow_id = f"test-workflow-approved-{uuid.uuid4()}"
+        expense_id = "test-expense-approved"
+
+        # Set up mock UI
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "APPROVED")
 
         @activity.defn(name="create_expense_activity")
         async def create_expense_mock(expense_id: str) -> None:
             return None
-
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            return "APPROVED"
 
         @activity.defn(name="payment_activity")
         async def payment_mock(expense_id: str) -> None:
@@ -41,12 +84,16 @@ class TestWorkflowPaths:
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
-            activities=[create_expense_mock, wait_for_decision_mock, payment_mock],
+            activities=[
+                create_expense_mock,
+                mock_ui.create_register_activity(),
+                payment_mock,
+            ],
         ):
             result = await client.execute_workflow(
                 SampleExpenseWorkflow.run,
-                "test-expense-approved",
-                id=f"test-workflow-approved-{uuid.uuid4()}",
+                expense_id,
+                id=workflow_id,
                 task_queue=task_queue,
             )
 
@@ -57,25 +104,28 @@ class TestWorkflowPaths:
     ):
         """Test rejected expense workflow - Returns empty string"""
         task_queue = f"test-expense-rejected-{uuid.uuid4()}"
+        workflow_id = f"test-workflow-rejected-{uuid.uuid4()}"
+        expense_id = "test-expense-rejected"
+
+        # Set up mock UI
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "REJECTED")
 
         @activity.defn(name="create_expense_activity")
         async def create_expense_mock(expense_id: str) -> None:
             return None
 
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            return "REJECTED"
-
         async with Worker(
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
-            activities=[create_expense_mock, wait_for_decision_mock],
+            activities=[create_expense_mock, mock_ui.create_register_activity()],
         ):
             result = await client.execute_workflow(
                 SampleExpenseWorkflow.run,
-                "test-expense-rejected",
-                id=f"test-workflow-rejected-{uuid.uuid4()}",
+                expense_id,
+                id=workflow_id,
                 task_queue=task_queue,
             )
 
@@ -86,25 +136,28 @@ class TestWorkflowPaths:
     ):
         """Test that non-APPROVED decisions are treated as rejection"""
         task_queue = f"test-expense-other-{uuid.uuid4()}"
+        workflow_id = f"test-workflow-other-{uuid.uuid4()}"
+        expense_id = "test-expense-other"
+
+        # Set up mock UI with PENDING decision
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "PENDING")  # Any non-APPROVED value
 
         @activity.defn(name="create_expense_activity")
         async def create_expense_mock(expense_id: str) -> None:
             return None
 
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            return "PENDING"  # Any non-APPROVED value
-
         async with Worker(
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
-            activities=[create_expense_mock, wait_for_decision_mock],
+            activities=[create_expense_mock, mock_ui.create_register_activity()],
         ):
             result = await client.execute_workflow(
                 SampleExpenseWorkflow.run,
-                "test-expense-other",
-                id=f"test-workflow-other-{uuid.uuid4()}",
+                expense_id,
+                id=workflow_id,
                 task_queue=task_queue,
             )
 
@@ -127,14 +180,17 @@ class TestWorkflowPaths:
         ]
 
         for decision, expected_result in test_cases:
+            workflow_id = f"test-workflow-decision-{decision.lower()}-{uuid.uuid4()}"
+            expense_id = f"test-expense-{decision.lower()}"
+
+            # Set up mock UI with specific decision
+            mock_ui = MockExpenseUI(client)
+            mock_ui.register_workflow(expense_id, workflow_id)
+            mock_ui.schedule_decision(expense_id, decision)
 
             @activity.defn(name="create_expense_activity")
             async def create_expense_mock(expense_id: str) -> None:
                 return None
-
-            @activity.defn(name="wait_for_decision_activity")
-            async def wait_for_decision_mock(expense_id: str) -> str:
-                return decision
 
             @activity.defn(name="payment_activity")
             async def payment_mock(expense_id: str) -> None:
@@ -144,12 +200,16 @@ class TestWorkflowPaths:
                 client,
                 task_queue=task_queue,
                 workflows=[SampleExpenseWorkflow],
-                activities=[create_expense_mock, wait_for_decision_mock, payment_mock],
+                activities=[
+                    create_expense_mock,
+                    mock_ui.create_register_activity(),
+                    payment_mock,
+                ],
             ):
                 result = await client.execute_workflow(
                     SampleExpenseWorkflow.run,
-                    f"test-expense-{decision.lower()}",
-                    id=f"test-workflow-decision-{decision.lower()}-{uuid.uuid4()}",
+                    expense_id,
+                    id=workflow_id,
                     task_queue=task_queue,
                 )
 
@@ -195,8 +255,8 @@ class TestWorkflowFailures:
         async def create_expense_mock(expense_id: str) -> None:
             return None
 
-        @activity.defn(name="wait_for_decision_activity")
-        async def failing_wait_decision(expense_id: str) -> str:
+        @activity.defn(name="register_for_decision_activity")
+        async def failing_wait_decision(expense_id: str) -> None:
             raise ApplicationError("Failed to register callback", non_retryable=True)
 
         async with Worker(
@@ -218,14 +278,17 @@ class TestWorkflowFailures:
     ):
         """Test workflow when payment activity fails after approval"""
         task_queue = f"test-payment-failure-{uuid.uuid4()}"
+        workflow_id = f"test-workflow-payment-fail-{uuid.uuid4()}"
+        expense_id = "test-expense-payment-fail"
+
+        # Set up mock UI with APPROVED decision
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "APPROVED")
 
         @activity.defn(name="create_expense_activity")
         async def create_expense_mock(expense_id: str) -> None:
             return None
-
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            return "APPROVED"
 
         @activity.defn(name="payment_activity")
         async def failing_payment(expense_id: str):
@@ -235,13 +298,17 @@ class TestWorkflowFailures:
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
-            activities=[create_expense_mock, wait_for_decision_mock, failing_payment],
+            activities=[
+                create_expense_mock,
+                mock_ui.create_register_activity(),
+                failing_payment,
+            ],
         ):
             with pytest.raises(WorkflowFailureError):
                 await client.execute_workflow(
                     SampleExpenseWorkflow.run,
-                    "test-expense-payment-fail",
-                    id=f"test-workflow-payment-fail-{uuid.uuid4()}",
+                    expense_id,
+                    id=workflow_id,
                     task_queue=task_queue,
                 )
 
@@ -254,7 +321,14 @@ class TestWorkflowConfiguration:
     ):
         """Test that workflow uses correct timeout configurations"""
         task_queue = f"test-timeouts-{uuid.uuid4()}"
+        workflow_id = f"test-workflow-timeouts-{uuid.uuid4()}"
+        expense_id = "test-expense-timeouts"
         timeout_calls = []
+
+        # Set up mock UI with APPROVED decision
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "APPROVED")
 
         @activity.defn(name="create_expense_activity")
         async def create_expense_timeout_check(expense_id: str) -> None:
@@ -263,13 +337,6 @@ class TestWorkflowConfiguration:
             timeout_calls.append(("create", activity_info.start_to_close_timeout))
             return None
 
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_decision_timeout_check(expense_id: str) -> str:
-            # Check that we're called with 10 minute timeout
-            activity_info = activity.info()
-            timeout_calls.append(("wait", activity_info.start_to_close_timeout))
-            return "APPROVED"
-
         @activity.defn(name="payment_activity")
         async def payment_timeout_check(expense_id: str) -> None:
             # Check that we're called with 10 second timeout
@@ -277,20 +344,35 @@ class TestWorkflowConfiguration:
             timeout_calls.append(("payment", activity_info.start_to_close_timeout))
             return None
 
+        # Create register activity that captures timeout info
+        def create_timeout_checking_register_activity():
+            @activity.defn(name="register_for_decision_activity")
+            async def register_decision_timeout_check(expense_id: str) -> None:
+                # Check that we're called with 10 minute timeout
+                activity_info = activity.info()
+                timeout_calls.append(("wait", activity_info.start_to_close_timeout))
+                # Simulate automatic decision if one was scheduled
+                if expense_id in mock_ui.scheduled_decisions:
+                    # Decision will be sent by the scheduled task
+                    pass
+                return None
+
+            return register_decision_timeout_check
+
         async with Worker(
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
             activities=[
                 create_expense_timeout_check,
-                wait_decision_timeout_check,
+                create_timeout_checking_register_activity(),
                 payment_timeout_check,
             ],
         ):
             await client.execute_workflow(
                 SampleExpenseWorkflow.run,
-                "test-expense-timeouts",
-                id=f"test-workflow-timeouts-{uuid.uuid4()}",
+                expense_id,
+                id=workflow_id,
                 task_queue=task_queue,
             )
 
@@ -305,7 +387,9 @@ class TestWorkflowConfiguration:
             )
 
             assert create_timeout == timedelta(seconds=10)
-            assert wait_timeout == timedelta(minutes=10)
+            assert wait_timeout == timedelta(
+                seconds=10
+            )  # register activity timeout is 10 seconds
             assert payment_timeout == timedelta(seconds=10)
 
 
@@ -317,17 +401,19 @@ class TestWorkflowFromSimpleFile:
     ):
         """Test workflow with mocked activities"""
         task_queue = f"test-expense-{uuid.uuid4()}"
+        workflow_id = f"test-expense-workflow-{uuid.uuid4()}"
+        expense_id = "test-expense-id"
+
+        # Set up mock UI with APPROVED decision
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "APPROVED")
 
         # Mock the activities to return expected values
         @activity.defn(name="create_expense_activity")
         async def create_expense_mock(expense_id: str) -> None:
             # Mock succeeds by returning None
             return None
-
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            # Mock returns APPROVED
-            return "APPROVED"
 
         @activity.defn(name="payment_activity")
         async def payment_mock(expense_id: str) -> None:
@@ -338,13 +424,17 @@ class TestWorkflowFromSimpleFile:
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
-            activities=[create_expense_mock, wait_for_decision_mock, payment_mock],
+            activities=[
+                create_expense_mock,
+                mock_ui.create_register_activity(),
+                payment_mock,
+            ],
         ):
             # Execute workflow
             result = await client.execute_workflow(
                 SampleExpenseWorkflow.run,
-                "test-expense-id",
-                id=f"test-expense-workflow-{uuid.uuid4()}",
+                expense_id,
+                id=workflow_id,
                 task_queue=task_queue,
             )
 
@@ -356,6 +446,13 @@ class TestWorkflowFromSimpleFile:
     ):
         """Test workflow when expense is rejected"""
         task_queue = f"test-expense-rejected-{uuid.uuid4()}"
+        workflow_id = f"test-expense-rejected-workflow-{uuid.uuid4()}"
+        expense_id = "test-expense-id"
+
+        # Set up mock UI with REJECTED decision
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "REJECTED")
 
         # Mock the activities
         @activity.defn(name="create_expense_activity")
@@ -363,22 +460,17 @@ class TestWorkflowFromSimpleFile:
             # Mock succeeds by returning None
             return None
 
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            # Mock returns REJECTED
-            return "REJECTED"
-
         async with Worker(
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
-            activities=[create_expense_mock, wait_for_decision_mock],
+            activities=[create_expense_mock, mock_ui.create_register_activity()],
         ):
             # Execute workflow
             result = await client.execute_workflow(
                 SampleExpenseWorkflow.run,
-                "test-expense-id",
-                id=f"test-expense-rejected-workflow-{uuid.uuid4()}",
+                expense_id,
+                id=workflow_id,
                 task_queue=task_queue,
             )
 

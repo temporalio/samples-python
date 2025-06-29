@@ -41,6 +41,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_async_activity_completion](hello/hello_async_activity_completion.py) - Complete an activity outside of the
     function that was called.
   * [hello_cancellation](hello/hello_cancellation.py) - Manually react to cancellation inside workflows and activities.
+  * [hello_change_log_level](hello/hello_change_log_level.py) - Change the level of workflow task failure from WARN to ERROR.
   * [hello_child_workflow](hello/hello_child_workflow.py) - Execute a child workflow from a workflow.
   * [hello_continue_as_new](hello/hello_continue_as_new.py) - Use continue as new to restart a workflow.
   * [hello_cron](hello/hello_cron.py) - Execute a workflow once a minute.
@@ -64,6 +65,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_metric](custom_metric) - Custom metric to record the workflow type in the activity schedule to start latency.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
+* [expense](expense) - Human-in-the-loop processing and asynchronous activity completion.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.

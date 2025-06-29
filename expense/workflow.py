@@ -6,12 +6,20 @@ with workflow.unsafe.imports_passed_through():
     from expense.activities import (
         create_expense_activity,
         payment_activity,
-        wait_for_decision_activity,
+        register_for_decision_activity,
     )
 
 
 @workflow.defn
 class SampleExpenseWorkflow:
+    def __init__(self) -> None:
+        self.expense_decision: str = ""
+
+    @workflow.signal
+    async def expense_decision_signal(self, decision: str) -> None:
+        """Signal handler for expense decision."""
+        self.expense_decision = decision
+
     @workflow.run
     async def run(self, expense_id: str) -> str:
         logger = workflow.logger
@@ -24,19 +32,27 @@ class SampleExpenseWorkflow:
                 start_to_close_timeout=timedelta(seconds=10),
             )
         except Exception as err:
-            logger.error(f"Failed to create expense report: {err}")
+            logger.exception(f"Failed to create expense report: {err}")
             raise
 
-        # Step 2: Wait for the expense report to be approved or rejected
-        # Notice that we set the timeout to be 10 minutes for this sample demo. If the expected time for the activity to
-        # complete (waiting for human to approve the request) is longer, you should set the timeout accordingly so the
-        # Temporal system will wait accordingly. Otherwise, Temporal system could mark the activity as failure by timeout.
-        status = await workflow.execute_activity(
-            wait_for_decision_activity,
-            expense_id,
-            start_to_close_timeout=timedelta(minutes=10),
+        # Step 2: Register for decision and wait for signal
+        try:
+            await workflow.execute_activity(
+                register_for_decision_activity,
+                expense_id,
+                start_to_close_timeout=timedelta(seconds=10),
+            )
+        except Exception as err:
+            logger.exception(f"Failed to register for decision: {err}")
+            raise
+
+        # Wait for the expense decision signal with a timeout
+        logger.info(f"Waiting for expense decision signal for {expense_id}")
+        await workflow.wait_condition(
+            lambda: self.expense_decision != "", timeout=timedelta(minutes=10)
         )
 
+        status = self.expense_decision
         if status != "APPROVED":
             logger.info(f"Workflow completed. ExpenseStatus: {status}")
             return ""

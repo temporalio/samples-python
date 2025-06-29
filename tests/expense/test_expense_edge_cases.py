@@ -3,6 +3,7 @@ Edge case tests for expense workflow and activities.
 Tests parameter validation, retries, error scenarios, and boundary conditions.
 """
 
+import asyncio
 import uuid
 
 import pytest
@@ -15,6 +16,45 @@ from temporalio.worker import Worker
 from expense.workflow import SampleExpenseWorkflow
 
 
+class MockExpenseUI:
+    """Mock UI that simulates the expense approval system"""
+
+    def __init__(self, client: Client):
+        self.client = client
+        self.workflow_map: dict[str, str] = {}
+        self.scheduled_decisions: dict[str, str] = {}
+
+    def register_workflow(self, expense_id: str, workflow_id: str):
+        """Register a workflow for an expense (simulates UI registration)"""
+        self.workflow_map[expense_id] = workflow_id
+
+    def schedule_decision(self, expense_id: str, decision: str, delay: float = 0.1):
+        """Schedule a decision to be made after a delay (simulates human decision)"""
+        self.scheduled_decisions[expense_id] = decision
+
+        async def send_decision():
+            await asyncio.sleep(delay)
+            if expense_id in self.workflow_map:
+                workflow_id = self.workflow_map[expense_id]
+                handle = self.client.get_workflow_handle(workflow_id)
+                await handle.signal("expense_decision_signal", decision)
+
+        asyncio.create_task(send_decision())
+
+    def create_register_activity(self):
+        """Create a register activity that works with this mock UI"""
+
+        @activity.defn(name="register_for_decision_activity")
+        async def register_decision_activity(expense_id: str) -> None:
+            # Simulate automatic decision if one was scheduled
+            if expense_id in self.scheduled_decisions:
+                # Decision will be sent by the scheduled task
+                pass
+            return None
+
+        return register_decision_activity
+
+
 class TestWorkflowEdgeCases:
     """Test edge cases in workflow behavior"""
 
@@ -23,8 +63,15 @@ class TestWorkflowEdgeCases:
     ):
         """Test workflow behavior with retryable activity failures"""
         task_queue = f"test-retryable-failures-{uuid.uuid4()}"
+        workflow_id = f"test-workflow-retryable-{uuid.uuid4()}"
+        expense_id = "test-expense-retryable"
         create_call_count = 0
         payment_call_count = 0
+
+        # Set up mock UI with APPROVED decision
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "APPROVED")
 
         @activity.defn(name="create_expense_activity")
         async def create_expense_retry(expense_id: str) -> None:
@@ -34,10 +81,6 @@ class TestWorkflowEdgeCases:
                 # First call fails, but retryable
                 raise Exception("Transient failure in create expense")
             return None  # Second call succeeds
-
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            return "APPROVED"
 
         @activity.defn(name="payment_activity")
         async def payment_retry(expense_id: str) -> None:
@@ -52,12 +95,16 @@ class TestWorkflowEdgeCases:
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
-            activities=[create_expense_retry, wait_for_decision_mock, payment_retry],
+            activities=[
+                create_expense_retry,
+                mock_ui.create_register_activity(),
+                payment_retry,
+            ],
         ):
             result = await client.execute_workflow(
                 SampleExpenseWorkflow.run,
-                "test-expense-retryable",
-                id=f"test-workflow-retryable-{uuid.uuid4()}",
+                expense_id,
+                id=workflow_id,
                 task_queue=task_queue,
             )
 
@@ -72,7 +119,14 @@ class TestWorkflowEdgeCases:
     ):
         """Test that workflow logging works correctly"""
         task_queue = f"test-logging-{uuid.uuid4()}"
+        workflow_id = f"test-workflow-logging-{uuid.uuid4()}"
+        expense_id = "test-expense-logging"
         logged_messages = []
+
+        # Set up mock UI with APPROVED decision
+        mock_ui = MockExpenseUI(client)
+        mock_ui.register_workflow(expense_id, workflow_id)
+        mock_ui.schedule_decision(expense_id, "APPROVED")
 
         @activity.defn(name="create_expense_activity")
         async def create_expense_mock(expense_id: str) -> None:
@@ -80,35 +134,47 @@ class TestWorkflowEdgeCases:
             logged_messages.append(f"Creating expense: {expense_id}")
             return None
 
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            logged_messages.append(f"Waiting for decision: {expense_id}")
-            return "APPROVED"
-
         @activity.defn(name="payment_activity")
         async def payment_mock(expense_id: str) -> None:
             logged_messages.append(f"Processing payment: {expense_id}")
             return None
 
+        # Create logging register activity
+        def create_logging_register_activity():
+            @activity.defn(name="register_for_decision_activity")
+            async def register_decision_logging(expense_id: str) -> None:
+                logged_messages.append(f"Waiting for decision: {expense_id}")
+                # Simulate automatic decision if one was scheduled
+                if expense_id in mock_ui.scheduled_decisions:
+                    # Decision will be sent by the scheduled task
+                    pass
+                return None
+
+            return register_decision_logging
+
         async with Worker(
             client,
             task_queue=task_queue,
             workflows=[SampleExpenseWorkflow],
-            activities=[create_expense_mock, wait_for_decision_mock, payment_mock],
+            activities=[
+                create_expense_mock,
+                create_logging_register_activity(),
+                payment_mock,
+            ],
         ):
             result = await client.execute_workflow(
                 SampleExpenseWorkflow.run,
-                "test-expense-logging",
-                id=f"test-workflow-logging-{uuid.uuid4()}",
+                expense_id,
+                id=workflow_id,
                 task_queue=task_queue,
             )
 
             assert result == "COMPLETED"
             # Verify logging occurred
             assert len(logged_messages) == 3
-            assert "Creating expense: test-expense-logging" in logged_messages
-            assert "Waiting for decision: test-expense-logging" in logged_messages
-            assert "Processing payment: test-expense-logging" in logged_messages
+            assert f"Creating expense: {expense_id}" in logged_messages
+            assert f"Waiting for decision: {expense_id}" in logged_messages
+            assert f"Processing payment: {expense_id}" in logged_messages
 
     async def test_workflow_parameter_validation(
         self, client: Client, env: WorkflowEnvironment
@@ -124,9 +190,9 @@ class TestWorkflowEdgeCases:
                 )
             return None
 
-        @activity.defn(name="wait_for_decision_activity")
-        async def wait_for_decision_mock(expense_id: str) -> str:
-            return "APPROVED"
+        @activity.defn(name="register_for_decision_activity")
+        async def wait_for_decision_mock(expense_id: str) -> None:
+            return None
 
         @activity.defn(name="payment_activity")
         async def payment_mock(expense_id: str) -> None:
@@ -138,7 +204,7 @@ class TestWorkflowEdgeCases:
             workflows=[SampleExpenseWorkflow],
             activities=[create_expense_validate, wait_for_decision_mock, payment_mock],
         ):
-            # Test with empty string
+            # Test with empty string - this should fail at create_expense_activity
             with pytest.raises(WorkflowFailureError):
                 await client.execute_workflow(
                     SampleExpenseWorkflow.run,
@@ -147,7 +213,7 @@ class TestWorkflowEdgeCases:
                     task_queue=task_queue,
                 )
 
-            # Test with whitespace-only string
+            # Test with whitespace-only string - this should fail at create_expense_activity
             with pytest.raises(WorkflowFailureError):
                 await client.execute_workflow(
                     SampleExpenseWorkflow.run,

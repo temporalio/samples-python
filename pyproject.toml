@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = "~=3.9"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.12.0,<2"]
+dependencies = ["temporalio>=1.13.0,<2"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -68,6 +68,7 @@ expense = [
     "fastapi>=0.115.12",
     "httpx>=0.25.0,<1",
     "uvicorn[standard]>=0.24.0.post1,<0.25",
+    "python-multipart>=0.0.5",
 ]
 
 [tool.uv]
@@ -76,7 +77,6 @@ default-groups = [
     "bedrock",
     "dsl",
     "encryption",
-    "expense",
     "gevent",
     "langchain",
     "open-telemetry",
@@ -158,4 +158,3 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "opentelemetry.*"
 ignore_errors = true
-

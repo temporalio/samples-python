@@ -1,7 +1,7 @@
 # Expense System UI Specification
 
 ## Overview
-The Expense System UI is a FastAPI-based web application that provides both a web interface and REST API for managing expense requests. It integrates with Temporal workflows through callback mechanisms.
+The Expense System UI is a FastAPI-based web application that provides both a web interface and REST API for managing expense requests. It integrates with Temporal workflows through signal mechanisms.
 
 ## System Components
 
@@ -14,7 +14,7 @@ The Expense System UI is a FastAPI-based web application that provides both a we
 
 ### Storage
 - **all_expenses**: In-memory dictionary mapping expense IDs to their current state
-- **token_map**: Maps expense IDs to Temporal activity task tokens for workflow callbacks
+- **workflow_map**: Maps expense IDs to Temporal workflow IDs for signal sending
 
 ## API Endpoints
 
@@ -38,13 +38,13 @@ All endpoints use FastAPI's automatic parameter validation:
 - Only CREATED expenses show action buttons
 - Expenses are displayed in sorted order by ID
 
-### 2. Action Handler (`GET /action`)
+### 2. Action Handler (`POST /action`)
 **Purpose**: Process expense state changes (approve/reject/payment)
 
 **Parameters**:
-- `type` (required): Action type - "approve", "reject", or "payment"
-- `id` (required): Expense ID
-- `is_api_call` (optional): "true" for API calls, "false" for UI calls
+- `type` (required): Action type - "approve", "reject", or "payment" (form data)
+- `id` (required): Expense ID (form data)
+- `is_api_call` (optional): "true" for API calls, "false" for UI calls (form data)
 
 **Business Rules**:
 - `approve`: Changes CREATED → APPROVED
@@ -54,7 +54,7 @@ All endpoints use FastAPI's automatic parameter validation:
 - Invalid action types return HTTP 200 with error message in response body
 - State changes from CREATED to APPROVED/REJECTED trigger workflow notifications
 - API calls return "SUCCEED" on success
-- UI calls redirect to list view after success
+- UI calls redirect to list view after success (HTTP 303 redirect)
 
 **Error Handling**:
 - API calls return HTTP 200 with "ERROR:INVALID_ID" or "ERROR:INVALID_TYPE" in response body
@@ -85,33 +85,32 @@ All endpoints use FastAPI's automatic parameter validation:
 **Response**: Current expense state as string
 **Error Handling**: Returns HTTP 200 with "ERROR:INVALID_ID" in response body for unknown IDs
 
-### 5. Callback Registration (`POST /registerCallback`)
-**Purpose**: Register Temporal workflow callback for expense state changes
+### 5. Workflow Registration (`POST /registerWorkflow`)
+**Purpose**: Register Temporal workflow ID for expense state change signals
 
 **Parameters**:
 - `id` (query): Expense ID
-- `task_token` (form): Hex-encoded Temporal task token
+- `workflow_id` (form): Temporal workflow ID
 
 **Business Rules**:
 - Expense must exist and be in CREATED state
-- Task token must be valid hex format
-- Enables workflow notification on state changes
+- Workflow ID is stored for later signal sending
+- Enables workflow signal notification on state changes
 
 **Error Handling**:
 - HTTP 200 with "ERROR:INVALID_ID" in response body for unknown expenses
 - HTTP 200 with "ERROR:INVALID_STATE" in response body for non-CREATED expenses
-- HTTP 200 with "ERROR:INVALID_FORM_DATA" in response body for invalid tokens
 
 ## Workflow Integration
 
-### Callback Mechanism
-- When expenses transition from CREATED to APPROVED/REJECTED, registered callbacks are triggered
-- Uses Temporal's async activity completion mechanism
-- Task tokens are stored and used to complete workflow activities
+### Signal Mechanism
+- When expenses transition from CREATED to APPROVED/REJECTED, registered workflows are signaled
+- Uses Temporal's workflow signal mechanism
+- Workflow IDs are stored and used to send signals to workflows
 
 ### Error Handling
-- Failed callback completions are logged but don't affect UI operations
-- Invalid or expired tokens are handled gracefully
+- Failed signal sending is logged but doesn't affect UI operations
+- Invalid or non-existent workflow IDs are handled gracefully
 
 ## User Interface
 
@@ -133,19 +132,19 @@ All endpoints use FastAPI's automatic parameter validation:
 - Handles concurrent API and UI requests
 
 ### Error Recovery
-- Graceful handling of workflow callback failures
+- Graceful handling of workflow signal failures
 - Input validation on all endpoints (422 for missing/invalid parameters, 200 with error messages for business logic errors)
 - Descriptive error messages in response body
 
 ### Logging
 - State change operations are logged
-- Callback registration and completion logged
+- Workflow registration and signal sending logged
 - Error conditions logged for debugging
 
 ## Security Considerations
 - Input validation on all parameters
 - Protection against duplicate ID creation
-- Secure handling of Temporal task tokens
+- Secure handling of Temporal workflow IDs
 
 ## Scalability Notes
 - Current implementation uses in-memory storage

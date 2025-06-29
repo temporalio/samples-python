@@ -2502,6 +2502,7 @@ encryption = [
 expense = [
     { name = "fastapi" },
     { name = "httpx" },
+    { name = "python-multipart" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 gevent = [
@@ -2536,7 +2537,7 @@ trio-async = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "temporalio", specifier = ">=1.12.0,<2" }]
+requires-dist = [{ name = "temporalio", specifier = ">=1.13.0,<2" }]
 
 [package.metadata.requires-dev]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
@@ -2567,6 +2568,7 @@ encryption = [
 expense = [
     { name = "fastapi", specifier = ">=0.115.12" },
     { name = "httpx", specifier = ">=0.25.0,<1" },
+    { name = "python-multipart", specifier = ">=0.0.5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0.post1,<0.25" },
 ]
 gevent = [{ name = "gevent", marker = "python_full_version >= '3.8'", specifier = "==25.4.2" }]

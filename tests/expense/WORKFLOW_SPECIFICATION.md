@@ -123,7 +123,7 @@ The activity demonstrates a signal-based human-in-the-loop pattern. It simply re
 **Business Rules**:
 - Only called for approved expenses
 - Validate expense_id is not empty
-- HTTP GET to `/action?is_api_call=true&type=payment&id={expense_id}`
+- HTTP POST to `/action` with form data: `is_api_call=true`, `type=payment`, `id={expense_id}`
 - Success condition: Response body equals "SUCCEED"
 
 **Error Handling**:

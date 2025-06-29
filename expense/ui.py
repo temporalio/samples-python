@@ -4,7 +4,7 @@ from typing import Dict, Optional
 
 import uvicorn
 from fastapi import FastAPI, Form, Query
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from temporalio.client import Client
 
 from expense import EXPENSE_SERVER_HOST, EXPENSE_SERVER_PORT
@@ -43,24 +43,28 @@ async def list_handler():
         state = all_expenses[expense_id]
         action_link = ""
         if state == ExpenseState.CREATED:
-            action_link = f"""
-                <a href="/action?type=approve&id={expense_id}">
-                    <button style="background-color:#4CAF50;">APPROVE</button>
-                </a>
-                &nbsp;&nbsp;
-                <a href="/action?type=reject&id={expense_id}">
-                    <button style="background-color:#f44336;">REJECT</button>
-                </a>
-            """
+            action_link = (
+                f'<form method="post" action="/action" style="display:inline;">'
+                f'<input type="hidden" name="type" value="approve">'
+                f'<input type="hidden" name="id" value="{expense_id}">'
+                '<button type="submit" style="background-color:#4CAF50;">APPROVE</button>'
+                "</form>"
+                "&nbsp;&nbsp;"
+                f'<form method="post" action="/action" style="display:inline;">'
+                f'<input type="hidden" name="type" value="reject">'
+                f'<input type="hidden" name="id" value="{expense_id}">'
+                '<button type="submit" style="background-color:#f44336;">REJECT</button>'
+                "</form>"
+            )
         html += f"<tr><td>{expense_id}</td><td>{state}</td><td>{action_link}</td></tr>"
 
     html += "</table>"
     return html
 
 
-@app.get("/action", response_class=HTMLResponse)
+@app.post("/action")
 async def action_handler(
-    type: str = Query(...), id: str = Query(...), is_api_call: str = Query("false")
+    type: str = Form(...), id: str = Form(...), is_api_call: str = Form("false")
 ):
     if id not in all_expenses:
         if is_api_call == "true":
@@ -102,7 +106,7 @@ async def action_handler(
             await notify_expense_state_change(id, all_expenses[id])
 
         print(f"Set state for {id} from {old_state} to {all_expenses[id]}")
-        return await list_handler()
+        return RedirectResponse(url="/list", status_code=303)
 
 
 @app.get("/create")

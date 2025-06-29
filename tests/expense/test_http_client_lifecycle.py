@@ -2,6 +2,7 @@
 """
 Simple test script to verify HTTP client lifecycle management.
 """
+
 import asyncio
 import os
 import sys

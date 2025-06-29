@@ -38,13 +38,13 @@ All endpoints use FastAPI's automatic parameter validation:
 - Only CREATED expenses show action buttons
 - Expenses are displayed in sorted order by ID
 
-### 2. Action Handler (`GET /action`)
+### 2. Action Handler (`POST /action`)
 **Purpose**: Process expense state changes (approve/reject/payment)
 
 **Parameters**:
-- `type` (required): Action type - "approve", "reject", or "payment"
-- `id` (required): Expense ID
-- `is_api_call` (optional): "true" for API calls, "false" for UI calls
+- `type` (required): Action type - "approve", "reject", or "payment" (form data)
+- `id` (required): Expense ID (form data)
+- `is_api_call` (optional): "true" for API calls, "false" for UI calls (form data)
 
 **Business Rules**:
 - `approve`: Changes CREATED → APPROVED
@@ -54,7 +54,7 @@ All endpoints use FastAPI's automatic parameter validation:
 - Invalid action types return HTTP 200 with error message in response body
 - State changes from CREATED to APPROVED/REJECTED trigger workflow notifications
 - API calls return "SUCCEED" on success
-- UI calls redirect to list view after success
+- UI calls redirect to list view after success (HTTP 303 redirect)
 
 **Error Handling**:
 - API calls return HTTP 200 with "ERROR:INVALID_ID" or "ERROR:INVALID_TYPE" in response body

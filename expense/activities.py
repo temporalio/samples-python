@@ -98,9 +98,9 @@ async def payment_activity(expense_id: str) -> None:
 
     client = get_http_client()
     try:
-        response = await client.get(
+        response = await client.post(
             f"{EXPENSE_SERVER_HOST_PORT}/action",
-            params={"is_api_call": "true", "type": "payment", "id": expense_id},
+            data={"is_api_call": "true", "type": "payment", "id": expense_id},
         )
         response.raise_for_status()
     except httpx.HTTPStatusError as e:

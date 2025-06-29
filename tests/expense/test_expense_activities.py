@@ -144,16 +144,16 @@ class TestPaymentActivity:
             mock_response.raise_for_status = AsyncMock()
 
             mock_client_instance = AsyncMock()
-            mock_client_instance.get.return_value = mock_response
+            mock_client_instance.post.return_value = mock_response
             mock_get_client.return_value = mock_client_instance
 
             # Execute activity
             result = await activity_env.run(payment_activity, "test-expense-123")
 
             # Verify HTTP call
-            mock_client_instance.get.assert_called_once_with(
+            mock_client_instance.post.assert_called_once_with(
                 f"{EXPENSE_SERVER_HOST_PORT}/action",
-                params={
+                data={
                     "is_api_call": "true",
                     "type": "payment",
                     "id": "test-expense-123",
@@ -177,7 +177,7 @@ class TestPaymentActivity:
             mock_response.raise_for_status = AsyncMock()
 
             mock_client_instance = AsyncMock()
-            mock_client_instance.get.return_value = mock_response
+            mock_client_instance.post.return_value = mock_response
             mock_get_client.return_value = mock_client_instance
 
             with pytest.raises(Exception, match="ERROR:INSUFFICIENT_FUNDS"):

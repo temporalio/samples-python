@@ -24,7 +24,7 @@ class SampleExpenseWorkflow:
                 start_to_close_timeout=timedelta(seconds=10),
             )
         except Exception as err:
-            logger.error(f"Failed to create expense report: {err}")
+            logger.exception(f"Failed to create expense report: {err}")
             raise
 
         # Step 2: Wait for the expense report to be approved or rejected

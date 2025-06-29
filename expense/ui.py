@@ -19,7 +19,7 @@ class ExpenseState(str, Enum):
 
 # Use memory store for this sample expense system
 all_expenses: Dict[str, ExpenseState] = {}
-token_map: Dict[str, bytes] = {}
+workflow_map: Dict[str, str] = {}  # Maps expense_id to workflow_id
 
 app = FastAPI()
 
@@ -133,8 +133,8 @@ async def status_handler(id: str = Query(...)):
     return PlainTextResponse(state.value)
 
 
-@app.post("/registerCallback")
-async def callback_handler(id: str = Query(...), task_token: str = Form(...)):
+@app.post("/registerWorkflow")
+async def register_workflow_handler(id: str = Query(...), workflow_id: str = Form(...)):
     if id not in all_expenses:
         return PlainTextResponse("ERROR:INVALID_ID")
 
@@ -142,19 +142,13 @@ async def callback_handler(id: str = Query(...), task_token: str = Form(...)):
     if curr_state != ExpenseState.CREATED:
         return PlainTextResponse("ERROR:INVALID_STATE")
 
-    # Convert hex string back to bytes
-    try:
-        task_token_bytes = bytes.fromhex(task_token)
-    except ValueError:
-        return PlainTextResponse("ERROR:INVALID_FORM_DATA")
-
-    print(f"Registered callback for ID={id}, token={task_token}")
-    token_map[id] = task_token_bytes
+    print(f"Registered workflow for ID={id}, workflow_id={workflow_id}")
+    workflow_map[id] = workflow_id
     return PlainTextResponse("SUCCEED")
 
 
 async def notify_expense_state_change(expense_id: str, state: str):
-    if expense_id not in token_map:
+    if expense_id not in workflow_map:
         print(f"Invalid id: {expense_id}")
         return
 
@@ -162,13 +156,16 @@ async def notify_expense_state_change(expense_id: str, state: str):
         print("Workflow client not initialized")
         return
 
-    token = token_map[expense_id]
+    workflow_id = workflow_map[expense_id]
     try:
-        handle = workflow_client.get_async_activity_handle(task_token=token)
-        await handle.complete(state)
-        print(f"Successfully complete activity: {token.hex()}")
+        # Send signal to workflow
+        handle = workflow_client.get_workflow_handle(workflow_id)
+        await handle.signal("expense_decision_signal", state)
+        print(
+            f"Successfully sent signal to workflow: {workflow_id} with decision: {state}"
+        )
     except Exception as err:
-        print(f"Failed to complete activity with error: {err}")
+        print(f"Failed to send signal to workflow with error: {err}")
 
 
 async def main():

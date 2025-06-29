@@ -1,13 +1,13 @@
 # Expense Workflow and Activities Specification
 
 ## Overview
-The Expense Processing System demonstrates a human-in-the-loop workflow pattern using Temporal. It processes expense requests through a multi-step approval workflow with asynchronous activity completion.
+The Expense Processing System demonstrates a human-in-the-loop workflow pattern using Temporal. It processes expense requests through a multi-step approval workflow with signal-based completion.
 
 ## Business Process Flow
 
 ### Workflow Steps
 1. **Create Expense Report**: Initialize a new expense in the external system
-2. **Wait for Human Decision**: Wait for approval/rejection via external UI (asynchronous completion)
+2. **Register for Decision & Wait for Signal**: Register expense and wait for approval/rejection via external UI (signal-based completion)
 3. **Process Payment** (conditional): Execute payment if approved
 
 ### Decision Logic
@@ -22,11 +22,11 @@ The Expense Processing System demonstrates a human-in-the-loop workflow pattern 
 - **Workflow**: `SampleExpenseWorkflow` - Main orchestration logic
 - **Activities**: Three distinct activities for each business step
 - **External System**: HTTP-based expense management UI
-- **Task Tokens**: Enable asynchronous activity completion from external systems
+- **Workflow Signals**: Enable workflow completion from external systems
 
 ### External Integration
 - **Expense UI Server**: HTTP API at `localhost:8099`
-- **Async Completion**: UI system completes activities via Temporal client
+- **Signal Completion**: UI system sends signals to workflows via Temporal client
 - **Human Interaction**: Web-based approval/rejection interface
 
 ## Implementation Specifications
@@ -37,6 +37,13 @@ The Expense Processing System demonstrates a human-in-the-loop workflow pattern 
 ```python
 @workflow.defn
 class SampleExpenseWorkflow:
+    def __init__(self) -> None:
+        self.expense_decision: str = ""
+
+    @workflow.signal
+    async def expense_decision_signal(self, decision: str) -> None:
+        self.expense_decision = decision
+
     @workflow.run
     async def run(self, expense_id: str) -> str
 ```
@@ -75,26 +82,26 @@ class SampleExpenseWorkflow:
 - Server error responses: `Exception` with specific error message (e.g., "ERROR:ID_ALREADY_EXISTS")
 - Network failures: Connection timeouts and DNS resolution errors propagated
 
-#### 2. Wait for Decision Activity
+#### 2. Register for Decision Activity
 
-**Purpose**: Register for async completion and wait for human approval
+**Purpose**: Register expense for human decision and return immediately
 
-**Function Signature**: `wait_for_decision_activity(expense_id: str) -> str`
+**Function Signature**: `register_for_decision_activity(expense_id: str) -> None`
 
-**Async Completion Pattern**:
-The activity demonstrates asynchronous activity completion. It registers itself for external completion using its task token, then calls `activity.raise_complete_async()` to signal that it will complete later without blocking the worker. This pattern enables human-in-the-loop workflows where activities can wait as long as necessary for external decisions without consuming worker resources or timing out.
+**Signal-Based Pattern**:
+The activity demonstrates a signal-based human-in-the-loop pattern. It simply registers the expense for decision and completes immediately. The workflow then waits for a signal from an external system. This pattern enables human-in-the-loop workflows where workflows can wait as long as necessary for external decisions using Temporal's signal mechanism.
 
 **Business Logic**:
 1. Validate expense_id is not empty
-2. Extract activity task token from context
-3. Register callback with external system via HTTP POST
-4. Call `activity.raise_complete_async()` to signal async completion
-5. When a human approves or rejects the expense, an external process uses the stored task token to call `workflow_client.get_async_activity_handle(task_token).complete()`, providing the decision result
+2. Log that the expense has been registered for decision
+3. Return immediately (no HTTP calls or external registration)
+4. The workflow then waits for a signal using `workflow.wait_condition()`
+5. When a human approves or rejects the expense, an external process sends a signal to the workflow using `workflow_handle.signal()`
 
-**HTTP Integration**:
-- **Endpoint**: POST `/registerCallback?id={expense_id}`
-- **Payload**: `task_token` as form data (hex-encoded)
-- **Success Response**: "SUCCEED"
+**Signal Integration**:
+- **Signal Name**: `expense_decision_signal`
+- **Signal Payload**: Decision string ("APPROVED", "REJECTED", etc.)
+- **Workflow Registration**: External system must know the workflow ID to send signals
 
 **Completion Values**:
 - `"APPROVED"`: Expense approved for payment
@@ -104,8 +111,8 @@ The activity demonstrates asynchronous activity completion. It registers itself 
 
 **Error Scenarios**:
 - Empty expense_id: Immediate validation error
-- HTTP registration failure: Activity fails immediately
-- Registration success but completion timeout: Temporal timeout handling
+- Signal timeout: Temporal timeout handling (workflow-level timeout)
+- Invalid signal payload: Handled gracefully by workflow
 
 #### 3. Payment Activity
 
@@ -128,22 +135,21 @@ The activity demonstrates asynchronous activity completion. It registers itself 
 ## State Management
 
 ### Activity Completion Flow
-1. **Synchronous Activities**: Create and Payment activities complete immediately
-2. **Asynchronous Activity**: Wait for Decision completes externally
+1. **Synchronous Activities**: Create, Register, and Payment activities complete immediately
+2. **Signal-Based Waiting**: Workflow waits for external signal after registration
 
-### Task Token Lifecycle
-1. Activity extracts task token from execution context
-2. Token registered with external system via HTTP POST
-3. External system stores token mapping to expense ID
-4. Human makes decision via web UI
-5. UI system calls Temporal client to complete activity
-6. Activity returns decision value to workflow
+### Signal Lifecycle
+1. Workflow starts and registers expense for decision
+2. External system stores workflow ID to expense ID mapping
+3. Human makes decision via web UI
+4. UI system calls Temporal client to send signal to workflow
+5. Workflow receives signal and continues execution
 
 ### External System Integration
 - **Storage**: In-memory expense state management
-- **Callbacks**: Task token to expense ID mapping
-- **Completion**: Temporal client async activity completion
-- **Error Recovery**: Graceful handling of completion failures
+- **Workflow Mapping**: Workflow ID to expense ID mapping
+- **Signal Completion**: Temporal client workflow signal sending
+- **Error Recovery**: Graceful handling of signal failures
 
 ## Error Handling Patterns
 
@@ -194,14 +200,14 @@ The system supports comprehensive testing with mocked activities:
 async def create_expense_mock(expense_id: str) -> None:
     return None  # Success mock
 
-@activity.defn(name="wait_for_decision_activity") 
-async def wait_for_decision_mock(expense_id: str) -> str:
-    return "APPROVED"  # Decision mock
+@activity.defn(name="register_for_decision_activity") 
+async def register_for_decision_mock(expense_id: str) -> None:
+    return None  # Registration mock
 
-# Testing async completion behavior:
-from temporalio.activity import _CompleteAsyncError
-with pytest.raises(_CompleteAsyncError):
-    await activity_env.run(wait_for_decision_activity, "test-expense")
+# Testing signal-based behavior:
+# Activity completes immediately, no special exceptions
+result = await activity_env.run(register_for_decision_activity, "test-expense")
+assert result is None
 ```
 
 ### Test Scenarios
@@ -209,7 +215,7 @@ with pytest.raises(_CompleteAsyncError):
 2. **Rejection Path**: Expense rejected, payment skipped
 3. **Failure Scenarios**: Activity failures at each step
 4. **Mock Server Testing**: HTTP interactions with test server
-5. **Async Completion Testing**: Simulated callback completion (expects `_CompleteAsyncError`)
+5. **Signal Testing**: Simulated workflow signal sending and receiving
 6. **Decision Value Testing**: All possible decision values (APPROVED, REJECTED, DENIED, PENDING, CANCELLED, UNKNOWN)
 7. **Retryable Failures**: Activities that fail temporarily and then succeed on retry
 8. **Parameter Validation**: Empty and whitespace-only expense IDs

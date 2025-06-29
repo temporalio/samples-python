@@ -68,6 +68,7 @@ expense = [
     "fastapi>=0.115.12",
     "httpx>=0.25.0,<1",
     "uvicorn[standard]>=0.24.0.post1,<0.25",
+    "python-multipart>=0.0.5",
 ]
 
 [tool.uv]

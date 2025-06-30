@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from temporalio import workflow
+from temporalio.common import RetryPolicy
 
 with workflow.unsafe.imports_passed_through():
     from expense.activities import (
@@ -30,6 +31,7 @@ class SampleExpenseWorkflow:
                 create_expense_activity,
                 expense_id,
                 start_to_close_timeout=timedelta(seconds=10),
+                retry_policy=RetryPolicy(maximum_attempts=3),
             )
         except Exception as err:
             logger.exception(f"Failed to create expense report: {err}")
@@ -63,6 +65,7 @@ class SampleExpenseWorkflow:
                 payment_activity,
                 expense_id,
                 start_to_close_timeout=timedelta(seconds=10),
+                retry_policy=RetryPolicy(maximum_attempts=3),
             )
         except Exception as err:
             logger.info(f"Workflow completed with payment failed. Error: {err}")

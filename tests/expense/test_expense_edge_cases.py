@@ -28,16 +28,19 @@ class MockExpenseUI:
         """Register a workflow for an expense (simulates UI registration)"""
         self.workflow_map[expense_id] = workflow_id
 
-    def schedule_decision(self, expense_id: str, decision: str, delay: float = 0.1):
-        """Schedule a decision to be made after a delay (simulates human decision)"""
+    def schedule_decision(self, expense_id: str, decision: str):
+        """Schedule a decision to be made (simulates human decision)"""
         self.scheduled_decisions[expense_id] = decision
 
         async def send_decision():
-            await asyncio.sleep(delay)
-            if expense_id in self.workflow_map:
-                workflow_id = self.workflow_map[expense_id]
-                handle = self.client.get_workflow_handle(workflow_id)
-                await handle.signal("expense_decision_signal", decision)
+            try:
+                if expense_id in self.workflow_map:
+                    workflow_id = self.workflow_map[expense_id]
+                    handle = self.client.get_workflow_handle(workflow_id)
+                    await handle.signal("expense_decision_signal", decision)
+            except Exception:
+                # Ignore errors in time-skipping mode where workflows may complete quickly
+                pass
 
         asyncio.create_task(send_decision())
 
@@ -46,10 +49,18 @@ class MockExpenseUI:
 
         @activity.defn(name="register_for_decision_activity")
         async def register_decision_activity(expense_id: str) -> None:
-            # Simulate automatic decision if one was scheduled
+            # In time-skipping mode, send the decision immediately
             if expense_id in self.scheduled_decisions:
-                # Decision will be sent by the scheduled task
-                pass
+                decision = self.scheduled_decisions[expense_id]
+                if expense_id in self.workflow_map:
+                    workflow_id = self.workflow_map[expense_id]
+                    handle = self.client.get_workflow_handle(workflow_id)
+                    try:
+                        # Send signal immediately when registering
+                        await handle.signal("expense_decision_signal", decision)
+                    except Exception:
+                        # Ignore errors in time-skipping mode
+                        pass
             return None
 
         return register_decision_activity
@@ -144,10 +155,18 @@ class TestWorkflowEdgeCases:
             @activity.defn(name="register_for_decision_activity")
             async def register_decision_logging(expense_id: str) -> None:
                 logged_messages.append(f"Waiting for decision: {expense_id}")
-                # Simulate automatic decision if one was scheduled
+                # In time-skipping mode, send the decision immediately
                 if expense_id in mock_ui.scheduled_decisions:
-                    # Decision will be sent by the scheduled task
-                    pass
+                    decision = mock_ui.scheduled_decisions[expense_id]
+                    if expense_id in mock_ui.workflow_map:
+                        workflow_id = mock_ui.workflow_map[expense_id]
+                        handle = client.get_workflow_handle(workflow_id)
+                        try:
+                            # Send signal immediately when registering
+                            await handle.signal("expense_decision_signal", decision)
+                        except Exception:
+                            # Ignore errors in time-skipping mode
+                            pass
                 return None
 
             return register_decision_logging

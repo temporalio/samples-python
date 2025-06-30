@@ -133,7 +133,7 @@ build-backend = "hatchling.build"
 [tool.poe.tasks]
 format = [{cmd = "uv run black ."}, {cmd = "uv run isort ."}]
 lint = [{cmd = "uv run black --check ."}, {cmd = "uv run isort --check-only ."}, {ref = "lint-types" }]
-lint-types = "uv run mypy --check-untyped-defs --namespace-packages ."
+lint-types = "uv run mypy --python-version=3.9 --check-untyped-defs --namespace-packages ."
 test = "uv run pytest"
 
 [tool.pytest.ini_options]
@@ -149,6 +149,7 @@ skip_gitignore = true
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
+exclude = [".venv"]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

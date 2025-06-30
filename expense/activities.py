@@ -1,3 +1,5 @@
+from typing import Optional
+
 import httpx
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
@@ -5,7 +7,7 @@ from temporalio.exceptions import ApplicationError
 from expense import EXPENSE_SERVER_HOST_PORT
 
 # Module-level HTTP client, managed by worker lifecycle
-_http_client: httpx.AsyncClient | None = None
+_http_client: Optional[httpx.AsyncClient] = None
 
 
 async def initialize_http_client() -> None:

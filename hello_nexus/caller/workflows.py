@@ -1,5 +1,4 @@
 from temporalio import workflow
-from temporalio.workflow import NexusClient
 
 with workflow.unsafe.imports_passed_through():
     from hello_nexus.service import MyInput, MyNexusService, MyOutput
@@ -13,8 +12,8 @@ class CallerWorkflow:
     # An __init__ method is always optional on a Workflow class. Here we use it to set the
     # NexusClient, but that could alternatively be done in the run method.
     def __init__(self):
-        self.nexus_client = NexusClient(
-            MyNexusService,
+        self.nexus_client = workflow.create_nexus_client(
+            service=MyNexusService,
             endpoint=NEXUS_ENDPOINT,
         )
 

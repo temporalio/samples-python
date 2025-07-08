@@ -6,7 +6,11 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = "~=3.9"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.13.0,<2"]
+dependencies = [
+#    "temporalio>=1.14.0,<2"
+#    "temporalio @ file:///Users/maxim/temporal/sdk-python"
+      "temporalio @ git+https://github.com/temporalio/sdk-python.git@nexus-operation-as-tool"
+]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -125,6 +129,9 @@ packages = [
 
 [tool.hatch.build.targets.wheel.sources]
 "./**/*.py" = "**/*.py"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [build-system]
 requires = ["hatchling"]

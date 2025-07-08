@@ -4,14 +4,13 @@ from datetime import timedelta
 
 from temporalio import workflow
 
-from nexus_openai_agents.get_weather_service import GetWeatherService
 
 # Import our activity, passing it through the sandbox
 with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
-    from openai_agents.workflows.get_weather_activity import get_weather
     from temporalio.contrib.openai_agents.temporal_tools import nexus_operation_as_tool
 
+    from nexus_openai_agents.get_weather_service_handler import GetWeatherServiceHandler
 
 @workflow.defn(sandboxed=False)
 class ToolsWorkflow:
@@ -22,8 +21,8 @@ class ToolsWorkflow:
             instructions="You are a helpful agent.",
             tools=[
                 nexus_operation_as_tool(
-                    GetWeatherService.get_weather,
-                    service=GetWeatherService,
+                    GetWeatherServiceHandler.get_weather,
+                    service=GetWeatherServiceHandler,
                     schedule_to_close_timeout=timedelta(hours=10),
                     endpoint="weather-service",
                 )

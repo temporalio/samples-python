@@ -50,7 +50,7 @@ open-telemetry = [
 ]
 openai-agents = [
     "openai-agents >= 0.0.19",
-    "temporalio[openai-agents] >= 1.13.0",
+    "temporalio[openai-agents]@git+https://github.com/temporalio/sdk-python@main",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=1.11.0,<2"]

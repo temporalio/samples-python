@@ -27,6 +27,6 @@ class GetWeatherServiceHandler:
     ) -> nexus.WorkflowHandle[Weather]:
         return await ctx.start_workflow(
             GetWeatherWorkflow.run,
-            input,
+            input.city,
             id=str(uuid.uuid4()),
         )

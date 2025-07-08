@@ -17,6 +17,7 @@ from temporalio.contrib.openai_agents.temporal_openai_agents import (
 from temporalio.worker import Worker
 
 from nexus_openai_agents.get_weather_service_handler import GetWeatherServiceHandler
+from nexus_openai_agents.get_weather_workflow import GetWeatherWorkflow
 from nexus_openai_agents.tools_workflow import ToolsWorkflow
 
 
@@ -35,6 +36,7 @@ async def main():
             client,
             task_queue="tools-task-queue",
             workflows=[
+                GetWeatherWorkflow,
                 ToolsWorkflow,
             ],
             activities=[

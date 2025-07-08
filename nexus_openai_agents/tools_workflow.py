@@ -4,7 +4,6 @@ from datetime import timedelta
 
 from temporalio import workflow
 
-import nexus_openai_agents.get_weather_service_handler as weather_module
 from nexus_openai_agents.get_weather_service import GetWeatherService
 
 # Import our activity, passing it through the sandbox
@@ -26,7 +25,6 @@ class ToolsWorkflow:
                     service=GetWeatherService,
                     schedule_to_close_timeout=timedelta(hours=10),
                     endpoint="weather-service",
-                    function_schema_globalns=weather_module.__dict__,
                 )
             ],
         )

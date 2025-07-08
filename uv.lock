@@ -503,15 +503,6 @@ wheels = [
 ]
 
 [[package]]
-name = "eval-type-backport"
-version = "0.2.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/30/ea/8b0ac4469d4c347c6a385ff09dc3c048c2d021696664e26c7ee6791631b5/eval_type_backport-0.2.2.tar.gz", hash = "sha256:f0576b4cf01ebb5bd358d02314d31846af5e07678387486e2c798af0e7d849c1", size = 9079, upload-time = "2024-12-21T20:09:46.005Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/31/55cd413eaccd39125368be33c46de24a1f639f2e12349b0361b4678f3915/eval_type_backport-0.2.2-py3-none-any.whl", hash = "sha256:cb6ad7c393517f476f96d456d0412ea80f0a8cf96f6892834cd9340149111b0a", size = 5830, upload-time = "2024-12-21T20:09:44.175Z" },
-]
-
-[[package]]
 name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1419,9 +1410,13 @@ wheels = [
 [[package]]
 name = "nexus-rpc"
 version = "1.1.0"
-source = { git = "https://github.com/nexus-rpc/sdk-python#6efc0caa541dc304cc52d70c4adc79c5ed5748e9" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ef/66/540687556bd28cf1ec370cc6881456203dfddb9dab047b8979c6865b5984/nexus_rpc-1.1.0.tar.gz", hash = "sha256:d65ad6a2f54f14e53ebe39ee30555eaeb894102437125733fb13034a04a44553", size = 77383, upload-time = "2025-07-07T19:03:58.368Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/2f/9e9d0dcaa4c6ffa22b7aa31069a8a264c753ff8027b36af602cce038c92f/nexus_rpc-1.1.0-py3-none-any.whl", hash = "sha256:d1b007af2aba186a27e736f8eaae39c03aed05b488084ff6c3d1785c9ba2ad38", size = 27743, upload-time = "2025-07-07T19:03:57.556Z" },
 ]
 
 [[package]]
@@ -2534,18 +2529,24 @@ wheels = [
 [[package]]
 name = "temporalio"
 version = "1.13.0"
-source = { git = "https://github.com/temporalio/sdk-python?branch=nexus#fdb3139e5dd2b62d739b33adc7cb20898423b8b4" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "nexus-rpc" },
     { name = "protobuf" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'" },
     { name = "types-protobuf" },
     { name = "typing-extensions" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/3e/a3/a76477b523937f47a21941188c16b3c6b1eef6baadc7c8efeea497d909de/temporalio-1.13.0.tar.gz", hash = "sha256:5a979eee5433da6ab5d8a2bcde25a1e7d454e91920acb0bf7ca93d415750828b", size = 1558745, upload-time = "2025-06-20T19:57:26.944Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f5/f4/a5a74284c671bd50ce7353ad1dad7dab1a795f891458454049e95bc5378f/temporalio-1.13.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:7ee14cab581352e77171d1e4ce01a899231abfe75c5f7233e3e260f361a344cc", size = 12086961, upload-time = "2025-06-20T19:57:15.25Z" },
+    { url = "https://files.pythonhosted.org/packages/1f/b7/5dc6e34f4e9a3da8b75cb3fe0d32edca1d9201d598c38d022501d38650a9/temporalio-1.13.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:575a0c57dbb089298b4775f3aca86ebaf8d58d5ba155e7fc5509877c25e6bb44", size = 11745239, upload-time = "2025-06-20T19:57:17.934Z" },
+    { url = "https://files.pythonhosted.org/packages/04/30/4b9b15af87c181fd9364b61971faa0faa07d199320d7ff1712b5d51b5bbb/temporalio-1.13.0-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:6bf099a27f22c0dbc22f3d86dba76d59be5da812ff044ba3fa183e3e14bd5e9a", size = 12119197, upload-time = "2025-06-20T19:57:20.509Z" },
+    { url = "https://files.pythonhosted.org/packages/46/9f/a5b627d773974c654b6cd22ed3937e7e2471023af244ea417f0e917e617b/temporalio-1.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f7e20c711f41c66877b9d54ab33c79a14ccaac9ed498a174274f6129110f4d84", size = 12413459, upload-time = "2025-06-20T19:57:22.816Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/73/efb6957212eb8c8dfff26c7c2c6ddf745aa5990a3b722cff17c8feaa66fc/temporalio-1.13.0-cp39-abi3-win_amd64.whl", hash = "sha256:9286cb84c1e078b2bcc6e8c6bd0be878d8ed395be991ac0d7cff555e3a82ac0b", size = 12440644, upload-time = "2025-06-20T19:57:25.175Z" },
+]
 
 [package.optional-dependencies]
 openai-agents = [
-    { name = "eval-type-backport", marker = "python_full_version < '3.10'" },
     { name = "openai-agents" },
 ]
 opentelemetry = [
@@ -2626,7 +2627,7 @@ trio-async = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "temporalio", git = "https://github.com/temporalio/sdk-python?branch=nexus" }]
+requires-dist = [{ name = "temporalio", specifier = ">=1.13.0,<2" }]
 
 [package.metadata.requires-dev]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
@@ -2669,11 +2670,11 @@ langchain = [
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "temporalio", extras = ["opentelemetry"], git = "https://github.com/temporalio/sdk-python?branch=nexus" },
+    { name = "temporalio", extras = ["opentelemetry"] },
 ]
 openai-agents = [
     { name = "openai-agents", specifier = ">=0.0.19" },
-    { name = "temporalio", extras = ["openai-agents"], git = "https://github.com/temporalio/sdk-python?branch=nexus" },
+    { name = "temporalio", extras = ["openai-agents"], specifier = ">=1.13.0" },
 ]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]
 sentry = [{ name = "sentry-sdk", specifier = ">=1.11.0,<2" }]

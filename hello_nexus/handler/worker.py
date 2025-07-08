@@ -5,7 +5,6 @@ from typing import Optional
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from hello_nexus.handler.db_client import MyDBClient
 from hello_nexus.handler.service_handler import MyNexusServiceHandler
 from hello_nexus.handler.workflows import WorkflowStartedByNexusOperation
 
@@ -23,11 +22,6 @@ async def main(client: Optional[Client] = None):
         namespace=NAMESPACE,
     )
 
-    # Create an instance of the service handler. Your service handler class __init__ can
-    # be written to accept any arguments that your operation handlers need when handling
-    # requests. In this example we provide a database client object to the service hander.
-    connected_db_client = MyDBClient.connect()
-
     # Start the worker, passing the Nexus service handler instance, in addition to the
     # workflow classes that are started by your nexus operations, and any activities
     # needed. This Worker will poll for both workflow tasks and Nexus tasks (this example
@@ -36,9 +30,7 @@ async def main(client: Optional[Client] = None):
         client,
         task_queue=TASK_QUEUE,
         workflows=[WorkflowStartedByNexusOperation],
-        nexus_service_handlers=[
-            MyNexusServiceHandler(connected_db_client=connected_db_client)
-        ],
+        nexus_service_handlers=[MyNexusServiceHandler()],
     ):
         logging.info("Worker started, ctrl+c to exit")
         await interrupt_event.wait()

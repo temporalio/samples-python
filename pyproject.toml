@@ -85,6 +85,9 @@ default-groups = [
     "trio-async",
 ]
 
+[tool.uv.sources]
+temporalio = { git = "https://github.com/temporalio/sdk-python", branch = "nexus" }
+
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]
 

@@ -7,9 +7,7 @@ requires-python = "~=3.9"
 readme = "README.md"
 license = "MIT"
 dependencies = [
-#    "temporalio>=1.14.0,<2"
-#    "temporalio @ file:///Users/maxim/temporal/sdk-python"
-      "temporalio @ git+https://github.com/temporalio/sdk-python.git@nexus-operation-as-tool"
+   "temporalio>=1.14.0,<2"
 ]
 
 [project.urls]
@@ -88,6 +86,9 @@ default-groups = [
     "sentry",
     "trio-async",
 ]
+
+[tool.uv.sources]
+temporalio = { path = "../sdk-python", editable = true }
 
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]

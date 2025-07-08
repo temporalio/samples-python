@@ -2666,7 +2666,7 @@ langchain = [
     { name = "tqdm", specifier = ">=4.62.0,<5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0.post1,<0.25" },
 ]
-nexus = [{ name = "nexus-rpc", git = "https://github.com/nexus-rpc/sdk-python" }]
+nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "temporalio", extras = ["opentelemetry"], git = "https://github.com/temporalio/sdk-python?branch=nexus" },

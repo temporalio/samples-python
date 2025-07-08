@@ -47,7 +47,7 @@ langchain = [
     "uvicorn[standard]>=0.24.0.post1,<0.25",
 ]
 nexus = [
-    "nexus-rpc",
+    "nexus-rpc>=1.1.0,<2",
 ]
 open-telemetry = [
     "temporalio[opentelemetry]",
@@ -84,10 +84,6 @@ default-groups = [
     "sentry",
     "trio-async",
 ]
-
-[tool.uv.sources]
-nexus-rpc = { git = "https://github.com/nexus-rpc/sdk-python" }
-temporalio = { git = "https://github.com/temporalio/sdk-python", branch = "nexus" }
 
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]
@@ -161,3 +157,4 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "opentelemetry.*"
 ignore_errors = true
+

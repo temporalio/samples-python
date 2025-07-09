@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-import concurrent.futures
 from datetime import timedelta
 
-from temporalio import workflow
 from temporalio.client import Client
-from temporalio.contrib.openai_agents.invoke_model_activity import ModelActivity
-from temporalio.contrib.openai_agents.open_ai_data_converter import (
-    open_ai_data_converter,
-)
-from temporalio.contrib.openai_agents.temporal_openai_agents import (
+from temporalio.contrib.openai_agents import (
+    ModelActivity,
+    ModelActivityParameters,
     set_open_ai_agent_temporal_overrides,
 )
+from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.worker import Worker
 
 from openai_agents.workflows.agents_as_tools_workflow import AgentsAsToolsWorkflow
@@ -25,12 +22,14 @@ from openai_agents.workflows.tools_workflow import ToolsWorkflow
 
 async def main():
     with set_open_ai_agent_temporal_overrides(
-        start_to_close_timeout=timedelta(seconds=60),
+        model_params=ModelActivityParameters(
+            start_to_close_timeout=timedelta(seconds=60),
+        ),
     ):
         # Create client connected to server at the given address
         client = await Client.connect(
             "localhost:7233",
-            data_converter=open_ai_data_converter,
+            data_converter=pydantic_data_converter,
         )
 
         model_activity = ModelActivity(model_provider=None)

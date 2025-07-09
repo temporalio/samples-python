@@ -6,15 +6,14 @@ from __future__ import annotations
 
 import uuid
 
-from nexusrpc.handler import StartOperationContext, service_handler, sync_operation
+import nexusrpc
 from temporalio import nexus
-from temporalio.nexus import WorkflowRunOperationContext, workflow_run_operation
 
 from hello_nexus.handler.workflows import WorkflowStartedByNexusOperation
 from hello_nexus.service import MyInput, MyNexusService, MyOutput
 
 
-@service_handler(service=MyNexusService)
+@nexusrpc.handler.service_handler(service=MyNexusService)
 class MyNexusServiceHandler:
     # You can create an __init__ method accepting what is needed by your operation
     # handlers to handle requests. You typically instantiate your service handler class
@@ -27,9 +26,9 @@ class MyNexusServiceHandler:
     #
     # The token will be used by the caller if it subsequently wants to cancel the Nexus
     # operation.
-    @workflow_run_operation
+    @nexus.workflow_run_operation
     async def my_workflow_run_operation(
-        self, ctx: WorkflowRunOperationContext, input: MyInput
+        self, ctx: nexus.WorkflowRunOperationContext, input: MyInput
     ) -> nexus.WorkflowHandle[MyOutput]:
         return await ctx.start_workflow(
             WorkflowStartedByNexusOperation.run,
@@ -43,8 +42,8 @@ class MyNexusServiceHandler:
     #
     # Sync operations are free to make arbitrary network calls, or perform CPU-bound
     # computations. Total execution duration must not exceed 10s.
-    @sync_operation
+    @nexusrpc.handler.sync_operation
     async def my_sync_operation(
-        self, ctx: StartOperationContext, input: MyInput
+        self, ctx: nexusrpc.handler.StartOperationContext, input: MyInput
     ) -> MyOutput:
         return MyOutput(message=f"Hello {input.name} from sync operation!")

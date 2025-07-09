@@ -29,7 +29,7 @@ class ResearchManager:
 
     async def run(self, query: str) -> str:
         trace_id = gen_trace_id()
-        with trace("Research trace", trace_id=trace_id):
+        with trace("Research", trace_id=trace_id):
             search_plan = await self._plan_searches(query)
             search_results = await self._perform_searches(search_plan)
             report = await self._write_report(query, search_results)

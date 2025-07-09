@@ -22,16 +22,16 @@ temporal operator nexus endpoint create \
   --name hello-nexus-basic-nexus-endpoint \
   --target-namespace hello-nexus-basic-handler-namespace \
   --target-task-queue my-handler-task-queue \
-  --description-file endpoint_description.md
+  --description-file hello_nexus/endpoint_description.md
 ```
 
-In one terminal, in this directory, run the Temporal worker in the handler namespace:
+In one terminal, run the Temporal worker in the handler namespace:
 ```
-uv run handler/worker.py
+uv run hello_nexus/handler/worker.py
 ```
 
-In another terminal, in this directory, run the Temporal worker in the caller namespace and start the caller
+In another terminal, run the Temporal worker in the caller namespace and start the caller
 workflow:
 ```
-uv run caller/app.py
+uv run hello_nexus/caller/app.py
 ```

@@ -4,9 +4,9 @@ import asyncio
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import (
-    ModelActivity,
-    ModelActivityParameters,
+from temporalio.contrib.openai_agents.invoke_model_activity import ModelActivity
+from temporalio.contrib.openai_agents.model_parameters import ModelActivityParameters
+from temporalio.contrib.openai_agents.temporal_openai_agents import (
     set_open_ai_agent_temporal_overrides,
 )
 from temporalio.contrib.pydantic import pydantic_data_converter

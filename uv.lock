@@ -1190,6 +1190,18 @@ wheels = [
 ]
 
 [[package]]
+name = "markdown-it-py"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple/" }
+dependencies = [
+    { name = "mdurl" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/38/71/3b932df36c1a044d397a1f92d1cf91ee0a503d91e470cbd670aa66b07ed0/markdown-it-py-3.0.0.tar.gz", hash = "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb", size = 74596, upload-time = "2023-06-03T06:41:14.443Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/42/d7/1ec15b46af6af88f19b8e5ffea08fa375d433c998b8a7639e76935c14f1f/markdown_it_py-3.0.0-py3-none-any.whl", hash = "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1", size = 87528, upload-time = "2023-06-03T06:41:11.019Z" },
+]
+
+[[package]]
 name = "marshmallow"
 version = "3.26.1"
 source = { registry = "https://pypi.org/simple/" }
@@ -1219,6 +1231,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/06/f2/dc2450e566eeccf92d89a00c3e813234ad58e2ba1e31d11467a09ac4f3b9/mcp-1.9.4.tar.gz", hash = "sha256:cfb0bcd1a9535b42edaef89947b9e18a8feb49362e1cc059d6e7fc636f2cb09f", size = 333294, upload-time = "2025-06-12T08:20:30.158Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/97/fc/80e655c955137393c443842ffcc4feccab5b12fa7cb8de9ced90f90e6998/mcp-1.9.4-py3-none-any.whl", hash = "sha256:7fcf36b62936adb8e63f89346bccca1268eeca9bf6dfb562ee10b1dfbda9dac0", size = 130232, upload-time = "2025-06-12T08:20:28.551Z" },
+]
+
+[[package]]
+name = "mdurl"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple/" }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
 ]
 
 [[package]]
@@ -1405,6 +1426,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ef/66/540687556bd28cf1ec370cc6881456203dfddb9dab047b8979c6865b5984/nexus_rpc-1.1.0.tar.gz", hash = "sha256:d65ad6a2f54f14e53ebe39ee30555eaeb894102437125733fb13034a04a44553", size = 77383, upload-time = "2025-07-07T19:03:58.368Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bf/2f/9e9d0dcaa4c6ffa22b7aa31069a8a264c753ff8027b36af602cce038c92f/nexus_rpc-1.1.0-py3-none-any.whl", hash = "sha256:d1b007af2aba186a27e736f8eaae39c03aed05b488084ff6c3d1785c9ba2ad38", size = 27743, upload-time = "2025-07-07T19:03:57.556Z" },
+]
+
+[[package]]
+name = "nodeenv"
+version = "1.9.1"
+source = { registry = "https://pypi.org/simple/" }
+sdist = { url = "https://files.pythonhosted.org/packages/43/16/fc88b08840de0e0a72a2f9d8c6bae36be573e475a6326ae854bcc549fc45/nodeenv-1.9.1.tar.gz", hash = "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f", size = 47437, upload-time = "2024-06-04T18:44:11.171Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl", hash = "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9", size = 22314, upload-time = "2024-06-04T18:44:08.352Z" },
 ]
 
 [[package]]
@@ -2082,6 +2112,28 @@ wheels = [
 ]
 
 [[package]]
+name = "pygments"
+version = "2.19.2"
+source = { registry = "https://pypi.org/simple/" }
+sdist = { url = "https://files.pythonhosted.org/packages/b0/77/a5b8c569bf593b0140bde72ea885a803b82086995367bf2037de0159d924/pygments-2.19.2.tar.gz", hash = "sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887", size = 4968631, upload-time = "2025-06-21T13:39:12.283Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c7/21/705964c7812476f378728bdf590ca4b771ec72385c533964653c68e86bdc/pygments-2.19.2-py3-none-any.whl", hash = "sha256:86540386c03d588bb81d44bc3928634ff26449851e99741617ecb9037ee5ec0b", size = 1225217, upload-time = "2025-06-21T13:39:07.939Z" },
+]
+
+[[package]]
+name = "pyright"
+version = "1.1.403"
+source = { registry = "https://pypi.org/simple/" }
+dependencies = [
+    { name = "nodeenv" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fe/f6/35f885264ff08c960b23d1542038d8da86971c5d8c955cfab195a4f672d7/pyright-1.1.403.tar.gz", hash = "sha256:3ab69b9f41c67fb5bbb4d7a36243256f0d549ed3608678d381d5f51863921104", size = 3913526, upload-time = "2025-07-09T07:15:52.882Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/49/b6/b04e5c2f41a5ccad74a1a4759da41adb20b4bc9d59a5e08d29ba60084d07/pyright-1.1.403-py3-none-any.whl", hash = "sha256:c0eeca5aa76cbef3fcc271259bbd785753c7ad7bcac99a9162b4c4c7daed23b3", size = 5684504, upload-time = "2025-07-09T07:15:50.958Z" },
+]
+
+[[package]]
 name = "pytest"
 version = "7.4.4"
 source = { registry = "https://pypi.org/simple/" }
@@ -2109,6 +2161,19 @@ sdist = { url = "https://files.pythonhosted.org/packages/4d/73/769d29676fb36a36e
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8b/d6/4ecdd0c5b49a2209131b6af78baa643cec35f213abbc54d0eb1542b3786d/pytest_asyncio-0.18.3-1-py3-none-any.whl", hash = "sha256:16cf40bdf2b4fb7fc8e4b82bd05ce3fbcd454cbf7b92afc445fe299dabb88213", size = 14768, upload-time = "2022-03-28T13:53:15.727Z" },
     { url = "https://files.pythonhosted.org/packages/ac/4b/7c400506ec484ec999b10133aa8e31af39dfc727042dc6944cd45fd927d0/pytest_asyncio-0.18.3-py3-none-any.whl", hash = "sha256:8fafa6c52161addfd41ee7ab35f11836c5a16ec208f93ee388f752bea3493a84", size = 14597, upload-time = "2022-03-25T09:43:57.106Z" },
+]
+
+[[package]]
+name = "pytest-pretty"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple/" }
+dependencies = [
+    { name = "pytest" },
+    { name = "rich" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ba/d7/c699e0be5401fe9ccad484562f0af9350b4e48c05acf39fb3dab1932128f/pytest_pretty-1.3.0.tar.gz", hash = "sha256:97e9921be40f003e40ae78db078d4a0c1ea42bf73418097b5077970c2cc43bf3", size = 219297, upload-time = "2025-06-04T12:54:37.322Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ab/85/2f97a1b65178b0f11c9c77c35417a4cc5b99a80db90dad4734a129844ea5/pytest_pretty-1.3.0-py3-none-any.whl", hash = "sha256:074b9d5783cef9571494543de07e768a4dda92a3e85118d6c7458c67297159b7", size = 5620, upload-time = "2025-06-04T12:54:36.229Z" },
 ]
 
 [[package]]
@@ -2317,6 +2382,20 @@ wheels = [
 ]
 
 [[package]]
+name = "rich"
+version = "14.0.0"
+source = { registry = "https://pypi.org/simple/" }
+dependencies = [
+    { name = "markdown-it-py" },
+    { name = "pygments" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a1/53/830aa4c3066a8ab0ae9a9955976fb770fe9c6102117c8ec4ab3ea62d89e8/rich-14.0.0.tar.gz", hash = "sha256:82f1bc23a6a21ebca4ae0c45af9bdbc492ed20231dcb63f297d6d1021a9d5725", size = 224078, upload-time = "2025-03-30T14:15:14.23Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0d/9b/63f4c7ebc259242c89b3acafdb37b41d1185c07ff0011164674e9076b491/rich-14.0.0-py3-none-any.whl", hash = "sha256:1c9491e1951aac09caffd42f448ee3d04e58923ffe14993f6e83068dc395d7e0", size = 243229, upload-time = "2025-03-30T14:15:12.283Z" },
+]
+
+[[package]]
 name = "s3transfer"
 version = "0.13.0"
 source = { registry = "https://pypi.org/simple/" }
@@ -2458,7 +2537,7 @@ wheels = [
 
 [[package]]
 name = "temporalio"
-version = "1.14.0"
+version = "1.14.1"
 source = { registry = "https://test.pypi.org/simple/" }
 dependencies = [
     { name = "nexus-rpc" },
@@ -2467,13 +2546,13 @@ dependencies = [
     { name = "types-protobuf" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://test-files.pythonhosted.org/packages/6d/e9/66ccf5b2d2f45b5943f8431c5a3694baaba7d92402b6bb1a56044ac23aed/temporalio-1.14.0.tar.gz", hash = "sha256:6dbe3b8da0b8c3b7b0079f1985770fd42d826bf98dea312ea2eb46216bcee38b", size = 1605629, upload-time = "2025-07-08T05:47:39.959Z" }
+sdist = { url = "https://test-files.pythonhosted.org/packages/40/23/ef5ed581d26112e21c4a6d4ddc2c4eaa5700c0d70b53b07566553e9b7d90/temporalio-1.14.1.tar.gz", hash = "sha256:b240cf56f64add65beb75bd18aa854ac35bdc2505097af5af1e235d611190a9d", size = 1607639, upload-time = "2025-07-10T20:29:47.454Z" }
 wheels = [
-    { url = "https://test-files.pythonhosted.org/packages/c7/49/2246f321a65028cdfec49a480ee4a77bd1c8a6d0efd5ef7eee29d9e17311/temporalio-1.14.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:5a08acc57b9ff0c1c0c2a78bd519448787c6b5fd5695da6f0f6bc2eecd23d7e1", size = 12505134, upload-time = "2025-07-08T05:47:27.949Z" },
-    { url = "https://test-files.pythonhosted.org/packages/09/30/9004e8743d3cc76684edfcbed1b0ed1b96ebff624803a13fff9b61e1dc5c/temporalio-1.14.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:0dcc5a50e8a9302a808e7e191fd71e0f1ada56003a5b2b03347748966a92d120", size = 12089962, upload-time = "2025-07-08T05:47:30.398Z" },
-    { url = "https://test-files.pythonhosted.org/packages/ca/a0/957df6473f210079d5032a65685ddcf26d00cfdbdce4ff9ddcc8b004f7ec/temporalio-1.14.0-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e7851ff63311af159086741be77071a43a8dc22de6cae4269ca9c907282160cd", size = 12451575, upload-time = "2025-07-08T05:47:33.413Z" },
-    { url = "https://test-files.pythonhosted.org/packages/b2/14/682ee77ce0cf624b809ff2fc2bc33666b879ca3461cfbb61d4e94a712044/temporalio-1.14.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:7663373e9d41f63522305fe5c0a246f47d498f9f653b9c19079638440191f611", size = 12687936, upload-time = "2025-07-08T05:47:35.451Z" },
-    { url = "https://test-files.pythonhosted.org/packages/43/ac/ecb434b6edb71ae8089a8d87007b7d34293ab48f42487ffde3c15a2f0d30/temporalio-1.14.0-cp39-abi3-win_amd64.whl", hash = "sha256:93a6a2cf5115449b5c9c26a062008cc3c16113facf2268c68cfa3e032c0a02ab", size = 12756882, upload-time = "2025-07-08T05:47:37.707Z" },
+    { url = "https://test-files.pythonhosted.org/packages/bd/66/6dc4f5a647a9901cf19e012c442173574babdc879ccaf4cb166662a23ef0/temporalio-1.14.1-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:ebde00b59af72e512e5837445e4b5b8aa445431d57a71bbeb57a5ba8a93ac8be", size = 12508009, upload-time = "2025-07-10T20:29:34.51Z" },
+    { url = "https://test-files.pythonhosted.org/packages/bb/dc/654ebcc92c658180576127ac6dc047fab43b7730f39df4439645e91577fb/temporalio-1.14.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:3c21cff8fdc60fbcc9acd91e6c119b0b5f9de7671fe806459f00d68bd4ecae78", size = 12091653, upload-time = "2025-07-10T20:29:37.547Z" },
+    { url = "https://test-files.pythonhosted.org/packages/8a/58/7fc3a7bde275c059e42d0279c54e8e66642b67be8eda21b31347f4277186/temporalio-1.14.1-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9f984b503ae741213fe71128d6193076f3267691561ff3c55dbe798f92e6ee1b", size = 12451995, upload-time = "2025-07-10T20:29:40.186Z" },
+    { url = "https://test-files.pythonhosted.org/packages/98/12/14f6a7a1f4aebb7d846469f5c1cd165cce55b793ded6ce5fc315bd83e28f/temporalio-1.14.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:830cb1a820624a5e64f6c874b5aca6ad9eb841295407dd2011074159a2d28bdb", size = 12688904, upload-time = "2025-07-10T20:29:42.834Z" },
+    { url = "https://test-files.pythonhosted.org/packages/b4/ed/c09f1ca41d5ed9f9a777a0ddd5bc225f8300bab8b42bc6751195566706fb/temporalio-1.14.1-cp39-abi3-win_amd64.whl", hash = "sha256:ad4e6a16b42bb34aebec62fb8bbe8f64643d8268ed6d7db337dfe98a76799bb0", size = 12758696, upload-time = "2025-07-10T20:29:45.31Z" },
 ]
 
 [package.optional-dependencies]
@@ -2509,8 +2588,10 @@ dev = [
     { name = "frozenlist" },
     { name = "isort" },
     { name = "mypy" },
+    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
+    { name = "pytest-pretty" },
     { name = "types-pyyaml" },
 ]
 dsl = [
@@ -2534,6 +2615,9 @@ langchain = [
     { name = "tqdm" },
     { name = "uvicorn", extra = ["standard"] },
 ]
+nexus = [
+    { name = "nexus-rpc" },
+]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "temporalio", extra = ["opentelemetry"] },
@@ -2554,7 +2638,7 @@ trio-async = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "temporalio", specifier = ">=1.14.0,<2" }]
+requires-dist = [{ name = "temporalio", specifier = ">=1.14.1,<2" }]
 
 [package.metadata.requires-dev]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
@@ -2569,8 +2653,10 @@ dev = [
     { name = "frozenlist", specifier = ">=1.4.0,<2" },
     { name = "isort", specifier = ">=5.10.1,<6" },
     { name = "mypy", specifier = ">=1.4.1,<2" },
+    { name = "pyright", specifier = ">=1.1.394" },
     { name = "pytest", specifier = ">=7.1.2,<8" },
     { name = "pytest-asyncio", specifier = ">=0.18.3,<0.19" },
+    { name = "pytest-pretty", specifier = ">=1.3.0" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20241230,<7" },
 ]
 dsl = [
@@ -2592,8 +2678,9 @@ langchain = [
     { name = "tqdm", specifier = ">=4.62.0,<5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0.post1,<0.25" },
 ]
+nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
-    { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = "==1.18.0" },
+    { name = "opentelemetry-exporter-otlp-proto-grpc" },
     { name = "temporalio", extras = ["opentelemetry"] },
 ]
 openai-agents = [

@@ -1,8 +1,6 @@
 from temporalio import workflow
 
-# Import agent Agent and Runner
-with workflow.unsafe.imports_passed_through():
-    from agents import Agent, Runner
+from agents import Agent, Runner
 
 
 @workflow.defn

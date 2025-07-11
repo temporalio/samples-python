@@ -39,7 +39,7 @@ async def main():
             CustomerServiceWorkflow.get_chat_history,
             reject_condition=QueryRejectCondition.NOT_OPEN,
         )
-    except WorkflowQueryRejectedError as e:
+    except WorkflowQueryRejectedError:
         start = True
     except RPCError as e:
         if e.status == RPCStatusCode.NOT_FOUND:

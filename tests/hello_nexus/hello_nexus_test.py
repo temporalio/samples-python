@@ -36,9 +36,6 @@ async def test_nexus_service_basic(client: Client, env: WorkflowEnvironment):
         hello_nexus.handler.worker.interrupt_event.set()
         await handler_worker_task
         hello_nexus.handler.worker.interrupt_event.clear()
-        print("\n\n")
-        print([r.message for r in results])
-        print("\n\n")
         assert [r.message for r in results] == [
             "Hello world from sync operation!",
             "Hello world from workflow run operation!",

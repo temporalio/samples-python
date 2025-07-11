@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 import pytest
 from temporalio.client import Client
@@ -13,6 +14,10 @@ from tests.hello_nexus.helpers import create_nexus_endpoint, delete_nexus_endpoi
 async def test_nexus_service_basic(client: Client, env: WorkflowEnvironment):
     if env.supports_time_skipping:
         pytest.skip("Nexus tests don't work under the Java test server")
+
+    if sys.version_info[:2] < (3, 10):
+        pytest.skip("Sample is written for Python >= 3.10")
+
     create_response = await create_nexus_endpoint(
         name=hello_nexus.caller.workflows.NEXUS_ENDPOINT,
         task_queue=hello_nexus.handler.worker.TASK_QUEUE,

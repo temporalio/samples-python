@@ -1,6 +1,5 @@
-from temporalio import workflow
-
 from agents import Agent, ItemHelpers, MessageOutputItem, RunConfig, Runner, trace
+from temporalio import workflow
 
 """
 This example shows the agents-as-tools pattern. The frontline agent receives a user message and

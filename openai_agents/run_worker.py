@@ -5,12 +5,12 @@ from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import (
-    set_open_ai_agent_temporal_overrides,
     ModelActivity,
     ModelActivityParameters,
+    set_open_ai_agent_temporal_overrides,
 )
-from temporalio.worker import Worker
 from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.worker import Worker
 
 from openai_agents.workflows.agents_as_tools_workflow import AgentsAsToolsWorkflow
 from openai_agents.workflows.customer_service_workflow import CustomerServiceWorkflow

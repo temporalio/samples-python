@@ -1,7 +1,5 @@
 from __future__ import annotations as _annotations
 
-from temporalio import workflow
-
 from agents import (
     Agent,
     HandoffOutputItem,
@@ -14,6 +12,7 @@ from agents import (
     TResponseInputItem,
     trace,
 )
+from temporalio import workflow
 
 from openai_agents.workflows.customer_service import (
     AirlineAgentContext,

@@ -1,6 +1,5 @@
-from temporalio import workflow
-
 from agents import Agent, Runner
+from temporalio import workflow
 
 
 @workflow.defn

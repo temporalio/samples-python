@@ -1,26 +1,24 @@
 from __future__ import annotations as _annotations
 
+from agents import (
+    Agent,
+    HandoffOutputItem,
+    ItemHelpers,
+    MessageOutputItem,
+    RunConfig,
+    Runner,
+    ToolCallItem,
+    ToolCallOutputItem,
+    TResponseInputItem,
+    trace,
+)
 from temporalio import workflow
 
-with workflow.unsafe.imports_passed_through():
-    from agents import (
-        Agent,
-        HandoffOutputItem,
-        ItemHelpers,
-        MessageOutputItem,
-        RunConfig,
-        Runner,
-        ToolCallItem,
-        ToolCallOutputItem,
-        TResponseInputItem,
-        trace,
-    )
-
-    from openai_agents.workflows.customer_service import (
-        AirlineAgentContext,
-        ProcessUserMessageInput,
-        init_agents,
-    )
+from openai_agents.workflows.customer_service import (
+    AirlineAgentContext,
+    ProcessUserMessageInput,
+    init_agents,
+)
 
 
 @workflow.defn

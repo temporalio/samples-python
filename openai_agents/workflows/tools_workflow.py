@@ -2,14 +2,11 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from agents import Agent, Runner
 from temporalio import workflow
-from temporalio.contrib.openai_agents.temporal_tools import activity_as_tool
+from temporalio.contrib import openai_agents as temporal_agents
 
-# Import our activity, passing it through the sandbox
-with workflow.unsafe.imports_passed_through():
-    from agents import Agent, Runner
-
-    from openai_agents.workflows.get_weather_activity import get_weather
+from openai_agents.workflows.get_weather_activity import get_weather
 
 
 @workflow.defn
@@ -20,7 +17,7 @@ class ToolsWorkflow:
             name="Hello world",
             instructions="You are a helpful agent.",
             tools=[
-                activity_as_tool(
+                temporal_agents.workflow.activity_as_tool(
                     get_weather, start_to_close_timeout=timedelta(seconds=10)
                 )
             ],

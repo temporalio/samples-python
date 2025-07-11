@@ -7,6 +7,7 @@ from temporalio.contrib.pydantic import pydantic_data_converter
 
 from openai_agents.workflows.hello_world_workflow import HelloWorldAgent
 
+
 async def main():
     # Create client connected to server at the given address
     client = await Client.connect(

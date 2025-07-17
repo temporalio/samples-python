@@ -7,13 +7,13 @@ For this sample, the optional `sentry` dependency group must be included. To inc
     uv sync --group sentry
 
 To run, first see [README.md](../README.md) for prerequisites. Set `SENTRY_DSN` environment variable to the Sentry DSN.
-Then, run the following from this directory to start the worker:
+Then, run the following from the root directory to start the worker:
 
-    uv run worker.py
+    uv run sentry/worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    uv run starter.py
+    uv run sentry/starter.py
 
 The workflow should complete with the hello result. If you alter the workflow or the activity to raise an
 `ApplicationError` instead, it should appear in Sentry.

@@ -15,14 +15,14 @@ For this sample, the optional `gevent` dependency group must be included. To inc
     uv sync --group gevent
 
 To run the sample, first see [README.md](../README.md) for prerequisites such as having a localhost Temporal server
-running. Then, run the following from this directory to start the worker:
+running. Then, run the following from the root directory to start the worker:
 
-    uv run worker.py
+    uv run gevent_async/worker.py
 
 This will start the worker. The worker has a workflow and two activities, one `asyncio` based and one gevent based. Now
-in another terminal, run the following from this directory to execute the workflow:
+in another terminal, run the following to execute the workflow:
 
-    uv run starter.py
+    uv run gevent_async/starter.py
 
 The workflow should run and complete with the hello result. Note on the worker terminal there will be logs of the
 workflow and activity executions.

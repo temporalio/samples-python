@@ -10,12 +10,12 @@ This sample shows off important techniques for handling signals and updates, aka
 
 To run, first see [README.md](../../README.md) for prerequisites.
 
-Then, run the following from this directory to run the worker:
-\
-    uv run worker.py
+Then, run the following from the root directory to run the worker:
+
+    uv run message_passing/safe_message_handlers/worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    uv run starter.py
+    uv run message_passing/safe_message_handlers/starter.py
 
 This will start a worker to run your workflow and activities, then start a ClusterManagerWorkflow and put it through its paces.

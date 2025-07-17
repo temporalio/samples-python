@@ -4,15 +4,15 @@ This sample demonstrates how to create a Temporal workflow that runs forever, se
 
 To run, first see the main [README.md](../../README.md) for prerequisites.
 
-Then create two terminals and `cd` to this directory.
+Then create two terminals.
 
 Run the worker in one terminal:
 
-    uv run worker.py
+    uv run sleep_for_days/worker.py
 
 And execute the workflow in the other terminal:
 
-    uv run starter.py
+    uv run sleep_for_days/starter.py
 
 This sample will run indefinitely until you send a signal to `complete`. See how to send a signal via Temporal CLI [here](https://docs.temporal.io/cli/workflow#signal).
 

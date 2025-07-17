@@ -1,6 +1,6 @@
+import asyncio
 from dataclasses import dataclass
 from typing import List
-import asyncio
 
 from temporalio import workflow
 from temporalio.common import WorkflowIDReusePolicy

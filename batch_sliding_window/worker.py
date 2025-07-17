@@ -8,9 +8,9 @@ from temporalio import worker
 from temporalio.client import Client
 
 from batch_sliding_window.batch_workflow import ProcessBatchWorkflow
-from batch_sliding_window.sliding_window_workflow import SlidingWindowWorkflow
-from batch_sliding_window.record_processor_workflow import RecordProcessorWorkflow
 from batch_sliding_window.record_loader_activity import RecordLoader
+from batch_sliding_window.record_processor_workflow import RecordProcessorWorkflow
+from batch_sliding_window.sliding_window_workflow import SlidingWindowWorkflow
 
 
 async def main():

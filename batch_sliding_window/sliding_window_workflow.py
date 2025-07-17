@@ -6,8 +6,8 @@ from temporalio import workflow
 from temporalio.common import WorkflowIDReusePolicy
 
 from batch_sliding_window.record_loader_activity import (
-    RecordLoader,
     GetRecordsInput,
+    RecordLoader,
     SingleRecord,
 )
 from batch_sliding_window.record_processor_workflow import RecordProcessorWorkflow

@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Dict, List, Optional, Set
 
 from temporalio import workflow
@@ -7,6 +8,7 @@ from temporalio.common import WorkflowIDReusePolicy
 
 from batch_sliding_window.record_loader_activity import (
     GetRecordsInput,
+    GetRecordsOutput,
     RecordLoader,
     SingleRecord,
 )
@@ -86,10 +88,12 @@ class SlidingWindowWorkflow:
                 offset=self.offset,
                 max_offset=input.maximum_offset,
             )
-            get_records_output = await workflow.execute_activity(
-                RecordLoader.get_records,
-                get_records_input,
-                start_to_close_timeout=workflow.timedelta(seconds=5),
+            get_records_output: GetRecordsOutput = (
+                await workflow.execute_activity_method(
+                    RecordLoader.get_records,
+                    get_records_input,
+                    start_to_close_timeout=timedelta(seconds=5),
+                )
             )
             records = get_records_output.records
 

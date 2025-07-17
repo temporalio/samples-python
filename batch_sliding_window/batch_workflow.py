@@ -1,5 +1,6 @@
 import asyncio
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import List
 
 from temporalio import workflow
@@ -37,9 +38,9 @@ class ProcessBatchWorkflow:
     @workflow.run
     async def run(self, input: ProcessBatchWorkflowInput) -> int:
         # Get total record count
-        record_count = await workflow.execute_activity(
+        record_count: int = await workflow.execute_activity_method(
             RecordLoader.get_record_count,
-            start_to_close_timeout=workflow.timedelta(seconds=5),
+            start_to_close_timeout=timedelta(seconds=5),
         )
 
         if input.sliding_window_size < input.partitions:

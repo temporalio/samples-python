@@ -9,14 +9,14 @@ of record processing workflows. It includes:
 - RecordLoader: Activity for loading records from external sources
 """
 
-from .batch_workflow import ProcessBatchWorkflow, ProcessBatchWorkflowInput
-from .sliding_window_workflow import (
+from batch_sliding_window.batch_workflow import ProcessBatchWorkflow, ProcessBatchWorkflowInput
+from batch_sliding_window.sliding_window_workflow import (
     SlidingWindowWorkflow,
     SlidingWindowWorkflowInput,
     SlidingWindowState,
 )
-from .record_processor_workflow import RecordProcessorWorkflow
-from .record_loader_activity import (
+from batch_sliding_window.record_processor_workflow import RecordProcessorWorkflow
+from batch_sliding_window.record_loader_activity import (
     RecordLoader,
     GetRecordsInput,
     GetRecordsOutput,

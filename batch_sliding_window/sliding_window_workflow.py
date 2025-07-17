@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Set
 from temporalio import workflow
 from temporalio.common import WorkflowIDReusePolicy
 
-from .record_loader_activity import RecordLoader, GetRecordsInput, SingleRecord
-from .record_processor_workflow import RecordProcessorWorkflow
+from batch_sliding_window.record_loader_activity import RecordLoader, GetRecordsInput, SingleRecord
+from batch_sliding_window.record_processor_workflow import RecordProcessorWorkflow
 
 
 @dataclass

@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
-"""Standalone starter for the batch sliding window sample."""
+"""Starter for the batch sliding window sample."""
 
 import asyncio
 import logging
-import sys
-from pathlib import Path
-
-# Add the python-samples directory to the path to enable imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from temporalio.client import Client
 
@@ -35,8 +30,8 @@ async def main():
     handle = await client.start_workflow(
         ProcessBatchWorkflow.run,
         workflow_input,
-        id="batch-sliding-window-example",
-        task_queue="batch-sliding-window",
+        id="batch_sliding_window_example",
+        task_queue="batch_sliding_window",
     )
 
     print(f"Started workflow: {handle.id}")

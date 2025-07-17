@@ -6,8 +6,8 @@ from temporalio import workflow
 from temporalio.common import WorkflowIDReusePolicy
 from temporalio.exceptions import ApplicationError
 
-from .record_loader_activity import RecordLoader
-from .sliding_window_workflow import SlidingWindowWorkflow, SlidingWindowWorkflowInput
+from batch_sliding_window.record_loader_activity import RecordLoader
+from batch_sliding_window.sliding_window_workflow import SlidingWindowWorkflow, SlidingWindowWorkflowInput
 
 
 @dataclass

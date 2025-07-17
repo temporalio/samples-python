@@ -3,7 +3,7 @@ import random
 
 from temporalio import workflow
 
-from .record_loader_activity import SingleRecord
+from batch_sliding_window.record_loader_activity import SingleRecord
 
 
 @workflow.defn

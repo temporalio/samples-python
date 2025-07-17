@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
-"""Standalone worker runner for the batch sliding window sample."""
+"""Worker for the batch sliding window sample."""
 
 import asyncio
 import logging
-import sys
-from pathlib import Path
-
-# Add the python-samples directory to the path to enable imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from temporalio import worker
 from temporalio.client import Client
@@ -32,7 +27,7 @@ async def main():
     # Create worker
     temporal_worker = worker.Worker(
         client,
-        task_queue="batch-sliding-window",
+        task_queue="batch_sliding_window",
         workflows=[
             ProcessBatchWorkflow,
             SlidingWindowWorkflow,

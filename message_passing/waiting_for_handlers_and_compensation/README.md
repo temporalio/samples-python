@@ -9,15 +9,15 @@ This sample demonstrates how to do the following:
 
 For a simpler sample showing how to do (1) without (2), see [safe_message_handlers](../safe_message_handlers/README.md).
 
-To run, open two terminals and `cd` to this directory in them.
+To run, open two terminals.
 
 Run the worker in one terminal:
 
-    uv run worker.py
+    uv run message_passing/waiting_for_handlers_and_compensation/worker.py
 
 And run the workflow-starter code in the other terminal:
 
-    uv run starter.py
+    uv run message_passing/waiting_for_handlers_and_compensation/starter.py
 
 
 Here's the output you'll see:

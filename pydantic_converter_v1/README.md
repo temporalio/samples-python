@@ -9,14 +9,14 @@ To install, run:
     uv run pip uninstall pydantic pydantic-core
     uv run pip install pydantic==1.10
 
-To run, first see the root [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see the root [README.md](../README.md) for prerequisites. Then, run the following from the root directory to start the
 worker:
 
-    uv run worker.py
+    uv run pydantic_converter_v1/worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    uv run starter.py
+    uv run pydantic_converter_v1/starter.py
 
 In the worker terminal, the workflow and its activity will log that it received the Pydantic models. In the starter
 terminal, the Pydantic models in the workflow result will be logged.

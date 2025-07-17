@@ -6,13 +6,13 @@ To ensure that polling Activity is restarted in a timely manner, we make sure th
 
 To run, first see [README.md](../../README.md) for prerequisites.
 
-Then, run the following from this directory to run the sample:
+Then, run the following from the root directory to run the sample:
 
-    uv run run_worker.py
+    uv run polling/frequent/run_worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    uv run run_frequent.py
+    uv run polling/frequent/run_frequent.py
 
 The Workflow will continue to poll the service and heartbeat on every iteration until it succeeds.
 

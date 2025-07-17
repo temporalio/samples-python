@@ -8,16 +8,16 @@ Please make sure your python is 3.9 above. For this sample, run:
 
 Before you start, please modify workflow input in `create_schedule.py` with your s3 bucket and namespace. Also make sure you've the right AWS permission set up in your environment to allow this workflow read and write to your s3 bucket. 
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the worker:
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from the root directory to start the worker:
 
 ```bash
-uv run run_worker.py
+uv run cloud_export_to_parquet/run_worker.py
 ```
 
 This will start the worker. Then, in another terminal, run the following to execute the schedule:
 
 ```bash
-uv run create_schedule.py
+uv run cloud_export_to_parquet/create_schedule.py
 ```
 
 The workflow should convert exported file in your input s3 bucket to parquet in your specified location.

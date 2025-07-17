@@ -4,13 +4,13 @@ This sample shows how to use a long-lived `ResourcePoolWorkflow` to allocate `re
 Each `ResourceUserWorkflow` runs several activities while it has ownership of a resource. Note that
 `ResourcePoolWorkflow` is making resource allocation decisions based on in-memory state.
 
-Run the following from this directory to start the worker:
+Run the following from the root directory to start the worker:
 
-    uv run worker.py
+    uv run resource_pool/worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute several `ResourceUserWorkflows`.
 
-    uv run starter.py
+    uv run resource_pool/starter.py
 
 You should see output indicating that the `ResourcePoolWorkflow` serialized access to each resource.
 

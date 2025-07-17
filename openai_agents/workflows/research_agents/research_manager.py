@@ -46,13 +46,16 @@ class ResearchManager:
 
     async def _perform_searches(self, search_plan: WebSearchPlan) -> list[str]:
         with custom_span("Search the web"):
+            num_completed = 0
             tasks = [
                 asyncio.create_task(self._search(item)) for item in search_plan.searches
             ]
             results = []
             for task in workflow.as_completed(tasks):
-                if result := await task:
+                result = await task
+                if result is not None:
                     results.append(result)
+                num_completed += 1
             return results
 
     async def _search(self, item: WebSearchItem) -> str | None:

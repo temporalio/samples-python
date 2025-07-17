@@ -5,13 +5,18 @@ from typing import Dict, List, Optional, Set
 from temporalio import workflow
 from temporalio.common import WorkflowIDReusePolicy
 
-from batch_sliding_window.record_loader_activity import RecordLoader, GetRecordsInput, SingleRecord
+from batch_sliding_window.record_loader_activity import (
+    RecordLoader,
+    GetRecordsInput,
+    SingleRecord,
+)
 from batch_sliding_window.record_processor_workflow import RecordProcessorWorkflow
 
 
 @dataclass
 class SlidingWindowWorkflowInput:
     """Contains SlidingWindowWorkflow arguments."""
+
     page_size: int
     sliding_window_size: int
     offset: int  # inclusive
@@ -24,6 +29,7 @@ class SlidingWindowWorkflowInput:
 @dataclass
 class SlidingWindowState:
     """Used as a 'state' query result."""
+
     current_records: List[int]  # record ids currently being processed
     children_started_by_this_run: int
     offset: int
@@ -33,7 +39,7 @@ class SlidingWindowState:
 @workflow.defn
 class SlidingWindowWorkflow:
     """Workflow processes a range of records using a requested number of child workflows.
-    
+
     As soon as a child workflow completes a new one is started.
     """
 
@@ -54,7 +60,7 @@ class SlidingWindowWorkflow:
                 "offset": input.offset,
                 "maximum_offset": input.maximum_offset,
                 "progress": input.progress,
-            }
+            },
         )
 
         # Initialize state from input
@@ -111,13 +117,15 @@ class SlidingWindowWorkflow:
 
         return await self._continue_as_new_or_complete(input)
 
-    async def _continue_as_new_or_complete(self, input: SlidingWindowWorkflowInput) -> int:
+    async def _continue_as_new_or_complete(
+        self, input: SlidingWindowWorkflowInput
+    ) -> int:
         """Continue-as-new after starting page_size children or complete if done."""
         # Update offset based on children started in this run
         new_offset = input.offset + len(self.children_started_by_this_run)
-        
+
         if new_offset < input.maximum_offset:
-            # In Python, await start_child_workflow() already waits until 
+            # In Python, await start_child_workflow() already waits until
             # the start has been accepted by the server, so no additional wait needed
 
             # Continue-as-new with updated state
@@ -129,7 +137,7 @@ class SlidingWindowWorkflow:
                 progress=self.progress,
                 current_records=self.current_records,
             )
-            
+
             workflow.continue_as_new(new_input)
 
         # Last run in the continue-as-new chain
@@ -152,4 +160,4 @@ class SlidingWindowWorkflow:
             children_started_by_this_run=len(self.children_started_by_this_run),
             offset=self.offset,
             progress=self.progress,
-        ) 
+        )

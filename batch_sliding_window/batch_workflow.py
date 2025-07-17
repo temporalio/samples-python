@@ -7,16 +7,20 @@ from temporalio.common import WorkflowIDReusePolicy
 from temporalio.exceptions import ApplicationError
 
 from batch_sliding_window.record_loader_activity import RecordLoader
-from batch_sliding_window.sliding_window_workflow import SlidingWindowWorkflow, SlidingWindowWorkflowInput
+from batch_sliding_window.sliding_window_workflow import (
+    SlidingWindowWorkflow,
+    SlidingWindowWorkflowInput,
+)
 
 
 @dataclass
 class ProcessBatchWorkflowInput:
     """Input for the ProcessBatchWorkflow.
-    
-    A single input structure is preferred to multiple workflow arguments 
+
+    A single input structure is preferred to multiple workflow arguments
     to simplify backward compatible API changes.
     """
+
     page_size: int  # Number of children started by a single sliding window workflow run
     sliding_window_size: int  # Maximum number of children to run in parallel
     partitions: int  # How many sliding windows to run in parallel
@@ -25,8 +29,8 @@ class ProcessBatchWorkflowInput:
 @workflow.defn
 class ProcessBatchWorkflow:
     """Sample workflow that partitions the data set into continuous ranges.
-    
-    A real application can choose any other way to divide the records 
+
+    A real application can choose any other way to divide the records
     into multiple collections.
     """
 
@@ -44,7 +48,9 @@ class ProcessBatchWorkflow:
             )
 
         partitions = self._divide_into_partitions(record_count, input.partitions)
-        window_sizes = self._divide_into_partitions(input.sliding_window_size, input.partitions)
+        window_sizes = self._divide_into_partitions(
+            input.sliding_window_size, input.partitions
+        )
 
         workflow.logger.info(
             f"ProcessBatchWorkflow started",
@@ -53,22 +59,22 @@ class ProcessBatchWorkflow:
                 "record_count": record_count,
                 "partitions": partitions,
                 "window_sizes": window_sizes,
-            }
+            },
         )
 
         # Start child workflows for each partition
         tasks = []
         offset = 0
-        
+
         for i in range(input.partitions):
             # Make child id more user-friendly
             child_id = f"{workflow.info().workflow_id}/{i}"
-            
+
             # Define partition boundaries
             maximum_partition_offset = offset + partitions[i]
             if maximum_partition_offset > record_count:
                 maximum_partition_offset = record_count
-            
+
             child_input = SlidingWindowWorkflowInput(
                 page_size=input.page_size,
                 sliding_window_size=window_sizes[i],
@@ -77,7 +83,7 @@ class ProcessBatchWorkflow:
                 progress=0,
                 current_records=None,
             )
-            
+
             task = workflow.execute_child_workflow(
                 SlidingWindowWorkflow.run,
                 child_input,
@@ -100,4 +106,4 @@ class ProcessBatchWorkflow:
         for i in range(remainder):
             partitions[i] += 1
 
-        return partitions 
+        return partitions

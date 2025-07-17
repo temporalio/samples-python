@@ -39,7 +39,7 @@ class SlidingWindowWorkflow:
 
     def __init__(self):
         self.current_records: Set[int] = set()
-        self.children_started_by_this_run: List[workflow.ChildWorkflowHandle] = []
+        self.children_started_by_this_run = []
         self.offset = 0
         self.progress = 0
         self._completion_signals_received = 0
@@ -117,9 +117,8 @@ class SlidingWindowWorkflow:
         new_offset = input.offset + len(self.children_started_by_this_run)
         
         if new_offset < input.maximum_offset:
-            # Wait for all children started by this run to begin execution
-            for child in self.children_started_by_this_run:
-                await child.get_workflow_execution()
+            # In Python, await start_child_workflow() already waits until 
+            # the start has been accepted by the server, so no additional wait needed
 
             # Continue-as-new with updated state
             new_input = SlidingWindowWorkflowInput(

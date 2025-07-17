@@ -12,10 +12,10 @@ A single instance of `SlidingWindowWorkflow` has limited window size and through
 
 To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the worker:
 
-    uv run run_worker.py
+    uv run worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    uv run run_starter.py
+    uv run starter.py
 
 The workflow will process 90 records using a sliding window of 10 parallel workers across 3 partitions, with a page size of 5 records per continue-as-new iteration. 

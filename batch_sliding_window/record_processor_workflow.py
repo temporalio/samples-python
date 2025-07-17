@@ -21,9 +21,8 @@ class RecordProcessorWorkflow:
         # But for unit testing it might be useful to skip the notification if there is none.
         if parent:
             # Don't specify run_id as parent calls continue-as-new
-            await workflow.external_workflow_handle(parent.workflow_id).signal(
-                "report_completion", record.id
-            )
+            handle = workflow.get_external_workflow_handle(parent.workflow_id)
+            await handle.signal("report_completion", record.id)
 
     async def _process_record(self, record: SingleRecord) -> None:
         """Simulate application specific record processing."""

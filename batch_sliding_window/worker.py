@@ -27,7 +27,7 @@ async def main():
     # Create worker
     temporal_worker = worker.Worker(
         client,
-        task_queue="batch_sliding_window",
+        task_queue="batch_sliding_window_task_queue",
         workflows=[
             ProcessBatchWorkflow,
             SlidingWindowWorkflow,

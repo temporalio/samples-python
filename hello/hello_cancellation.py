@@ -1,13 +1,12 @@
 import asyncio
 import time
-import traceback
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from typing import NoReturn
 
 from temporalio import activity, workflow
 from temporalio.client import Client, WorkflowFailureError
-from temporalio.exceptions import CancelledError
+from temporalio.exceptions import ActivityError, CancelledError
 from temporalio.worker import Worker
 
 
@@ -20,8 +19,10 @@ def never_complete_activity() -> NoReturn:
             print("Heartbeating activity")
             activity.heartbeat()
             time.sleep(1)
-    except CancelledError:
-        print("Activity cancelled")
+    except CancelledError as err:
+        print(
+            f"Got expected exception in activity. Cause chain is {format_exception_cause_chain(err)}"
+        )
         raise
 
 
@@ -43,6 +44,11 @@ class CancellationWorkflow:
                 # Always set a heartbeat timeout for long-running activities
                 heartbeat_timeout=timedelta(seconds=2),
             )
+        except ActivityError as err:
+            print(
+                f"Got expected exception in workflow. Cause chain is {format_exception_cause_chain(err)}"
+            )
+            raise
         finally:
             await workflow.execute_activity(
                 cleanup_activity, start_to_close_timeout=timedelta(seconds=5)
@@ -61,7 +67,6 @@ async def main():
         activities=[never_complete_activity, cleanup_activity],
         activity_executor=ThreadPoolExecutor(5),
     ):
-
         # While the worker is running, use the client to start the workflow.
         # Note, in many production setups, the client would be in a completely
         # separate process from the worker.
@@ -80,8 +85,17 @@ async def main():
         try:
             await handle.result()
             raise RuntimeError("Should not succeed")
-        except WorkflowFailureError:
-            print("Got expected exception: ", traceback.format_exc())
+        except WorkflowFailureError as err:
+            print(
+                f"Got expected exception in client. Cause chain is {format_exception_cause_chain(err)}"
+            )
+
+
+def format_exception_cause_chain(err: BaseException) -> str:
+    causes = [err]
+    while cause := causes[-1].__cause__:
+        causes.append(cause)
+    return " -> ".join([f"{e.__class__.__name__}" for e in causes])
 
 
 if __name__ == "__main__":

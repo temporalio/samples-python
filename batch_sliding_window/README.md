@@ -18,4 +18,4 @@ This will start the worker. Then, in another terminal, run the following to exec
 
     uv run batch_sliding_window/starter.py
 
-The workflow will process 90 records using a sliding window of 10 parallel workers across 3 partitions, with a page size of 5 records per continue-as-new iteration. 
+The workflow will process 90 records using a sliding window of 10 parallel workers across 3 partitions, with a page size of 5 records per continue-as-new iteration.

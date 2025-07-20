@@ -13,5 +13,5 @@ class FakeSentryTransport:
     def __init__(self):
         self.events: list[sentry_sdk.types.Event] = []
 
-    def __callable__(self, event: sentry_sdk.types.Event) -> None:
+    def __call__(self, event: sentry_sdk.types.Event) -> None:
         self.events.append(event)

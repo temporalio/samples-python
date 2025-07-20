@@ -29,9 +29,7 @@ def transport() -> FakeSentryTransport:
 def sentry_init(transport: FakeSentryTransport) -> None:
     """Initialize Sentry for testing."""
     sentry_sdk.init(
-        # Pass __callable__ explicitly so SDK treats it as Callable[[Event], None]
-        # it confuses it otherwise
-        transport=transport.__callable__,
+        transport=transport,
         integrations=[
             AsyncioIntegration(),
         ],

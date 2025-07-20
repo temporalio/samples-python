@@ -103,7 +103,7 @@ async def test_sentry_interceptor_captures_errors(
     assert event["exception"]["values"][0]["type"] == "Exception"
     assert event["exception"]["values"][0]["value"] == "Activity failed!"
 
-    # Check useful metadata were were captured as tags
+    # Check useful metadata were captured as tags
     assert event["tags"] == {
         "temporal.execution_type": "activity",
         "module": "sentry.activity.broken_activity",
@@ -135,7 +135,7 @@ async def test_sentry_interceptor_captures_errors(
     assert event["exception"]["values"][0]["type"] == "ApplicationError"
     assert event["exception"]["values"][0]["value"] == "Activity failed!"
 
-    # Check useful metadata were were captured as tags
+    # Check useful metadata were captured as tags
     assert event["tags"] == {
         "temporal.execution_type": "workflow",
         "module": "sentry.workflow.SentryExampleWorkflow.run",

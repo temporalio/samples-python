@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import os
 
 import sentry_sdk
@@ -12,11 +11,9 @@ from temporalio.worker.workflow_sandbox import (
     SandboxRestrictions,
 )
 
-from sentry.activity import compose_greeting
+from sentry.activity import broken_activity, working_activity
 from sentry.interceptor import SentryInterceptor
-from sentry.workflow import GreetingWorkflow
-
-logger = logging.getLogger(__name__)
+from sentry.workflow import SentryExampleWorkflow
 
 interrupt_event = asyncio.Event()
 
@@ -29,27 +26,30 @@ def before_send(event: Event, hint: Hint) -> Event | None:
     return event
 
 
-async def main():
-    # Configure logging
-    logging.basicConfig(level=logging.INFO)
-
-    # Initialize the Sentry SDK
-    if sentry_dsn := os.environ.get("SENTRY_DSN"):
-        environment = os.environ.get("ENVIRONMENT")
-        sentry_sdk.init(
-            dsn=sentry_dsn,
-            environment=environment,
-            integrations=[
-                AsyncioIntegration(),
-            ],
-            attach_stacktrace=True,
-            before_send=before_send,
-        )
-        logger.info(f"Sentry SDK initialized for environment: {environment!r}")
-    else:
-        logger.warning(
+def initialise_sentry() -> None:
+    sentry_dsn = os.environ.get("SENTRY_DSN")
+    if not sentry_dsn:
+        print(
             "SENTRY_DSN environment variable is not set. Sentry will not be initialized."
         )
+        return
+
+    environment = os.environ.get("ENVIRONMENT")
+    sentry_sdk.init(
+        dsn=sentry_dsn,
+        environment=environment,
+        integrations=[
+            AsyncioIntegration(),
+        ],
+        attach_stacktrace=True,
+        before_send=before_send,
+    )
+    print(f"Sentry SDK initialized for environment: {environment!r}")
+
+
+async def main():
+    # Initialize the Sentry SDK
+    initialise_sentry()
 
     # Start client
     client = await Client.connect("localhost:7233")
@@ -58,8 +58,8 @@ async def main():
     async with Worker(
         client,
         task_queue="sentry-task-queue",
-        workflows=[GreetingWorkflow],
-        activities=[compose_greeting],
+        workflows=[SentryExampleWorkflow],
+        activities=[broken_activity, working_activity],
         interceptors=[SentryInterceptor()],  # Use SentryInterceptor for error reporting
         workflow_runner=SandboxedWorkflowRunner(
             restrictions=SandboxRestrictions.default.with_passthrough_modules(

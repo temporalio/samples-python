@@ -2,7 +2,7 @@ import asyncio
 
 from temporalio.client import Client
 
-from sentry.workflow import GreetingWorkflow
+from sentry.workflow import SentryExampleWorkflow, SentryExampleWorkflowInput
 
 
 async def main():
@@ -12,8 +12,8 @@ async def main():
     # Run workflow
     try:
         result = await client.execute_workflow(
-            GreetingWorkflow.run,
-            "World",
+            SentryExampleWorkflow.run,
+            SentryExampleWorkflowInput(option="broken"),
             id="sentry-workflow-id",
             task_queue="sentry-task-queue",
         )

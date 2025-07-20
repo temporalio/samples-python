@@ -10,14 +10,14 @@ Export your [OpenAI API key](https://platform.openai.com/api-keys) as an environ
 
     export OPENAI_API_KEY='...'
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from the root directory to start the
 worker:
 
-    uv run worker.py
+    uv run langchain/worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute a workflow:
 
-    uv run starter.py
+    uv run langchain/starter.py
 
 Then, in another terminal, run the following command to translate a phrase:
 

@@ -10,13 +10,13 @@ To run, first see [README.md](../README.md) for prerequisites. Then run the foll
 
     docker compose up
 
-Now, from this directory, start the worker in its own terminal:
+Now, start the worker in its own terminal:
 
-    uv run worker.py
+    uv run open_telemetry/worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    uv run starter.py
+    uv run open_telemetry/starter.py
 
 The workflow should complete with the hello result.
 

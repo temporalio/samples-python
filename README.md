@@ -41,6 +41,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_async_activity_completion](hello/hello_async_activity_completion.py) - Complete an activity outside of the
     function that was called.
   * [hello_cancellation](hello/hello_cancellation.py) - Manually react to cancellation inside workflows and activities.
+  * [hello_change_log_level](hello/hello_change_log_level.py) - Change the level of workflow task failure from WARN to ERROR.
   * [hello_child_workflow](hello/hello_child_workflow.py) - Execute a child workflow from a workflow.
   * [hello_continue_as_new](hello/hello_continue_as_new.py) - Use continue as new to restart a workflow.
   * [hello_cron](hello/hello_cron.py) - Execute a workflow once a minute.
@@ -83,10 +84,6 @@ Some examples require extra dependencies. See each sample's directory for specif
 
 ## Test
 
-Running the tests requires `poe` to be installed.
+To run the tests:
 
-    uv tool install poethepoet
-
-Once you have `poe` installed you can run:
-
-    poe test
+    uv run poe test

@@ -1,10 +1,6 @@
-from agents import gen_trace_id
+from agents import Agent, Runner
+from agents import gen_trace_id, trace
 from temporalio import workflow
-
-# Import agent Agent and Runner
-with workflow.unsafe.imports_passed_through():
-    from agents import Agent, Runner, trace
-
 
 @workflow.defn
 class HelloWorldAgent:

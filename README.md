@@ -84,10 +84,6 @@ Some examples require extra dependencies. See each sample's directory for specif
 
 ## Test
 
-Running the tests requires `poe` to be installed.
+To run the tests:
 
-    uv tool install poethepoet
-
-Once you have `poe` installed you can run:
-
-    poe test
+    uv run poe test

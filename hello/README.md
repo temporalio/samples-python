@@ -2,16 +2,16 @@
 
 These samples show basic workflow and activity features.
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to run the
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from the root directory to run the
 `hello_activity.py` sample:
 
-    uv run hello_activity.py
+    uv run hello/hello_activity.py
 
 The result will be:
 
     Result: Hello, World!
 
-Replace `hello_activity.py` in the command with any other example filename to run it instead.
+Replace `hello/hello_activity.py` in the command with any other example filename (with the `hello/` prefix) to run it instead.
 
 ## Samples
 

@@ -1,8 +1,7 @@
 from agents import gen_trace_id
-from temporalio import workflow
+from agents import Agent, ItemHelpers, MessageOutputItem, RunConfig, Runner, trace
 
-with workflow.unsafe.imports_passed_through():
-    from agents import Agent, ItemHelpers, MessageOutputItem, RunConfig, Runner, trace
+from temporalio import workflow
 
 """
 This example shows the agents-as-tools pattern. The frontline agent receives a user message and

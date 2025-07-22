@@ -4,12 +4,12 @@ import asyncio
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents.invoke_model_activity import ModelActivity
-from temporalio.contrib.openai_agents.model_parameters import ModelActivityParameters
-from temporalio.contrib.openai_agents.temporal_openai_agents import (
+from temporalio.contrib.openai_agents import (
+    ModelActivity,
+    ModelActivityParameters,
     set_open_ai_agent_temporal_overrides,
 )
-from temporalio.contrib.openai_agents.trace_interceptor import (
+from temporalio.contrib.openai_agents._trace_interceptor import (
     OpenAIAgentsTracingInterceptor,
 )
 from temporalio.contrib.pydantic import pydantic_data_converter
@@ -35,7 +35,6 @@ async def main():
             data_converter=pydantic_data_converter,
         )
 
-        model_activity = ModelActivity(model_provider=None)
         worker = Worker(
             client,
             task_queue="openai-agents-task-queue",
@@ -47,7 +46,7 @@ async def main():
                 AgentsAsToolsWorkflow,
             ],
             activities=[
-                model_activity.invoke_model_activity,
+                ModelActivity().invoke_model_activity,
                 get_weather,
             ],
             interceptors=[OpenAIAgentsTracingInterceptor()],

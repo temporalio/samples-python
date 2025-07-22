@@ -70,6 +70,12 @@ cloud-export-to-parquet = [
     "boto3>=1.34.89,<2",
     "pyarrow>=19.0.1",
 ]
+expense = [
+    "fastapi>=0.115.12",
+    "httpx>=0.25.0,<1",
+    "uvicorn[standard]>=0.24.0.post1,<0.25",
+    "python-multipart>=0.0.5",
+]
 
 [tool.uv]
 default-groups = [
@@ -101,6 +107,7 @@ packages = [
     "custom_metric",
     "dsl",
     "encryption",
+    "expense",
     "gevent_async",
     "hello",
     "langchain",
@@ -134,7 +141,7 @@ build-backend = "hatchling.build"
 [tool.poe.tasks]
 format = [{cmd = "uv run black ."}, {cmd = "uv run isort ."}]
 lint = [{cmd = "uv run black --check ."}, {cmd = "uv run isort --check-only ."}, {ref = "lint-types" }]
-lint-types = "uv run mypy --check-untyped-defs --namespace-packages ."
+lint-types = "uv run mypy --python-version=3.9 --check-untyped-defs --namespace-packages ."
 test = "uv run pytest"
 
 [tool.pytest.ini_options]
@@ -150,6 +157,7 @@ skip_gitignore = true
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
+exclude = [".venv"]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

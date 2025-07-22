@@ -31,7 +31,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: uv tool install poethepoet
-      - run: uv sync --group=dsl --group=encryption --group=trio-async
+      - run: uv sync --group=dsl --group=encryption --group=trio-async --group=expense
       - run: poe lint
       - run: mkdir junit-xml
       - run: poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}.xml

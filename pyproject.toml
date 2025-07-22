@@ -71,20 +71,6 @@ cloud-export-to-parquet = [
     "pyarrow>=19.0.1",
 ]
 
-[tool.uv]
-default-groups = [
-    "dev",
-    "bedrock",
-    "dsl",
-    "encryption",
-    "gevent",
-    "langchain",
-    "nexus",
-    "open-telemetry",
-    "pydantic-converter",
-    "sentry",
-    "trio-async",
-]
 
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]

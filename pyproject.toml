@@ -120,8 +120,8 @@ build-backend = "hatchling.build"
 [tool.poe.tasks]
 format = [{cmd = "uv run black ."}, {cmd = "uv run isort ."}]
 lint = [{cmd = "uv run black --check ."}, {cmd = "uv run isort --check-only ."}, {ref = "lint-types" }]
-lint-types = "uv run mypy --check-untyped-defs --namespace-packages ."
-test = "uv run pytest"
+lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages ."
+test = "uv run --all-groups pytest"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

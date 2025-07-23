@@ -1,4 +1,3 @@
-from agents import gen_trace_id
 from agents import Agent, ItemHelpers, MessageOutputItem, RunConfig, Runner, trace
 
 from temporalio import workflow
@@ -68,8 +67,7 @@ class AgentsAsToolsWorkflow:
         config = RunConfig()
 
         # Run the entire orchestration in a single trace
-        trace_id = gen_trace_id()
-        with trace("Orchestrator evaluator", trace_id=trace_id):
+        with trace("Orchestrator evaluator"):
             orchestrator = orchestrator_agent()
             synthesizer = synthesizer_agent()
 

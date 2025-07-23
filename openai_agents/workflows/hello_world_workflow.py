@@ -2,6 +2,7 @@ from agents import Agent, Runner
 from agents import gen_trace_id, trace
 from temporalio import workflow
 
+
 @workflow.defn
 class HelloWorldAgent:
     @workflow.run

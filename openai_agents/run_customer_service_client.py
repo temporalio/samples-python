@@ -32,6 +32,7 @@ async def main():
     # Query the workflow for the chat history
     # If the workflow is not open, start a new one
     start = False
+    history = []
     try:
         history = await handle.query(
             CustomerServiceWorkflow.get_chat_history,

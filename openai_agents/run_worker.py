@@ -9,7 +9,7 @@ from temporalio.contrib.openai_agents import (
     ModelActivityParameters,
     set_open_ai_agent_temporal_overrides,
 )
-from temporalio.contrib.openai_agents._trace_interceptor import (
+from temporalio.contrib.openai_agents import (
     OpenAIAgentsTracingInterceptor,
 )
 from temporalio.contrib.pydantic import pydantic_data_converter

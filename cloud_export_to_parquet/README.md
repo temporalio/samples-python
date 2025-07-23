@@ -2,7 +2,7 @@
 
 This is an example workflow to convert exported file from proto to parquet file. The workflow is an hourly schedule. 
 
-Please make sure your python is 3.9 above. For this sample, run:
+Please make sure your python version is 3.10 or above. For this sample, run:
 
     uv sync --group=cloud-export-to-parquet
 

@@ -4,7 +4,6 @@ from temporalio.client import Client
 from temporalio.contrib.pydantic import pydantic_data_converter
 
 from openai_agents.workflows.hello_world_workflow import HelloWorldAgent
-from openai_agents.workflows.research_bot_workflow import ResearchWorkflow
 
 
 async def main():

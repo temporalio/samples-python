@@ -7,10 +7,8 @@ from temporalio.client import Client
 from temporalio.contrib.openai_agents import (
     ModelActivity,
     ModelActivityParameters,
-    set_open_ai_agent_temporal_overrides,
-)
-from temporalio.contrib.openai_agents import (
     OpenAIAgentsTracingInterceptor,
+    set_open_ai_agent_temporal_overrides,
 )
 from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.worker import Worker

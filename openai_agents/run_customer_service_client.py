@@ -65,7 +65,7 @@ async def main():
                 CustomerServiceWorkflow.process_user_message, message_input
             )
             history.extend(new_history)
-            print(*new_history, sep="\n")
+            print(*new_history[1:], sep="\n")
         except WorkflowUpdateFailedError:
             print("** Stale conversation. Reloading...")
             length = len(history)

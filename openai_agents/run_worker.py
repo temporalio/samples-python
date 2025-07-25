@@ -3,13 +3,9 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 
-from temporalio.client import Client
-from temporalio.contrib.openai_agents import (
-    ModelActivityParameters,
-    OpenAIAgentsPlugin
-)
+from temporalio.client import Client, ClientConfig
+from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
-from temporalio.client import ClientConfig
 
 from openai_agents.workflows.agents_as_tools_workflow import AgentsAsToolsWorkflow
 from openai_agents.workflows.customer_service_workflow import CustomerServiceWorkflow
@@ -26,10 +22,10 @@ async def main():
         plugins=[
             OpenAIAgentsPlugin(
                 model_params=ModelActivityParameters(
-                start_to_close_timeout=timedelta(seconds=120)
+                    start_to_close_timeout=timedelta(seconds=120)
                 )
             ),
-        ]
+        ],
     )
 
     worker = Worker(

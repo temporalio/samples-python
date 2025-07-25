@@ -32,12 +32,13 @@ async def main():
     # Query the workflow for the chat history
     # If the workflow is not open, start a new one
     start = False
+    history = []
     try:
         history = await handle.query(
             CustomerServiceWorkflow.get_chat_history,
             reject_condition=QueryRejectCondition.NOT_OPEN,
         )
-    except WorkflowQueryRejectedError as e:
+    except WorkflowQueryRejectedError:
         start = True
     except RPCError as e:
         if e.status == RPCStatusCode.NOT_FOUND:

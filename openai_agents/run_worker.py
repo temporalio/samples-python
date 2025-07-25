@@ -7,6 +7,7 @@ from temporalio.client import Client
 from temporalio.contrib.openai_agents import (
     ModelActivity,
     ModelActivityParameters,
+    OpenAIAgentsTracingInterceptor,
     set_open_ai_agent_temporal_overrides,
 )
 from temporalio.contrib.pydantic import pydantic_data_converter
@@ -46,6 +47,7 @@ async def main():
                 ModelActivity().invoke_model_activity,
                 get_weather,
             ],
+            interceptors=[OpenAIAgentsTracingInterceptor()],
         )
         await worker.run()
 

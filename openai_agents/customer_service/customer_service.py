@@ -1,5 +1,7 @@
 from __future__ import annotations as _annotations
 
+from typing import Dict, Tuple
+
 from agents import Agent, RunContextWrapper, function_tool, handoff
 from agents.extensions.handoff_prompt import RECOMMENDED_PROMPT_PREFIX
 from pydantic import BaseModel
@@ -23,19 +25,20 @@ class AirlineAgentContext(BaseModel):
     description_override="Lookup frequently asked questions.",
 )
 async def faq_lookup_tool(question: str) -> str:
-    if "bag" in question or "baggage" in question:
+    question_lower = question.lower()
+    if "bag" in question_lower or "baggage" in question_lower:
         return (
             "You are allowed to bring one bag on the plane. "
             "It must be under 50 pounds and 22 inches x 14 inches x 9 inches."
         )
-    elif "seats" in question or "plane" in question:
+    elif "seats" in question_lower or "plane" in question_lower:
         return (
             "There are 120 seats on the plane. "
             "There are 22 business class seats and 98 economy seats. "
             "Exit rows are rows 4 and 16. "
             "Rows 5-8 are Economy Plus, with extra legroom. "
         )
-    elif "wifi" in question:
+    elif "wifi" in question_lower:
         return "We have free wifi on the plane, join Airline-Wifi"
     return "I'm sorry, I don't know the answer to that question."
 
@@ -74,7 +77,9 @@ async def on_seat_booking_handoff(
 ### AGENTS
 
 
-def init_agents() -> Agent[AirlineAgentContext]:
+def init_agents() -> Tuple[
+    Agent[AirlineAgentContext], Dict[str, Agent[AirlineAgentContext]]
+]:
     """
     Initialize the agents for the airline customer service workflow.
     :return: triage agent
@@ -121,7 +126,9 @@ def init_agents() -> Agent[AirlineAgentContext]:
 
     faq_agent.handoffs.append(triage_agent)
     seat_booking_agent.handoffs.append(triage_agent)
-    return triage_agent
+    return triage_agent, {
+        agent.name: agent for agent in [faq_agent, seat_booking_agent, triage_agent]
+    }
 
 
 class ProcessUserMessageInput(BaseModel):

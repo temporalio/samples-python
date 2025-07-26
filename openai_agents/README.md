@@ -21,66 +21,20 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 - Required dependencies installed via `uv sync --group openai-agents`
 - OpenAI API key set as environment variable: `export OPENAI_API_KEY=your_key_here`
 
-## Running the Examples
+## Examples
 
-1. **Start the worker** (supports all samples):
-   ```bash
-   uv run openai_agents/basic/run_worker.py
-   ```
+Each directory contains a complete example with its own README for detailed instructions:
 
-2. **Run individual samples** in separate terminals:
+### [Basic Examples](./basic/README.md)
+Simple agent examples including a hello world agent and a tools-enabled agent that can access external APIs like weather services.
 
-### Basic Agent Examples
+### [Agent Patterns](./agent_patterns/README.md)
+Advanced patterns for agent composition, including using agents as tools within other agents.
 
-- **Hello World Agent** - Simple agent that responds in haikus:
-  ```bash
-  uv run openai_agents/basic/run_hello_world_workflow.py
-  ```
+### [Research Bot](./research_bot/README.md)
+Multi-agent research system with specialized roles: a planner agent, search agent, and writer agent working together to conduct comprehensive research.
 
-- **Tools Agent** - Agent with access to external tools (weather API):
-  ```bash
-  uv run openai_agents/basic/run_tools_workflow.py
-  ```
-
-### Agent Patterns
-
-Start the worker:
-
-   ```bash
-   uv run openai_agents/agent_patterns/run_worker.py
-   ```
-
-- **Agents as Tools** - Demonstrate using agents as tools within other agents:
-
-  ```bash
-  uv run openai_agents/agent_patterns/run_agents_as_tools_workflow.py
-  ```
-
-### Advanced Multi-Agent Examples
-
-- **Research Workflow** - Multi-agent research system with specialized roles:
-
-  Start the worker:
-
-   ```bash
-   uv run openai_agents/research_bot/run_worker.py
-   ```
-
-  ```bash
-  uv run openai_agents/research_bot/run_research_workflow.py
-  ```
-  Features a planner agent, search agent, and writer agent working together.
-
-- **Customer Service Workflow** - Customer service agent with escalation capabilities (interactive):
-
-  Start the worker:
-
-   ```bash
-   uv run openai_agents/customer_service/run_worker.py
-   ```
-
-  ```bash
-  uv run openai_agents/customer_service/run_customer_service_client.py --conversation-id my-conversation-123
-  ```
+### [Customer Service](./customer_service/README.md)
+Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 
 

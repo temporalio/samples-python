@@ -19,7 +19,7 @@ async def main():
         plugins=[
             OpenAIAgentsPlugin(
                 model_params=ModelActivityParameters(
-                    start_to_close_timeout=timedelta(seconds=120)
+                    start_to_close_timeout=timedelta(seconds=30)
                 )
             ),
         ],

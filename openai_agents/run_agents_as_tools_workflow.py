@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.workflows.agents_as_tools_workflow import AgentsAsToolsWorkflow
 
@@ -10,7 +10,9 @@ async def main():
     # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",
-        data_converter=pydantic_data_converter,
+        plugins=[
+            OpenAIAgentsPlugin(),
+        ],
     )
 
     # Execute a workflow

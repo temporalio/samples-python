@@ -7,7 +7,7 @@ from temporalio.client import (
     WorkflowUpdateFailedError,
 )
 from temporalio.common import QueryRejectCondition
-from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 from temporalio.service import RPCError, RPCStatusCode
 
 from openai_agents.workflows.customer_service_workflow import (
@@ -24,7 +24,9 @@ async def main():
     # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",
-        data_converter=pydantic_data_converter,
+        plugins=[
+            OpenAIAgentsPlugin(),
+        ],
     )
 
     handle = client.get_workflow_handle(args.conversation_id)

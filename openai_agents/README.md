@@ -21,42 +21,13 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 - Required dependencies installed via `uv sync --group openai-agents`
 - OpenAI API key set as environment variable: `export OPENAI_API_KEY=your_key_here`
 
-## Running the Examples
+## Examples
 
-1. **Start the worker** (supports all samples):
-   ```bash
-   uv run openai_agents/run_worker.py
-   ```
+Each directory contains a complete example with its own README for detailed instructions:
 
-2. **Run individual samples** in separate terminals:
+- **[Basic Examples](./basic/README.md)** - Simple agent examples including a hello world agent and a tools-enabled agent that can access external APIs like weather services.
+- **[Agent Patterns](./agent_patterns/README.md)** - Advanced patterns for agent composition, including using agents as tools within other agents.
+- **[Research Bot](./research_bot/README.md)** - Multi-agent research system with specialized roles: a planner agent, search agent, and writer agent working together to conduct comprehensive research.
+- **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 
-### Basic Agent Examples
-
-- **Hello World Agent** - Simple agent that responds in haikus:
-  ```bash
-  uv run openai_agents/run_hello_world_workflow.py
-  ```
-
-- **Tools Agent** - Agent with access to external tools (weather API):
-  ```bash
-  uv run openai_agents/run_tools_workflow.py
-  ```
-
-### Advanced Multi-Agent Examples
-
-- **Research Workflow** - Multi-agent research system with specialized roles:
-  ```bash
-  uv run openai_agents/run_research_workflow.py
-  ```
-  Features a planner agent, search agent, and writer agent working together.
-
-- **Customer Service Workflow** - Customer service agent with escalation capabilities (interactive):
-  ```bash
-  uv run openai_agents/run_customer_service_client.py --conversation-id my-conversation-123
-  ```
-
-- **Agents as Tools** - Demonstrate using agents as tools within other agents:
-  ```bash
-  uv run openai_agents/run_agents_as_tools_workflow.py
-  ```
 

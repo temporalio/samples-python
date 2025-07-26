@@ -10,7 +10,7 @@ from temporalio.common import QueryRejectCondition
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 from temporalio.service import RPCError, RPCStatusCode
 
-from openai_agents.workflows.customer_service_workflow import (
+from openai_agents.customer_service.workflows.customer_service_workflow import (
     CustomerServiceWorkflow,
     ProcessUserMessageInput,
 )

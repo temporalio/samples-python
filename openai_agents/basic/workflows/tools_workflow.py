@@ -6,7 +6,7 @@ from agents import Agent, Runner
 from temporalio import workflow
 from temporalio.contrib import openai_agents as temporal_agents
 
-from openai_agents.workflows.get_weather_activity import get_weather
+from openai_agents.basic.activities.get_weather_activity import get_weather
 
 
 @workflow.defn

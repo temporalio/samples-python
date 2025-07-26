@@ -14,7 +14,7 @@ from agents import (
 )
 from temporalio import workflow
 
-from openai_agents.workflows.customer_service import (
+from openai_agents.customer_service.customer_service import (
     AirlineAgentContext,
     ProcessUserMessageInput,
     init_agents,

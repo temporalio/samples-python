@@ -8,13 +8,13 @@ with workflow.unsafe.imports_passed_through():
     # TODO: Restore progress updates
     from agents import RunConfig, Runner, custom_span, trace
 
-    from openai_agents.workflows.research_agents.planner_agent import (
+    from openai_agents.research_bot.agents.planner_agent import (
         WebSearchItem,
         WebSearchPlan,
         new_planner_agent,
     )
-    from openai_agents.workflows.research_agents.search_agent import new_search_agent
-    from openai_agents.workflows.research_agents.writer_agent import (
+    from openai_agents.research_bot.agents.search_agent import new_search_agent
+    from openai_agents.research_bot.agents.writer_agent import (
         ReportData,
         new_writer_agent,
     )

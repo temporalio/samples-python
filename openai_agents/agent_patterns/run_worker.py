@@ -10,6 +10,25 @@ from temporalio.worker import Worker
 from openai_agents.agent_patterns.workflows.agents_as_tools_workflow import (
     AgentsAsToolsWorkflow,
 )
+from openai_agents.agent_patterns.workflows.deterministic_workflow import (
+    DeterministicWorkflow,
+)
+from openai_agents.agent_patterns.workflows.forcing_tool_use_workflow import (
+    ForcingToolUseWorkflow,
+)
+from openai_agents.agent_patterns.workflows.input_guardrails_workflow import (
+    InputGuardrailsWorkflow,
+)
+from openai_agents.agent_patterns.workflows.llm_as_a_judge_workflow import (
+    LLMAsAJudgeWorkflow,
+)
+from openai_agents.agent_patterns.workflows.output_guardrails_workflow import (
+    OutputGuardrailsWorkflow,
+)
+from openai_agents.agent_patterns.workflows.parallelization_workflow import (
+    ParallelizationWorkflow,
+)
+from openai_agents.agent_patterns.workflows.routing_workflow import RoutingWorkflow
 
 
 async def main():
@@ -27,9 +46,16 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue="openai-agents-task-queue",
+        task_queue="openai-agents-patterns-task-queue",
         workflows=[
             AgentsAsToolsWorkflow,
+            DeterministicWorkflow,
+            ParallelizationWorkflow,
+            LLMAsAJudgeWorkflow,
+            ForcingToolUseWorkflow,
+            InputGuardrailsWorkflow,
+            OutputGuardrailsWorkflow,
+            RoutingWorkflow,
         ],
     )
     await worker.run()

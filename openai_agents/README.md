@@ -25,7 +25,7 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 
 1. **Start the worker** (supports all samples):
    ```bash
-   uv run openai_agents/run_worker.py
+   uv run openai_agents/basic/run_worker.py
    ```
 
 2. **Run individual samples** in separate terminals:
@@ -34,29 +34,53 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 
 - **Hello World Agent** - Simple agent that responds in haikus:
   ```bash
-  uv run openai_agents/run_hello_world_workflow.py
+  uv run openai_agents/basic/run_hello_world_workflow.py
   ```
 
 - **Tools Agent** - Agent with access to external tools (weather API):
   ```bash
-  uv run openai_agents/run_tools_workflow.py
+  uv run openai_agents/basic/run_tools_workflow.py
+  ```
+
+### Agent Patterns
+
+Start the worker:
+
+   ```bash
+   uv run openai_agents/agent_patterns/run_worker.py
+   ```
+
+- **Agents as Tools** - Demonstrate using agents as tools within other agents:
+
+  ```bash
+  uv run openai_agents/agent_patterns/run_agents_as_tools_workflow.py
   ```
 
 ### Advanced Multi-Agent Examples
 
 - **Research Workflow** - Multi-agent research system with specialized roles:
+
+  Start the worker:
+
+   ```bash
+   uv run openai_agents/research_bot/run_worker.py
+   ```
+
   ```bash
-  uv run openai_agents/run_research_workflow.py
+  uv run openai_agents/research_bot/run_research_workflow.py
   ```
   Features a planner agent, search agent, and writer agent working together.
 
 - **Customer Service Workflow** - Customer service agent with escalation capabilities (interactive):
+
+  Start the worker:
+
+   ```bash
+   uv run openai_agents/customer_service/run_worker.py
+   ```
+
   ```bash
-  uv run openai_agents/run_customer_service_client.py --conversation-id my-conversation-123
+  uv run openai_agents/customer_service/run_customer_service_client.py --conversation-id my-conversation-123
   ```
 
-- **Agents as Tools** - Demonstrate using agents as tools within other agents:
-  ```bash
-  uv run openai_agents/run_agents_as_tools_workflow.py
-  ```
 

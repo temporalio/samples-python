@@ -7,12 +7,9 @@ from temporalio.client import Client
 from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
-from openai_agents.workflows.agents_as_tools_workflow import AgentsAsToolsWorkflow
-from openai_agents.workflows.customer_service_workflow import CustomerServiceWorkflow
-from openai_agents.workflows.get_weather_activity import get_weather
-from openai_agents.workflows.hello_world_workflow import HelloWorldAgent
-from openai_agents.workflows.research_bot_workflow import ResearchWorkflow
-from openai_agents.workflows.tools_workflow import ToolsWorkflow
+from openai_agents.agent_patterns.workflows.agents_as_tools_workflow import (
+    AgentsAsToolsWorkflow,
+)
 
 
 async def main():
@@ -32,14 +29,7 @@ async def main():
         client,
         task_queue="openai-agents-task-queue",
         workflows=[
-            HelloWorldAgent,
-            ToolsWorkflow,
-            ResearchWorkflow,
-            CustomerServiceWorkflow,
             AgentsAsToolsWorkflow,
-        ],
-        activities=[
-            get_weather,
         ],
     )
     await worker.run()

@@ -55,33 +55,21 @@ class CustomerServiceWorkflow:
         self.input_items = (
             customer_service_state.input_items if customer_service_state else []
         )
-        self.continue_as_new_suggested = False
 
     @workflow.run
     async def run(
         self, customer_service_state: CustomerServiceWorkflowState | None = None
     ):
         await workflow.wait_condition(
-            # lambda: workflow.info().is_continue_as_new_suggested()
-            # and
-            lambda: self.continue_as_new_suggested
+            lambda: workflow.info().is_continue_as_new_suggested()
             and workflow.all_handlers_finished()
         )
-        # Convert input_items to plain dictionaries for serialization
-        serializable_input_items = []
-        for item in self.input_items:
-            if hasattr(item, "model_dump") and callable(getattr(item, "model_dump")):
-                # Convert Pydantic objects to dictionaries
-                serializable_input_items.append(item.model_dump())  # type: ignore
-            else:
-                # Already a plain Python object
-                serializable_input_items.append(item)
         workflow.continue_as_new(
             CustomerServiceWorkflowState(
                 printed_history=self.printed_history,
                 current_agent_name=self.current_agent.name,
                 context=self.context,
-                input_items=serializable_input_items,
+                input_items=self.input_items,
             )
         )
 
@@ -130,7 +118,6 @@ class CustomerServiceWorkflow:
             self.current_agent = result.last_agent
         workflow.set_current_details("\n\n".join(self.printed_history))
 
-        self.continue_as_new_suggested = True
         return self.printed_history[length:]
 
     @process_user_message.validator

@@ -26,11 +26,8 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 Each directory contains a complete example with its own README for detailed instructions:
 
 - **[Basic Examples](./basic/README.md)** - Simple agent examples including a hello world agent and a tools-enabled agent that can access external APIs like weather services.
-
 - **[Agent Patterns](./agent_patterns/README.md)** - Advanced patterns for agent composition, including using agents as tools within other agents.
-
 - **[Research Bot](./research_bot/README.md)** - Multi-agent research system with specialized roles: a planner agent, search agent, and writer agent working together to conduct comprehensive research.
-
 - **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 
 

@@ -17,8 +17,9 @@ async def main():
         query = "Write up an analysis of Apple Inc.'s most recent quarter."
         print(f"Using default query: {query}")
 
-    client = await Client.connect("localhost:7233",
-                                  plugins=[
+    client = await Client.connect(
+        "localhost:7233",
+        plugins=[
             OpenAIAgentsPlugin(),
         ],
     )

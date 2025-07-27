@@ -3,17 +3,18 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.worker import Worker
-
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.worker import Worker
 
 from openai_agents.financial_research_agent.workflows.financial_research_workflow import (
     FinancialResearchWorkflow,
 )
 
+
 async def main():
-    client = await Client.connect("localhost:7233",
-                                  plugins=[
+    client = await Client.connect(
+        "localhost:7233",
+        plugins=[
             OpenAIAgentsPlugin(),
         ],
     )

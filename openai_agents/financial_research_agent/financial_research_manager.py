@@ -3,9 +3,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Sequence
 
-from temporalio import workflow
-
 from agents import RunConfig, Runner, RunResult, custom_span, trace
+from temporalio import workflow
 
 from openai_agents.financial_research_agent.agents.financials_agent import (
     new_financials_agent,
@@ -16,9 +15,7 @@ from openai_agents.financial_research_agent.agents.planner_agent import (
     new_planner_agent,
 )
 from openai_agents.financial_research_agent.agents.risk_agent import new_risk_agent
-from openai_agents.financial_research_agent.agents.search_agent import (
-    new_search_agent,
-)
+from openai_agents.financial_research_agent.agents.search_agent import new_search_agent
 from openai_agents.financial_research_agent.agents.verifier_agent import (
     VerificationResult,
     new_verifier_agent,

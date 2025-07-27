@@ -43,9 +43,9 @@ async def main():
         )
 
         print(f"\nPrompt: {result.prompt}")
-        print(f"\nReasoning Content:")
+        print("\nReasoning Content:")
         print(result.reasoning_content or "No reasoning content provided")
-        print(f"\nRegular Content:")
+        print("\nRegular Content:")
         print(result.regular_content or "No regular content provided")
         print("-" * 50 + "\n")
 

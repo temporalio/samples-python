@@ -29,6 +29,6 @@ def new_writer_agent() -> Agent:
     return Agent(
         name="FinancialWriterAgent",
         instructions=WRITER_PROMPT,
-        model="gpt-4.1-mini",
+        model="gpt-4.1",
         output_type=FinancialReportData,
     )

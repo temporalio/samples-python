@@ -2,29 +2,30 @@
 
 These samples show basic workflow and activity features.
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to run the
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from the root directory to run the
 `hello_activity.py` sample:
 
-    uv run hello_activity.py
+    uv run hello/hello_activity.py
 
 The result will be:
 
     Result: Hello, World!
 
-Replace `hello_activity.py` in the command with any other example filename to run it instead.
+Replace `hello/hello_activity.py` in the command with any other example filename (with the `hello/` prefix) to run it instead.
 
 ## Samples
 
 <!-- Keep this list in alphabetical order and in sync on hello/README.md and root README.md -->
 * [hello_activity](hello_activity.py) - Execute an activity from a workflow.
+* [hello_activity_async](hello_activity_async.py) - Execute an async activity from a workflow.
 * [hello_activity_choice](hello_activity_choice.py) - Execute certain activities inside a workflow based on dynamic
   input.
 * [hello_activity_method](hello_activity_method.py) - Demonstrate an activity that is an instance method on a
   class and can access class state.
+* [hello_activity_heartbeat](hello_activity_heartbeat.py) - Demonstrate usage of heartbeat timeouts.
 * [hello_activity_multiprocess](hello_activity_multiprocess.py) - Execute a synchronous activity on a process pool.
 * [hello_activity_retry](hello_activity_retry.py) - Demonstrate activity retry by failing until a certain number of
   attempts.
-* [hello_activity_threaded](hello_activity_threaded.py) - Execute a synchronous activity on a thread pool.
 * [hello_async_activity_completion](hello_async_activity_completion.py) - Complete an activity outside of the function
   that was called.
 * [hello_cancellation](hello_cancellation.py) - Manually react to cancellation inside workflows and activities.
@@ -38,6 +39,7 @@ Replace `hello_activity.py` in the command with any other example filename to ru
 * [hello_mtls](hello_mtls.py) - Accept URL, namespace, and certificate info as CLI args and use mTLS for connecting to
   server.
 * [hello_parallel_activity](hello_parallel_activity.py) - Execute multiple activities at once.
+* [hello_patch](hello_patch.py) - Demonstrates how to patch executions.
 * [hello_query](hello_query.py) - Invoke queries on a workflow.
 * [hello_search_attributes](hello_search_attributes.py) - Start workflow with search attributes then change while
   running.

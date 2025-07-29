@@ -12,15 +12,15 @@ usually wait for the handlers to finish immediately before the call to
 continue_as_new(); that's not illustrated in this sample.
 
 
-To run, open two terminals and `cd` to this directory in them.
+To run, open two terminals.
 
 Run the worker in one terminal:
 
-    uv run worker.py
+    uv run message_passing/waiting_for_handlers/worker.py
 
 And run the workflow-starter code in the other terminal:
 
-    uv run starter.py
+    uv run message_passing/waiting_for_handlers/starter.py
 
 
 Here's the output you'll see:

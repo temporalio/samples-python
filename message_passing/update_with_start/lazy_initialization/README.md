@@ -6,13 +6,13 @@ update-with-start is used to add items to the cart, receiving back the updated c
 
 To run, first see the main [README.md](../../../README.md) for prerequisites.
 
-Then run the following from this directory:
+Then run the following from the root directory:
 
-    uv run worker.py
+    uv run message_passing/update_with_start/lazy_initialization/worker.py
 
 Then, in another terminal:
 
-    uv run starter.py
+    uv run message_passing/update_with_start/lazy_initialization/starter.py
 
 This will start a worker to run your workflow and activities, then simulate a backend application receiving
 requests to add items to a shopping cart, before finalizing the order.

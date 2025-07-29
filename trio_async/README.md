@@ -9,14 +9,14 @@ For this sample, the optional `trio_async` dependency group must be included. To
 
     uv sync --group trio_async
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from the root directory to start the
 worker:
 
-    uv run worker.py
+    uv run trio_async/worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute the workflow:
 
-    uv run starter.py
+    uv run trio_async/starter.py
 
 The starter should complete with:
 

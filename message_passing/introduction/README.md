@@ -6,13 +6,13 @@ See https://docs.temporal.io/develop/python/message-passing.
 
 To run, first see the main [README.md](../../README.md) for prerequisites.
 
-Then create two terminals and `cd` to this directory.
+Then create two terminals.
 
 Run the worker in one terminal:
 
-    uv run worker.py
+    uv run message_passing/introduction/worker.py
 
 And execute the workflow in the other terminal:
 
-    uv run starter.py
+    uv run message_passing/introduction/starter.py
 

@@ -6,7 +6,7 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     # TODO: Restore progress updates
-    from agents import RunConfig, Runner, custom_span, gen_trace_id, trace
+    from agents import RunConfig, Runner, custom_span, trace
 
     from openai_agents.workflows.research_agents.planner_agent import (
         WebSearchItem,
@@ -28,8 +28,7 @@ class ResearchManager:
         self.writer_agent = new_writer_agent()
 
     async def run(self, query: str) -> str:
-        trace_id = gen_trace_id()
-        with trace("Research trace", trace_id=trace_id):
+        with trace("Research trace"):
             search_plan = await self._plan_searches(query)
             search_results = await self._perform_searches(search_plan)
             report = await self._write_report(query, search_results)

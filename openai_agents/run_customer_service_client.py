@@ -7,7 +7,7 @@ from temporalio.client import (
     WorkflowUpdateFailedError,
 )
 from temporalio.common import QueryRejectCondition
-from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 from temporalio.service import RPCError, RPCStatusCode
 
 from openai_agents.workflows.customer_service_workflow import (
@@ -24,7 +24,9 @@ async def main():
     # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",
-        data_converter=pydantic_data_converter,
+        plugins=[
+            OpenAIAgentsPlugin(),
+        ],
     )
 
     handle = client.get_workflow_handle(args.conversation_id)
@@ -32,12 +34,13 @@ async def main():
     # Query the workflow for the chat history
     # If the workflow is not open, start a new one
     start = False
+    history = []
     try:
         history = await handle.query(
             CustomerServiceWorkflow.get_chat_history,
             reject_condition=QueryRejectCondition.NOT_OPEN,
         )
-    except WorkflowQueryRejectedError as e:
+    except WorkflowQueryRejectedError:
         start = True
     except RPCError as e:
         if e.status == RPCStatusCode.NOT_FOUND:

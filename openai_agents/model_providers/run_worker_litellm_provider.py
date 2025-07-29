@@ -6,7 +6,9 @@ from temporalio.client import Client
 from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
-from openai_agents.model_providers.workflows.litellm_auto_workflow import LitellmAutoWorkflow
+from openai_agents.model_providers.workflows.litellm_auto_workflow import (
+    LitellmAutoWorkflow,
+)
 
 
 async def main():

@@ -4,13 +4,7 @@ import asyncio
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import (
-    ModelActivity,
-    ModelActivityParameters,
-    OpenAIAgentsTracingInterceptor,
-    set_open_ai_agent_temporal_overrides,
-)
-from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
 from openai_agents.workflows.agents_as_tools_workflow import AgentsAsToolsWorkflow
@@ -22,34 +16,33 @@ from openai_agents.workflows.tools_workflow import ToolsWorkflow
 
 
 async def main():
-    with set_open_ai_agent_temporal_overrides(
-        model_params=ModelActivityParameters(
-            start_to_close_timeout=timedelta(seconds=60),
-        ),
-    ):
-        # Create client connected to server at the given address
-        client = await Client.connect(
-            "localhost:7233",
-            data_converter=pydantic_data_converter,
-        )
+    # Create client connected to server at the given address
+    client = await Client.connect(
+        "localhost:7233",
+        plugins=[
+            OpenAIAgentsPlugin(
+                model_params=ModelActivityParameters(
+                    start_to_close_timeout=timedelta(seconds=120)
+                )
+            ),
+        ],
+    )
 
-        worker = Worker(
-            client,
-            task_queue="openai-agents-task-queue",
-            workflows=[
-                HelloWorldAgent,
-                ToolsWorkflow,
-                ResearchWorkflow,
-                CustomerServiceWorkflow,
-                AgentsAsToolsWorkflow,
-            ],
-            activities=[
-                ModelActivity().invoke_model_activity,
-                get_weather,
-            ],
-            interceptors=[OpenAIAgentsTracingInterceptor()],
-        )
-        await worker.run()
+    worker = Worker(
+        client,
+        task_queue="openai-agents-task-queue",
+        workflows=[
+            HelloWorldAgent,
+            ToolsWorkflow,
+            ResearchWorkflow,
+            CustomerServiceWorkflow,
+            AgentsAsToolsWorkflow,
+        ],
+        activities=[
+            get_weather,
+        ],
+    )
+    await worker.run()
 
 
 if __name__ == "__main__":

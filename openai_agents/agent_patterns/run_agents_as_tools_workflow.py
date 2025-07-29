@@ -3,7 +3,9 @@ import asyncio
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.workflows.agents_as_tools_workflow import AgentsAsToolsWorkflow
+from openai_agents.agent_patterns.workflows.agents_as_tools_workflow import (
+    AgentsAsToolsWorkflow,
+)
 
 
 async def main():

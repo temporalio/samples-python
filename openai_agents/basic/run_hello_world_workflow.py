@@ -3,7 +3,7 @@ import asyncio
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.workflows.research_bot_workflow import ResearchWorkflow
+from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
 
 
 async def main():
@@ -17,12 +17,11 @@ async def main():
 
     # Execute a workflow
     result = await client.execute_workflow(
-        ResearchWorkflow.run,
-        "Caribbean vacation spots in April, optimizing for surfing, hiking and water sports",
-        id="research-workflow",
+        HelloWorldAgent.run,
+        "Tell me about recursion in programming.",
+        id="my-workflow-id",
         task_queue="openai-agents-task-queue",
     )
-
     print(f"Result: {result}")
 
 

@@ -20,9 +20,9 @@ async def main():
     # Execute a workflow
     result = await client.execute_workflow(
         AgentsAsToolsWorkflow.run,
-        "Translate to English: '¿Cómo estás?'",
-        id="my-workflow-id",
-        task_queue="openai-agents-task-queue",
+        "Please translate 'Good morning, how are you?' to Spanish and French",
+        id="agents-as-tools-workflow-example",
+        task_queue="openai-agents-patterns-task-queue",
     )
 
     print(f"Result: {result}")

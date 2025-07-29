@@ -3,7 +3,9 @@ import asyncio
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
+from openai_agents.agent_patterns.workflows.llm_as_a_judge_workflow import (
+    LLMAsAJudgeWorkflow,
+)
 
 
 async def main():
@@ -17,10 +19,10 @@ async def main():
 
     # Execute a workflow
     result = await client.execute_workflow(
-        HelloWorldAgent.run,
-        "Tell me about recursion in programming.",
-        id="my-workflow-id",
-        task_queue="openai-agents-basic-task-queue",
+        LLMAsAJudgeWorkflow.run,
+        "A thrilling adventure story about pirates searching for treasure",
+        id="llm-as-a-judge-workflow-example",
+        task_queue="openai-agents-patterns-task-queue",
     )
     print(f"Result: {result}")
 

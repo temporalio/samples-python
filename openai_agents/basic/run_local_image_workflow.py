@@ -1,13 +1,13 @@
 import asyncio
+import os
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
+from openai_agents.basic.workflows.local_image_workflow import LocalImageWorkflow
 
 
 async def main():
-    # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",
         plugins=[
@@ -15,14 +15,17 @@ async def main():
         ],
     )
 
-    # Execute a workflow
+    # Use the media file from the original example
+    image_path = os.path.join(os.path.dirname(__file__), "media/image_bison.jpg")
+
     result = await client.execute_workflow(
-        HelloWorldAgent.run,
-        "Tell me about recursion in programming.",
-        id="my-workflow-id",
+        LocalImageWorkflow.run,
+        args=[image_path, "What do you see in this image?"],
+        id="local-image-workflow",
         task_queue="openai-agents-basic-task-queue",
     )
-    print(f"Result: {result}")
+
+    print(f"Agent response: {result}")
 
 
 if __name__ == "__main__":

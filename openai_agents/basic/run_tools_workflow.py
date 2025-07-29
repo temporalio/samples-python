@@ -20,7 +20,7 @@ async def main():
         ToolsWorkflow.run,
         "What is the weather in Tokio?",
         id="tools-workflow",
-        task_queue="openai-agents-task-queue",
+        task_queue="openai-agents-basic-task-queue",
     )
 
     print(f"Result: {result}")

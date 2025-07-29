@@ -47,7 +47,7 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue="openai-agents-basic-task-queue",
+        task_queue="openai-agents-task-queue",
         workflows=[
             HelloWorldAgent,
             ToolsWorkflow,

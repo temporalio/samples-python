@@ -3,8 +3,8 @@ import asyncio
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.agent_patterns.workflows.agents_as_tools_workflow import (
-    AgentsAsToolsWorkflow,
+from openai_agents.agent_patterns.workflows.parallelization_workflow import (
+    ParallelizationWorkflow,
 )
 
 
@@ -19,12 +19,11 @@ async def main():
 
     # Execute a workflow
     result = await client.execute_workflow(
-        AgentsAsToolsWorkflow.run,
-        "Please translate 'Good morning, how are you?' to Spanish and French",
-        id="agents-as-tools-workflow-example",
+        ParallelizationWorkflow.run,
+        "Hello, world! How are you today?",
+        id="parallelization-workflow-example",
         task_queue="openai-agents-patterns-task-queue",
     )
-
     print(f"Result: {result}")
 
 

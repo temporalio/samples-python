@@ -37,6 +37,14 @@ encryption = [
     "cryptography>=38.0.1,<39",
     "aiohttp>=3.8.1,<4",
 ]
+encryption_jwt = [
+    "cryptography>=38.0.1,<39",
+    "aiohttp>=3.8.1,<4",
+    "pyjwt>=2.9.0,<3",
+    "aioboto3>=13.1.1,<14",
+    "requests>=2.32.3,<3",
+    "types-requests>=2.31.0.6,<3"
+]
 gevent = ["gevent==25.4.2 ; python_version >= '3.8'"]
 langchain = [
     "langchain>=0.1.7,<0.2 ; python_version >= '3.8.1' and python_version < '4.0'",
@@ -77,6 +85,7 @@ default-groups = [
     "bedrock",
     "dsl",
     "encryption",
+    "encryption_jwt",
     "gevent",
     "langchain",
     "nexus",
@@ -101,6 +110,7 @@ packages = [
     "custom_metric",
     "dsl",
     "encryption",
+    "encryption_jwt",
     "gevent_async",
     "hello",
     "langchain",

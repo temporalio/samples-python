@@ -113,7 +113,7 @@ class _ContextPropagationClientOutboundInterceptor(
         self, input: temporalio.client.StartWorkflowUpdateInput
     ) -> temporalio.client.WorkflowUpdateHandle[Any]:
         set_header_from_context(input, self._payload_converter)
-        return await self.next.start_workflow_update(input)
+        return await super().start_workflow_update(input)
 
 
 class _ContextPropagationActivityInboundInterceptor(
@@ -123,40 +123,40 @@ class _ContextPropagationActivityInboundInterceptor(
         self, input: temporalio.worker.ExecuteActivityInput
     ) -> Any:
         with context_from_header(input, temporalio.activity.payload_converter()):
-            return await self.next.execute_activity(input)
+            return await super().execute_activity(input)
 
 
 class _ContextPropagationWorkflowInboundInterceptor(
     temporalio.worker.WorkflowInboundInterceptor
 ):
     def init(self, outbound: temporalio.worker.WorkflowOutboundInterceptor) -> None:
-        self.next.init(_ContextPropagationWorkflowOutboundInterceptor(outbound))
+        super().init(_ContextPropagationWorkflowOutboundInterceptor(outbound))
 
     async def execute_workflow(
         self, input: temporalio.worker.ExecuteWorkflowInput
     ) -> Any:
         with context_from_header(input, temporalio.workflow.payload_converter()):
-            return await self.next.execute_workflow(input)
+            return await super().execute_workflow(input)
 
     async def handle_signal(self, input: temporalio.worker.HandleSignalInput) -> None:
         with context_from_header(input, temporalio.workflow.payload_converter()):
-            return await self.next.handle_signal(input)
+            return await super().handle_signal(input)
 
     async def handle_query(self, input: temporalio.worker.HandleQueryInput) -> Any:
         with context_from_header(input, temporalio.workflow.payload_converter()):
-            return await self.next.handle_query(input)
+            return await super().handle_query(input)
 
     def handle_update_validator(
         self, input: temporalio.worker.HandleUpdateInput
     ) -> None:
         with context_from_header(input, temporalio.workflow.payload_converter()):
-            self.next.handle_update_validator(input)
+            super().handle_update_validator(input)
 
     async def handle_update_handler(
         self, input: temporalio.worker.HandleUpdateInput
     ) -> Any:
         with context_from_header(input, temporalio.workflow.payload_converter()):
-            return await self.next.handle_update_handler(input)
+            return await super().handle_update_handler(input)
 
 
 class _ContextPropagationWorkflowOutboundInterceptor(
@@ -166,28 +166,28 @@ class _ContextPropagationWorkflowOutboundInterceptor(
         self, input: temporalio.worker.SignalChildWorkflowInput
     ) -> None:
         set_header_from_context(input, temporalio.workflow.payload_converter())
-        return await self.next.signal_child_workflow(input)
+        return await super().signal_child_workflow(input)
 
     async def signal_external_workflow(
         self, input: temporalio.worker.SignalExternalWorkflowInput
     ) -> None:
         set_header_from_context(input, temporalio.workflow.payload_converter())
-        return await self.next.signal_external_workflow(input)
+        return await super().signal_external_workflow(input)
 
     def start_activity(
         self, input: temporalio.worker.StartActivityInput
     ) -> temporalio.workflow.ActivityHandle:
         set_header_from_context(input, temporalio.workflow.payload_converter())
-        return self.next.start_activity(input)
+        return super().start_activity(input)
 
     async def start_child_workflow(
         self, input: temporalio.worker.StartChildWorkflowInput
     ) -> temporalio.workflow.ChildWorkflowHandle:
         set_header_from_context(input, temporalio.workflow.payload_converter())
-        return await self.next.start_child_workflow(input)
+        return await super().start_child_workflow(input)
 
     def start_local_activity(
         self, input: temporalio.worker.StartLocalActivityInput
     ) -> temporalio.workflow.ActivityHandle:
         set_header_from_context(input, temporalio.workflow.payload_converter())
-        return self.next.start_local_activity(input)
+        return super().start_local_activity(input)

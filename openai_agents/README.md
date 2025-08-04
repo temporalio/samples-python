@@ -1,6 +1,6 @@
 # Temporal OpenAI Agents SDK Integration
 
-⚠️ **Experimental** - This module is not yet stable and may change in the future.
+⚠️ **Public Preview** - This integration is experimental and its interfaces may change prior to General Availability.
 
 This directory contains samples demonstrating how to use the [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) with Temporal's durable execution engine.
 These samples are adapted from the [OpenAI Agents SDK examples](https://github.com/openai/openai-agents-python/tree/main/examples) and extended with Temporal's durability and orchestration capabilities.
@@ -21,42 +21,18 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 - Required dependencies installed via `uv sync --group openai-agents`
 - OpenAI API key set as environment variable: `export OPENAI_API_KEY=your_key_here`
 
-## Running the Examples
+## Examples
 
-1. **Start the worker** (supports all samples):
-   ```bash
-   uv run openai_agents/run_worker.py
-   ```
+Each directory contains a complete example with its own README for detailed instructions:
 
-2. **Run individual samples** in separate terminals:
-
-### Basic Agent Examples
-
-- **Hello World Agent** - Simple agent that responds in haikus:
-  ```bash
-  uv run openai_agents/run_hello_world_workflow.py
-  ```
-
-- **Tools Agent** - Agent with access to external tools (weather API):
-  ```bash
-  uv run openai_agents/run_tools_workflow.py
-  ```
-
-### Advanced Multi-Agent Examples
-
-- **Research Workflow** - Multi-agent research system with specialized roles:
-  ```bash
-  uv run openai_agents/run_research_workflow.py
-  ```
-  Features a planner agent, search agent, and writer agent working together.
-
-- **Customer Service Workflow** - Customer service agent with escalation capabilities (interactive):
-  ```bash
-  uv run openai_agents/run_customer_service_client.py --conversation-id my-conversation-123
-  ```
-
-- **Agents as Tools** - Demonstrate using agents as tools within other agents:
-  ```bash
-  uv run openai_agents/run_agents_as_tools_workflow.py
-  ```
+- **[Basic Examples](./basic/README.md)** - Simple agent examples including a hello world agent and a tools-enabled agent that can access external APIs like weather services.
+- **[Agent Patterns](./agent_patterns/README.md)** - Advanced patterns for agent composition, including using agents as tools within other agents.
+- **[Tools](./tools/README.md)** - Demonstrates available tools such as file search, image generation, and others.
+- **[Handoffs](./handoffs/README.md)** - Agents collaborating via handoffs.
+- **[Hosted MCP](./hosted_mcp/README.md)** - Using the MCP client functionality of the OpenAI Responses API.
+- **[Model Providers](./model_providers/README.md)** - Using custom LLM providers (e.g., Anthropic via LiteLLM).
+- **[Research Bot](./research_bot/README.md)** - Multi-agent research system with specialized roles: a planner agent, search agent, and writer agent working together to conduct comprehensive research.
+- **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
+- **[Reasoning Content](./reasoning_content/README.md)** - Example of how to retrieve the thought process of reasoning models.
+- **[Financial Research Agent](./financial_research_agent/README.md)** - Multi-agent financial research system with planner, search, analyst, writer, and verifier agents collaborating.
 

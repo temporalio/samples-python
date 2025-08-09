@@ -13,32 +13,42 @@ from mcp_sequential_thinking.mcp_server.nexus_service import (
     CallToolInput,
     ListToolsInput,
     MCPServerNexusService,
+    MCPServerStartInput,
 )
 
 
 class MinimalMCPClient:
     """A minimal MCP client that routes through Nexus without anyio dependencies."""
 
-    def __init__(
-        self, nexus_client: NexusClient[MCPServerNexusService], operation_token: str
-    ):
+    def __init__(self, nexus_client: NexusClient[MCPServerNexusService]):
         self.nexus_client = nexus_client
-        self.operation_token = operation_token
+        self.operation_token: Optional[str] = None
         self._initialized = False
 
     async def initialize(self) -> types.InitializeResult:
-        """Initialize the MCP session."""
-        # For Nexus transport, we just return a success response
+        """Initialize the MCP session by starting the workflow."""
+        # Start the MCP server workflow - this creates our session
+        op_handle = await self.nexus_client.start_operation(
+            MCPServerNexusService.start,
+            MCPServerStartInput(
+                mcp_server_workflow_name="SequentialThinkingMCPServerWorkflow"
+            ),
+        )
+
+        # Store the operation token for subsequent calls
+        self.operation_token = op_handle.operation_token
         self._initialized = True
+
+        # Return the initialization result
         return types.InitializeResult(
-            protocolVersion="2024-11-15",
+            protocolVersion="2024-11-05",  # Use a supported version
             capabilities=types.ServerCapabilities(tools=types.ToolsCapability()),
             serverInfo=types.Implementation(name="nexus-mcp-server", version="0.1.0"),
         )
 
     async def list_tools(self) -> types.ListToolsResult:
         """List available tools."""
-        if not self._initialized:
+        if not self._initialized or not self.operation_token:
             raise RuntimeError("Client not initialized")
 
         result = await self.nexus_client.execute_operation(
@@ -54,7 +64,7 @@ class MinimalMCPClient:
         self, name: str, arguments: Optional[Dict[str, Any]] = None
     ) -> Any:
         """Call a tool."""
-        if not self._initialized:
+        if not self._initialized or not self.operation_token:
             raise RuntimeError("Client not initialized")
 
         result = await self.nexus_client.execute_operation(

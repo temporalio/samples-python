@@ -70,6 +70,11 @@ cloud-export-to-parquet = [
     "boto3>=1.34.89,<2",
     "pyarrow>=19.0.1",
 ]
+mcp = [
+    "mcp[cli]>=1.11.0",
+    "nexus-rpc>=1.1.0",
+    "litellm>=1.74.8",
+]
 
 
 [tool.hatch.build.targets.sdist]
@@ -145,3 +150,5 @@ ignore_errors = true
 module = "opentelemetry.*"
 ignore_errors = true
 
+[tool.uv.sources]
+temporalio = { git = "https://github.com/temporalio/sdk-python", branch = "dan-9997-python-mcp-nexus" }

@@ -2691,6 +2691,7 @@ langchain = [
 ]
 mcp-sequential-thinking = [
     { name = "mcp", extra = ["cli"] },
+    { name = "nexus-rpc" },
 ]
 nexus = [
     { name = "nexus-rpc" },
@@ -2756,7 +2757,10 @@ langchain = [
     { name = "tqdm", specifier = ">=4.62.0,<5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0.post1,<0.25" },
 ]
-mcp-sequential-thinking = [{ name = "mcp", extras = ["cli"], specifier = ">=1.11.0" }]
+mcp-sequential-thinking = [
+    { name = "mcp", extras = ["cli"], specifier = ">=1.11.0" },
+    { name = "nexus-rpc", specifier = ">=1.1.0" },
+]
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },

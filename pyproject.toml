@@ -70,6 +70,9 @@ cloud-export-to-parquet = [
     "boto3>=1.34.89,<2",
     "pyarrow>=19.0.1",
 ]
+mcp-sequential-thinking = [
+    "mcp[cli]>=1.11.0",
+]
 
 
 [tool.hatch.build.targets.sdist]

@@ -4,7 +4,7 @@ from .mcp_server.nexus_service import MCPServerNexusService, MCPServerStartInput
 from .minimal_mcp_client import MinimalMCPClient
 
 
-@workflow.defn(sandboxed=False)  # MCP requires anyio/sniffio
+@workflow.defn(sandboxed=False)  # Imports mcp package
 class AgentWorkflow:
     @workflow.run
     async def run(self):
@@ -27,7 +27,6 @@ class AgentWorkflow:
         workflow.logger.info(
             f"Started MCP server workflow, token: {op_handle.operation_token}"
         )
-        assert op_handle.operation_token
 
         # Create minimal MCP client that works in Temporal workflows
         mcp = MinimalMCPClient(nexus_client, op_handle.operation_token)
@@ -41,16 +40,29 @@ class AgentWorkflow:
         workflow.logger.info(f"Listed tools: {tools_result}")
         print("\nAvailable tools:")
         for tool in tools_result.tools:
-            assert tool.description
+            assert tool.description, f"Tool {tool.name} missing description"
             print(f"  - {tool.name}: {tool.description[:60]}...")
 
-        # Call the sequential thinking tool
+        # Call the sequential thinking tool with multiple steps
+        # Step 1
+        result1 = await mcp.call_tool(
+            "sequentialthinking",
+            arguments={
+                "thought": "To find the capital of France, I need to recall my knowledge of European geography.",
+                "thoughtNumber": 1,
+                "totalThoughts": 2,
+                "nextThoughtNeeded": True,
+            },
+        )
+        workflow.logger.info(f"First thought result: {result1}")
+
+        # Step 2
         result = await mcp.call_tool(
             "sequentialthinking",
             arguments={
-                "thought": "What is the capital of France?",
-                "thoughtNumber": 1,
-                "totalThoughts": 1,
+                "thought": "The capital of France is Paris. It has been the capital city for centuries and is known for landmarks like the Eiffel Tower.",
+                "thoughtNumber": 2,
+                "totalThoughts": 2,
                 "nextThoughtNeeded": False,
             },
         )

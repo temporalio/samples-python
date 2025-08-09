@@ -7,16 +7,24 @@ import json
 from typing import Any, Dict, Optional
 
 import mcp.types as types
+from temporalio.workflow import NexusClient
+
+from mcp_sequential_thinking.mcp_server.nexus_service import (
+    CallToolInput,
+    ListToolsInput,
+    MCPServerNexusService,
+)
 
 
 class MinimalMCPClient:
     """A minimal MCP client that routes through Nexus without anyio dependencies."""
 
-    def __init__(self, nexus_client, operation_token: str):
+    def __init__(
+        self, nexus_client: NexusClient[MCPServerNexusService], operation_token: str
+    ):
         self.nexus_client = nexus_client
         self.operation_token = operation_token
         self._initialized = False
-        self._request_id = 0
 
     async def initialize(self) -> types.InitializeResult:
         """Initialize the MCP session."""
@@ -33,8 +41,6 @@ class MinimalMCPClient:
         if not self._initialized:
             raise RuntimeError("Client not initialized")
 
-        from .mcp_server.nexus_service import ListToolsInput, MCPServerNexusService
-
         result = await self.nexus_client.execute_operation(
             MCPServerNexusService.list_tools,
             ListToolsInput(
@@ -50,8 +56,6 @@ class MinimalMCPClient:
         """Call a tool."""
         if not self._initialized:
             raise RuntimeError("Client not initialized")
-
-        from .mcp_server.nexus_service import CallToolInput, MCPServerNexusService
 
         result = await self.nexus_client.execute_operation(
             MCPServerNexusService.call_tool,

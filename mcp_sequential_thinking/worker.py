@@ -3,35 +3,34 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from mcp_sequential_thinking.agent_workflow import AgentWorkflow
-from mcp_sequential_thinking.agent_workflow_with_transport import (
-    AgentWorkflowWithTransport,
+from mcp_sequential_thinking.agent_workflow_nexus_client import (
+    AgentWorkflowNexusClient,
 )
-from mcp_sequential_thinking.debug_workflow import DebugEventLoopWorkflow
+from mcp_sequential_thinking.agent_workflow_nexus_transport import (
+    AgentWorkflowNexusTransport,
+)
 from mcp_sequential_thinking.mcp_server.nexus_service import (
     MCPServerNexusServiceHandler,
 )
 from mcp_sequential_thinking.mcp_server.workflow import (
     SequentialThinkingMCPServerWorkflow,
 )
-from mcp_sequential_thinking.test_anyio_workflow import TestAnyioWorkflow
 
 
 async def main():
     client = await Client.connect("localhost:7233")
-    worker = Worker(
+    async with Worker(
         client,
         task_queue="mcp-sequential-thinking-task-queue",
         workflows=[
-            AgentWorkflow,
-            AgentWorkflowWithTransport,
-            DebugEventLoopWorkflow,
-            TestAnyioWorkflow,
+            AgentWorkflowNexusClient,
+            AgentWorkflowNexusTransport,
             SequentialThinkingMCPServerWorkflow,
         ],
         nexus_service_handlers=[MCPServerNexusServiceHandler()],
-    )
-    await worker.run()
+    ):
+        print("Worker started, press Ctrl+C to exit")
+        await asyncio.Event().wait()
 
 
 if __name__ == "__main__":

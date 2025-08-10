@@ -1,7 +1,7 @@
 from temporalio import workflow
 
 from .mcp_server.nexus_service import MCPServerNexusService
-from .minimal_mcp_client import MinimalMCPClient
+from .minimal_mcp_client import NexusMCPClientSession
 
 
 @workflow.defn(sandboxed=False)  # Imports mcp package
@@ -18,7 +18,7 @@ class AgentWorkflow:
         workflow.logger.info("Created Nexus client")
 
         # Create minimal MCP client that works in Temporal workflows
-        mcp = MinimalMCPClient(nexus_client)
+        mcp = NexusMCPClientSession(nexus_client)
 
         # Initialize the client - this starts the MCP server workflow
         init_result = await mcp.initialize()

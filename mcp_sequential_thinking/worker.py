@@ -4,12 +4,17 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from mcp_sequential_thinking.agent_workflow import AgentWorkflow
+from mcp_sequential_thinking.agent_workflow_with_transport import (
+    AgentWorkflowWithTransport,
+)
+from mcp_sequential_thinking.debug_workflow import DebugEventLoopWorkflow
 from mcp_sequential_thinking.mcp_server.nexus_service import (
     MCPServerNexusServiceHandler,
 )
 from mcp_sequential_thinking.mcp_server.workflow import (
     SequentialThinkingMCPServerWorkflow,
 )
+from mcp_sequential_thinking.test_anyio_workflow import TestAnyioWorkflow
 
 
 async def main():
@@ -17,7 +22,13 @@ async def main():
     worker = Worker(
         client,
         task_queue="mcp-sequential-thinking-task-queue",
-        workflows=[AgentWorkflow, SequentialThinkingMCPServerWorkflow],
+        workflows=[
+            AgentWorkflow,
+            AgentWorkflowWithTransport,
+            DebugEventLoopWorkflow,
+            TestAnyioWorkflow,
+            SequentialThinkingMCPServerWorkflow,
+        ],
         nexus_service_handlers=[MCPServerNexusServiceHandler()],
     )
     await worker.run()

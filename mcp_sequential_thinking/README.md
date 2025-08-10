@@ -22,3 +22,17 @@ In another terminal, start the caller workflow:
 ```
 uv run mcp_sequential_thinking/app.py
 ```
+
+## Approaches
+
+This sample includes two approaches for MCP integration:
+
+1. **Minimal Client** - A custom client that bypasses anyio dependencies and routes MCP operations directly through Nexus
+   ```
+   uv run mcp_sequential_thinking/app_compare.py  # Uses minimal client by default
+   ```
+
+2. **Transport-Based** - Uses the standard MCP ClientSession with a custom Nexus transport and event loop patching
+   ```
+   uv run mcp_sequential_thinking/app_compare.py --transport
+   ```

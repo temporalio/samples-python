@@ -1,7 +1,13 @@
 import asyncio
 
 
-def patch_temporal_event_loop():
+def patch_sdk_python_event_loop():
+    """
+    The MCP Python SDK uses anyio.
+    EventLoop.get_task_factory() must return None in order to work with anyio.
+    Hopefully this is a simple change we can make in sdk-python without negative consequences.
+    """
+
     loop = asyncio.get_event_loop()
 
     original_get_task_factory = loop.get_task_factory

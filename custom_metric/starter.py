@@ -2,15 +2,18 @@ import asyncio
 import uuid
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
 from custom_metric.workflow import StartTwoActivitiesWorkflow
+from util import get_temporal_config_path
 
 
 async def main():
-
-    client = await Client.connect(
-        "localhost:7233",
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
     )
+
+    client = await Client.connect(**config)
 
     await client.start_workflow(
         StartTwoActivitiesWorkflow.run,

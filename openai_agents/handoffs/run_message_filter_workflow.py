@@ -1,6 +1,5 @@
 import asyncio
 import json
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
@@ -9,21 +8,21 @@ from temporalio.envconfig import ClientConfig
 from openai_agents.handoffs.workflows.message_filter_workflow import (
     MessageFilterWorkflow,
 )
+from util import get_temporal_config_path
 
 
 async def main():
-    # Get repo root - we know openai_agents/handoffs/ is two levels deep from root
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    config_file = repo_root / "temporal.toml"
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
-    config["plugins"] = [
-        OpenAIAgentsPlugin(),
-    ]
-    
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     # Create client connected to server at the given address
-    client = await Client.connect(**config)
+    client = await Client.connect(
+        **config,
+        plugins=[
+            OpenAIAgentsPlugin(),
+        ],
+    )
 
     # Execute a workflow
     result = await client.execute_workflow(

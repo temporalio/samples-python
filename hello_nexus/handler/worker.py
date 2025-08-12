@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 from typing import Optional
 
 from temporalio.client import Client
@@ -9,6 +8,7 @@ from temporalio.worker import Worker
 
 from hello_nexus.handler.service_handler import MyNexusServiceHandler
 from hello_nexus.handler.workflows import WorkflowStartedByNexusOperation
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 
@@ -20,15 +20,10 @@ async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)
 
     if not client:
-        # Get repo root - 2 levels deep from root
-
-        repo_root = Path(__file__).resolve().parent.parent.parent
-
-        config_file = repo_root / "temporal.toml"
-
-        
-        config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-        config["target_host"] = "localhost:7233"
+        config = ClientConfig.load_client_connect_config(
+            config_file=str(get_temporal_config_path())
+        )
+        # Override the namespace from the config file.
         config["namespace"] = NAMESPACE
         client = await Client.connect(**config)
 

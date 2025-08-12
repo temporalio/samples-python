@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Optional
 
 from temporalio import exceptions
@@ -10,21 +9,17 @@ from temporalio.envconfig import ClientConfig
 
 from updatable_timer import TASK_QUEUE
 from updatable_timer.workflow import Workflow
+from util import get_temporal_config_path
 
 
 async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)
 
     if not client:
-        # Get repo root - 1 level deep from root
+        config = ClientConfig.load_client_connect_config(
+            config_file=str(get_temporal_config_path())
+        )
 
-        repo_root = Path(__file__).resolve().parent.parent
-
-        config_file = repo_root / "temporal.toml"
-
-        
-        config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-        config["target_host"] = "localhost:7233"
         client = await Client.connect(**config)
     try:
         handle = await client.start_workflow(

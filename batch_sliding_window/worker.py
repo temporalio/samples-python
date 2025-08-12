@@ -6,11 +6,13 @@ import logging
 
 from temporalio import worker
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
 from batch_sliding_window.batch_workflow import ProcessBatchWorkflow
 from batch_sliding_window.record_loader_activity import RecordLoader
 from batch_sliding_window.record_processor_workflow import RecordProcessorWorkflow
 from batch_sliding_window.sliding_window_workflow import SlidingWindowWorkflow
+from util import get_temporal_config_path
 
 
 async def main():
@@ -19,11 +21,10 @@ async def main():
     logging.basicConfig(level=logging.INFO)
 
     # Create client
-        # Get repo root - 1 level deep from root
-        repo_root = Path(__file__).resolve().parent.parent
-        config_file = repo_root / "temporal.toml"
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     client = await Client.connect(**config)
 
     # Create RecordLoader activity with sample data

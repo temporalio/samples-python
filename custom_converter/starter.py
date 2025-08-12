@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -10,24 +9,21 @@ from custom_converter.shared import (
     greeting_data_converter,
 )
 from custom_converter.workflow import GreetingWorkflow
+from util import get_temporal_config_path
 
 
 async def main():
-    # Get repo root - 1 level deep from root
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
 
-    repo_root = Path(__file__).resolve().parent.parent
-
-    config_file = repo_root / "temporal.toml"
-
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
-    # Without this we get:
-    #   TypeError: Object of type GreetingInput is not JSON serializable
-    config["data_converter"] = greeting_data_converter
-    
     # Connect client
-    client = await Client.connect(**config)
+    client = await Client.connect(
+        **config,
+        # Without this we get:
+        #   TypeError: Object of type GreetingInput is not JSON serializable
+        data_converter=greeting_data_converter,
+    )
 
     # Run workflow
     result = await client.execute_workflow(

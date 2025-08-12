@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 
 from temporalio import client, common
 from temporalio.envconfig import ClientConfig
@@ -11,15 +10,14 @@ from message_passing.waiting_for_handlers import (
     WorkflowInput,
 )
 from message_passing.waiting_for_handlers.workflows import WaitingForHandlersWorkflow
+from util import get_temporal_config_path
 
 
 async def starter(exit_type: WorkflowExitType):
-    # Get repo root - we know message_passing/waiting_for_handlers/ is two levels deep from root
-    repo_root = Path(__file__).resolve().parent.parent.parent
-    config_file = repo_root / "temporal.toml"
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     cl = await client.Client.connect(**config)
     wf_handle = await cl.start_workflow(
         WaitingForHandlersWorkflow.run,

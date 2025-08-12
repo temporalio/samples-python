@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -8,17 +7,17 @@ from temporalio.worker import Worker
 
 from dsl.activities import DSLActivities
 from dsl.workflow import DSLWorkflow
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 
 
 async def main():
     # Connect client
-    # Get repo root - 1 level deep from root
-    repo_root = Path(__file__).resolve().parent.parent
-    config_file = repo_root / "temporal.toml"
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     client = await Client.connect(**config)
 
     # Run a worker for the activities and workflow

@@ -2,16 +2,18 @@ import asyncio
 import sys
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from workflows import SignalQueryBedrockWorkflow
+
+from util import get_temporal_config_path
 
 
 async def main(prompt):
     # Create client connected to server at the given address
-        # Get repo root - 2 levels deep from root
-        repo_root = Path(__file__).resolve().parent.parent.parent
-        config_file = repo_root / "temporal.toml"
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     client = await Client.connect(**config)
 
     workflow_id = "bedrock-workflow-with-signals"

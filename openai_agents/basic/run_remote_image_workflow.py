@@ -1,28 +1,22 @@
 import asyncio
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 from temporalio.envconfig import ClientConfig
 
 from openai_agents.basic.workflows.remote_image_workflow import RemoteImageWorkflow
+from util import get_temporal_config_path
 
 
 async def main():
-    # Get repo root - 2 levels deep from root
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
 
-    repo_root = Path(__file__).resolve().parent.parent.parent
-
-    config_file = repo_root / "temporal.toml"
-
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
-    config["plugins"] = [
-        OpenAIAgentsPlugin(),
-    ]
-    
-    client = await Client.connect(**config)
+    client = await Client.connect(
+        **config,
+        plugins=[OpenAIAgentsPlugin()],
+    )
 
     # Use the URL from the original example
     image_url = (

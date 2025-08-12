@@ -1,11 +1,11 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from context_propagation import interceptor, shared, workflows
+from util import get_temporal_config_path
 
 
 async def main():
@@ -14,23 +14,16 @@ async def main():
     # Set the user ID
     shared.user_id.set("some-user")
 
-    # Get repo root - 1 level deep from root
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
 
-
-    repo_root = Path(__file__).resolve().parent.parent
-
-
-    config_file = repo_root / "temporal.toml"
-
-
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
-    # Use our interceptor
-    config["interceptors"] = [interceptor.ContextPropagationInterceptor()]
-    
     # Connect client
-    client = await Client.connect(**config)
+    client = await Client.connect(
+        **config,
+        # Use our interceptor
+        interceptors=[interceptor.ContextPropagationInterceptor()],
+    )
 
     # Start workflow, send signal, wait for completion, issue query
     handle = await client.start_workflow(

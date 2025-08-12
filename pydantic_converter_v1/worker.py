@@ -3,7 +3,6 @@ import dataclasses
 import logging
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
-from pathlib import Path
 from typing import List
 
 from temporalio import activity, workflow
@@ -21,6 +20,8 @@ with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel
 
     from pydantic_converter_v1.converter import pydantic_data_converter
+
+from util import get_temporal_config_path
 
 
 class MyPydanticModel(BaseModel):
@@ -72,23 +73,16 @@ interrupt_event = asyncio.Event()
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-    
-    # Get repo root - 1 level deep from root
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
 
-    
-    repo_root = Path(__file__).resolve().parent.parent
-
-    
-    config_file = repo_root / "temporal.toml"
-
-    
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
     # Connect client using the Pydantic converter
-    config["data_converter"] = pydantic_data_converter
-    
-    client = await Client.connect(**config)
+
+    client = await Client.connect(
+        **config,
+        data_converter=pydantic_data_converter,
+    )
 
     # Run a worker for the workflow
     async with Worker(

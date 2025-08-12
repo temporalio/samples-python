@@ -1,6 +1,5 @@
 import asyncio
 import dataclasses
-from pathlib import Path
 
 import temporalio.converter
 from temporalio import workflow
@@ -9,6 +8,7 @@ from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from encryption.codec import EncryptionCodec
+from util import get_temporal_config_path
 
 
 @workflow.defn(name="Workflow")
@@ -22,22 +22,18 @@ interrupt_event = asyncio.Event()
 
 
 async def main():
-    # Get repo root - 1 level deep from root
-
-    repo_root = Path(__file__).resolve().parent.parent
-
-    config_file = repo_root / "temporal.toml"
-
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
-    # Use the default converter, but change the codec
-    config["data_converter"] = dataclasses.replace(
-        temporalio.converter.default(), payload_codec=EncryptionCodec()
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
     )
-    
+
     # Connect client
-    client = await Client.connect(**config)
+    client = await Client.connect(
+        **config,
+        # Use the default converter, but change the codec
+        data_converter=dataclasses.replace(
+            temporalio.converter.default(), payload_codec=EncryptionCodec()
+        ),
+    )
 
     # Run a worker for the workflow
     async with Worker(

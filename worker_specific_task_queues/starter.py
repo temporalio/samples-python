@@ -2,17 +2,18 @@ import asyncio
 from uuid import uuid4
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
+from util import get_temporal_config_path
 from worker_specific_task_queues.tasks import FileProcessing
 
 
 async def main():
     # Connect client
-        # Get repo root - 1 level deep from root
-        repo_root = Path(__file__).resolve().parent.parent
-        config_file = repo_root / "temporal.toml"
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     client = await Client.connect(**config)
 
     # Start 10 concurrent workflows

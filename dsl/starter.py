@@ -2,10 +2,12 @@ import asyncio
 import logging
 import sys
 import uuid
+from pathlib import Path
 
 import dacite
 import yaml
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
 from dsl.workflow import DSLInput, DSLWorkflow
 
@@ -16,7 +18,12 @@ async def main(dsl_yaml: str) -> None:
     dsl_input = dacite.from_dict(DSLInput, yaml.safe_load(dsl_yaml))
 
     # Connect client
-    client = await Client.connect("localhost:7233")
+    # Get repo root - 1 level deep from root
+    repo_root = Path(__file__).resolve().parent.parent
+    config_file = repo_root / "temporal.toml"
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    client = await Client.connect(**config)
 
     # Run workflow
     result = await client.execute_workflow(

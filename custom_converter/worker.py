@@ -1,6 +1,8 @@
 import asyncio
+from pathlib import Path
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from custom_converter.shared import greeting_data_converter
@@ -10,13 +12,21 @@ interrupt_event = asyncio.Event()
 
 
 async def main():
+    # Get repo root - 1 level deep from root
+
+    repo_root = Path(__file__).resolve().parent.parent
+
+    config_file = repo_root / "temporal.toml"
+
+    
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    # Without this, when trying to run a workflow, we get:
+    #   KeyError: 'Unknown payload encoding my-greeting-encoding
+    config["data_converter"] = greeting_data_converter
+    
     # Connect client
-    client = await Client.connect(
-        "localhost:7233",
-        # Without this, when trying to run a workflow, we get:
-        #   KeyError: 'Unknown payload encoding my-greeting-encoding
-        data_converter=greeting_data_converter,
-    )
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

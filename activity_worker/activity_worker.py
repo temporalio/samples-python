@@ -1,9 +1,11 @@
 import asyncio
 import random
 import string
+from pathlib import Path
 
 from temporalio import activity
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 task_queue = "say-hello-task-queue"
@@ -18,7 +20,12 @@ async def say_hello_activity(name: str) -> str:
 
 async def main():
     # Create client to localhost on default namespace
-    client = await Client.connect("localhost:7233")
+    # Get repo root - 1 level deep from root
+    repo_root = Path(__file__).resolve().parent.parent
+    config_file = repo_root / "temporal.toml"
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    client = await Client.connect(**config)
 
     # Run activity worker
     async with Worker(client, task_queue=task_queue, activities=[say_hello_activity]):

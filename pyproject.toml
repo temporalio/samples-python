@@ -59,7 +59,7 @@ openai-agents = [
     "temporalio[openai-agents] >= 1.15.0",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
-sentry = ["sentry-sdk>=1.11.0,<2"]
+sentry = ["sentry-sdk>=2.13.0"]
 trio-async = [
     "trio>=0.28.0,<0.29",
     "trio-asyncio>=0.15.0,<0.16",
@@ -144,4 +144,3 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "opentelemetry.*"
 ignore_errors = true
-

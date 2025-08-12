@@ -2,13 +2,13 @@ import asyncio
 import logging
 from datetime import datetime
 from ipaddress import IPv4Address
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.envconfig import ClientConfig
 
 from pydantic_converter.worker import MyPydanticModel, MyWorkflow
+from util import get_temporal_config_path
 
 
 async def main():

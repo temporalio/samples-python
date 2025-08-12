@@ -6,6 +6,7 @@ from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from patching.activities import post_patch_activity, pre_patch_activity
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

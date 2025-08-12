@@ -17,6 +17,7 @@ from sentry.interceptor import SentryInterceptor
 from sentry.workflow import SentryExampleWorkflow
 
 interrupt_event = asyncio.Event()
+from util import get_temporal_config_path
 
 
 def before_send(event: Event, hint: Hint) -> Event | None:

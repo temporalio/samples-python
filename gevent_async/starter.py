@@ -11,6 +11,7 @@ from temporalio.envconfig import ClientConfig
 
 from gevent_async import workflow
 from gevent_async.executor import GeventExecutor
+from util import get_temporal_config_path
 
 
 def main():

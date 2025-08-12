@@ -2,13 +2,14 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
-from pathlib import Path
 from typing import List
 
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
+
+from util import get_temporal_config_path
 
 # Always pass through external modules to the sandbox that you know are safe for
 # workflow use

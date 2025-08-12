@@ -2,7 +2,6 @@ import argparse
 import asyncio
 import logging
 import uuid
-from pathlib import Path
 from typing import Optional
 
 from temporalio import common
@@ -15,6 +14,7 @@ from message_passing.safe_message_handlers.workflow import (
     ClusterManagerInput,
     ClusterManagerWorkflow,
 )
+from util import get_temporal_config_path
 
 
 async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] = None):

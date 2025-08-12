@@ -5,6 +5,7 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from trio_async import workflows
+from util import get_temporal_config_path
 
 
 @trio_asyncio.aio_as_trio  # Note this decorator which allows asyncio primitives

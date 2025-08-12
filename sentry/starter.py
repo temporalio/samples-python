@@ -1,11 +1,10 @@
 import asyncio
-import os
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from sentry.workflow import SentryExampleWorkflow, SentryExampleWorkflowInput
+from util import get_temporal_config_path
 
 
 async def main():

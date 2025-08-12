@@ -1,11 +1,11 @@
 import asyncio
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 from temporalio.envconfig import ClientConfig
 
 from openai_agents.basic.workflows.remote_image_workflow import RemoteImageWorkflow
+from util import get_temporal_config_path
 
 
 async def main():

@@ -12,6 +12,7 @@ from batch_sliding_window.batch_workflow import (
     ProcessBatchWorkflow,
     ProcessBatchWorkflowInput,
 )
+from util import get_temporal_config_path
 
 
 async def main():

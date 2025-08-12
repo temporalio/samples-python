@@ -6,6 +6,7 @@ from temporalio.worker import Worker
 
 from polling.frequent.activities import compose_greeting
 from polling.frequent.workflows import GreetingWorkflow
+from util import get_temporal_config_path
 
 
 async def main():

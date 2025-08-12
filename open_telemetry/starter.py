@@ -1,11 +1,11 @@
 import asyncio
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.envconfig import ClientConfig
 
 from open_telemetry.worker import GreetingWorkflow, init_runtime_with_telemetry
+from util import get_temporal_config_path
 
 
 async def main():

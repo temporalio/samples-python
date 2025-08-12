@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -7,6 +6,7 @@ from temporalio.worker import Worker
 
 from custom_converter.shared import greeting_data_converter
 from custom_converter.workflow import GreetingWorkflow
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

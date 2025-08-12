@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -8,6 +7,7 @@ from temporalio.worker import Worker
 
 from dsl.activities import DSLActivities
 from dsl.workflow import DSLWorkflow
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

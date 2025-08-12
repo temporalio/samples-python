@@ -8,6 +8,7 @@ from temporalio.worker import Worker
 from workflows import SignalQueryBedrockWorkflow
 
 from bedrock.shared.activities import BedrockActivities
+from util import get_temporal_config_path
 
 
 async def main():

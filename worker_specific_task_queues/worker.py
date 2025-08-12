@@ -9,6 +9,7 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
+from util import get_temporal_config_path
 from worker_specific_task_queues import tasks
 
 interrupt_event = asyncio.Event()

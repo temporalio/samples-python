@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -13,6 +12,7 @@ from message_passing.safe_message_handlers.workflow import (
     start_cluster,
     unassign_nodes_for_job,
 )
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

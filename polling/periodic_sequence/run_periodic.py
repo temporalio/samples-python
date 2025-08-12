@@ -4,6 +4,7 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from polling.periodic_sequence.workflows import GreetingWorkflow
+from util import get_temporal_config_path
 
 
 async def main():

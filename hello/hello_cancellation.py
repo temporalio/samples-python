@@ -11,6 +11,8 @@ from temporalio.envconfig import ClientConfig
 from temporalio.exceptions import CancelledError
 from temporalio.worker import Worker
 
+from util import get_temporal_config_path
+
 
 @activity.defn
 def never_complete_activity() -> NoReturn:

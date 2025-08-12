@@ -16,6 +16,7 @@ from cloud_export_to_parquet.workflows import (
     ProtoToParquet,
     ProtoToParquetWorkflowInput,
 )
+from util import get_temporal_config_path
 
 
 async def main() -> None:

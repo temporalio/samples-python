@@ -7,6 +7,8 @@ from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 from workflow import LangChainChildWorkflow, LangChainWorkflow
 
+from util import get_temporal_config_path
+
 interrupt_event = asyncio.Event()
 
 

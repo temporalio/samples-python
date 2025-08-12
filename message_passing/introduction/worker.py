@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -9,6 +8,7 @@ from temporalio.worker import Worker
 from message_passing.introduction import TASK_QUEUE
 from message_passing.introduction.activities import call_greeting_service
 from message_passing.introduction.workflows import GreetingWorkflow
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

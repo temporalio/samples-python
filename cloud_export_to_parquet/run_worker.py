@@ -14,6 +14,7 @@ from cloud_export_to_parquet.data_trans_activities import (
     get_object_keys,
 )
 from cloud_export_to_parquet.workflows import ProtoToParquet
+from util import get_temporal_config_path
 
 
 async def main() -> None:

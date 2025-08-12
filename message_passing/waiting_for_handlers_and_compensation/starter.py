@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 
 from temporalio import client, common
 from temporalio.envconfig import ClientConfig
@@ -13,6 +12,7 @@ from message_passing.waiting_for_handlers_and_compensation import (
 from message_passing.waiting_for_handlers_and_compensation.workflows import (
     WaitingForHandlersAndCompensationWorkflow,
 )
+from util import get_temporal_config_path
 
 
 async def starter(exit_type: WorkflowExitType):

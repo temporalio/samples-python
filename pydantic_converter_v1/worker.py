@@ -3,7 +3,6 @@ import dataclasses
 import logging
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
-from pathlib import Path
 from typing import List
 
 from temporalio import activity, workflow
@@ -21,6 +20,8 @@ with workflow.unsafe.imports_passed_through():
     from pydantic import BaseModel
 
     from pydantic_converter_v1.converter import pydantic_data_converter
+
+from util import get_temporal_config_path
 
 
 class MyPydanticModel(BaseModel):

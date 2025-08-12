@@ -1,6 +1,5 @@
 import asyncio
 import uuid
-from pathlib import Path
 from typing import Optional, Tuple
 
 from temporalio import common
@@ -18,6 +17,7 @@ from message_passing.update_with_start.lazy_initialization.workflows import (
     ShoppingCartItem,
     ShoppingCartWorkflow,
 )
+from util import get_temporal_config_path
 
 
 async def handle_add_item_request(

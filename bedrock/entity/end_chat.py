@@ -5,6 +5,8 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from workflows import EntityBedrockWorkflow
 
+from util import get_temporal_config_path
+
 
 async def main():
     # Create client connected to server at the given address

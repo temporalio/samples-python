@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -8,6 +7,7 @@ from temporalio.envconfig import ClientConfig
 # Since it's just used for typing purposes, it doesn't matter which one we
 # import
 from patching.workflow_1_initial import MyWorkflow
+from util import get_temporal_config_path
 
 
 async def main():

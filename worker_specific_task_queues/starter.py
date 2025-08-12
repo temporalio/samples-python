@@ -4,6 +4,7 @@ from uuid import uuid4
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
+from util import get_temporal_config_path
 from worker_specific_task_queues.tasks import FileProcessing
 
 

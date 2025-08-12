@@ -22,9 +22,15 @@ async def main():
             temporalio.converter.default(), payload_codec=EncryptionCodec()
         ),
     )
-    
+
     # Connect client
-    client = await Client.connect(**config)
+    client = await Client.connect(
+        **config,
+        # Use the default converter, but change the codec
+        data_converter=dataclasses.replace(
+            temporalio.converter.default(), payload_codec=EncryptionCodec()
+        ),
+    )
 
     # Run workflow
     result = await client.execute_workflow(

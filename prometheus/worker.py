@@ -1,12 +1,13 @@
 import asyncio
 from datetime import timedelta
-from pathlib import Path
 
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 from temporalio.worker import Worker
+
+from util import get_temporal_config_path
 
 
 @workflow.defn

@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 from typing import Optional
 
 from temporalio.client import Client, WorkflowUpdateStage
@@ -13,6 +12,7 @@ from message_passing.introduction.workflows import (
     Language,
     SetLanguageInput,
 )
+from util import get_temporal_config_path
 
 
 async def main(client: Optional[Client] = None):

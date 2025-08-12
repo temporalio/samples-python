@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Optional
 
 from temporalio import exceptions
@@ -10,6 +9,7 @@ from temporalio.envconfig import ClientConfig
 
 from updatable_timer import TASK_QUEUE
 from updatable_timer.workflow import Workflow
+from util import get_temporal_config_path
 
 
 async def main(client: Optional[Client] = None):

@@ -1,6 +1,5 @@
 import asyncio
 from datetime import timedelta
-from pathlib import Path
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -13,6 +12,8 @@ from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.envconfig import ClientConfig
 from temporalio.runtime import OpenTelemetryConfig, Runtime, TelemetryConfig
 from temporalio.worker import Worker
+
+from util import get_temporal_config_path
 
 
 @workflow.defn

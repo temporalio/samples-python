@@ -1,11 +1,11 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from context_propagation import interceptor, shared, workflows
+from util import get_temporal_config_path
 
 
 async def main():

@@ -1,10 +1,10 @@
 import asyncio
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from prometheus.worker import GreetingWorkflow, init_runtime_with_prometheus
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

@@ -1,12 +1,13 @@
 import asyncio
 import random
 import string
-from pathlib import Path
 
 from temporalio import activity
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
+
+from util import get_temporal_config_path
 
 task_queue = "say-hello-task-queue"
 workflow_name = "say-hello-workflow"

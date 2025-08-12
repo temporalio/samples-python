@@ -12,6 +12,7 @@ from batch_sliding_window.batch_workflow import ProcessBatchWorkflow
 from batch_sliding_window.record_loader_activity import RecordLoader
 from batch_sliding_window.record_processor_workflow import RecordProcessorWorkflow
 from batch_sliding_window.sliding_window_workflow import SlidingWindowWorkflow
+from util import get_temporal_config_path
 
 
 async def main():

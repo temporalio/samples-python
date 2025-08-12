@@ -8,6 +8,8 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
+from util import get_temporal_config_path
+
 
 # While we could use multiple parameters in the activity, Temporal strongly
 # encourages using a single dataclass instead which can have fields added to it

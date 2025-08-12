@@ -8,6 +8,8 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
+from util import get_temporal_config_path
+
 
 @activity.defn
 def say_hello_activity(name: str) -> str:

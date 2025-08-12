@@ -14,6 +14,7 @@ from temporalio.worker import (
 
 from custom_metric.activity import print_and_sleep
 from custom_metric.workflow import StartTwoActivitiesWorkflow
+from util import get_temporal_config_path
 
 
 class SimpleWorkerInterceptor(Interceptor):

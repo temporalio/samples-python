@@ -1,12 +1,12 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from context_propagation import activities, interceptor, workflows
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

@@ -6,6 +6,7 @@ from temporalio.envconfig import ClientConfig
 from openai_agents.basic.workflows.agent_lifecycle_workflow import (
     AgentLifecycleWorkflow,
 )
+from util import get_temporal_config_path
 
 
 async def main() -> None:

@@ -1,6 +1,5 @@
 import asyncio
 import uuid
-from pathlib import Path
 from typing import Optional
 
 from temporalio.client import Client
@@ -9,6 +8,7 @@ from temporalio.worker import Worker
 
 from hello_nexus.caller.workflows import CallerWorkflow
 from hello_nexus.service import MyOutput
+from util import get_temporal_config_path
 
 NAMESPACE = "hello-nexus-basic-caller-namespace"
 TASK_QUEUE = "hello-nexus-basic-caller-task-queue"

@@ -4,6 +4,7 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from replay.worker import JustActivity, JustTimer, TimerThenActivity
+from util import get_temporal_config_path
 
 
 async def main():

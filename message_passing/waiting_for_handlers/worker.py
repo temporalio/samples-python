@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -11,6 +10,7 @@ from message_passing.waiting_for_handlers.activities import (
     activity_executed_by_update_handler,
 )
 from message_passing.waiting_for_handlers.workflows import WaitingForHandlersWorkflow
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

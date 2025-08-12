@@ -14,6 +14,7 @@ from resource_pool.resource_user_workflow import (
     ResourceUserWorkflowInput,
 )
 from resource_pool.shared import RESOURCE_POOL_WORKFLOW_ID
+from util import get_temporal_config_path
 
 
 async def main() -> None:

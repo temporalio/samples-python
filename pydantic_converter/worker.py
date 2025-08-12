@@ -2,13 +2,14 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
-from pathlib import Path
 from typing import List
 
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
+
+from util import get_temporal_config_path
 
 # Always pass through external modules to the sandbox that you know are safe for
 # workflow use
@@ -43,23 +44,17 @@ interrupt_event = asyncio.Event()
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-    
-    # Get repo root - 1 level deep from root
 
-    
-    repo_root = Path(__file__).resolve().parent.parent
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
 
-    
-    config_file = repo_root / "temporal.toml"
-
-    
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
     # Connect client using the Pydantic converter
-    config["data_converter"] = pydantic_data_converter
-    
-    client = await Client.connect(**config)
+
+    client = await Client.connect(
+        **config,
+        data_converter=pydantic_data_converter,
+    )
 
     # Run a worker for the workflow
     async with Worker(

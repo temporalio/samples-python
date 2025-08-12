@@ -1,10 +1,10 @@
 import asyncio
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from prometheus.worker import GreetingWorkflow, init_runtime_with_prometheus
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 
@@ -12,22 +12,15 @@ interrupt_event = asyncio.Event()
 async def main():
     runtime = init_runtime_with_prometheus(9001)
 
-    # Get repo root - 1 level deep from root
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
 
-
-    repo_root = Path(__file__).resolve().parent.parent
-
-
-    config_file = repo_root / "temporal.toml"
-
-
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
-    config["runtime"] = runtime
-    
     # Connect client
-    client = await Client.connect(**config)
+    client = await Client.connect(
+        **config,
+        runtime=runtime,
+    )
 
     # Run workflow
     result = await client.execute_workflow(

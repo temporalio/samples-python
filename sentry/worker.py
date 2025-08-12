@@ -5,6 +5,7 @@ import sentry_sdk
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.types import Event, Hint
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 from temporalio.worker.workflow_sandbox import (
     SandboxedWorkflowRunner,
@@ -16,6 +17,7 @@ from sentry.interceptor import SentryInterceptor
 from sentry.workflow import SentryExampleWorkflow
 
 interrupt_event = asyncio.Event()
+from util import get_temporal_config_path
 
 
 def before_send(event: Event, hint: Hint) -> Event | None:
@@ -51,19 +53,10 @@ async def main():
     # Initialize the Sentry SDK
     initialise_sentry()
 
-    # Get repo root - 1 level deep from root
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
 
-
-    repo_root = Path(__file__).resolve().parent.parent
-
-
-    config_file = repo_root / "temporal.toml"
-
-
-    
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
-    
     # Start client
     client = await Client.connect(**config)
 

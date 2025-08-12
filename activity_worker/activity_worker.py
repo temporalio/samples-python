@@ -1,12 +1,13 @@
 import asyncio
 import random
 import string
-from pathlib import Path
 
 from temporalio import activity
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
+
+from util import get_temporal_config_path
 
 task_queue = "say-hello-task-queue"
 workflow_name = "say-hello-workflow"
@@ -20,11 +21,10 @@ async def say_hello_activity(name: str) -> str:
 
 async def main():
     # Create client to localhost on default namespace
-    # Get repo root - 1 level deep from root
-    repo_root = Path(__file__).resolve().parent.parent
-    config_file = repo_root / "temporal.toml"
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     client = await Client.connect(**config)
 
     # Run activity worker

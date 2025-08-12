@@ -66,6 +66,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_metric](custom_metric) - Custom metric to record the workflow type in the activity schedule to start latency.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
+* [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.

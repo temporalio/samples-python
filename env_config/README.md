@@ -1,6 +1,6 @@
 # Temporal External Client Configuration Samples
 
-This directory contains Python samples that demonstrate how to use the Temporal SDK's external client configuration feature. This feature allows you to configure a `temporalio.client.Client` using a TOML file and/or environment variables, decoupling connection settings from your application code.
+This directory contains Python samples that demonstrate how to use the Temporal SDK's external client configuration feature. This feature allows you to configure a `temporalio.client.Client` using a TOML file and/or programmatic overrides, decoupling connection settings from your application code.
 
 ## Prerequisites
 
@@ -30,7 +30,7 @@ python3 env_config/load_default.py
 
 ### `load_profile.py`
 
-This sample demonstrates loading the `staging` profile by name (which has an incorrect address) and then correcting the address using an environment variable. This highlights how environment variables can be used to fix or override file-based configuration.
+This sample demonstrates loading the `staging` profile by name (which has an incorrect address) and then correcting the address programmatically. This highlights the recommended approach for overriding configuration values at runtime.
 
 **To run this sample:**
 

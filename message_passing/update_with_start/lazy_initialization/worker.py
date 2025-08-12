@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -8,6 +7,7 @@ from temporalio.worker import Worker
 
 from message_passing.update_with_start.lazy_initialization import TASK_QUEUE, workflows
 from message_passing.update_with_start.lazy_initialization.activities import get_price
+from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 
@@ -15,13 +15,10 @@ interrupt_event = asyncio.Event()
 async def main():
     logging.basicConfig(level=logging.INFO)
 
-    # Get repo root - 3 levels deep from root
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
 
-    repo_root = Path(__file__).resolve().parent.parent.parent.parent
-
-    config_file = repo_root / "temporal.toml"
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
     client = await Client.connect(**config)
 
     async with Worker(

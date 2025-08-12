@@ -2,8 +2,10 @@ import asyncio
 import uuid
 
 from temporalio.client import BuildIdOpAddNewCompatible, BuildIdOpAddNewDefault, Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
+from util import get_temporal_config_path
 from worker_versioning.activities import greet, super_greet
 from worker_versioning.workflow_v1 import MyWorkflow as MyWorkflowV1
 from worker_versioning.workflow_v1_1 import MyWorkflow as MyWorkflowV1_1
@@ -11,11 +13,10 @@ from worker_versioning.workflow_v2 import MyWorkflow as MyWorkflowV2
 
 
 async def main():
-        # Get repo root - 1 level deep from root
-        repo_root = Path(__file__).resolve().parent.parent
-        config_file = repo_root / "temporal.toml"
-    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-    config["target_host"] = "localhost:7233"
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     client = await Client.connect(**config)
     task_queue = f"worker-versioning-{uuid.uuid4()}"
 

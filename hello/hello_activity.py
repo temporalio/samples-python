@@ -46,9 +46,10 @@ async def main():
     # logging.basicConfig(level=logging.INFO)
 
     # Load configuration
-    config = ClientConfig.load_client_connect_config(config_file=str(get_temporal_config_path()))
-    config["target_host"] = "localhost:7233"
-    
+    config = ClientConfig.load_client_connect_config(
+        config_file=str(get_temporal_config_path())
+    )
+
     # Start client
     client = await Client.connect(**config)
 

@@ -1,6 +1,5 @@
 import asyncio
 import uuid
-from pathlib import Path
 from typing import Optional
 
 from temporalio.client import Client
@@ -9,6 +8,7 @@ from temporalio.worker import Worker
 
 from hello_nexus.caller.workflows import CallerWorkflow
 from hello_nexus.service import MyOutput
+from util import get_temporal_config_path
 
 NAMESPACE = "hello-nexus-basic-caller-namespace"
 TASK_QUEUE = "hello-nexus-basic-caller-task-queue"
@@ -18,15 +18,10 @@ async def execute_caller_workflow(
     client: Optional[Client] = None,
 ) -> tuple[MyOutput, MyOutput]:
     if not client:
-        # Get repo root - 2 levels deep from root
-
-        repo_root = Path(__file__).resolve().parent.parent.parent
-
-        config_file = repo_root / "temporal.toml"
-
-        
-        config = ClientConfig.load_client_connect_config(config_file=str(config_file))
-        config["target_host"] = "localhost:7233"
+        config = ClientConfig.load_client_connect_config(
+            config_file=str(get_temporal_config_path())
+        )
+        # Override the namespace from config file.
         config["namespace"] = NAMESPACE
         client = await Client.connect(**config)
 

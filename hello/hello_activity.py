@@ -5,7 +5,10 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
+
+from util import get_temporal_config_path
 
 
 # While we could use multiple parameters in the activity, Temporal strongly
@@ -42,8 +45,12 @@ async def main():
     # import logging
     # logging.basicConfig(level=logging.INFO)
 
+    # Load configuration
+    config = ClientConfig.load_client_connect_config(config_file=str(get_temporal_config_path()))
+    config["target_host"] = "localhost:7233"
+    
     # Start client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

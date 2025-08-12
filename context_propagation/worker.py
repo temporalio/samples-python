@@ -1,7 +1,9 @@
 import asyncio
 import logging
+from pathlib import Path
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from context_propagation import activities, interceptor, workflows
@@ -12,12 +14,23 @@ interrupt_event = asyncio.Event()
 async def main():
     logging.basicConfig(level=logging.INFO)
 
+    # Get repo root - 1 level deep from root
+
+
+    repo_root = Path(__file__).resolve().parent.parent
+
+
+    config_file = repo_root / "temporal.toml"
+
+
+    
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    # Use our interceptor
+    config["interceptors"] = [interceptor.ContextPropagationInterceptor()]
+    
     # Connect client
-    client = await Client.connect(
-        "localhost:7233",
-        # Use our interceptor
-        interceptors=[interceptor.ContextPropagationInterceptor()],
-    )
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

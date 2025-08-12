@@ -15,7 +15,12 @@ async def main():
     logging.basicConfig(level=logging.INFO)
 
     # Connect client
-    client = await Client.connect("localhost:7233")
+        # Get repo root - 1 level deep from root
+        repo_root = Path(__file__).resolve().parent.parent
+        config_file = repo_root / "temporal.toml"
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    client = await Client.connect(**config)
 
     # Temporal runs threaded activities and workflow tasks via run_in_executor.
     # Due to how trio_asyncio works, you can only do run_in_executor with their

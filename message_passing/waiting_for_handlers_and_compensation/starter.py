@@ -1,6 +1,8 @@
 import asyncio
+from pathlib import Path
 
 from temporalio import client, common
+from temporalio.envconfig import ClientConfig
 
 from message_passing.waiting_for_handlers_and_compensation import (
     TASK_QUEUE,
@@ -14,7 +16,16 @@ from message_passing.waiting_for_handlers_and_compensation.workflows import (
 
 
 async def starter(exit_type: WorkflowExitType):
-    cl = await client.Client.connect("localhost:7233")
+    # Get repo root - 2 levels deep from root
+
+    repo_root = Path(__file__).resolve().parent.parent.parent
+
+    config_file = repo_root / "temporal.toml"
+
+    
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    cl = await client.Client.connect(**config)
     wf_handle = await cl.start_workflow(
         WaitingForHandlersAndCompensationWorkflow.run,
         WorkflowInput(exit_type=exit_type),

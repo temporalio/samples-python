@@ -20,7 +20,12 @@ from cloud_export_to_parquet.workflows import (
 async def main() -> None:
     """Main function to run temporal workflow."""
     # Create client connected to server at the given address
-    client = await Client.connect("localhost:7233")
+        # Get repo root - 1 level deep from root
+        repo_root = Path(__file__).resolve().parent.parent
+        config_file = repo_root / "temporal.toml"
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    client = await Client.connect(**config)
     # TODO: update s3_bucket and namespace to the actual usecase
     wf_input = ProtoToParquetWorkflowInput(
         num_delay_hour=2,

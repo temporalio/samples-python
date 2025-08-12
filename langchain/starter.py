@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import List
 from uuid import uuid4
 
@@ -7,14 +8,24 @@ from activities import TranslateParams
 from fastapi import FastAPI, HTTPException
 from langchain_interceptor import LangChainContextPropagationInterceptor
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from workflow import LangChainWorkflow, TranslateWorkflowParams
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.temporal_client = await Client.connect(
-        "localhost:7233", interceptors=[LangChainContextPropagationInterceptor()]
-    )
+    # Get repo root - 1 level deep from root
+
+    repo_root = Path(__file__).resolve().parent.parent
+
+    config_file = repo_root / "temporal.toml"
+
+    
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    config["interceptors"] = [LangChainContextPropagationInterceptor()]
+    
+    app.state.temporal_client = await Client.connect(**config)
     yield
 
 

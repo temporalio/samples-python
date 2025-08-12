@@ -2,10 +2,12 @@ import argparse
 import asyncio
 import logging
 import uuid
+from pathlib import Path
 from typing import Optional
 
 from temporalio import common
 from temporalio.client import Client, WorkflowHandle
+from temporalio.envconfig import ClientConfig
 
 from message_passing.safe_message_handlers.workflow import (
     ClusterManagerAssignNodesToJobInput,
@@ -54,7 +56,12 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
 
 async def main(should_test_continue_as_new: bool):
     # Connect to Temporal
-    client = await Client.connect("localhost:7233")
+    # Get repo root - 2 levels deep from root
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    config_file = repo_root / "temporal.toml"
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    client = await Client.connect(**config)
 
     print("Starting cluster")
     cluster_manager_handle = await client.start_workflow(

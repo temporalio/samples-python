@@ -1,5 +1,6 @@
 import asyncio
 from datetime import timedelta
+from pathlib import Path
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -9,6 +10,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import TracingInterceptor
+from temporalio.envconfig import ClientConfig
 from temporalio.runtime import OpenTelemetryConfig, Runtime, TelemetryConfig
 from temporalio.worker import Worker
 
@@ -50,13 +52,24 @@ def init_runtime_with_telemetry() -> Runtime:
 async def main():
     runtime = init_runtime_with_telemetry()
 
+    # Get repo root - 1 level deep from root
+
+
+    repo_root = Path(__file__).resolve().parent.parent
+
+
+    config_file = repo_root / "temporal.toml"
+
+
+    
+    config = ClientConfig.load_client_connect_config(config_file=str(config_file))
+    config["target_host"] = "localhost:7233"
+    # Use OpenTelemetry interceptor
+    config["interceptors"] = [TracingInterceptor()]
+    config["runtime"] = runtime
+    
     # Connect client
-    client = await Client.connect(
-        "localhost:7233",
-        # Use OpenTelemetry interceptor
-        interceptors=[TracingInterceptor()],
-        runtime=runtime,
-    )
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

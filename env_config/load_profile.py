@@ -19,7 +19,9 @@ async def main():
     config_file = Path(__file__).parent / "config.toml"
     profile_name = "staging"
 
-    print("The 'staging' profile in config.toml has an incorrect address (localhost:9999).")
+    print(
+        "The 'staging' profile in config.toml has an incorrect address (localhost:9999)."
+    )
     print("We'll programmatically override it to the correct address.")
 
     # Load the 'staging' profile.
@@ -33,7 +35,9 @@ async def main():
     connect_config["target_host"] = "localhost:7233"
 
     print(f"\nLoaded '{profile_name}' profile from {config_file} with overrides.")
-    print(f"  Address: {connect_config.get('target_host')} (overridden from localhost:9999)")
+    print(
+        f"  Address: {connect_config.get('target_host')} (overridden from localhost:9999)"
+    )
     print(f"  Namespace: {connect_config.get('namespace')}")
 
     print("\nAttempting to connect to client...")

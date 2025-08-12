@@ -4,7 +4,7 @@ This directory contains Python samples that demonstrate how to use the Temporal 
 
 ## Prerequisites
 
-To run these samples successfully, you must have a local Temporal development server running. You can start one easily using `temporal server start-dev`.
+To run, first see [README.md](../README.md) for prerequisites.
 
 ## Configuration File
 
@@ -18,14 +18,14 @@ The `config.toml` file defines three profiles for different environments:
 
 The following Python scripts demonstrate different ways to load and use these configuration profiles. Each runnable sample highlights a unique feature.
 
-### `load_default.py`
+### `load_from_file.py`
 
 This sample shows the most common use case: loading the `default` profile from the `config.toml` file.
 
 **To run this sample:**
 
 ```bash
-python3 env_config/load_default.py
+uv run env_config/load_from_file.py
 ```
 
 ### `load_profile.py`
@@ -35,7 +35,7 @@ This sample demonstrates loading the `staging` profile by name (which has an inc
 **To run this sample:**
 
 ```bash
-python3 env_config/load_profile.py
+uv run env_config/load_profile.py
 ```
 
 ## Running the Samples

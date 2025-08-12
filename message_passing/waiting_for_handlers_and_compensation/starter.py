@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 
 from temporalio import client, common
 from temporalio.envconfig import ClientConfig

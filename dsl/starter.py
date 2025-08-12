@@ -2,6 +2,7 @@ import asyncio
 import logging
 import sys
 import uuid
+from pathlib import Path
 
 import dacite
 import yaml

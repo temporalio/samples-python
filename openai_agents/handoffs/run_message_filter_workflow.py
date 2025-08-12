@@ -1,5 +1,6 @@
 import asyncio
 import json
+from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin

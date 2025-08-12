@@ -1,6 +1,7 @@
 import asyncio
 import random
 import string
+from pathlib import Path
 
 from temporalio import activity
 from temporalio.client import Client

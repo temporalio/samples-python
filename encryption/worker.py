@@ -1,5 +1,6 @@
 import asyncio
 import dataclasses
+from pathlib import Path
 
 import temporalio.converter
 from temporalio import workflow
@@ -31,6 +32,9 @@ async def main():
             temporalio.converter.default(), payload_codec=EncryptionCodec()
         ),
     )
+    
+    # Connect client
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

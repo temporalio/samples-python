@@ -7,6 +7,7 @@ from temporalio.envconfig import ClientConfig
 
 from encryption.codec import EncryptionCodec
 from encryption.worker import GreetingWorkflow
+from util import get_temporal_config_path
 
 
 async def main():
@@ -21,6 +22,9 @@ async def main():
             temporalio.converter.default(), payload_codec=EncryptionCodec()
         ),
     )
+    
+    # Connect client
+    client = await Client.connect(**config)
 
     # Run workflow
     result = await client.execute_workflow(

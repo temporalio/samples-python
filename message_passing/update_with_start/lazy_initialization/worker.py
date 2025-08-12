@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig

@@ -15,9 +15,7 @@ class AgentWorkflowNexusClient:
 
         mcp = NexusMCPClientSession(nexus_client)
 
-        init_result = await mcp.initialize()
-
-        tools_result = await mcp.list_tools()
+        await mcp.initialize()
 
         result1 = await mcp.call_tool(
             "sequentialthinking",

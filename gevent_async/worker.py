@@ -40,8 +40,9 @@ async def async_main():
     )
 
     # Connect client
-    config = ClientConfigProfile.load()
-    config["address"] = "localhost:7233"
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
     client = await Client.connect(**config.to_client_connect_config())
 
     # Create an executor for use by Temporal. This cannot be the outer one

@@ -55,8 +55,9 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
 
 async def main(should_test_continue_as_new: bool):
     # Connect to Temporal
-    config = ClientConfigProfile.load()
-    config["address"] = "localhost:7233"
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
     client = await Client.connect(**config.to_client_connect_config())
 
     print("Starting cluster")

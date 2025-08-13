@@ -13,8 +13,9 @@ async def main():
     # Set the user ID
     shared.user_id.set("some-user")
 
-    config = ClientConfigProfile.load()
-    config["address"] = "localhost:7233"
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
 
     # Connect client
     client = await Client.connect(

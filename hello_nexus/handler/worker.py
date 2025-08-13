@@ -19,10 +19,11 @@ async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)
 
     if not client:
-        config = ClientConfigProfile.load()
-        config["address"] = "localhost:7233"
-        # Override the namespace from the config file.
-        config["namespace"] = NAMESPACE
+        config_dict = ClientConfigProfile.load().to_dict()
+        # Override the address and namespace from the config file.
+        config_dict.setdefault("address", "localhost:7233")
+        config_dict["namespace"] = NAMESPACE
+        config = ClientConfigProfile.from_dict(config_dict)
         client = await Client.connect(**config.to_client_connect_config())
 
     # Start the worker, passing the Nexus service handler instance, in addition to the

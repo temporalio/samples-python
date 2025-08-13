@@ -17,10 +17,11 @@ async def execute_caller_workflow(
     client: Optional[Client] = None,
 ) -> tuple[MyOutput, MyOutput]:
     if not client:
-        config = ClientConfigProfile.load()
-        config["address"] = "localhost:7233"
+        config_dict = ClientConfigProfile.load().to_dict()
         # Override the namespace from config file.
-        config["namespace"] = NAMESPACE
+        config_dict.setdefault("address", "localhost:7233")
+        config_dict["namespace"] = NAMESPACE
+        config = ClientConfigProfile.from_dict(config_dict)
         client = await Client.connect(**config.to_client_connect_config())
 
     async with Worker(

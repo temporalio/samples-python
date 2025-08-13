@@ -13,9 +13,10 @@ from message_passing.waiting_for_handlers.workflows import WaitingForHandlersWor
 
 
 async def starter(exit_type: WorkflowExitType):
-    config = ClientConfigProfile.load()
-    config["address"] = "localhost:7233"
-    cl = await Client.connect(**config.to_client_connect_config())
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+    cl = await client.Client.connect(**config.to_client_connect_config())
 
     wf_handle = await cl.start_workflow(
         WaitingForHandlersWorkflow.run,

@@ -8,8 +8,9 @@ from workflows import EntityBedrockWorkflow
 
 async def main():
     # Create client connected to server at the given address
-    config = ClientConfigProfile.load()
-    config["address"] = "localhost:7233"
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
     client = await Client.connect(**config.to_client_connect_config())
 
     workflow_id = "entity-bedrock-workflow"

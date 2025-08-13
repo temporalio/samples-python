@@ -6,7 +6,7 @@ from typing import Optional
 
 from temporalio import common
 from temporalio.client import Client, WorkflowHandle
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from message_passing.safe_message_handlers.workflow import (
     ClusterManagerAssignNodesToJobInput,
@@ -14,7 +14,6 @@ from message_passing.safe_message_handlers.workflow import (
     ClusterManagerInput,
     ClusterManagerWorkflow,
 )
-from util import get_temporal_config_path
 
 
 async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] = None):
@@ -56,11 +55,9 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
 
 async def main(should_test_continue_as_new: bool):
     # Connect to Temporal
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
-    client = await Client.connect(**config)
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
 
     print("Starting cluster")
     cluster_manager_handle = await client.start_workflow(

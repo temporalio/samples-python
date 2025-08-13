@@ -7,11 +7,10 @@ from datetime import timedelta
 import sentry_sdk
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
 from sentry.interceptor import SentryInterceptor
-from util import get_temporal_config_path
 
 
 @dataclass
@@ -47,12 +46,10 @@ async def main():
         dsn=os.environ.get("SENTRY_DSN"),
     )
 
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
     # Start client
-    client = await Client.connect(**config)
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Run a worker for the workflow
     worker = Worker(

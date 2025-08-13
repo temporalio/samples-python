@@ -6,13 +6,12 @@ import datetime
 import logging
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from batch_sliding_window.batch_workflow import (
     ProcessBatchWorkflow,
     ProcessBatchWorkflowInput,
 )
-from util import get_temporal_config_path
 
 
 async def main():
@@ -21,11 +20,9 @@ async def main():
     logging.basicConfig(level=logging.INFO)
 
     # Create client
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
-    client = await Client.connect(**config)
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Create unique workflow ID with timestamp
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

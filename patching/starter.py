@@ -2,12 +2,11 @@ import argparse
 import asyncio
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 # Since it's just used for typing purposes, it doesn't matter which one we
 # import
 from patching.workflow_1_initial import MyWorkflow
-from util import get_temporal_config_path
 
 
 async def main():
@@ -19,11 +18,9 @@ async def main():
         raise RuntimeError("Either --start-workflow or --query-workflow is required")
 
     # Connect client
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
-    client = await Client.connect(**config)
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
 
     if args.start_workflow:
         handle = await client.start_workflow(

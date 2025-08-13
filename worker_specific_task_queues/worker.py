@@ -6,10 +6,9 @@ from uuid import UUID
 
 from temporalio import activity
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
-from util import get_temporal_config_path
 from worker_specific_task_queues import tasks
 
 interrupt_event = asyncio.Event()
@@ -33,11 +32,9 @@ async def main():
         return task_queue
 
     # Start client
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
-    client = await Client.connect(**config)
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Run a worker to distribute the workflows
     run_futures = []

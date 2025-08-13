@@ -6,17 +6,18 @@ from temporalio.client import (
     ScheduleUpdate,
     ScheduleUpdateInput,
 )
-from temporalio.envconfig import ClientConfig
-
-from util import get_temporal_config_path
+from temporalio.envconfig import ClientConfigProfile
 
 
 async def main():
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
+    # config_dict = ClientConfigProfile.load().to_dict()
+    # config_dict["address"] = "localhost:7233"
+    # config = ClientConfigProfile.from_dict(config_dict)
+    # client = await Client.connect(**config.to_client_connect_config())
 
-    client = await Client.connect(**config)
     handle = client.get_schedule_handle(
         "workflow-schedule-id",
     )

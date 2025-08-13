@@ -9,11 +9,16 @@ from temporalio.client import (
     ScheduleSpec,
     ScheduleState,
 )
+from temporalio.envconfig import ClientConfigProfile
 from your_workflows import YourSchedulesWorkflow
 
 
 async def main():
-    client = await Client.connect("localhost:7233")
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+    client = await Client.connect(**config.to_client_connect_config())
+
     await client.create_schedule(
         "workflow-schedule-id",
         Schedule(

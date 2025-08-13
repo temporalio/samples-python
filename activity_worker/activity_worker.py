@@ -4,6 +4,7 @@ import string
 
 from temporalio import activity
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
 task_queue = "say-hello-task-queue"
@@ -18,7 +19,10 @@ async def say_hello_activity(name: str) -> str:
 
 async def main():
     # Create client to localhost on default namespace
-    client = await Client.connect("localhost:7233")
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Run activity worker
     async with Worker(client, task_queue=task_queue, activities=[say_hello_activity]):

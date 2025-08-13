@@ -4,6 +4,7 @@ import dataclasses
 import temporalio.converter
 from temporalio import workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
 from encryption.codec import EncryptionCodec
@@ -20,9 +21,13 @@ interrupt_event = asyncio.Event()
 
 
 async def main():
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+
     # Connect client
     client = await Client.connect(
-        "localhost:7233",
+        **config.to_client_connect_config(),
         # Use the default converter, but change the codec
         data_converter=dataclasses.replace(
             temporalio.converter.default(), payload_codec=EncryptionCodec()

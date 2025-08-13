@@ -2,6 +2,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 from temporalio.worker.workflow_sandbox import (
     SandboxedWorkflowRunner,
@@ -18,7 +19,10 @@ from cloud_export_to_parquet.workflows import ProtoToParquet
 async def main() -> None:
     """Main worker function."""
     # Create client connected to server at the given address
-    client = await Client.connect("localhost:7233")
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Run the worker
     worker: Worker = Worker(

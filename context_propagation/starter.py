@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfigProfile
 
 from context_propagation import interceptor, shared, workflows
 
@@ -12,9 +13,13 @@ async def main():
     # Set the user ID
     shared.user_id.set("some-user")
 
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+
     # Connect client
     client = await Client.connect(
-        "localhost:7233",
+        **config.to_client_connect_config(),
         # Use our interceptor
         interceptors=[interceptor.ContextPropagationInterceptor()],
     )

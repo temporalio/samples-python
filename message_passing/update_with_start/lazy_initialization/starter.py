@@ -9,6 +9,7 @@ from temporalio.client import (
     WorkflowHandle,
     WorkflowUpdateFailedError,
 )
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.exceptions import ApplicationError
 
 from message_passing.update_with_start.lazy_initialization import TASK_QUEUE
@@ -61,12 +62,15 @@ async def handle_add_item_request(
 async def main():
     print("🛒")
     session_id = f"session-{uuid.uuid4()}"
-    temporal_client = await Client.connect("localhost:7233")
-    subtotal_1, _ = await handle_add_item_request(
-        session_id, "sku-123", 1, temporal_client
-    )
+
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+    client = await Client.connect(**config.to_client_connect_config())
+
+    subtotal_1, _ = await handle_add_item_request(session_id, "sku-123", 1, client)
     subtotal_2, wf_handle = await handle_add_item_request(
-        session_id, "sku-456", 1, temporal_client
+        session_id, "sku-456", 1, client
     )
     print(f"subtotals were, {[subtotal_1, subtotal_2]}")
     await wf_handle.signal(ShoppingCartWorkflow.checkout)

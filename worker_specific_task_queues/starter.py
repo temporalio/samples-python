@@ -2,13 +2,17 @@ import asyncio
 from uuid import uuid4
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfigProfile
 
 from worker_specific_task_queues.tasks import FileProcessing
 
 
 async def main():
     # Connect client
-    client = await Client.connect("localhost:7233")
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Start 10 concurrent workflows
     futures = []

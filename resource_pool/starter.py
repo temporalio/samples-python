@@ -3,6 +3,7 @@ from typing import Any
 
 from temporalio.client import Client, WorkflowFailureError, WorkflowHandle
 from temporalio.common import WorkflowIDConflictPolicy
+from temporalio.envconfig import ClientConfigProfile
 
 from resource_pool.pool_client.resource_pool_workflow import (
     ResourcePoolWorkflow,
@@ -17,7 +18,10 @@ from resource_pool.shared import RESOURCE_POOL_WORKFLOW_ID
 
 async def main() -> None:
     # Connect client
-    client = await Client.connect("localhost:7233")
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Initialize the resource pool
     resource_pool_handle = await client.start_workflow(

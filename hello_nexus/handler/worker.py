@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
 from hello_nexus.handler.service_handler import MyNexusServiceHandler
@@ -17,10 +18,13 @@ TASK_QUEUE = "my-handler-task-queue"
 async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)
 
-    client = client or await Client.connect(
-        "localhost:7233",
-        namespace=NAMESPACE,
-    )
+    if not client:
+        config_dict = ClientConfigProfile.load().to_dict()
+        # Override the address and namespace from the config file.
+        config_dict.setdefault("address", "localhost:7233")
+        config_dict["namespace"] = NAMESPACE
+        config = ClientConfigProfile.from_dict(config_dict)
+        client = await Client.connect(**config.to_client_connect_config())
 
     # Start the worker, passing the Nexus service handler instance, in addition to the
     # workflow classes that are started by your nexus operations, and any activities

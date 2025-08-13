@@ -7,11 +7,9 @@ from typing import NoReturn
 
 from temporalio import activity, workflow
 from temporalio.client import Client, WorkflowFailureError
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.exceptions import CancelledError
 from temporalio.worker import Worker
-
-from util import get_temporal_config_path
 
 
 @activity.defn
@@ -53,12 +51,10 @@ class CancellationWorkflow:
 
 
 async def main():
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
     # Start client
-    client = await Client.connect(**config)
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Run a worker for the workflow
     async with Worker(

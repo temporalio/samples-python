@@ -4,21 +4,19 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from updatable_timer.workflow import Workflow
-from util import get_temporal_config_path
 
 
 async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)
 
     if not client:
-        config = ClientConfig.load_client_connect_config(
-            config_file=str(get_temporal_config_path())
-        )
+        config = ClientConfigProfile.load()
+        config["address"] = "localhost:7233"
+        client = await Client.connect(**config.to_client_connect_config())
 
-        client = await Client.connect(**config)
     handle = client.get_workflow_handle(workflow_id="updatable-timer-workflow")
     # signal workflow about the wake up time change
     await handle.signal(

@@ -71,8 +71,9 @@ interrupt_event = asyncio.Event()
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-    config = ClientConfigProfile.load()
-    config["address"] = "localhost:7233"
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
 
     # Connect client using the Pydantic converter
 

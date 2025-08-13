@@ -13,8 +13,9 @@ async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)
 
     if not client:
-        config = ClientConfigProfile.load()
-        config["address"] = "localhost:7233"
+        config_dict = ClientConfigProfile.load().to_dict()
+        config_dict.setdefault("address", "localhost:7233")
+        config = ClientConfigProfile.from_dict(config_dict)
         client = await Client.connect(**config.to_client_connect_config())
 
     handle = client.get_workflow_handle(workflow_id="updatable-timer-workflow")

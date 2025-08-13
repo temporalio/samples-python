@@ -102,8 +102,9 @@ async def main():
     # logging.basicConfig(level=logging.INFO)
 
     # Start client
-    config = ClientConfigProfile.load()
-    config["address"] = "localhost:7233"
+    config_dict = ClientConfigProfile.load().to_dict()
+    config_dict.setdefault("address", "localhost:7233")
+    config = ClientConfigProfile.from_dict(config_dict)
     client = await Client.connect(**config.to_client_connect_config())
 
     # Set workflow_class to the proper class based on version

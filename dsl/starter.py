@@ -6,10 +6,9 @@ import uuid
 import dacite
 import yaml
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from dsl.workflow import DSLInput, DSLWorkflow
-from util import get_temporal_config_path
 
 
 async def main(dsl_yaml: str) -> None:
@@ -18,11 +17,9 @@ async def main(dsl_yaml: str) -> None:
     dsl_input = dacite.from_dict(DSLInput, yaml.safe_load(dsl_yaml))
 
     # Connect client
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
-    client = await Client.connect(**config)
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Run workflow
     result = await client.execute_workflow(

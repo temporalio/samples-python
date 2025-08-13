@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
 from message_passing.safe_message_handlers.workflow import (
@@ -12,17 +12,14 @@ from message_passing.safe_message_handlers.workflow import (
     start_cluster,
     unassign_nodes_for_job,
 )
-from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 
 
 async def main():
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
-    client = await Client.connect(**config)
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
 
     async with Worker(
         client,

@@ -3,10 +3,8 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
-
-from util import get_temporal_config_path
 
 
 class MyDatabaseClient:
@@ -35,11 +33,9 @@ class MyWorkflow:
 
 async def main():
     # Start client
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
-
-    client = await Client.connect(**config)
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Create our database client that can then be used in the activity
     db_client = MyDatabaseClient()

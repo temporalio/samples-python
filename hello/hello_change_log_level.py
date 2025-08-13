@@ -11,10 +11,8 @@ import sys
 
 from temporalio import workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
-
-from util import get_temporal_config_path
 
 # --- Begin logging set‑up ----------------------------------------------------------
 logging.basicConfig(
@@ -53,11 +51,10 @@ class GreetingWorkflow:
 
 
 async def main():
-    config = ClientConfig.load_client_connect_config(
-        config_file=str(get_temporal_config_path())
-    )
+    config = ClientConfigProfile.load()
+    config["address"] = "localhost:7233"
+    client = await Client.connect(**config.to_client_connect_config())
 
-    client = await Client.connect(**config)
     async with Worker(
         client,
         task_queue="hello-change-log-level-task-queue",

@@ -2,10 +2,9 @@ import asyncio
 
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import TracingInterceptor
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from open_telemetry.worker import GreetingWorkflow, init_runtime_with_telemetry
-from util import get_temporal_config_path
 
 
 async def main():
@@ -15,7 +14,7 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
     # Connect client
     client = await Client.connect(
-        **config,
+        **config.to_client_connect_config(),
         # Use OpenTelemetry interceptor
         interceptors=[TracingInterceptor()],
         runtime=runtime,

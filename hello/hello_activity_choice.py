@@ -7,10 +7,8 @@ from typing import List
 
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
-
-from util import get_temporal_config_path
 
 # Activities that will be called by the workflow
 
@@ -87,7 +85,7 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
 
     # Start client
-    client = await Client.connect(**config)
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Run a worker for the workflow
     async with Worker(

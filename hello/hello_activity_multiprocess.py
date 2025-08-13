@@ -8,10 +8,8 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import SharedStateManager, Worker
-
-from util import get_temporal_config_path
 
 
 @dataclass

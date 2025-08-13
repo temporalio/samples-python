@@ -6,10 +6,9 @@ import uuid
 import dacite
 import yaml
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from dsl.workflow import DSLInput, DSLWorkflow
-from util import get_temporal_config_path
 
 
 async def main(dsl_yaml: str) -> None:

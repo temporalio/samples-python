@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
 from message_passing.waiting_for_handlers import TASK_QUEUE
@@ -10,7 +10,6 @@ from message_passing.waiting_for_handlers.activities import (
     activity_executed_by_update_handler,
 )
 from message_passing.waiting_for_handlers.workflows import WaitingForHandlersWorkflow
-from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 

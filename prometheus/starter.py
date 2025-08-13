@@ -1,10 +1,9 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from prometheus.worker import GreetingWorkflow, init_runtime_with_prometheus
-from util import get_temporal_config_path
 
 interrupt_event = asyncio.Event()
 
@@ -17,7 +16,7 @@ async def main():
 
     # Connect client
     client = await Client.connect(
-        **config,
+        **config.to_client_connect_config(),
         runtime=runtime,
     )
 

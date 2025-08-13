@@ -7,11 +7,10 @@ import asyncio
 import logging
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from gevent_async import workflow
 from gevent_async.executor import GeventExecutor
-from util import get_temporal_config_path
 
 
 def main():

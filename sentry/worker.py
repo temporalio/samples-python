@@ -5,7 +5,7 @@ import sentry_sdk
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.types import Event, Hint
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 from temporalio.worker.workflow_sandbox import (
     SandboxedWorkflowRunner,
@@ -17,8 +17,6 @@ from sentry.interceptor import SentryInterceptor
 from sentry.workflow import SentryExampleWorkflow
 
 interrupt_event = asyncio.Event()
-from util import get_temporal_config_path
-
 
 def before_send(event: Event, hint: Hint) -> Event | None:
     # Filter out __ShutdownRequested events raised by the worker's internals
@@ -57,7 +55,7 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
 
     # Start client
-    client = await Client.connect(**config)
+    client = await Client.connect(**config.to_client_connect_config())
 
     # Run a worker for the workflow
     async with Worker(

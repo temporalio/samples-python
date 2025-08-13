@@ -10,13 +10,12 @@ from temporalio.client import (
     ScheduleSpec,
     WorkflowFailureError,
 )
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from cloud_export_to_parquet.workflows import (
     ProtoToParquet,
     ProtoToParquetWorkflowInput,
 )
-from util import get_temporal_config_path
 
 
 async def main() -> None:

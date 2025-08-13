@@ -9,12 +9,11 @@ import signal
 
 import gevent
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
 from gevent_async import activity, workflow
 from gevent_async.executor import GeventExecutor
-from util import get_temporal_config_path
 
 
 def main():

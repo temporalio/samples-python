@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from custom_converter.shared import (
     GreetingInput,
@@ -9,7 +9,6 @@ from custom_converter.shared import (
     greeting_data_converter,
 )
 from custom_converter.workflow import GreetingWorkflow
-from util import get_temporal_config_path
 
 
 async def main():
@@ -18,7 +17,7 @@ async def main():
 
     # Connect client
     client = await Client.connect(
-        **config,
+        **config.to_client_connect_config(),
         # Without this we get:
         #   TypeError: Object of type GreetingInput is not JSON serializable
         data_converter=greeting_data_converter,

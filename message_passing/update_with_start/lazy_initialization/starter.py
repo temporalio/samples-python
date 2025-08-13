@@ -9,7 +9,7 @@ from temporalio.client import (
     WorkflowHandle,
     WorkflowUpdateFailedError,
 )
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.exceptions import ApplicationError
 
 from message_passing.update_with_start.lazy_initialization import TASK_QUEUE
@@ -17,7 +17,6 @@ from message_passing.update_with_start.lazy_initialization.workflows import (
     ShoppingCartItem,
     ShoppingCartWorkflow,
 )
-from util import get_temporal_config_path
 
 
 async def handle_add_item_request(

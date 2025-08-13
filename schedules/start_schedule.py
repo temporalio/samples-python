@@ -9,10 +9,8 @@ from temporalio.client import (
     ScheduleSpec,
     ScheduleState,
 )
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from your_workflows import YourSchedulesWorkflow
-
-from util import get_temporal_config_path
 
 
 async def main():

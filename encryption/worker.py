@@ -4,11 +4,10 @@ import dataclasses
 import temporalio.converter
 from temporalio import workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 from temporalio.worker import Worker
 
 from encryption.codec import EncryptionCodec
-from util import get_temporal_config_path
 
 
 @workflow.defn(name="Workflow")
@@ -35,7 +34,7 @@ async def main():
 
     # Connect client
     client = await Client.connect(
-        **config,
+        **config.to_client_connect_config(),
         # Use the default converter, but change the codec
         data_converter=dataclasses.replace(
             temporalio.converter.default(), payload_codec=EncryptionCodec()

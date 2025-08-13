@@ -6,13 +6,12 @@ import datetime
 import logging
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from batch_sliding_window.batch_workflow import (
     ProcessBatchWorkflow,
     ProcessBatchWorkflowInput,
 )
-from util import get_temporal_config_path
 
 
 async def main():

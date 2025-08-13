@@ -2,10 +2,9 @@ import asyncio
 import uuid
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from custom_metric.workflow import StartTwoActivitiesWorkflow
-from util import get_temporal_config_path
 
 
 async def main():

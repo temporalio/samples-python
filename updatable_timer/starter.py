@@ -5,11 +5,10 @@ from typing import Optional
 
 from temporalio import exceptions
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfig
+from temporalio.envconfig import ClientConfigProfile
 
 from updatable_timer import TASK_QUEUE
 from updatable_timer.workflow import Workflow
-from util import get_temporal_config_path
 
 
 async def main(client: Optional[Client] = None):

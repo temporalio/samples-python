@@ -1,10 +1,6 @@
-"""
-A Temporal workflow that implements MCP server operations.
-Returns mock data for testing purposes.
-"""
-
 from datetime import timedelta
 
+from mcp import StdioServerParameters
 from mcp.types import (
     CallToolRequest,
     CallToolResult,
@@ -14,28 +10,29 @@ from mcp.types import (
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from mcp_examples.common.mcp_server_workflow_stdio_activity import connect
+    from mcp_examples.nexus_transport.stdio_mcp_server.activity import (
+        run_stdio_mcp_server,
+    )
 
 
 @workflow.defn
-class MCPServerWorkflow:
-    """A workflow that acts as an MCP server, handling tool listing and execution."""
+class MCPStdioClientSessionWorkflow:
+    """A workflow that acts as an MCP client session, handling tool listing and execution."""
 
     def __init__(self):
         pass
 
     @workflow.run
-    async def run(self) -> None:
-        print("🟢 workflow.run()")
+    async def run(self, server_params: StdioServerParameters) -> None:
         await workflow.execute_activity(
-            connect,
-            start_to_close_timeout=timedelta(seconds=10),
+            run_stdio_mcp_server,
+            server_params,
+            start_to_close_timeout=timedelta(days=999),
         )
 
     @workflow.update
     async def list_tools(self, request: ListToolsRequest) -> ListToolsResult:
         """Handle list_tools requests."""
-        print("🟢 list_tools()")
         return await workflow.execute_activity(
             "list-tools",
             args=[request],
@@ -47,7 +44,6 @@ class MCPServerWorkflow:
     @workflow.update
     async def call_tool(self, request: CallToolRequest) -> CallToolResult:
         """Handle call_tool requests."""
-        print("🟢 call_tool()")
         return await workflow.execute_activity(
             "call-tool",
             args=[request],

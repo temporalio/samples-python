@@ -7,6 +7,7 @@ import uuid
 from dataclasses import dataclass
 
 import nexusrpc
+from mcp import StdioServerParameters
 from mcp.types import (
     CallToolRequest,
     CallToolResult,
@@ -19,6 +20,7 @@ from temporalio import nexus
 @dataclass
 class MCPServerStartInput:
     mcp_server_workflow_name: str
+    mcp_server_params: StdioServerParameters
 
 
 @dataclass
@@ -48,6 +50,7 @@ class MCPServerNexusServiceHandler:
     ) -> nexus.WorkflowHandle[None]:
         return await ctx.start_workflow(
             input.mcp_server_workflow_name,
+            input.mcp_server_params,
             id=str(uuid.uuid4()),
             task_queue="mcp-sequential-thinking-task-queue",
         )

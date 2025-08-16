@@ -5,10 +5,11 @@ from typing import Optional
 import anyio
 import mcp.types as types
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
+from mcp import StdioServerParameters
 from mcp.shared.message import SessionMessage
 from temporalio import workflow
 
-from mcp_examples.common.mcp_server_nexus_service import (
+from mcp_examples.nexus_transport.mcp_server_nexus_service import (
     CallToolInput,
     ListToolsInput,
     MCPServerNexusService,
@@ -17,8 +18,13 @@ from mcp_examples.common.mcp_server_nexus_service import (
 
 
 class NexusTransport:
-    def __init__(self, nexus_client: workflow.NexusClient[MCPServerNexusService]):
+    def __init__(
+        self,
+        nexus_client: workflow.NexusClient[MCPServerNexusService],
+        server_params: StdioServerParameters,
+    ):
         self.nexus_client = nexus_client
+        self.server_params = server_params
         self.operation_token: Optional[str] = None
 
     @asynccontextmanager
@@ -70,7 +76,10 @@ class NexusTransport:
         if request.method == "initialize":
             workflow_handle = await self.nexus_client.start_operation(
                 MCPServerNexusService.start,
-                MCPServerStartInput(mcp_server_workflow_name="MCPServerWorkflow"),
+                MCPServerStartInput(
+                    mcp_server_workflow_name="MCPServerWorkflow",
+                    mcp_server_params=self.server_params,
+                ),
             )
             assert workflow_handle.operation_token
             self.operation_token = workflow_handle.operation_token

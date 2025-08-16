@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 import mcp.types as types
 from temporalio.workflow import NexusClient
 
-from .mcp_server.nexus_service import (
+from mcp_examples.common.mcp_server_nexus_service import (
     CallToolInput,
     ListToolsInput,
     MCPServerNexusService,

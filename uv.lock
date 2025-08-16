@@ -2643,21 +2643,13 @@ wheels = [
 [[package]]
 name = "temporalio"
 version = "1.15.0"
-source = { registry = "https://pypi.org/simple" }
+source = { editable = "../sdk-python" }
 dependencies = [
     { name = "nexus-rpc" },
     { name = "protobuf" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'" },
     { name = "types-protobuf" },
     { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0b/af/1a3619fc62333d0acbdf90cfc5ada97e68e8c0f79610363b2dbb30871d83/temporalio-1.15.0.tar.gz", hash = "sha256:a4bc6ca01717880112caab75d041713aacc8263dc66e41f5019caef68b344fa0", size = 1684485, upload-time = "2025-07-29T03:44:09.071Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/2d/0153f2bc459e0cb59d41d4dd71da46bf9a98ca98bc37237576c258d6696b/temporalio-1.15.0-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:74bc5cc0e6bdc161a43015538b0821b8713f5faa716c4209971c274b528e0d47", size = 12703607, upload-time = "2025-07-29T03:43:30.083Z" },
-    { url = "https://files.pythonhosted.org/packages/e4/39/1b867ec698c8987aef3b7a7024b5c0c732841112fa88d021303d0fc69bea/temporalio-1.15.0-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:ee8001304dae5723d79797516cfeebe04b966fdbdf348e658fce3b43afdda3cd", size = 12232853, upload-time = "2025-07-29T03:43:38.909Z" },
-    { url = "https://files.pythonhosted.org/packages/5e/3e/647d9a7c8b2f638f639717404c0bcbdd7d54fddd7844fdb802e3f40dc55f/temporalio-1.15.0-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8febd1ac36720817e69c2176aa4aca14a97fe0b83f0d2449c0c730b8f0174d02", size = 12636700, upload-time = "2025-07-29T03:43:49.066Z" },
-    { url = "https://files.pythonhosted.org/packages/9a/13/7aa9ec694fec9fba39efdbf61d892bccf7d2b1aa3d9bd359544534c1d309/temporalio-1.15.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:202d81a42cafaed9ccc7ccbea0898838e3b8bf92fee65394f8790f37eafbaa63", size = 12860186, upload-time = "2025-07-29T03:43:57.644Z" },
-    { url = "https://files.pythonhosted.org/packages/9f/2b/ba962401324892236148046dbffd805d4443d6df7a7dc33cc7964b566bf9/temporalio-1.15.0-cp39-abi3-win_amd64.whl", hash = "sha256:aae5b18d7c9960238af0f3ebf6b7e5959e05f452106fc0d21a8278d78724f780", size = 12932800, upload-time = "2025-07-29T03:44:06.271Z" },
 ]
 
 [package.optional-dependencies]
@@ -2667,6 +2659,45 @@ openai-agents = [
 opentelemetry = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-sdk" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "eval-type-backport", marker = "python_full_version < '3.10' and extra == 'openai-agents'", specifier = ">=0.2.2" },
+    { name = "grpcio", marker = "extra == 'grpc'", specifier = ">=1.48.2,<2" },
+    { name = "nexus-rpc", specifier = "==1.1.0" },
+    { name = "openai-agents", marker = "extra == 'openai-agents'", specifier = ">=0.2.3,<0.3" },
+    { name = "opentelemetry-api", marker = "extra == 'opentelemetry'", specifier = ">=1.11.1,<2" },
+    { name = "opentelemetry-sdk", marker = "extra == 'opentelemetry'", specifier = ">=1.11.1,<2" },
+    { name = "protobuf", specifier = ">=3.20,<6" },
+    { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.0.0,<3" },
+    { name = "python-dateutil", marker = "python_full_version < '3.11'", specifier = ">=2.8.2,<3" },
+    { name = "types-protobuf", specifier = ">=3.20" },
+    { name = "typing-extensions", specifier = ">=4.2.0,<5" },
+]
+provides-extras = ["grpc", "opentelemetry", "pydantic", "openai-agents"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "cibuildwheel", specifier = ">=2.22.0,<3" },
+    { name = "grpcio-tools", specifier = ">=1.48.2,<2" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "maturin", specifier = ">=1.8.2" },
+    { name = "mypy", specifier = "==1.4.1" },
+    { name = "mypy-protobuf", specifier = ">=3.3.0,<4" },
+    { name = "openai-agents", extras = ["litellm"], specifier = ">=0.2.3,<0.3" },
+    { name = "psutil", specifier = ">=5.9.3,<6" },
+    { name = "pydocstyle", specifier = ">=6.3.0,<7" },
+    { name = "pydoctor", specifier = ">=24.11.1,<25" },
+    { name = "pyright", specifier = "==1.1.403" },
+    { name = "pytest", specifier = "~=7.4" },
+    { name = "pytest-asyncio", specifier = ">=0.21,<0.22" },
+    { name = "pytest-cov", specifier = ">=6.1.1" },
+    { name = "pytest-pretty", specifier = ">=1.3.0" },
+    { name = "pytest-timeout", specifier = "~=2.2" },
+    { name = "ruff", specifier = ">=0.5.0,<0.6" },
+    { name = "toml", specifier = ">=0.10.2,<0.11" },
+    { name = "twine", specifier = ">=4.0.1,<5" },
 ]
 
 [[package]]
@@ -2720,7 +2751,7 @@ langchain = [
     { name = "tqdm" },
     { name = "uvicorn", extra = ["standard"] },
 ]
-mcp-sequential-thinking = [
+mcp = [
     { name = "litellm" },
     { name = "mcp", extra = ["cli"] },
     { name = "nexus-rpc" },
@@ -2748,7 +2779,7 @@ trio-async = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "temporalio", specifier = ">=1.15.0,<2" }]
+requires-dist = [{ name = "temporalio", editable = "../sdk-python" }]
 
 [package.metadata.requires-dev]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
@@ -2789,7 +2820,7 @@ langchain = [
     { name = "tqdm", specifier = ">=4.62.0,<5" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0.post1,<0.25" },
 ]
-mcp-sequential-thinking = [
+mcp = [
     { name = "litellm", specifier = ">=1.74.8" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.11.0" },
     { name = "nexus-rpc", specifier = ">=1.1.0" },
@@ -2797,11 +2828,11 @@ mcp-sequential-thinking = [
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "temporalio", extras = ["opentelemetry"] },
+    { name = "temporalio", extras = ["opentelemetry"], editable = "../sdk-python" },
 ]
 openai-agents = [
     { name = "openai-agents", extras = ["litellm"], specifier = ">=0.2.3" },
-    { name = "temporalio", extras = ["openai-agents"], specifier = ">=1.15.0" },
+    { name = "temporalio", extras = ["openai-agents"], editable = "../sdk-python" },
 ]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]
 sentry = [{ name = "sentry-sdk", specifier = ">=1.11.0,<2" }]

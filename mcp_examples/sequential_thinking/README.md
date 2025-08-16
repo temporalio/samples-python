@@ -13,7 +13,7 @@ This sample includes two agent workflows:
 ## Setup
 
 ```bash
-uv sync --group=mcp-sequential-thinking
+uv sync --group=mcp
 ```
 
 First, create the Nexus endpoint:

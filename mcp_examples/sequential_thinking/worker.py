@@ -3,15 +3,15 @@ import asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from mcp_sequential_thinking.agent_workflow_nexus_client import (
+from mcp_examples.common.mcp_server_nexus_service import MCPServerNexusServiceHandler
+from mcp_examples.sequential_thinking.agent_workflow_nexus_client import (
     AgentWorkflowNexusClient,
 )
-from mcp_sequential_thinking.agent_workflow_with_llm import AgentWorkflowWithLLM
-from mcp_sequential_thinking.llm_activity import call_llm, parse_json_response
-from mcp_sequential_thinking.mcp_server.nexus_service import (
-    MCPServerNexusServiceHandler,
+from mcp_examples.sequential_thinking.agent_workflow_with_llm import (
+    AgentWorkflowWithLLM,
 )
-from mcp_sequential_thinking.mcp_server.workflow import (
+from mcp_examples.sequential_thinking.llm_activity import call_llm, parse_json_response
+from mcp_examples.sequential_thinking.mcp_server.workflow import (
     SequentialThinkingMCPServerWorkflow,
 )
 

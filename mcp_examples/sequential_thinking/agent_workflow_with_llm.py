@@ -5,7 +5,8 @@ from typing import Any, Dict, List
 
 from temporalio import workflow
 
-from .mcp_server.nexus_service import MCPServerNexusService
+from mcp_examples.common.mcp_server_nexus_service import MCPServerNexusService
+
 from .nexus_client import NexusMCPClientSession
 
 with workflow.unsafe.imports_passed_through():

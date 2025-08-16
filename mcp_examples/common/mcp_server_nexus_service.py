@@ -1,3 +1,8 @@
+"""
+A Nexus service that presents the interface of an MCP server.
+It is backed by a Temporal workflow.
+"""
+
 import uuid
 from dataclasses import dataclass
 

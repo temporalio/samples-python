@@ -3,7 +3,7 @@ import uuid
 
 from temporalio.client import Client
 
-from mcp_sequential_thinking.agent_workflow_nexus_client import (
+from mcp_examples.sequential_thinking.agent_workflow_nexus_client import (
     AgentWorkflowNexusClient,
 )
 

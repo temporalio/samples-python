@@ -16,7 +16,8 @@ from mcp_examples.common.mcp_server_nexus_service import (
     MCPServerNexusService,
     MCPServerNexusServiceHandler,
 )
-from mcp_examples.common.mcp_server_workflow_stub import MCPServerWorkflow
+from mcp_examples.common.mcp_server_workflow_stdio import MCPServerWorkflow
+from mcp_examples.common.mcp_server_workflow_stdio_activity import connect
 
 
 async def create_client_session_and_call_tool_using_standard_transport():
@@ -65,6 +66,7 @@ async def main():
             CallToolWorkflow,
             MCPServerWorkflow,
         ],
+        activities=[connect],
         nexus_service_handlers=[MCPServerNexusServiceHandler()],
         workflow_runner=UnsandboxedWorkflowRunner(),
     ) as worker:

@@ -5,6 +5,7 @@ It is backed by a Temporal workflow.
 
 import uuid
 from dataclasses import dataclass
+from typing import Protocol
 
 import nexusrpc
 from mcp import StdioServerParameters
@@ -14,13 +15,21 @@ from mcp.types import (
     ListToolsRequest,
     ListToolsResult,
 )
-from temporalio import nexus
+from temporalio import nexus, workflow
+
+
+class MCPServiceWorkflowT(Protocol):
+    @workflow.update
+    def list_tools(self, request: ListToolsRequest) -> ListToolsResult: ...
+
+    @workflow.update
+    async def call_tool(self, request: CallToolRequest) -> CallToolResult: ...
 
 
 @dataclass
-class MCPServerStartInput:
-    mcp_server_workflow_name: str
-    mcp_server_params: StdioServerParameters
+class MCPServerInput:
+    workflow_name: str
+    stdio_server_params: StdioServerParameters | None
 
 
 @dataclass
@@ -37,7 +46,7 @@ class CallToolInput:
 
 @nexusrpc.service
 class MCPServerNexusService:
-    start: nexusrpc.Operation[MCPServerStartInput, None]
+    start: nexusrpc.Operation[MCPServerInput, None]
     list_tools: nexusrpc.Operation[ListToolsInput, ListToolsResult]
     call_tool: nexusrpc.Operation[CallToolInput, CallToolResult]
 
@@ -46,11 +55,11 @@ class MCPServerNexusService:
 class MCPServerNexusServiceHandler:
     @nexus.workflow_run_operation
     async def start(
-        self, ctx: nexus.WorkflowRunOperationContext, input: MCPServerStartInput
+        self, ctx: nexus.WorkflowRunOperationContext, input: MCPServerInput
     ) -> nexus.WorkflowHandle[None]:
         return await ctx.start_workflow(
-            input.mcp_server_workflow_name,
-            input.mcp_server_params,
+            input.workflow_name,
+            input,  # TODO: workflow shouldn't be passed its own name
             id=str(uuid.uuid4()),
             task_queue="mcp-sequential-thinking-task-queue",
         )

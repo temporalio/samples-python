@@ -20,6 +20,8 @@ from mcp.types import (
 )
 from temporalio import workflow
 
+from mcp_examples.nexus_transport.mcp_server_nexus_service import MCPServerInput
+
 # Tool definition from the TypeScript reference server
 # https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking
 SEQUENTIAL_THINKING_TOOL = Tool(
@@ -131,7 +133,7 @@ class SequentialThinkingMCPServerWorkflow:
         self.branches: dict[str, list[dict[str, Any]]] = {}
 
     @workflow.run
-    async def start(self):
+    async def run(self, input: MCPServerInput):
         self.running = True
         await workflow.wait_condition(lambda: not self.running)
 

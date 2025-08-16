@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from mcp import StdioServerParameters
 from mcp.types import (
     CallToolRequest,
     CallToolResult,
@@ -8,6 +7,8 @@ from mcp.types import (
     ListToolsResult,
 )
 from temporalio import workflow
+
+from mcp_examples.nexus_transport.mcp_server_nexus_service import MCPServerInput
 
 with workflow.unsafe.imports_passed_through():
     from mcp_examples.nexus_transport.stdio_mcp_server.activity import (
@@ -19,20 +20,17 @@ with workflow.unsafe.imports_passed_through():
 class MCPStdioClientSessionWorkflow:
     """A workflow that acts as an MCP client session, handling tool listing and execution."""
 
-    def __init__(self):
-        pass
-
     @workflow.run
-    async def run(self, server_params: StdioServerParameters) -> None:
+    async def run(self, input: MCPServerInput) -> None:
+        assert input.stdio_server_params
         await workflow.execute_activity(
             run_stdio_mcp_server,
-            server_params,
+            input.stdio_server_params,
             start_to_close_timeout=timedelta(days=999),
         )
 
     @workflow.update
     async def list_tools(self, request: ListToolsRequest) -> ListToolsResult:
-        """Handle list_tools requests."""
         return await workflow.execute_activity(
             "list-tools",
             args=[request],
@@ -43,7 +41,6 @@ class MCPStdioClientSessionWorkflow:
 
     @workflow.update
     async def call_tool(self, request: CallToolRequest) -> CallToolResult:
-        """Handle call_tool requests."""
         return await workflow.execute_activity(
             "call-tool",
             args=[request],

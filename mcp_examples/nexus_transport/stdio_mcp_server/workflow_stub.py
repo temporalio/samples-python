@@ -17,7 +17,7 @@ from temporalio import workflow
 
 
 @workflow.defn
-class MCPServerWorkflow:
+class MCPServerWorkflowStub:
     """A workflow that acts as an MCP server, handling tool listing and execution."""
 
     def __init__(self):

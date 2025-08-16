@@ -49,6 +49,7 @@ class MCPServerNexusServiceHandler:
         return await ctx.start_workflow(
             input.mcp_server_workflow_name,
             id=str(uuid.uuid4()),
+            task_queue="mcp-sequential-thinking-task-queue",
         )
 
     @nexusrpc.handler.sync_operation
@@ -67,4 +68,4 @@ class MCPServerNexusServiceHandler:
         workflow_handle = nexus.WorkflowHandle.from_token(
             input.operation_token
         )._to_client_workflow_handle(nexus.client())
-        return await workflow_handle.query("list_tools", input.request)
+        return await workflow_handle.execute_update("list_tools", input.request)

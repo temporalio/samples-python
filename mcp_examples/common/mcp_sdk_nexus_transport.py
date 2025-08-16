@@ -6,18 +6,20 @@ import anyio
 import mcp.types as types
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from mcp.shared.message import SessionMessage
+from temporalio import workflow
 
 from mcp_examples.common.mcp_server_nexus_service import (
     CallToolInput,
     ListToolsInput,
     MCPServerNexusService,
+    MCPServerStartInput,
 )
 
 
 class NexusTransport:
-    def __init__(self, nexus_client, operation_token: str):
+    def __init__(self, nexus_client: workflow.NexusClient[MCPServerNexusService]):
         self.nexus_client = nexus_client
-        self.operation_token = operation_token
+        self.operation_token: Optional[str] = None
 
     @asynccontextmanager
     async def connect(self):
@@ -66,6 +68,13 @@ class NexusTransport:
         request = message.root
 
         if request.method == "initialize":
+            workflow_handle = await self.nexus_client.start_operation(
+                MCPServerNexusService.start,
+                MCPServerStartInput(mcp_server_workflow_name="MCPServerWorkflow"),
+            )
+            assert workflow_handle.operation_token
+            self.operation_token = workflow_handle.operation_token
+
             result = types.InitializeResult(
                 protocolVersion="2024-11-05",
                 capabilities=types.ServerCapabilities(tools=types.ToolsCapability()),
@@ -75,34 +84,44 @@ class NexusTransport:
             )
 
         elif request.method == "tools/list":
-            result = await self.nexus_client.execute_operation(
-                MCPServerNexusService.list_tools,
-                ListToolsInput(
-                    operation_token=self.operation_token,
-                    request=types.ListToolsRequest(method="tools/list"),
-                ),
-            )
-
-        elif request.method == "tools/call":
-            params = request.params
-            if isinstance(params, dict) and "name" in params:
-                result = await self.nexus_client.execute_operation(
-                    MCPServerNexusService.call_tool,
-                    CallToolInput(
-                        operation_token=self.operation_token,
-                        request=types.CallToolRequest(
-                            method="tools/call",
-                            params=types.CallToolRequestParams(
-                                name=params["name"],
-                                arguments=params.get("arguments", {}),
-                            ),
-                        ),
-                    ),
+            if not self.operation_token:
+                result = types.ErrorData(
+                    code=types.INTERNAL_ERROR, message="Not initialized"
                 )
             else:
-                result = types.ErrorData(
-                    code=types.INVALID_PARAMS, message="Missing tool name"
+                result = await self.nexus_client.execute_operation(
+                    MCPServerNexusService.list_tools,
+                    ListToolsInput(
+                        operation_token=self.operation_token,
+                        request=types.ListToolsRequest(method="tools/list"),
+                    ),
                 )
+
+        elif request.method == "tools/call":
+            if not self.operation_token:
+                result = types.ErrorData(
+                    code=types.INTERNAL_ERROR, message="Not initialized"
+                )
+            else:
+                params = request.params
+                if isinstance(params, dict) and "name" in params:
+                    result = await self.nexus_client.execute_operation(
+                        MCPServerNexusService.call_tool,
+                        CallToolInput(
+                            operation_token=self.operation_token,
+                            request=types.CallToolRequest(
+                                method="tools/call",
+                                params=types.CallToolRequestParams(
+                                    name=params["name"],
+                                    arguments=params.get("arguments", {}),
+                                ),
+                            ),
+                        ),
+                    )
+                else:
+                    result = types.ErrorData(
+                        code=types.INVALID_PARAMS, message="Missing tool name"
+                    )
 
         else:
             result = types.ErrorData(

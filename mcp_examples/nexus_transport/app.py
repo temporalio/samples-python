@@ -16,6 +16,7 @@ from mcp_examples.common.mcp_server_nexus_service import (
     MCPServerNexusService,
     MCPServerNexusServiceHandler,
 )
+from mcp_examples.common.mcp_server_workflow_stub import MCPServerWorkflow
 
 
 async def create_client_session_and_call_tool_using_standard_transport():
@@ -32,7 +33,7 @@ async def create_client_session_and_call_tool_using_standard_transport():
 async def create_client_session_and_call_tool_using_nexus_transport(
     nexus_client: workflow.NexusClient[MCPServerNexusService],
 ):
-    transport = NexusTransport(nexus_client, "mcp-sequential-thinking-nexus-endpoint")
+    transport = NexusTransport(nexus_client)
 
     async with transport.connect() as (read_stream, write_stream):
         async with ClientSession(read_stream, write_stream) as session:
@@ -43,12 +44,10 @@ async def create_client_session_and_call_tool_using_nexus_transport(
 @workflow.defn
 class CallToolWorkflow:
     def __init__(self):
-        print("Creating nexus client in workflow...")
         self.nexus_client = workflow.create_nexus_client(
             service=MCPServerNexusService,
             endpoint="mcp-sequential-thinking-nexus-endpoint",
         )
-        print("Nexus client created")
 
     @workflow.run
     async def run(self):
@@ -64,6 +63,7 @@ async def main():
         task_queue="mcp-sequential-thinking-task-queue",
         workflows=[
             CallToolWorkflow,
+            MCPServerWorkflow,
         ],
         nexus_service_handlers=[MCPServerNexusServiceHandler()],
         workflow_runner=UnsandboxedWorkflowRunner(),
@@ -95,7 +95,6 @@ async def _call_tool(session: ClientSession):
 
 
 if __name__ == "__main__":
-    print("Starting app...")
     if "WITHOUT_WORKFLOW" in os.environ:
         asyncio.run(create_client_session_and_call_tool_using_standard_transport())
     else:

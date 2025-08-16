@@ -4,6 +4,7 @@ from typing import Optional
 
 import anyio
 import mcp.types as types
+from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from mcp.shared.message import SessionMessage
 
 from mcp_examples.common.mcp_server_nexus_service import (
@@ -128,7 +129,9 @@ class NexusTransport:
         return SessionMessage(types.JSONRPCMessage(root=response))
 
 
-class AsyncioQueueStream:
+class AsyncioQueueStream(
+    MemoryObjectSendStream[SessionMessage], MemoryObjectReceiveStream[SessionMessage]
+):
     def __init__(self, queue: asyncio.Queue):
         self.queue = queue
         self._closed = False

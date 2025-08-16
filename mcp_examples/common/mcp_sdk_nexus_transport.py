@@ -4,7 +4,6 @@ from typing import Optional
 
 import anyio
 import mcp.types as types
-from mcp.client.session import ClientSession
 from mcp.shared.message import SessionMessage
 
 from mcp_examples.common.mcp_server_nexus_service import (
@@ -163,3 +162,10 @@ class AsyncioQueueStream:
             self.queue.put_nowait(None)
         except asyncio.QueueFull:
             pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.aclose()
+        return None

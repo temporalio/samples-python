@@ -12,7 +12,10 @@ from temporalio.client import Client
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
 from mcp_examples.common.mcp_sdk_nexus_transport import NexusTransport
-from mcp_examples.common.mcp_server_nexus_service import MCPServerNexusService
+from mcp_examples.common.mcp_server_nexus_service import (
+    MCPServerNexusService,
+    MCPServerNexusServiceHandler,
+)
 
 
 async def create_client_session_and_call_tool_using_standard_transport():
@@ -60,6 +63,7 @@ async def main():
         workflows=[
             CallToolWorkflow,
         ],
+        nexus_service_handlers=[MCPServerNexusServiceHandler()],
         workflow_runner=UnsandboxedWorkflowRunner(),
     ) as worker:
         await client.execute_workflow(

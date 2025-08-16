@@ -7,15 +7,14 @@ from typing import cast
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.types import TextContent
-from temporalio import workflow
-from temporalio.client import Client
-from temporalio.worker import UnsandboxedWorkflowRunner, Worker
-
 from mcp_examples.common.mcp_sdk_nexus_transport import NexusTransport
 from mcp_examples.common.mcp_server_nexus_service import (
     MCPServerNexusService,
     MCPServerNexusServiceHandler,
 )
+from temporalio import workflow
+from temporalio.client import Client
+from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
 
 async def create_client_session_and_call_tool_using_standard_transport():
@@ -32,11 +31,16 @@ async def create_client_session_and_call_tool_using_standard_transport():
 async def create_client_session_and_call_tool_using_nexus_transport(
     nexus_client: workflow.NexusClient[MCPServerNexusService],
 ):
+    print("Creating NexusTransport...")
     transport = NexusTransport(nexus_client, "mcp-sequential-thinking-nexus-endpoint")
 
+    print("Connecting transport...")
     async with transport.connect() as (read_stream, write_stream):
+        print("Creating ClientSession...")
         async with ClientSession(read_stream, write_stream) as session:
+            print("Initializing session...")
             await session.initialize()
+            print("Calling tool...")
             await _call_tool(session)
 
 
@@ -52,13 +56,17 @@ class CallToolWorkflow:
 
     @workflow.run
     async def run(self):
+        print("CallToolWorkflow.run() started")
         await create_client_session_and_call_tool_using_nexus_transport(
             self.nexus_client
         )
+        print("CallToolWorkflow.run() completed")
 
 
 async def main():
+    print("Connecting to Temporal...")
     client = await Client.connect("localhost:7233")
+    print("Creating worker...")
     async with Worker(
         client,
         task_queue="mcp-sequential-thinking-task-queue",
@@ -68,11 +76,13 @@ async def main():
         nexus_service_handlers=[MCPServerNexusServiceHandler()],
         workflow_runner=UnsandboxedWorkflowRunner(),
     ) as worker:
-        await client.execute_workflow(
+        print("Executing workflow...")
+        result = await client.execute_workflow(
             CallToolWorkflow.run,
             id=str(uuid.uuid4()),
             task_queue=worker.task_queue,
         )
+        print(f"Workflow completed: {result}")
 
 
 async def _call_tool(session: ClientSession):

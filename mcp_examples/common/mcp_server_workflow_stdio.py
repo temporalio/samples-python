@@ -1,35 +1,35 @@
 import asyncio
 import logging
+import uuid
 from datetime import timedelta
-from typing import Any, Callable, Optional, Sequence, Union
+from typing import Any, Callable, Optional, Sequence
 
-from agents import AgentBase, RunContextWrapper
-from agents.mcp import MCPServer
-from mcp import GetPromptResult, ListPromptsResult  # type:ignore
-from mcp import Tool as MCPTool  # type:ignore
+from mcp import (  # type:ignore
+    ClientSession,
+    GetPromptResult,
+    ListPromptsResult,
+    ListToolsResult,
+)
 from mcp.types import CallToolResult  # type:ignore
 from temporalio import activity, workflow
-from temporalio.api.enums.v1.workflow_pb2 import (
-    TIMEOUT_TYPE_HEARTBEAT,
-    TIMEOUT_TYPE_SCHEDULE_TO_START,
-)
-from temporalio.exceptions import ActivityError, ApplicationError
 from temporalio.worker import PollerBehaviorSimpleMaximum, Worker
 from temporalio.workflow import ActivityConfig, ActivityHandle
+
+from mcp_examples.common.mcp_server_nexus_service import (
+    CallToolInput,
+    ListToolsInput,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class StatefulTemporalMCPServer(MCPServer):
-    """A stateful MCP server implementation for Temporal workflows.
+# Based on StatefulTemporalMCPServer from https://github.com/temporalio/sdk-python/pull/1021
+class StdioMCPClientSessionWorkflow:
+    """A stateful MCP client session implementation as a Temporal workflow.
 
     This class wraps an MCP server to maintain a persistent connection throughout
     the workflow execution. It creates a dedicated worker that stays connected to
     the MCP server and processes operations on a dedicated task queue.
-
-    This approach is more efficient for workflows that make multiple MCP calls,
-    as it avoids connection overhead, but requires more resources to maintain
-    the persistent connection and worker.
 
     The caller will have to handle cases where the dedicated worker fails, as Temporal is
     unable to seamlessly recreate any lost state in that case.
@@ -37,7 +37,7 @@ class StatefulTemporalMCPServer(MCPServer):
 
     def __init__(
         self,
-        server: Union[MCPServer, str],
+        session: ClientSession,
         config: Optional[ActivityConfig] = None,
         connect_config: Optional[ActivityConfig] = None,
     ):
@@ -50,8 +50,8 @@ class StatefulTemporalMCPServer(MCPServer):
             connect_config: Optional activity configuration for the connection activity.
                            Defaults to 1-hour start-to-close timeout.
         """
-        self.server = server if isinstance(server, MCPServer) else None
-        self._name = (server if isinstance(server, str) else server.name) + "-stateful"
+        self.session = session
+        self._name = str(uuid.uuid4())  # TODO
         self.config = config or ActivityConfig(
             start_to_close_timeout=timedelta(minutes=1),
             schedule_to_start_timeout=timedelta(seconds=30),
@@ -116,9 +116,8 @@ class StatefulTemporalMCPServer(MCPServer):
 
     async def list_tools(
         self,
-        run_context: Optional[RunContextWrapper[Any]] = None,
-        agent: Optional[AgentBase] = None,
-    ) -> list[MCPTool]:
+        input: ListToolsInput,
+    ) -> ListToolsResult:
         """List available tools from the MCP server.
 
         This method executes a Temporal activity on the dedicated task queue
@@ -135,38 +134,15 @@ class StatefulTemporalMCPServer(MCPServer):
             ApplicationError: If the MCP worker fails to schedule or heartbeat.
             ActivityError: If the underlying Temporal activity fails.
         """
-        try:
-            logger.info("Executing list-tools: %s", self.config)
-            return await workflow.execute_activity(
-                self.name + "-list-tools",
-                args=[],
-                result_type=list[MCPTool],
-                **self.config,
-            )
-        except ActivityError as e:
-            failure = e.failure
-            if failure:
-                cause = failure.cause
-                if cause:
-                    if (
-                        cause.timeout_failure_info.timeout_type
-                        == TIMEOUT_TYPE_SCHEDULE_TO_START
-                    ):
-                        raise ApplicationError(
-                            "MCP Stateful Server Worker failed to schedule activity."
-                        ) from e
-                    if (
-                        cause.timeout_failure_info.timeout_type
-                        == TIMEOUT_TYPE_HEARTBEAT
-                    ):
-                        raise ApplicationError(
-                            "MCP Stateful Server Worker failed to heartbeat."
-                        ) from e
-            raise e
+        logger.info("Executing list-tools: %s", self.config)
+        return await workflow.execute_activity(
+            self.name + "-list-tools",
+            args=[input],
+            result_type=ListToolsResult,
+            **self.config,
+        )
 
-    async def call_tool(
-        self, tool_name: str, arguments: Optional[dict[str, Any]]
-    ) -> CallToolResult:
+    async def call_tool(self, input: CallToolInput) -> CallToolResult:
         """Call a specific tool on the MCP server.
 
         This method executes a Temporal activity on the dedicated task queue
@@ -184,7 +160,7 @@ class StatefulTemporalMCPServer(MCPServer):
         """
         return await workflow.execute_activity(
             self.name + "-call-tool",
-            args=[tool_name, arguments],
+            args=[input],
             result_type=CallToolResult,
             **self.config,
         )
@@ -246,31 +222,31 @@ class StatefulTemporalMCPServer(MCPServer):
         Raises:
             ValueError: If no MCP server instance was provided during initialization.
         """
-        server = self.server
-        if server is None:
+        session = self.session
+        if session is None:
             raise ValueError(
                 "A full MCPServer implementation should have been provided when adding a server to the worker."
             )
 
         @activity.defn(name=self.name + "-list-tools")
-        async def list_tools() -> list[MCPTool]:
-            return await server.list_tools()
+        async def list_tools() -> ListToolsResult:
+            return await session.list_tools()
 
         @activity.defn(name=self.name + "-call-tool")
         async def call_tool(
             tool_name: str, arguments: Optional[dict[str, Any]]
         ) -> CallToolResult:
-            return await server.call_tool(tool_name, arguments)
+            return await session.call_tool(tool_name, arguments)
 
         @activity.defn(name=self.name + "-list-prompts")
         async def list_prompts() -> ListPromptsResult:
-            return await server.list_prompts()
+            return await session.list_prompts()
 
         @activity.defn(name=self.name + "-get-prompt")
         async def get_prompt(
             name: str, arguments: Optional[dict[str, Any]]
         ) -> GetPromptResult:
-            return await server.get_prompt(name, arguments)
+            return await session.get_prompt(name, arguments)
 
         async def heartbeat_every(delay: float, *details: Any) -> None:
             """Heartbeat every so often while not cancelled"""
@@ -283,7 +259,7 @@ class StatefulTemporalMCPServer(MCPServer):
             logger.info("Connect activity")
             heartbeat_task = asyncio.create_task(heartbeat_every(30))
             try:
-                await server.connect()
+                # await session.connect()
 
                 worker = Worker(
                     activity.client(),
@@ -294,7 +270,7 @@ class StatefulTemporalMCPServer(MCPServer):
 
                 await worker.run()
             finally:
-                await server.cleanup()
+                # await session.cleanup()
                 heartbeat_task.cancel()
                 try:
                     await heartbeat_task

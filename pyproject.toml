@@ -151,4 +151,4 @@ module = "opentelemetry.*"
 ignore_errors = true
 
 [tool.uv.sources]
-temporalio = { git = "https://github.com/temporalio/sdk-python", branch = "dan-9997-python-mcp-nexus" }
+temporalio = { path = "/Users/dan/src/temporal/src/sdk-python", editable = true }

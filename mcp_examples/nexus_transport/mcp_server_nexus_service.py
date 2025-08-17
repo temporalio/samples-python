@@ -4,8 +4,8 @@ It is backed by a Temporal workflow.
 """
 
 import uuid
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Protocol
 
 import nexusrpc
 from mcp import StdioServerParameters
@@ -18,11 +18,13 @@ from mcp.types import (
 from temporalio import nexus, workflow
 
 
-class MCPServiceWorkflowT(Protocol):
+class MCPServiceWorkflowBase(ABC):
     @workflow.update
-    def list_tools(self, request: ListToolsRequest) -> ListToolsResult: ...
+    @abstractmethod
+    async def list_tools(self, request: ListToolsRequest) -> ListToolsResult: ...
 
     @workflow.update
+    @abstractmethod
     async def call_tool(self, request: CallToolRequest) -> CallToolResult: ...
 
 

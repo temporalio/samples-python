@@ -8,7 +8,10 @@ from mcp.types import (
 )
 from temporalio import workflow
 
-from mcp_examples.nexus_transport.mcp_server_nexus_service import MCPServerInput
+from mcp_examples.nexus_transport.mcp_server_nexus_service import (
+    MCPServerInput,
+    MCPServiceWorkflowBase,
+)
 
 with workflow.unsafe.imports_passed_through():
     from mcp_examples.nexus_transport.stdio_mcp_server.activity import (
@@ -17,7 +20,7 @@ with workflow.unsafe.imports_passed_through():
 
 
 @workflow.defn
-class MCPStdioClientSessionWorkflow:
+class MCPStdioClientSessionWorkflow(MCPServiceWorkflowBase):
     """A workflow that acts as an MCP client session, handling tool listing and execution."""
 
     @workflow.run

@@ -16,7 +16,7 @@ from mcp_examples.nexus_transport.mcp_server_nexus_service import (
     MCPServerInput,
     MCPServerNexusService,
     MCPServerNexusServiceHandler,
-    MCPServiceWorkflowT,
+    MCPServiceWorkflowBase,
 )
 from mcp_examples.nexus_transport.nexus_transport import NexusTransport
 from mcp_examples.nexus_transport.stdio_mcp_server.activity import run_stdio_mcp_server
@@ -68,7 +68,7 @@ class MCPServerType(str, Enum):
 
 
 async def run_caller_workflow(
-    mcp_server_workflow_cls: type[MCPServiceWorkflowT],
+    mcp_server_workflow_cls: type[MCPServiceWorkflowBase],
     mcp_server_params: StdioServerParameters | None,
 ):
     mcp_server_input = MCPServerInput(

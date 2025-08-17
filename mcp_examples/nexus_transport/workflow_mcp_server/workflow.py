@@ -20,7 +20,10 @@ from mcp.types import (
 )
 from temporalio import workflow
 
-from mcp_examples.nexus_transport.mcp_server_nexus_service import MCPServerInput
+from mcp_examples.nexus_transport.mcp_server_nexus_service import (
+    MCPServerInput,
+    MCPServiceWorkflowBase,
+)
 
 # Tool definition from the TypeScript reference server
 # https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking
@@ -126,7 +129,7 @@ You should:
 # Sandboxing is disabled because the MCP library uses anyio/sniffio which requires
 # threading capabilities that are restricted in Temporal's workflow sandbox
 @workflow.defn(sandboxed=False)
-class SequentialThinkingMCPServerWorkflow:
+class SequentialThinkingMCPServerWorkflow(MCPServiceWorkflowBase):
     def __init__(self) -> None:
         self.running = False
         self.thought_history: list[dict[str, Any]] = []
@@ -141,7 +144,7 @@ class SequentialThinkingMCPServerWorkflow:
     def stop(self):
         self.running = False
 
-    @workflow.query
+    @workflow.update
     def list_tools(self, request: ListToolsRequest) -> ListToolsResult:
         """Handle tools/list request."""
         print(f"✅ list_tools({request})")

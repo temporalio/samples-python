@@ -12,20 +12,22 @@ from temporalio.client import Client
 from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
-from mcp_examples.nexus_transport.mcp_server_nexus_service import (
+from mcp_examples.workflow_nexus_transport.mcp_server_nexus_service import (
     MCPServerInput,
     MCPServerNexusService,
     MCPServerNexusServiceHandler,
     MCPServiceWorkflowBase,
 )
-from mcp_examples.nexus_transport.nexus_transport import NexusTransport
-from mcp_examples.nexus_transport.stdio_mcp_server.activity import run_stdio_mcp_server
-from mcp_examples.nexus_transport.stdio_mcp_server.workflow import (
+from mcp_examples.workflow_nexus_transport.stdio_mcp_server.activity import (
+    run_stdio_mcp_server,
+)
+from mcp_examples.workflow_nexus_transport.stdio_mcp_server.workflow import (
     MCPStdioClientSessionWorkflow,
 )
-from mcp_examples.nexus_transport.workflow_mcp_server.workflow import (
+from mcp_examples.workflow_nexus_transport.workflow_mcp_server.workflow import (
     SequentialThinkingMCPServerWorkflow,
 )
+from mcp_examples.workflow_nexus_transport.workflow_transport import WorkflowTransport
 
 app = typer.Typer()
 
@@ -39,7 +41,7 @@ class MCPCallerWorkflow:
             endpoint="mcp-sequential-thinking-nexus-endpoint",
         )
 
-        transport = NexusTransport(nexus_client, input)
+        transport = WorkflowTransport(nexus_client, input)
 
         async with transport.connect() as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:

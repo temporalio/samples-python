@@ -8,13 +8,13 @@ from mcp.types import (
 )
 from temporalio import workflow
 
-from mcp_examples.nexus_transport.mcp_server_nexus_service import (
+from mcp_examples.workflow_nexus_transport.mcp_server_nexus_service import (
     MCPServerInput,
     MCPServiceWorkflowBase,
 )
 
 with workflow.unsafe.imports_passed_through():
-    from mcp_examples.nexus_transport.stdio_mcp_server.activity import (
+    from mcp_examples.workflow_nexus_transport.stdio_mcp_server.activity import (
         run_stdio_mcp_server,
     )
 

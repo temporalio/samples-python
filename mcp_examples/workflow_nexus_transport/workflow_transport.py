@@ -8,7 +8,7 @@ from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStre
 from mcp.shared.message import SessionMessage
 from temporalio import workflow
 
-from mcp_examples.nexus_transport.mcp_server_nexus_service import (
+from mcp_examples.workflow_nexus_transport.mcp_server_nexus_service import (
     CallToolInput,
     ListToolsInput,
     MCPServerInput,
@@ -16,7 +16,7 @@ from mcp_examples.nexus_transport.mcp_server_nexus_service import (
 )
 
 
-class NexusTransport:
+class WorkflowTransport:
     def __init__(
         self,
         nexus_client: workflow.NexusClient[MCPServerNexusService],

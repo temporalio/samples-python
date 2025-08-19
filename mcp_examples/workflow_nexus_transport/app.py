@@ -14,7 +14,6 @@ from temporalio.worker import UnsandboxedWorkflowRunner, Worker
 
 from mcp_examples.workflow_nexus_transport.mcp_server_nexus_service import (
     MCPServerInput,
-    MCPServerNexusService,
     MCPServerNexusServiceHandler,
     MCPServiceWorkflowBase,
 )
@@ -36,12 +35,9 @@ app = typer.Typer()
 class MCPCallerWorkflow:
     @workflow.run
     async def run(self, input: MCPServerInput):
-        nexus_client = workflow.create_nexus_client(
-            service=MCPServerNexusService,
-            endpoint="mcp-sequential-thinking-nexus-endpoint",
+        transport = WorkflowTransport(
+            endpoint="mcp-sequential-thinking-nexus-endpoint", input=input
         )
-
-        transport = WorkflowTransport(nexus_client, input)
 
         async with transport.connect() as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:

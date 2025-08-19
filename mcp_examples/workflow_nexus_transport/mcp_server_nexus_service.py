@@ -36,13 +36,13 @@ class MCPServerInput:
 
 @dataclass
 class ListToolsInput:
-    operation_token: str
+    session_token: str
     request: ListToolsRequest
 
 
 @dataclass
 class CallToolInput:
-    operation_token: str
+    session_token: str
     request: CallToolRequest
 
 
@@ -71,7 +71,7 @@ class MCPServerNexusServiceHandler:
         self, ctx: nexusrpc.handler.StartOperationContext, input: CallToolInput
     ) -> CallToolResult:
         workflow_handle = nexus.WorkflowHandle.from_token(
-            input.operation_token
+            input.session_token
         )._to_client_workflow_handle(nexus.client())
         return await workflow_handle.execute_update("call_tool", input.request)
 
@@ -80,6 +80,6 @@ class MCPServerNexusServiceHandler:
         self, ctx: nexusrpc.handler.StartOperationContext, input: ListToolsInput
     ) -> ListToolsResult:
         workflow_handle = nexus.WorkflowHandle.from_token(
-            input.operation_token
+            input.session_token
         )._to_client_workflow_handle(nexus.client())
         return await workflow_handle.execute_update("list_tools", input.request)

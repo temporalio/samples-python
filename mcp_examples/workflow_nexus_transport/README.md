@@ -5,6 +5,11 @@ rise to durable client sessions. The example uses an MCP server with stateful se
 reference MCP server, optionally translated as a Python Temporal workflow.
 
 ```
+temporal operator nexus endpoint create \
+  --target-namespace default \
+  --name mcp-sequential-thinking-nexus-endpoint \
+  --target-task-queue mcp-sequential-thinking-task-queue
+  
 uv sync --group=mcp
-uv run mcp_examples/nexus_transport/app.py
+uv run mcp_examples/workflow_nexus_transport/app.py
 ```

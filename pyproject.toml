@@ -151,4 +151,4 @@ module = "opentelemetry.*"
 ignore_errors = true
 
 [tool.uv.sources]
-temporalio = { path = "/Users/dan/src/temporal/src/sdk-python", editable = true }
+temporalio = { git = "https://github.com/temporalio/sdk-python" }

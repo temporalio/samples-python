@@ -10,7 +10,7 @@ from polling.infrequent.workflows import GreetingWorkflow
 
 
 async def test_infrequent_polling_workflow(client: Client, env: WorkflowEnvironment):
-    if not env.supports_time_skipping:
+    if env.supports_time_skipping:
         pytest.skip("Too slow to test with time-skipping disabled")
 
     # Start a worker that hosts the workflow and activity implementations.

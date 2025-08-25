@@ -1,0 +1,635 @@
+# OpenAI Agents SDK + Temporal Integration
+
+## Overview
+This integration combines OpenAI's Agents SDK with Temporal's durable execution engine to create production-ready AI agent workflows. The key innovation is that every agent invocation automatically becomes a Temporal Activity, providing durability, observability, and scalability without code changes.
+
+## Core Concept
+When you call `Runner.run(agent, input)` in a Temporal workflow, it automatically:
+1. Creates a Temporal Activity for the agent execution
+2. Provides automatic retries, state persistence, and error handling
+3. Enables horizontal scaling (each agent runs in its own process/thread)
+4. Integrates tracing between Temporal and OpenAI systems
+
+---
+
+# basic-usage: Basic Usage
+URL: /docs/openai_agents/basic
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/BASIC.md
+
+## Basic Agent Workflow
+```python
+from temporalio import workflow
+from agents import Agent, Runner
+
+@workflow.defn
+class HelloWorldAgent:
+    @workflow.run
+    async def run(self, prompt: str) -> str:
+        agent = Agent(
+            name="Assistant",
+            instructions="You only respond in haikus.",
+            model="gpt-4o"
+        )
+        
+        # This automatically creates a Temporal Activity
+        result = await Runner.run(agent, input=prompt)
+        return result.final_output
+```
+
+## Worker Setup
+```python
+from temporalio.worker import Worker
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+
+worker = Worker(
+    client,
+    task_queue="openai-agents-task-queue",
+    workflows=[HelloWorldAgent],
+    plugins=[OpenAIAgentsPlugin()]
+)
+```
+
+## Agent Lifecycle Management
+```python
+@workflow.defn
+class AgentLifecycleWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        # Initialize agent with specific configuration
+        agent = Agent(
+            name="LifecycleAgent",
+            instructions="Process the input step by step",
+            model="gpt-4o",
+            model_settings=ModelSettings(
+                temperature=0.7,
+                max_tokens=1000
+            )
+        )
+        
+        # Execute with lifecycle management
+        result = await Runner.run(
+            agent, 
+            input=input,
+            run_config=RunConfig(
+                max_steps=50,
+                timeout=300
+            )
+        )
+        
+        return result.final_output
+```
+
+---
+
+# agent-patterns: Agent Patterns
+URL: /docs/openai_agents/agent_patterns
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/AGENT_PATTERNS.md
+
+## Multi-Agent Orchestration
+```python
+@workflow.defn
+class MultiAgentWorkflow:
+    @workflow.run
+    async def run(self, task: str) -> str:
+        # Planning agent
+        planner = Agent(
+            name="Planner",
+            instructions="Break down complex tasks into steps",
+            model="gpt-4o"
+        )
+        
+        plan = await Runner.run(planner, f"Plan: {task}")
+        
+        # Execution agent
+        executor = Agent(
+            name="Executor",
+            instructions="Execute tasks based on plans",
+            model="gpt-4o"
+        )
+        
+        result = await Runner.run(executor, f"Execute: {plan.final_output}")
+        return result.final_output
+```
+
+## Agent Routing with Handoffs
+```python
+@workflow.defn
+class RoutingWorkflow:
+    @workflow.run
+    async def run(self, query: str) -> str:
+        # Triage agent decides routing
+        triage_agent = Agent(
+            name="Triage",
+            instructions="Route queries to appropriate specialists",
+            handoffs=[weather_agent, business_agent, tech_agent]
+        )
+        
+        # Automatic handoff based on query type
+        result = await Runner.run(triage_agent, query)
+        return result.final_output
+```
+
+## Parallel Agent Execution
+```python
+@workflow.defn
+class ParallelWorkflow:
+    @workflow.run
+    async def run(self, tasks: list[str]) -> list[str]:
+        # Create specialized agents
+        agents = [
+            Agent(name=f"Agent{i}", instructions=f"Process {task}")
+            for i, task in enumerate(tasks)
+        ]
+        
+        # Execute agents in parallel
+        results = await asyncio.gather(*[
+            Runner.run(agent, task) 
+            for agent, task in zip(agents, tasks)
+        ])
+        
+        return [r.final_output for r in results]
+```
+
+---
+
+# tools-integration: Tools Integration
+URL: /docs/openai_agents/tools
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/TOOLS.md
+
+## Built-in OpenAI Tools
+```python
+from agents import WebSearchTool, CodeInterpreterTool, FileSearchTool
+
+@workflow.defn
+class ToolsWorkflow:
+    @workflow.run
+    async def run(self, query: str) -> str:
+        agent = Agent(
+            name="ResearchAgent",
+            instructions="Research and analyze using available tools",
+            tools=[
+                WebSearchTool(),
+                CodeInterpreterTool(),
+                FileSearchTool()
+            ],
+            model="gpt-4o"
+        )
+        
+        result = await Runner.run(agent, query)
+        return result.final_output
+```
+
+## Custom Tool Integration
+```python
+@workflow.defn
+class CustomToolsWorkflow:
+    @workflow.run
+    async def run(self, request: str) -> str:
+        # Custom tool for database queries
+        db_tool = CustomTool(
+            name="database_query",
+            description="Query the database for information",
+            function=self.query_database
+        )
+        
+        agent = Agent(
+            name="DataAgent",
+            instructions="Use database tools to answer questions",
+            tools=[db_tool],
+            model="gpt-4o"
+        )
+        
+        result = await Runner.run(agent, request)
+        return result.final_output
+    
+    async def query_database(self, query: str) -> str:
+        # Database query implementation
+        return "Database result"
+```
+
+## Image Generation Tools
+```python
+@workflow.defn
+class ImageGenerationWorkflow:
+    @workflow.run
+    async def run(self, prompt: str) -> str:
+        agent = Agent(
+            name="ImageAgent",
+            instructions="Generate images based on descriptions",
+            tools=[ImageGeneratorTool()],
+            model="gpt-4o"
+        )
+        
+        result = await Runner.run(agent, prompt)
+        return result.final_output
+```
+
+---
+
+# handoffs: Agent Handoffs
+URL: /docs/openai_agents/handoffs
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/HANDOFFS.md
+
+## Message Filtering with Handoffs
+```python
+@workflow.defn
+class MessageFilterWorkflow:
+    @workflow.run
+    async def run(self, message: str) -> str:
+        # Filter agent with handoff capabilities
+        filter_agent = Agent(
+            name="MessageFilter",
+            instructions="Filter and route messages appropriately",
+            handoffs=[
+                Agent(name="SpamFilter", instructions="..."),
+                Agent(name="ContentModerator", instructions="..."),
+                Agent(name="Router", instructions="...")
+            ]
+        )
+        
+        result = await Runner.run(filter_agent, message)
+        return result.final_output
+```
+
+## Collaborative Agent Workflows
+```python
+@workflow.defn
+class CollaborationWorkflow:
+    @workflow.run
+    async def run(self, project: str) -> str:
+        # Project manager agent
+        manager = Agent(
+            name="ProjectManager",
+            instructions="Coordinate project execution",
+            handoffs=[
+                Agent(name="Designer", instructions="..."),
+                Agent(name="Developer", instructions="..."),
+                Agent(name="Tester", instructions="...")
+            ]
+        )
+        
+        result = await Runner.run(manager, project)
+        return result.final_output
+```
+
+---
+
+# hosted-mcp: Hosted MCP Integration
+URL: /docs/openai_agents/hosted_mcp
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/HOSTED_MCP.md
+
+## MCP Server Integration
+```python
+@workflow.defn
+class MCPWorkflow:
+    @workflow.run
+    async def run(self, request: str) -> str:
+        # Agent with MCP tool access
+        mcp_agent = Agent(
+            name="MCPAgent",
+            instructions="Use MCP tools to access external systems",
+            tools=[MCPTool(server_url="http://localhost:3000")],
+            model="gpt-4o"
+        )
+        
+        result = await Runner.run(mcp_agent, request)
+        return result.final_output
+```
+
+## Approval Workflow with MCP
+```python
+@workflow.defn
+class ApprovalMCPWorkflow:
+    @workflow.run
+    async def run(self, request: str) -> str:
+        # Approval agent using MCP tools
+        approval_agent = Agent(
+            name="ApprovalAgent",
+            instructions="Process approval requests using MCP tools",
+            tools=[
+                MCPTool(server_url="http://approval-system:3000"),
+                MCPTool(server_url="http://notification-system:3000")
+            ]
+        )
+        
+        result = await Runner.run(approval_agent, request)
+        return result.final_output
+```
+
+---
+
+# model-providers: Model Providers
+URL: /docs/openai_agents/model_providers
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/MODEL_PROVIDERS.md
+
+## LiteLLM Integration
+```python
+@workflow.defn
+class LiteLLMWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        agent = Agent(
+            name="LiteLLMAgent",
+            instructions="Process requests using LiteLLM",
+            model="gpt-4o",
+            model_settings=ModelSettings(
+                provider="litellm",
+                api_base="http://localhost:8000"
+            )
+        )
+        
+        result = await Runner.run(agent, input)
+        return result.final_output
+```
+
+## Ollama Integration
+```python
+@workflow.defm
+class OllamaWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        agent = Agent(
+            name="OllamaAgent",
+            instructions="Use local Ollama models",
+            model="llama2",
+            model_settings=ModelSettings(
+                provider="ollama",
+                api_base="http://localhost:11434"
+            )
+        )
+        
+        result = await Runner.run(agent, input)
+        return result.final_output
+```
+
+## GPT-OSS Integration
+```python
+@workflow.defn
+class GPTOSSWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        agent = Agent(
+            name="GPTOSSAgent",
+            instructions="Use open-source GPT models",
+            model="gpt2",
+            model_settings=ModelSettings(
+                provider="gpt-oss",
+                api_base="http://localhost:5000"
+                )
+            )
+        
+        result = await Runner.run(agent, input)
+        return result.final_output
+```
+
+---
+
+# reasoning-content: Reasoning Content
+URL: /docs/openai_agents/reasoning_content
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/REASONING_CONTENT.md
+
+## Accessing Model Reasoning
+```python
+@workflow.defn
+class ReasoningWorkflow:
+    @workflow.run
+    async def run(self, problem: str) -> str:
+        agent = Agent(
+            name="ReasoningAgent",
+            instructions="Show your reasoning step by step",
+            model="gpt-4o",
+            model_settings=ModelSettings(
+                show_reasoning=True,
+                reasoning_format="step_by_step"
+            )
+        )
+        
+        result = await Runner.run(agent, problem)
+        return result.final_output
+```
+
+## Thought Process Extraction
+```python
+@workflow.defn
+class ThoughtProcessWorkflow:
+    @workflow.run
+    async def run(self, question: str) -> str:
+        agent = Agent(
+            name="ThoughtAgent",
+            instructions="Explain your thinking process",
+            model="gpt-4o",
+            model_settings=ModelSettings(
+                extract_thoughts=True,
+                thought_format="detailed"
+            )
+        )
+        
+        result = await Runner.run(agent, question)
+        return result.final_output
+```
+
+---
+
+# customer-service: Customer Service
+URL: /docs/openai_agents/customer_service
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/CUSTOMER_SERVICE.md
+
+## Conversational Customer Service
+```python
+@workflow.defn
+class CustomerServiceWorkflow:
+    def __init__(self):
+        self.conversation_history = []
+    
+    @workflow.run
+    async def run(self, customer_query: str) -> str:
+        # Add to conversation history
+        self.conversation_history.append(customer_query)
+        
+        # Customer service agent
+        agent = Agent(
+            name="CustomerService",
+            instructions="Provide helpful customer support",
+            model="gpt-4o",
+            context=f"Conversation history: {self.conversation_history}"
+        )
+        
+        result = await Runner.run(agent, customer_query)
+        
+        # Update history
+        self.conversation_history.append(result.final_output)
+        return result.final_output
+```
+
+## Escalation Workflow
+```python
+@workflow.defn
+class EscalationWorkflow:
+    @workflow.run
+    async def run(self, issue: str) -> str:
+        # Initial support agent
+        support_agent = Agent(
+            name="SupportAgent",
+            instructions="Handle customer issues, escalate if needed",
+            handoffs=[
+                Agent(name="SeniorSupport", instructions="..."),
+                Agent(name="TechnicalSpecialist", instructions="..."),
+                Agent(name="Manager", instructions="...")
+            ]
+        )
+        
+        result = await Runner.run(support_agent, issue)
+        return result.final_output
+```
+
+---
+
+# financial-research: Financial Research Agent
+URL: /docs/openai_agents/financial_research_agent
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/FINANCIAL_RESEARCH_AGENT.md
+
+## Multi-Agent Financial Analysis
+```python
+@workflow.defn
+class FinancialResearchWorkflow:
+    @workflow.run
+    async def run(self, research_request: str) -> str:
+        # Planning agent
+        planner = Agent(
+            name="FinancialPlanner",
+            instructions="Plan financial research approach",
+            model="gpt-4o"
+        )
+        
+        plan = await Runner.run(planner, research_request)
+        
+        # Risk analysis agent
+        risk_agent = Agent(
+            name="RiskAnalyst",
+            instructions="Analyze financial risks",
+            model="gpt-4o"
+        )
+        
+        risk_analysis = await Runner.run(risk_agent, plan.final_output)
+        
+        # Financial data agent
+        data_agent = Agent(
+            name="DataAnalyst",
+            instructions="Analyze financial data",
+            model="gpt-4o"
+        )
+        
+        data_analysis = await Runner.run(data_agent, risk_analysis.final_output)
+        
+        # Synthesis agent
+        synthesizer = Agent(
+            name="Synthesizer",
+            instructions="Combine all analyses into final report",
+            model="gpt-4o"
+        )
+        
+        final_report = await Runner.run(
+            synthesizer, 
+            f"Plan: {plan.final_output}\nRisk: {risk_analysis.final_output}\nData: {data_analysis.final_output}"
+        )
+        
+        return final_report.final_output
+```
+
+---
+
+# research-bot: Research Bot
+URL: /docs/openai_agents/research_bot
+Source: https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/RESEARCH_BOT.md
+
+## Comprehensive Research Workflow
+```python
+@workflow.defn
+class ResearchBotWorkflow:
+    @workflow.run
+    async def run(self, research_topic: str) -> str:
+        # Research manager coordinates the process
+        manager = Agent(
+            name="ResearchManager",
+            instructions="Coordinate comprehensive research",
+            model="gpt-4o"
+        )
+        
+        # Planning phase
+        plan = await Runner.run(manager, f"Plan research for: {research_topic}")
+        
+        # Search agents for different aspects
+        search_agents = [
+            Agent(name="AcademicSearch", instructions="Search academic sources"),
+            Agent(name="NewsSearch", instructions="Search recent news"),
+            Agent(name="TechnicalSearch", instructions="Search technical documentation")
+        ]
+        
+        # Parallel search execution
+        search_results = await asyncio.gather(*[
+            Runner.run(agent, plan.final_output)
+            for agent in search_agents
+        ])
+        
+        # Writing agent synthesizes results
+        writer = Agent(
+            name="ResearchWriter",
+            instructions="Write comprehensive research report",
+            model="gpt-4o"
+        )
+        
+        synthesis_input = f"Topic: {research_topic}\nPlan: {plan.final_output}\nResults: {search_results}"
+        final_report = await Runner.run(writer, synthesis_input)
+        
+        return final_report.final_output
+```
+
+---
+
+# Key Benefits
+- **Durability**: Survives crashes, restarts, and failures
+- **Scalability**: Independent scaling of different agent types
+- **Observability**: Unified tracing across Temporal and OpenAI
+- **Production Ready**: Automatic retries, rate limit handling, state persistence
+
+## Common Patterns
+1. **Sequential Agents**: Run agents one after another
+2. **Parallel Agents**: Use `asyncio.gather()` for concurrent execution
+3. **Agent Handoffs**: Use `handoffs` parameter for agent-to-agent transitions
+4. **State Management**: Leverage workflow state for conversation history
+5. **Error Handling**: Temporal automatically retries failed agent invocations
+
+## File Structure
+```
+openai_agents/
+├── basic/           # Fundamental patterns
+├── agent_patterns/  # Multi-agent architectures
+├── tools/           # Tool integration examples
+├── handoffs/        # Agent collaboration
+├── hosted_mcp/      # MCP integration
+├── model_providers/ # Custom LLM providers
+├── reasoning_content/ # Model reasoning access
+├── customer_service/ # Conversational workflows
+├── financial_research_agent/ # Complex multi-agent system
+└── research_bot/    # Research workflow example
+```
+
+## Getting Started
+1. Start Temporal server: `temporal server start-dev`
+2. Install dependencies: `uv sync --group openai-agents`
+3. Set OpenAI API key: `export OPENAI_API_KEY=your_key`
+4. Run worker: `uv run openai_agents/basic/run_worker.py`
+5. Execute workflow: `uv run openai_agents/basic/run_hello_world_workflow.py`
+
+## Best Practices
+- Keep agents focused on single responsibilities
+- Use descriptive agent names for debugging
+- Leverage workflow state for conversation context
+- Handle agent failures gracefully with Temporal's retry mechanisms
+- Use appropriate timeouts for agent operations
+- Monitor both Temporal and OpenAI dashboards for observability
+
+## Resources
+- [Temporal Blog](https://temporal.io/blog/announcing-openai-agents-sdk-integration)
+- [Python SDK](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)
+- [Community Demos](https://github.com/temporal-community/openai-agents-demos)

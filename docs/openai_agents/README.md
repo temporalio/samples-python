@@ -17,6 +17,23 @@ This combination ensures that AI agent workflows are:
 - **Scalable**: Handle complex multi-agent interactions and long-running conversations
 - **Reliable**: Built-in retry mechanisms and error handling
 
+## 🚀 **Key Integration Benefits**
+
+### **Implicit Activity Creation**
+Every agent invocation is automatically executed through a Temporal Activity, providing durability without code changes. The `Runner.run()` calls automatically create activities under the hood.
+
+### **Integrated Tracing**
+Unified observability across both Temporal and OpenAI systems. View agent execution in Temporal's workflow history and OpenAI's tracing dashboard simultaneously.
+
+### **Horizontal Scaling**
+Each agent runs in its own process or thread, enabling independent scaling. Add more capacity for specific agent types without affecting others.
+
+### **Production Readiness**
+- **Crash-Proof Execution**: Automatic recovery from failures, restarts, and bugs
+- **Rate Limit Handling**: Graceful handling of LLM API rate limits
+- **Network Resilience**: Automatic retries for downstream API failures
+- **State Persistence**: Workflow state automatically saved between steps
+
 ## 🔄 **Core Integration Patterns**
 
 ### **Workflow-Orchestrated Agents**
@@ -31,9 +48,11 @@ Seamless integration of OpenAI's built-in tools (web search, code interpreter, f
 ### **Multi-Agent Coordination**
 Complex workflows can coordinate multiple specialized agents, each with distinct roles and responsibilities.
 
-## 📚 **Service Documentation**
+## 📚 **Documentation Structure**
 
-Each service demonstrates specific integration patterns and use cases:
+### **Getting Started**
+- **[llms.txt](./llms.txt)** - LLM-friendly summary for AI assistants and developers
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Technical deep dive into integration patterns
 
 ### **Core Services**
 - **[Basic Examples](./BASIC.md)** - Fundamental agent patterns, lifecycle management, and tool integration
@@ -101,11 +120,12 @@ worker = Worker(
 )
 ```
 
-### **Agent Integration**
+### **Agent Integration (Implicit Activities)**
 ```python
 from agents import Agent, Runner
 
 agent = Agent(name="MyAgent", instructions="...")
+# This automatically creates a Temporal Activity under the hood
 result = await Runner.run(agent, input_text)
 ```
 
@@ -123,6 +143,8 @@ Each service documentation follows a consistent structure:
 - [Temporal Python SDK Documentation](https://docs.temporal.io/python)
 - [OpenAI Agents SDK Documentation](https://github.com/openai/openai-agents-python)
 - [Module Documentation](https://github.com/temporalio/sdk-python/blob/main/temporalio/contrib/openai_agents/README.md)
+- [Temporal Blog: OpenAI Agents Integration](https://temporal.io/blog/announcing-openai-agents-sdk-integration)
+- [Community Demos](https://github.com/temporal-community/openai-agents-demos)
 
 ## 🎯 **Use Cases**
 

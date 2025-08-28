@@ -2,7 +2,7 @@ import logging
 
 import trio_asyncio
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from trio_async import workflows
 
@@ -12,10 +12,9 @@ async def main():
     logging.basicConfig(level=logging.INFO)
 
     # Connect client
-    config_dict = ClientConfigProfile.load().to_dict()
-    config_dict.setdefault("address", "localhost:7233")
-    config = ClientConfigProfile.from_dict(config_dict)
-    client = await Client.connect(**config.to_client_connect_config())
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Execute the workflow
     result = await client.execute_workflow(

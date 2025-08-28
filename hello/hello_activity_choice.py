@@ -7,7 +7,7 @@ from typing import List
 
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 # Activities that will be called by the workflow
@@ -81,11 +81,11 @@ class PurchaseFruitsWorkflow:
 
 
 async def main():
-    config_dict = ClientConfigProfile.load().to_dict()
-    config_dict.setdefault("address", "localhost:7233")
-    config = ClientConfigProfile.from_dict(config_dict)
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Start client
-    client = await Client.connect(**config.to_client_connect_config())
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

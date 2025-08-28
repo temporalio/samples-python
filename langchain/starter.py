@@ -7,18 +7,17 @@ from activities import TranslateParams
 from fastapi import FastAPI, HTTPException
 from langchain_interceptor import LangChainContextPropagationInterceptor
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from workflow import LangChainWorkflow, TranslateWorkflowParams
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    config_dict = ClientConfigProfile.load().to_dict()
-    config_dict.setdefault("address", "localhost:7233")
-    config = ClientConfigProfile.from_dict(config_dict)
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
 
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         interceptors=[LangChainContextPropagationInterceptor()],
     )
     yield

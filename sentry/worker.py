@@ -5,6 +5,7 @@ import sentry_sdk
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.types import Event, Hint
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 from temporalio.worker.workflow_sandbox import (
     SandboxedWorkflowRunner,
@@ -51,8 +52,11 @@ async def main():
     # Initialize the Sentry SDK
     initialise_sentry()
 
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Start client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

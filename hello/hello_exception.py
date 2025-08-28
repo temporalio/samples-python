@@ -8,6 +8,7 @@ from typing import NoReturn, Optional
 from temporalio import activity, workflow
 from temporalio.client import Client, WorkflowFailureError
 from temporalio.common import RetryPolicy
+from temporalio.envconfig import ClientConfig
 from temporalio.exceptions import FailureError
 from temporalio.worker import Worker
 
@@ -39,7 +40,9 @@ class GreetingWorkflow:
 
 async def main():
     # Start client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

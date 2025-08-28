@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 
@@ -42,10 +42,9 @@ class GreetingWorkflow:
 
 async def main():
     # Start client
-    config_dict = ClientConfigProfile.load().to_dict()
-    config_dict.setdefault("address", "localhost:7233")
-    config = ClientConfigProfile.from_dict(config_dict)
-    client = await Client.connect(**config.to_client_connect_config())
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

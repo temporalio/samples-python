@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional
 
 from temporalio.client import Client, WorkflowUpdateStage
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from message_passing.introduction import TASK_QUEUE
 from message_passing.introduction.workflows import (
@@ -16,10 +16,9 @@ from message_passing.introduction.workflows import (
 
 async def main(client: Optional[Client] = None):
     if not client:
-        config_dict = ClientConfigProfile.load().to_dict()
-        config_dict.setdefault("address", "localhost:7233")
-        config = ClientConfigProfile.from_dict(config_dict)
-        client = await Client.connect(**config.to_client_connect_config())
+        config = ClientConfig.load_client_connect_config()
+        config.setdefault("target_host", "localhost:7233")
+        client = await Client.connect(**config)
 
     wf_handle = await client.start_workflow(
         GreetingWorkflow.run,

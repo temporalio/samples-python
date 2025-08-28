@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio import client, common
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from message_passing.waiting_for_handlers_and_compensation import (
     TASK_QUEUE,
@@ -15,10 +15,9 @@ from message_passing.waiting_for_handlers_and_compensation.workflows import (
 
 
 async def starter(exit_type: WorkflowExitType):
-    config_dict = ClientConfigProfile.load().to_dict()
-    config_dict.setdefault("address", "localhost:7233")
-    config = ClientConfigProfile.from_dict(config_dict)
-    cl = await client.Client.connect(**config.to_client_connect_config())
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    cl = await client.Client.connect(**config)
 
     wf_handle = await cl.start_workflow(
         WaitingForHandlersAndCompensationWorkflow.run,

@@ -9,7 +9,7 @@ import signal
 
 import gevent
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from gevent_async import activity, workflow
@@ -40,10 +40,9 @@ async def async_main():
     )
 
     # Connect client
-    config_dict = ClientConfigProfile.load().to_dict()
-    config_dict.setdefault("address", "localhost:7233")
-    config = ClientConfigProfile.from_dict(config_dict)
-    client = await Client.connect(**config.to_client_connect_config())
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Create an executor for use by Temporal. This cannot be the outer one
     # running this async main. The max_workers here needs to have enough room to

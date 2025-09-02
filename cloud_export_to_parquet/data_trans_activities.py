@@ -73,25 +73,18 @@ def get_data_from_object_key(
 
 def convert_proto_to_parquet_flatten(wfs: export.WorkflowExecutions) -> pd.DataFrame:
     """Function that convert flatten proto data to parquet."""
-    dfs = []
+    all_rows = []
+
     for wf in wfs.items:
         start_attributes = wf.history.events[
             0
         ].workflow_execution_started_event_attributes
         histories = wf.history
         json_str = MessageToJson(histories)
-        row = {
-            "WorkflowID": start_attributes.workflow_id,
-            "RunID": start_attributes.original_execution_run_id,
-            "Histories": json.loads(json_str),
-        }
-        dfs.append(pd.DataFrame([row]))
-    df = pd.concat(dfs, ignore_index=True)
-    rows_flatten = []
-    for _, row in df.iterrows():
-        wf_histories_raw = row["Histories"]["events"]
-        worfkow_id = row["WorkflowID"]
-        run_id = row["RunID"]
+        wf_histories_raw = json.loads(json_str)["events"]
+        workflow_id = start_attributes.workflow_id
+        run_id = start_attributes.original_execution_run_id
+
         for history_event in wf_histories_raw:
             row_flatten = pd.json_normalize(history_event, sep="_")
             skip_name = ["payloads", "."]
@@ -99,10 +92,15 @@ def convert_proto_to_parquet_flatten(wfs: export.WorkflowExecutions) -> pd.DataF
                 col for col in row_flatten.columns for skip in skip_name if skip in col
             ]
             row_flatten.drop(columns_to_drop, axis=1, inplace=True)
-            row_flatten.insert(0, "WorkflowId", worfkow_id)
+            row_flatten.insert(0, "WorkflowId", workflow_id)
             row_flatten.insert(1, "RunId", run_id)
-            rows_flatten.append(row_flatten)
-    df_flatten = pd.concat(rows_flatten, ignore_index=True)
+            all_rows.append(row_flatten)
+
+    if all_rows:
+        df_flatten = pd.concat(all_rows, ignore_index=True)
+    else:
+        df_flatten = pd.DataFrame()
+
     return df_flatten
 
 

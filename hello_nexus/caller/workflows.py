@@ -21,15 +21,15 @@ class CallerWorkflow:
     @workflow.run
     async def run(self, name: str) -> tuple[MyOutput, MyOutput]:
         # Start the nexus operation and wait for the result in one go, using execute_operation.
-        wf_result = await self.nexus_client.execute_operation(
-            MyNexusService.my_workflow_run_operation,
+        op_1_result = await self.nexus_client.execute_operation(
+            MyNexusService.my_sync_operation,
             MyInput(name),
         )
         # Alternatively, you can use start_operation to obtain the operation handle and
         # then `await` the handle to obtain the result.
-        sync_operation_handle = await self.nexus_client.start_operation(
-            MyNexusService.my_sync_operation,
+        op_2_handle = await self.nexus_client.start_operation(
+            MyNexusService.my_workflow_run_operation,
             MyInput(name),
         )
-        sync_result = await sync_operation_handle
-        return sync_result, wf_result
+        op_2_result = await op_2_handle
+        return op_1_result, op_2_result

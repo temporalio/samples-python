@@ -1,0 +1,4 @@
+# Default profile for local development
+[profile.default]
+address = "localhost:7233"
+namespace = "default" 

@@ -2,6 +2,7 @@ import asyncio
 import uuid
 
 from temporalio.client import BuildIdOpAddNewCompatible, BuildIdOpAddNewDefault, Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from worker_versioning.activities import greet, super_greet
@@ -11,7 +12,10 @@ from worker_versioning.workflow_v2 import MyWorkflow as MyWorkflowV2
 
 
 async def main():
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
+
     task_queue = f"worker-versioning-{uuid.uuid4()}"
 
     # Start a 1.0 worker

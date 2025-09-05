@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from temporalio import activity, exceptions, workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 
@@ -101,7 +102,9 @@ async def main():
     # logging.basicConfig(level=logging.INFO)
 
     # Start client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Set workflow_class to the proper class based on version
     workflow_class = ""

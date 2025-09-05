@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from temporalio import activity, workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 from temporalio.worker import Worker
 
@@ -38,9 +39,12 @@ def init_runtime_with_prometheus(port: int) -> Runtime:
 async def main():
     runtime = init_runtime_with_prometheus(9000)
 
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Connect client
     client = await Client.connect(
-        "localhost:7233",
+        **config,
         runtime=runtime,
     )
 

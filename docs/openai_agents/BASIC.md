@@ -367,7 +367,7 @@ class DynamicSystemPromptWorkflow:
 - **Flexible Behavior**: Single agent with multiple personality modes
 
 ### Usage Tracking with RunHooks
-**File**: `openai_agents/basic/workflows/agent_lifecycle_workflow.py`
+**File**: `openai_agents/basic/workflows/lifecycle_workflow.py`
 
 This pattern demonstrates comprehensive usage monitoring for API consumption, token tracking, and cost optimization.
 
@@ -618,7 +618,7 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue="openai-agents-task-queue",
+        task_queue="openai-agents-basic-task-queue",
         workflows=[
             HelloWorldAgent,
             ToolsWorkflow,
@@ -705,9 +705,9 @@ async def test_agent_lifecycle():
 ## ⚠️ Important Implementation Notes
 
 ### Task Queue Configuration
-- **Worker**: Uses task queue `"openai-agents-task-queue"`
+- **Worker**: Uses task queue `"openai-agents-basic-task-queue"`
 - **Runner Scripts**: Use task queue `"openai-agents-basic-task-queue"`
-- **Note**: This mismatch means runner scripts won't connect to the worker unless the worker is started with the correct task queue
+- **Note**: Task queues are consistent between worker and runner scripts
 
 ### Specific Examples Implemented
 - **Hello World**: Asks about recursion in programming

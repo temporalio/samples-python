@@ -7,13 +7,13 @@ This document provides a technical deep dive into how the OpenAI Agents SDK inte
 ## 🔄 **Core Integration Mechanism**
 
 ### **Implicit Activity Creation for Model Invocations**
-The integration's key innovation is automatic Temporal Activity creation for each **model invocation** within the agentic loop:
+The integration's key innovation is automatic Temporal Activity creation for each **model invocation** within the agentic loop. **Important**: This behavior only occurs when the `OpenAIAgentsPlugin` is registered with the Temporal worker.
 
 ```python
 # What you write
 result = await Runner.run(agent, input="Hello")
 
-# What happens under the hood
+# What happens under the hood (with OpenAIAgentsPlugin registered)
 # 1. Runner.run() executes inside the Temporal workflow
 # 2. During the agentic loop, each model invocation becomes a separate Activity
 # 3. Each Activity is stored in Temporal history
@@ -55,36 +55,38 @@ graph TB
         C[Client Application]
     end
     
-    subgraph "Temporal Layer"
-        W[Workflow]
-        MA[Model Activities]
-        TA[Tool Activities]
-        S[Temporal Server]
+    subgraph "Temporal Workflow"
+        W[Workflow Execution]
+        R[Runner + Agent]
+        T[Tools Processing]
     end
     
-    subgraph "OpenAI Layer"
-        AG[Agent Definition]
-        LLM[LLM API]
-        T[Tools]
+    subgraph "Temporal Activities"
+        MA[Model Invocation Activities]
+        TA[Tool Activities]
     end
     
     subgraph "External Services"
+        LLM[LLM APIs]
         API[External APIs]
         DB[Databases]
         FS[File Systems]
     end
     
-    C --> W
-    W --> AG
-    AG --> LLM
-    AG --> T
+    subgraph "Temporal Server"
+        S[History & State]
+    end
     
-    LLM --> MA
+    C --> W
+    W --> R
+    R --> T
+    R --> MA
     T --> TA
     T --> API
     T --> DB
     T --> FS
     
+    MA --> LLM
     MA --> S
     TA --> S
     S --> MA
@@ -97,31 +99,31 @@ graph TB
 sequenceDiagram
     participant C as Client
     participant W as Workflow
-    participant AG as Agent
+    participant R as Runner + Agent
     participant M as Model Activity
     participant T as Tools
     participant O as OpenAI API
     
     C->>W: Start Workflow
-    W->>AG: Initialize Agent (inside workflow)
+    W->>R: Initialize Runner + Agent (inside workflow)
     
     loop Agentic Loop
-        AG->>M: Model Invocation (creates Activity)
+        R->>M: Model Invocation (creates Activity)
         M->>O: LLM API Call
         O->>M: AI Response
-        M->>AG: Model Result
+        M->>R: Model Result
         
         alt Tool Usage Required
-            AG->>T: Execute Tool (in workflow)
+            R->>T: Execute Tool (in workflow)
             T->>O: Tool API Call
             O->>T: Tool Result
-            T->>AG: Tool Response
+            T->>R: Tool Response
         end
         
-        Note over AG: Checkpoint workflow state
+        Note over R: Checkpoint workflow state
     end
     
-    AG->>W: Return Final Result
+    R->>W: Return Final Result
     W->>C: Workflow Complete
 ```
 
@@ -189,6 +191,8 @@ worker = Worker(
     ]
 )
 ```
+
+**Critical**: The `OpenAIAgentsPlugin` must be registered with the worker for model invocations to automatically create Temporal Activities. Without this plugin, the integration will not work as described.
 
 ### **Agent Configuration**
 ```python

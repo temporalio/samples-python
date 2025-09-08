@@ -19,8 +19,8 @@ This combination ensures that AI agent workflows are:
 
 ## 🚀 **Key Integration Benefits**
 
-### **Implicit Activity Creation**
-Every agent invocation is automatically executed through a Temporal Activity, providing durability without code changes. The `Runner.run()` calls automatically create activities under the hood.
+### **Architecture: Runner in Workflow, Model Calls in Activities**
+The **Runner and Agent execute within the Temporal workflow** (deterministic environment), while **model invocations automatically become Temporal Activities** (non-deterministic environment). This separation ensures that agent orchestration logic is durable and deterministic, while LLM API calls benefit from Temporal's retry mechanisms and fault tolerance. The integration provides this durability without requiring code changes to your existing Agent SDK applications.
 
 ### **Integrated Tracing**
 Unified observability across both Temporal and OpenAI systems. View agent execution in Temporal's workflow history and OpenAI's tracing dashboard simultaneously.
@@ -111,22 +111,41 @@ class AgentWorkflow:
 
 ### **OpenAI Agents Plugin**
 ```python
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin, ModelActivityParameters
+from datetime import timedelta
+
+client = await Client.connect(
+    "localhost:7233",
+    plugins=[
+        OpenAIAgentsPlugin(
+            model_params=ModelActivityParameters(
+                start_to_close_timeout=timedelta(seconds=30)
+            )
+        ),
+    ],
+)
 
 worker = Worker(
     client,
     task_queue="openai-agents-task-queue",
-    plugins=[OpenAIAgentsPlugin()],
+    workflows=[YourWorkflowClass],
 )
 ```
 
-### **Agent Integration (Implicit Activities)**
+### **Agent Integration (Model Invocations Create Activities)**
 ```python
 from agents import Agent, Runner
 
-agent = Agent(name="MyAgent", instructions="...")
-# This automatically creates a Temporal Activity under the hood
-result = await Runner.run(agent, input_text)
+@workflow.defn
+class MyAgentWorkflow:
+    @workflow.run
+    async def run(self, input_text: str) -> str:
+        agent = Agent(name="MyAgent", instructions="...")
+        # Runner.run() executes inside the workflow (deterministic)
+        # Model invocations automatically create Temporal Activities (non-deterministic)
+        # (Requires OpenAIAgentsPlugin to be registered with the worker)
+        result = await Runner.run(agent, input_text)
+        return result.final_output
 ```
 
 ## 📖 **Documentation Structure**

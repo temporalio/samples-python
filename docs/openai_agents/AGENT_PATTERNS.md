@@ -60,6 +60,7 @@ The system is designed for developers and engineering teams who want to:
 - **State Persistence**: Automatic state management through Temporal
 - **Task Queue**: Uses `"openai-agents-patterns-task-queue"` for all workflows
 - **Pydantic Models**: Output validation requires structured Pydantic models
+- **Plugin Requirement**: Requires `OpenAIAgentsPlugin` to be registered with the worker
 
 ## 🏗️ System Overview
 
@@ -469,6 +470,12 @@ def orchestrator_agent() -> Agent:
         handoff_description="An english to french translator",
     )
 
+    italian_agent = Agent(
+        name="italian_agent",
+        instructions="You translate the user's message to Italian",
+        handoff_description="An english to italian translator",
+    )
+
     # Main orchestrator agent that coordinates other agents as tools
     orchestrator_agent = Agent(
         name="orchestrator_agent",
@@ -486,6 +493,10 @@ def orchestrator_agent() -> Agent:
             french_agent.as_tool(
                 tool_name="translate_to_french",
                 tool_description="Translate the user's message to French",
+            ),
+            italian_agent.as_tool(
+                tool_name="translate_to_italian",
+                tool_description="Translate the user's message to Italian",
             ),
         ],
     )

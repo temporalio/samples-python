@@ -9,7 +9,7 @@ from temporalio import workflow
 class FileSystemWorkflow:
     @workflow.run
     async def run(self) -> str:
-        with trace(workflow_name="MCP Filesystem Example"):
+        with trace(workflow_name="MCP File System Example"):
             server: MCPServer = openai_agents.workflow.stateless_mcp_server("FileSystemServer")
             agent = Agent(
                 name="Assistant",

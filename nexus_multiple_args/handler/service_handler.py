@@ -18,7 +18,6 @@ class MyNexusServiceHandler:
     # This is a nexus operation that is backed by a Temporal workflow.
     # The key feature here is that it demonstrates how to map a single input object
     # (HelloInput) to a workflow that takes multiple individual arguments.
-    # This is equivalent to the Java WorkflowRunOperation.fromWorkflowHandle pattern.
     @nexus.workflow_run_operation
     async def hello(
         self, ctx: nexus.WorkflowRunOperationContext, input: HelloInput

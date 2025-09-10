@@ -9,6 +9,7 @@ from nexus_multiple_args.handler.workflows import HelloHandlerWorkflow
 from nexus_multiple_args.service import HelloInput, HelloOutput, MyNexusService
 
 
+# @@@SNIPSTART samples-python-nexus-handler-multiargs
 @nexusrpc.handler.service_handler(service=MyNexusService)
 class MyNexusServiceHandler:
     """
@@ -33,3 +34,6 @@ class MyNexusServiceHandler:
             ],
             id=str(uuid.uuid4()),
         )
+
+
+# @@@SNIPEND

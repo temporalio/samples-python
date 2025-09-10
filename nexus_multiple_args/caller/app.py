@@ -6,7 +6,6 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from nexus_multiple_args.caller.workflows import CallerWorkflow
-from nexus_multiple_args.service import Language
 
 NAMESPACE = "nexus-multiple-args-caller-namespace"
 TASK_QUEUE = "nexus-multiple-args-caller-task-queue"
@@ -28,7 +27,7 @@ async def execute_caller_workflow(
         # Execute workflow with English language
         result1 = await client.execute_workflow(
             CallerWorkflow.run,
-            args=["Nexus", Language.EN],
+            args=["Nexus", "en"],
             id=str(uuid.uuid4()),
             task_queue=TASK_QUEUE,
         )
@@ -36,7 +35,7 @@ async def execute_caller_workflow(
         # Execute workflow with Spanish language
         result2 = await client.execute_workflow(
             CallerWorkflow.run,
-            args=["Nexus", Language.ES],
+            args=["Nexus", "es"],
             id=str(uuid.uuid4()),
             task_queue=TASK_QUEUE,
         )

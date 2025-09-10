@@ -1,7 +1,7 @@
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from nexus_multiple_args.service import HelloInput, Language, MyNexusService
+    from nexus_multiple_args.service import HelloInput, MyNexusService
 
 NEXUS_ENDPOINT = "nexus-multiple-args-nexus-endpoint"
 
@@ -20,7 +20,7 @@ class CallerWorkflow:
     # The workflow run method demonstrates calling a nexus operation with multiple arguments
     # packed into an input object.
     @workflow.run
-    async def run(self, name: str, language: Language) -> str:
+    async def run(self, name: str, language: str) -> str:
         # Start the nexus operation and wait for the result in one go, using execute_operation.
         # The multiple arguments (name and language) are packed into a HelloInput object.
         result = await self.nexus_client.execute_operation(

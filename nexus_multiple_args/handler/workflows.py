@@ -1,7 +1,7 @@
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from nexus_multiple_args.service import HelloInput, HelloOutput, Language
+    from nexus_multiple_args.service import HelloOutput
 
 
 # This is the workflow that is started by the `hello` nexus operation.
@@ -9,22 +9,22 @@ with workflow.unsafe.imports_passed_through():
 @workflow.defn
 class HelloHandlerWorkflow:
     @workflow.run
-    async def run(self, name: str, language: Language) -> HelloOutput:
+    async def run(self, name: str, language: str) -> HelloOutput:
         """
         Handle the hello workflow with multiple arguments.
 
         This method receives the individual arguments (name and language)
         that were unpacked from the HelloInput in the service handler.
         """
-        if language == Language.EN:
+        if language == "en":
             message = f"Hello {name} 👋"
-        elif language == Language.FR:
+        elif language == "fr":
             message = f"Bonjour {name} 👋"
-        elif language == Language.DE:
+        elif language == "de":
             message = f"Hallo {name} 👋"
-        elif language == Language.ES:
+        elif language == "es":
             message = f"¡Hola! {name} 👋"
-        elif language == Language.TR:
+        elif language == "tr":
             message = f"Merhaba {name} 👋"
         else:
             raise ValueError(f"Unsupported language: {language}")

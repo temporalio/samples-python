@@ -14,23 +14,14 @@ demonstrates handling multiple arguments through a single input object.
 """
 
 from dataclasses import dataclass
-from enum import StrEnum
 
 import nexusrpc
-
-
-class Language(StrEnum):
-    EN = "EN"
-    FR = "FR"
-    DE = "DE"
-    ES = "ES"
-    TR = "TR"
 
 
 @dataclass
 class HelloInput:
     name: str
-    language: Language
+    language: str
 
 
 @dataclass

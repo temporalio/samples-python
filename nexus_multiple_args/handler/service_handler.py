@@ -6,11 +6,7 @@ import nexusrpc
 from temporalio import nexus
 
 from nexus_multiple_args.handler.workflows import HelloHandlerWorkflow
-from nexus_multiple_args.service import (
-    HelloInput,
-    HelloOutput,
-    MyNexusService,
-)
+from nexus_multiple_args.service import HelloInput, HelloOutput, MyNexusService
 
 
 @nexusrpc.handler.service_handler(service=MyNexusService)

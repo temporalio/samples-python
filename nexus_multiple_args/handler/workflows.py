@@ -12,8 +12,8 @@ class HelloHandlerWorkflow:
     async def run(self, name: str, language: Language) -> HelloOutput:
         """
         Handle the hello workflow with multiple arguments.
-        
-        This method receives the individual arguments (name and language) 
+
+        This method receives the individual arguments (name and language)
         that were unpacked from the HelloInput in the service handler.
         """
         if language == Language.EN:
@@ -28,5 +28,5 @@ class HelloHandlerWorkflow:
             message = f"Merhaba {name} 👋"
         else:
             raise ValueError(f"Unsupported language: {language}")
-        
+
         return HelloOutput(message=message)

@@ -5,13 +5,13 @@ import pytest
 from temporalio.client import Client
 from temporalio.testing import WorkflowEnvironment
 
-import hello_nexus.caller.app
-import hello_nexus.caller.workflows
-import hello_nexus.handler.worker
+import nexus_multiple_args.caller.app
+import nexus_multiple_args.caller.workflows
+import nexus_multiple_args.handler.worker
 from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
 
 
-async def test_nexus_service_basic(client: Client, env: WorkflowEnvironment):
+async def test_nexus_multiple_args(client: Client, env: WorkflowEnvironment):
     if env.supports_time_skipping:
         pytest.skip("Nexus tests don't work under the Java test server")
 
@@ -19,27 +19,29 @@ async def test_nexus_service_basic(client: Client, env: WorkflowEnvironment):
         pytest.skip("Sample is written for Python >= 3.10")
 
     create_response = await create_nexus_endpoint(
-        name=hello_nexus.caller.workflows.NEXUS_ENDPOINT,
-        task_queue=hello_nexus.handler.worker.TASK_QUEUE,
+        name=nexus_multiple_args.caller.workflows.NEXUS_ENDPOINT,
+        task_queue=nexus_multiple_args.handler.worker.TASK_QUEUE,
         client=client,
     )
     try:
         handler_worker_task = asyncio.create_task(
-            hello_nexus.handler.worker.main(
+            nexus_multiple_args.handler.worker.main(
                 client,
             )
         )
         await asyncio.sleep(1)
-        results = await hello_nexus.caller.app.execute_caller_workflow(
+        results = await nexus_multiple_args.caller.app.execute_caller_workflow(
             client,
         )
-        hello_nexus.handler.worker.interrupt_event.set()
+        nexus_multiple_args.handler.worker.interrupt_event.set()
         await handler_worker_task
-        hello_nexus.handler.worker.interrupt_event.clear()
-        assert [r.message for r in results] == [
-            "Hello world from sync operation!",
-            "Hello world from workflow run operation!",
-        ]
+        nexus_multiple_args.handler.worker.interrupt_event.clear()
+
+        # Verify the expected output messages
+        assert results == (
+            "Hello Nexus 👋",
+            "¡Hola! Nexus 👋",
+        )
     finally:
         await delete_nexus_endpoint(
             id=create_response.endpoint.id,

@@ -21,5 +21,21 @@ class StartTwoActivitiesWorkflow:
             print_and_sleep,
             start_to_close_timeout=timedelta(seconds=5),
         )
-        await asyncio.gather(activity1, activity2)
+        activity3 = workflow.execute_activity(
+            print_and_sleep,
+            start_to_close_timeout=timedelta(seconds=5),
+        )
+        activity4 = workflow.execute_activity(
+            print_and_sleep,
+            start_to_close_timeout=timedelta(seconds=5),
+        )
+        activity5 = workflow.execute_activity(
+            print_and_sleep,
+            start_to_close_timeout=timedelta(seconds=5),
+        )
+        activity6 = workflow.execute_activity(
+            print_and_sleep,
+            start_to_close_timeout=timedelta(seconds=5),
+        )
+        await asyncio.gather(activity1, activity2, activity3, activity4, activity5, activity6)
         return None

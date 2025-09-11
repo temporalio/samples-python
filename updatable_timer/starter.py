@@ -5,6 +5,7 @@ from typing import Optional
 
 from temporalio import exceptions
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
 from updatable_timer import TASK_QUEUE
 from updatable_timer.workflow import Workflow
@@ -13,7 +14,10 @@ from updatable_timer.workflow import Workflow
 async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)
 
-    client = client or await Client.connect("localhost:7233")
+    if not client:
+        config = ClientConfig.load_client_connect_config()
+        config.setdefault("target_host", "localhost:7233")
+        client = await Client.connect(**config)
     try:
         handle = await client.start_workflow(
             Workflow.run,

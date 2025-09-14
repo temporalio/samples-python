@@ -9,15 +9,44 @@ from fractions import Fraction
 
 import asyncpg
 from temporalio.common import RetryPolicy
-from openai_agents.memory.connection_state import (
-    set_worker_connection,
-    get_worker_connection,
-    clear_worker_connection,
-)
 from openai_agents.memory.db_utils import IdempotenceHelper
 from pydantic import BaseModel
 from datetime import datetime
 from temporalio.contrib.pydantic import pydantic_data_converter
+from typing import Optional
+
+
+# WARNING: This implementation uses global state and is not safe for concurrent
+# testing (e.g., pytest-xdist). Run tests sequentially to avoid race conditions.
+
+# Module-level connection state
+_connection: Optional[asyncpg.Connection] = None
+
+
+def set_worker_connection(connection: asyncpg.Connection) -> None:
+    """Set the worker-level database connection."""
+    global _connection
+    _connection = connection
+
+
+def get_worker_connection() -> asyncpg.Connection:
+    """Get the worker-level database connection.
+
+    Raises:
+        RuntimeError: If no connection has been set.
+    """
+    if _connection is None:
+        raise RuntimeError(
+            "No worker-level database connection has been set. "
+            "Call set_worker_connection() before using activities."
+        )
+    return _connection
+
+
+def clear_worker_connection() -> None:
+    """Clear the worker-level database connection."""
+    global _connection
+    _connection = None
 
 
 @workflow.defn

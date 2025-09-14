@@ -14,12 +14,7 @@ from openai_agents.memory.workflows.postgres_session_workflow import (
 )
 from openai_agents.memory.postgres_session import (
     PostgresSessionConfig,
-    init_schema,
     PostgresSession,
-    postgres_session_get_items_activity,
-    postgres_session_add_items_activity,
-    postgres_session_pop_item_activity,
-    postgres_session_clear_session_activity,
 )
 from openai_agents.memory.db_utils import IdempotenceHelper
 
@@ -32,12 +27,18 @@ async def main():
         messages_table="session_messages",
         sessions_table="session",
         operation_id_sequence="session_operation_id_sequence",
+        idempotence_table="activity_idempotence",
     )
-    PostgresSession.set_connection_factory(lambda: db_connection)
-    await init_schema(db_connection, config=postgres_session_config)
-    idempotence_helper = IdempotenceHelper(table_name="activity_idempotence")
+
+    # Create the idempotence table. This is used to ensure that activities are idempotent with
+    # respect to database modifications.
+    idempotence_helper = IdempotenceHelper(table_name=postgres_session_config.idempotence_table)
     await idempotence_helper.create_table(db_connection)
+
+    # Configure the Postgres Session with the database connection.
+    # Initialize the schema.
     PostgresSession.set_connection_factory(lambda: db_connection)
+    await PostgresSession.init_schema(config=postgres_session_config)
 
     # Create client connected to server at the given address
     client = await Client.connect(
@@ -53,16 +54,11 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue="openai-agents-memory-task-queue",
+        task_queue="openai-postgres-session-task-queue",
         workflows=[
             PostgresSessionWorkflow,
         ],
-        activities=[
-            postgres_session_get_items_activity,
-            postgres_session_add_items_activity,
-            postgres_session_pop_item_activity,
-            postgres_session_clear_session_activity,
-        ],
+        activities=[*PostgresSession.get_activities()],
     )
     await worker.run()
 

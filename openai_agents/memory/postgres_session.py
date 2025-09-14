@@ -56,42 +56,6 @@ class PostgresSessionConfig(BaseModel):
     idempotence_table: str = "activity_idempotence"
 
 
-async def init_schema(conn: asyncpg.Connection, config: PostgresSessionConfig) -> None:
-    """Initialize the PostgreSQL schema."""
-    async with conn.transaction():
-        # Create sessions table
-        sessions_ddl = f"""
-            CREATE TABLE IF NOT EXISTS {config.sessions_table} (
-                session_id TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW(),
-                updated_at TIMESTAMP DEFAULT NOW(),
-                PRIMARY KEY (session_id)
-            )
-        """
-        await conn.execute(sessions_ddl)
-
-        # Create operation_id sequence
-        operation_id_ddl = f"""
-            CREATE SEQUENCE IF NOT EXISTS {config.operation_id_sequence} START 1
-        """
-        await conn.execute(operation_id_ddl)
-
-        # Create messages table
-        messages_ddl = f"""
-            CREATE TABLE IF NOT EXISTS {config.messages_table} (
-                session_id TEXT NOT NULL,
-                operation_id INTEGER NOT NULL DEFAULT nextval('{config.operation_id_sequence}'),
-                message_data TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT NOW(),
-                deleted_at TIMESTAMP NULL,
-                PRIMARY KEY (session_id, operation_id),
-                FOREIGN KEY (session_id) 
-                REFERENCES {config.sessions_table} (session_id)
-                ON DELETE CASCADE
-            )
-        """
-        await conn.execute(messages_ddl)
-
 
 class PostgresSessionGetItemsRequest(BaseModel):
     config: PostgresSessionConfig
@@ -284,3 +248,50 @@ class PostgresSession(SessionABC):
         if _connection_factory is None:
             raise ValueError("Connection factory not set")
         return _connection_factory()
+
+    @staticmethod
+    async def init_schema(config: PostgresSessionConfig) -> None:
+        conn = PostgresSession._get_connection()
+        """Initialize the PostgreSQL schema."""
+        async with conn.transaction():
+            # Create sessions table
+            sessions_ddl = f"""
+                CREATE TABLE IF NOT EXISTS {config.sessions_table} (
+                    session_id TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    updated_at TIMESTAMP DEFAULT NOW(),
+                    PRIMARY KEY (session_id)
+                )
+            """
+            await conn.execute(sessions_ddl)
+
+            # Create operation_id sequence
+            operation_id_ddl = f"""
+                CREATE SEQUENCE IF NOT EXISTS {config.operation_id_sequence} START 1
+            """
+            await conn.execute(operation_id_ddl)
+
+            # Create messages table
+            messages_ddl = f"""
+                CREATE TABLE IF NOT EXISTS {config.messages_table} (
+                    session_id TEXT NOT NULL,
+                    operation_id INTEGER NOT NULL DEFAULT nextval('{config.operation_id_sequence}'),
+                    message_data TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT NOW(),
+                    deleted_at TIMESTAMP NULL,
+                    PRIMARY KEY (session_id, operation_id),
+                    FOREIGN KEY (session_id) 
+                    REFERENCES {config.sessions_table} (session_id)
+                    ON DELETE CASCADE
+                )
+            """
+            await conn.execute(messages_ddl)
+
+    @staticmethod
+    def get_activities() -> list[Callable[[], activity.Activity]]:
+        return [
+            postgres_session_get_items_activity,
+            postgres_session_add_items_activity,
+            postgres_session_pop_item_activity,
+            postgres_session_clear_session_activity,
+        ]

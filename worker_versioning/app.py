@@ -20,7 +20,10 @@ async def main() -> None:
     )
     await wait_for_worker_and_make_current(client, "1.0")
 
-    # Start auto-upgrading and pinned workflows
+    # Start auto-upgrading and pinned workflows. Importantly, note that when we start the workflows,
+    # we are using a workflow type name which does *not* include the version number. We defined them
+    # with versioned names so we could show changes to the code, but here when the client invokes
+    # them, we're demonstrating that the client remains version-agnostic.
     auto_upgrade_workflow_id = "worker-versioning-versioning-autoupgrade_" + str(
         uuid.uuid4()
     )

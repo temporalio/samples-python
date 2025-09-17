@@ -8,16 +8,28 @@ Before running these examples, be sure to review the [prerequisites and backgrou
 
 ## Running the Examples
 
-### File System MCP
+### File System MCP - Stateless
 
 First, start the worker (supports all MCP workflows):
 ```bash
-uv run openai_agents/mcp/run_file_system_worker.py
+uv run openai_agents/mcp/run_file_system_stateless_worker.py
 ```
 
 Connect to a hosted MCP server for file system operations:
 ```bash
-uv run openai_agents/mcp/run_file_system_workflow.py
+uv run openai_agents/mcp/run_file_system_stateless_workflow.py
 ```
 
 This sample assumes that the worker and `run_file_system_workflow.py` are on the same machine.
+
+### File System MCP - Stateful
+
+First, start the worker (supports all MCP workflows):
+```bash
+uv run openai_agents/mcp/run_file_system_stateful_worker.py
+```
+
+Connect to a hosted MCP server for file system operations:
+```bash
+uv run openai_agents/mcp/run_file_system_stateful_workflow.py
+```

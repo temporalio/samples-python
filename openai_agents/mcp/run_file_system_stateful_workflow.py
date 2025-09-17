@@ -4,7 +4,7 @@ import os
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.mcp.workflows.file_system_workflow import FileSystemWorkflow
+from openai_agents.mcp.workflows.file_system_stateful_workflow import FileSystemWorkflow
 
 
 async def main():
@@ -20,7 +20,7 @@ async def main():
     result = await client.execute_workflow(
         FileSystemWorkflow.run,
         id="file-system-workflow",
-        task_queue="openai-agents-mcp-task-queue",
+        task_queue="openai-agents-mcp-stateful-task-queue",
     )
 
     print(f"Result: {result}")

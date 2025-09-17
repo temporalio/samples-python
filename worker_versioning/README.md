@@ -10,6 +10,7 @@ The sample creates multiple worker versions (1.0, 1.1, and 2.0) within one deplo
 ### Steps to run this sample:
 
 1) Run a [Temporal service](https://github.com/temporalio/samples-python/tree/main/#how-to-use).
+   Ensure that you're using at least Server version 1.28.0 (CLI version 1.4.0).
 
 2) Start the main application (this will guide you through the sample):
 ```bash
@@ -21,4 +22,5 @@ uv run worker_versioning/app.py
    - When prompted, run: `uv run worker_versioning/workerv1_1.py`
    - When prompted, run: `uv run worker_versioning/workerv2.py`
 
-The sample will show how auto-upgrading workflows migrate to newer workers while pinned workflows remain on their original version.
+The sample will show how auto-upgrading workflows migrate to newer workers while pinned workflows
+remain on their original version.

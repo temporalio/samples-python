@@ -6,7 +6,8 @@ import uuid
 
 from temporalio.client import Client
 
-from worker_versioning.constants import DEPLOYMENT_NAME, TASK_QUEUE
+TASK_QUEUE = "worker-versioning"
+DEPLOYMENT_NAME = "my-deployment"
 
 logging.basicConfig(level=logging.INFO)
 
@@ -97,7 +98,6 @@ async def wait_for_worker_and_make_current(client: Client, build_id: str) -> Non
         deployment_name=DEPLOYMENT_NAME, build_id=build_id
     )
 
-    # Wait for the worker to appear
     while True:
         try:
             describe_request = wsv1.DescribeWorkerDeploymentRequest(
@@ -108,7 +108,6 @@ async def wait_for_worker_and_make_current(client: Client, build_id: str) -> Non
                 describe_request
             )
 
-            # Check if our version is present in the version summaries
             for version_summary in response.worker_deployment_info.version_summaries:
                 if (
                     version_summary.deployment_version.deployment_name

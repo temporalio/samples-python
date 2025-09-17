@@ -8,7 +8,7 @@ from temporalio.common import WorkerDeploymentVersion
 from temporalio.worker import Worker, WorkerDeploymentConfig
 
 from worker_versioning.activities import some_activity, some_incompatible_activity
-from worker_versioning.constants import DEPLOYMENT_NAME, TASK_QUEUE
+from worker_versioning.app import DEPLOYMENT_NAME, TASK_QUEUE
 from worker_versioning.workflows import AutoUpgradingWorkflowV1b, PinnedWorkflowV2
 
 logging.basicConfig(level=logging.INFO)

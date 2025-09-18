@@ -22,6 +22,7 @@ async def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     samples_dir = os.path.join(current_dir, "sample_files")
 
+    # TODO: StatelessMCPServer will switch to StatelessMCPServerProvider instead
     file_system_server = StatelessMCPServer(
         MCPServerStdio(
             name="FileSystemServer",

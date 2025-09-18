@@ -24,7 +24,7 @@ async def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     samples_dir = os.path.join(current_dir, "sample_files")
 
-    file_system_server = StatefulMCPServerProvider(
+    file_system_server_provider = StatefulMCPServerProvider(
         lambda: MCPServerStdio(
             name="FileSystemServer",
             params={
@@ -42,7 +42,7 @@ async def main():
                 model_params=ModelActivityParameters(
                     start_to_close_timeout=timedelta(seconds=60)
                 ),
-                mcp_servers=[file_system_server],
+                mcp_servers=[file_system_server_provider],
             ),
         ],
     )

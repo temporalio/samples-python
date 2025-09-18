@@ -1,4 +1,4 @@
-# Hosted MCP Examples
+# MCP Examples
 
 Integration with hosted MCP (Model Context Protocol) servers using OpenAI agents in Temporal workflows.
 

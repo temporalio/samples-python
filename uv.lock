@@ -1458,7 +1458,7 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "1.97.1"
+version = "1.108.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -1470,14 +1470,14 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/57/1c471f6b3efb879d26686d31582997615e969f3bb4458111c9705e56332e/openai-1.97.1.tar.gz", hash = "sha256:a744b27ae624e3d4135225da9b1c89c107a2a7e5bc4c93e5b7b5214772ce7a4e", size = 494267, upload-time = "2025-07-22T13:10:12.607Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/3c/3ea4c40c62d5f4b11690de13de35554d0d49b5e5780669fad5e83562d635/openai-1.108.0.tar.gz", hash = "sha256:e859c64e4202d7f5956f19280eee92bb281f211c41cdd5be9e63bf51a024ff72", size = 564659, upload-time = "2025-09-17T22:03:23.075Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/35/412a0e9c3f0d37c94ed764b8ac7adae2d834dbd20e69f6aca582118e0f55/openai-1.97.1-py3-none-any.whl", hash = "sha256:4e96bbdf672ec3d44968c9ea39d2c375891db1acc1794668d8149d5fa6000606", size = 764380, upload-time = "2025-07-22T13:10:10.689Z" },
+    { url = "https://files.pythonhosted.org/packages/af/dc/0a007b7c5a079e13d66eecc5d521bbc67b53c135e2a3131160ef76b5db1f/openai-1.108.0-py3-none-any.whl", hash = "sha256:31f2e58230e2703f13ddbb50c285f39dacf7fca64ab19882fd8a7a0b2bccd781", size = 948114, upload-time = "2025-09-17T22:03:20.972Z" },
 ]
 
 [[package]]
 name = "openai-agents"
-version = "0.2.3"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "griffe" },
@@ -1488,9 +1488,9 @@ dependencies = [
     { name = "types-requests" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e3/17/1f9eefb99fde956e5912a00fbdd03d50ebc734cc45a80b8fe4007d3813c2/openai_agents-0.2.3.tar.gz", hash = "sha256:95d4ad194c5c0cf1a40038cb701eee8ecdaaf7698d87bb13e3c2c5cff80c4b4d", size = 1464947, upload-time = "2025-07-21T19:34:20.595Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/49/78c902865ceb0432dae52f4a3feee8bcb57ce5be724c52e0119754fd421b/openai_agents-0.3.0.tar.gz", hash = "sha256:4d5d1a4f43cdc35b55c41ae4f31157cf5ff2e2c89563cde58616f8a77fde932d", size = 1700443, upload-time = "2025-09-11T19:20:09.742Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/a7/d6bdf69a54c15d237a2be979981f33dab8f5da53f9bc2e734fb2b58592ca/openai_agents-0.2.3-py3-none-any.whl", hash = "sha256:15c5602de7076a5df6d11f07a18ffe0cf4f6811f6135b301acdd1998398a6d5c", size = 161393, upload-time = "2025-07-21T19:34:18.883Z" },
+    { url = "https://files.pythonhosted.org/packages/46/3b/58ee42582716645aa1a5c30c1e337dc9a7433f7f0b5ed84ef02a35368abb/openai_agents-0.3.0-py3-none-any.whl", hash = "sha256:16de8a28729ae9e27faad7ce146a4b74acf05c9eeca3fe23299f6e621a3893ed", size = 185007, upload-time = "2025-09-11T19:20:08.304Z" },
 ]
 
 [package.optional-dependencies]
@@ -2596,14 +2596,18 @@ wheels = [
 
 [[package]]
 name = "temporalio"
-version = "1.16.0"
-source = { git = "https://github.com/temporalio/sdk-python.git?rev=openai%2Fmcp#f1a642c8b4280f8a46e6df2e5f7d75268e8d9df0" }
+version = "1.17.0"
+source = { registry = "../sdk-python/dist" }
 dependencies = [
     { name = "nexus-rpc" },
     { name = "protobuf" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'" },
     { name = "types-protobuf" },
     { name = "typing-extensions" },
+]
+sdist = { path = "temporalio-1.17.0.tar.gz" }
+wheels = [
+    { path = "temporalio-1.17.0-cp39-abi3-macosx_11_0_arm64.whl" },
 ]
 
 [package.optional-dependencies]
@@ -2737,8 +2741,8 @@ open-telemetry = [
     { name = "temporalio", extras = ["opentelemetry"] },
 ]
 openai-agents = [
-    { name = "openai-agents", extras = ["litellm"], specifier = ">=0.2.3" },
-    { name = "temporalio", extras = ["openai-agents"], git = "https://github.com/temporalio/sdk-python.git?rev=openai%2Fmcp" },
+    { name = "openai-agents", extras = ["litellm"], specifier = "==0.3.0" },
+    { name = "temporalio", extras = ["openai-agents"] },
 ]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]
 sentry = [{ name = "sentry-sdk", specifier = ">=2.13.0" }]

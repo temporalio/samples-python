@@ -13,7 +13,6 @@ class FileSystemWorkflow:
     async def run(self) -> str:
         async with temporal_openai_agents.workflow.stateful_mcp_server(
             "FileSystemServer",
-            #workflow.ActivityConfig(start_to_close_timeout=timedelta(seconds=120)),
         ) as server:
             with trace(workflow_name="MCP File System Example"):
                 agent = Agent(

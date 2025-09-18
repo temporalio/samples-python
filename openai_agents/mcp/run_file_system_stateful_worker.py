@@ -9,7 +9,7 @@ from temporalio.client import Client
 from temporalio.contrib.openai_agents import (
     ModelActivityParameters,
     OpenAIAgentsPlugin,
-    StatefulMCPServer,
+    StatefulMCPServerProvider,
 )
 import logging
 from temporalio.worker import Worker
@@ -24,8 +24,8 @@ async def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     samples_dir = os.path.join(current_dir, "sample_files")
 
-    file_system_server = StatefulMCPServer(
-        MCPServerStdio(
+    file_system_server = StatefulMCPServerProvider(
+        lambda: MCPServerStdio(
             name="FileSystemServer",
             params={
                 "command": "npx",

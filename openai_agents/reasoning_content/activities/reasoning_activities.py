@@ -31,6 +31,7 @@ async def get_reasoning_response(
         tracing=ModelTracing.DISABLED,
         previous_response_id=None,
         prompt=None,
+        conversation_id=None,
     )
 
     # Extract reasoning content and regular content from the response

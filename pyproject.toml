@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.15.0,<2"]
+dependencies = ["temporalio>=1.18.0,<2"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -56,7 +56,7 @@ open-telemetry = [
 ]
 openai-agents = [
     "openai-agents[litellm] >= 0.2.3",
-    "temporalio[openai-agents] >= 1.15.0",
+    "temporalio[openai-agents] >= 1.18.0",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=2.13.0"]

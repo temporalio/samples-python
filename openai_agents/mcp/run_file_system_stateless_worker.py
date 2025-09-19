@@ -3,13 +3,14 @@ from __future__ import annotations
 import asyncio
 import os
 from datetime import timedelta
+import uuid
 
 from agents.mcp import MCPServerStdio
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import (
     ModelActivityParameters,
     OpenAIAgentsPlugin,
-    StatelessMCPServer,
+    StatelessMCPServerProvider,
 )
 from temporalio.worker import Worker
 
@@ -23,8 +24,8 @@ async def main():
     samples_dir = os.path.join(current_dir, "sample_files")
 
     # TODO: StatelessMCPServer will switch to StatelessMCPServerProvider instead
-    file_system_server = StatelessMCPServer(
-        MCPServerStdio(
+    file_system_server = StatelessMCPServerProvider(
+        lambda: MCPServerStdio(
             name="FileSystemServer",
             params={
                 "command": "npx",
@@ -48,7 +49,7 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue="openai-agents-mcp-stateless-task-queue",
+        task_queue=f"openai-agents-mcp-stateless-task-queue-{uuid.uuid4()}",
         workflows=[
             FileSystemWorkflow,
         ],

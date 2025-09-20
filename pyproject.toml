@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.15.0,<2"]
+dependencies = ["temporalio>=1.18.0,<2"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"

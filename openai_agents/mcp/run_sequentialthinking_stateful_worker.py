@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from datetime import timedelta
 
 from agents.mcp import MCPServerStdio
@@ -14,25 +13,24 @@ from temporalio.contrib.openai_agents import (
 )
 from temporalio.worker import Worker
 
-from openai_agents.mcp.workflows.file_system_stateful_workflow import FileSystemWorkflow
+from openai_agents.mcp.workflows.sequentialthinking_stateful_workflow import (
+    SequentialThinkingWorkflow,
+)
 
 
 async def main():
     logging.basicConfig(level=logging.INFO)
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    samples_dir = os.path.join(current_dir, "sample_files")
 
-    file_system_server_provider = StatefulMCPServerProvider(
+    sequential_server_provider = StatefulMCPServerProvider(
         lambda: MCPServerStdio(
-            name="FileSystemServer",
+            name="SequentialThinkingServer",
             params={
                 "command": "npx",
-                "args": ["-y", "@modelcontextprotocol/server-filesystem", samples_dir],
+                "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
             },
         )
     )
 
-    # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",
         plugins=[
@@ -40,20 +38,18 @@ async def main():
                 model_params=ModelActivityParameters(
                     start_to_close_timeout=timedelta(seconds=60)
                 ),
-                mcp_servers=[file_system_server_provider],
+                mcp_servers=[sequential_server_provider],
             ),
         ],
     )
 
     worker = Worker(
         client,
-        task_queue="openai-agents-mcp-filesystem-stateful-task-queue",
+        task_queue="openai-agents-mcp-sequential-stateful-task-queue",
         workflows=[
-            FileSystemWorkflow,
+            SequentialThinkingWorkflow,
         ],
-        activities=[
-            # No custom activities needed for these workflows
-        ],
+        activities=[],
     )
     await worker.run()
 

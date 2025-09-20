@@ -23,16 +23,20 @@ uv run openai_agents/mcp/run_file_system_stateless_workflow.py
 
 This sample assumes that the worker and `run_file_system_workflow.py` are on the same machine.
 
-### File System MCP - Stateful
+### Sequential Thinking MCP - Stateful
+
+This example demonstrates a stateful MCP server that maintains a sequential plan across multiple agent runs within a single workflow execution.
+
+Note: This example is not a direct port from the OpenAI SDK samples; it is added here because it better illustrates stateful behavior than the filesystem server.
 
 First, start the worker:
 ```bash
-uv run openai_agents/mcp/run_file_system_stateful_worker.py
+uv run openai_agents/mcp/run_sequentialthinking_stateful_worker.py
 ```
 
 Run the workflow:
 ```bash
-uv run openai_agents/mcp/run_file_system_stateful_workflow.py
+uv run openai_agents/mcp/run_sequentialthinking_stateful_workflow.py
 ```
 
 ### Streamable HTTP MCP - Stateless

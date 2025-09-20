@@ -11,7 +11,7 @@ from temporalio.contrib import openai_agents
 class SseWorkflow:
     @workflow.run
     async def run(self) -> str:
-        with trace(workflow_name="MCP SSE Example"):
+        with trace(workflow_name="SSE Example"):
             server: MCPServer = openai_agents.workflow.stateless_mcp_server("SseServer")
             agent = Agent(
                 name="Assistant",

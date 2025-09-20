@@ -9,22 +9,22 @@ Before running these examples, be sure to review the [prerequisites and backgrou
 
 ## Running the Examples
 
-### File System MCP - Stateless
+### Stdio MCP
 
 First, start the worker:
 ```bash
-uv run openai_agents/mcp/run_file_system_stateless_worker.py
+uv run openai_agents/mcp/run_file_system_worker.py
 ```
 
 Run the workflow:
 ```bash
-uv run openai_agents/mcp/run_file_system_stateless_workflow.py
+uv run openai_agents/mcp/run_file_system_workflow.py
 ```
 
 This sample assumes that the worker and `run_file_system_workflow.py` are on the same machine.
 
 
-### Streamable HTTP MCP - Stateless
+### Streamable HTTP MCP
 
 First, start the worker:
 ```bash
@@ -33,15 +33,15 @@ uv run openai_agents/mcp/servers/tools_server.py --transport=streamable-http
 
 Then start the worker:
 ```bash
-uv run openai_agents/mcp/run_streamable_http_stateless_worker.py
+uv run openai_agents/mcp/run_streamable_http_worker.py
 ```
 
 Finally, run the workflow:
 ```bash
-uv run openai_agents/mcp/run_streamable_http_stateless_workflow.py
+uv run openai_agents/mcp/run_streamable_http_workflow.py
 ```
 
-### SSE MCP - Stateless
+### SSE MCP
 
 First, start the MCP server:
 ```bash
@@ -50,15 +50,15 @@ uv run openai_agents/mcp/servers/tools_server.py --transport=sse
 
 Then start the worker:
 ```bash
-uv run openai_agents/mcp/run_sse_stateless_worker.py
+uv run openai_agents/mcp/run_sse_worker.py
 ```
 
 Finally, run the workflow:
 ```bash
-uv run openai_agents/mcp/run_sse_stateless_workflow.py
+uv run openai_agents/mcp/run_sse_workflow.py
 ```
 
-### Prompt Server MCP - Stateless
+### Prompt Server MCP
 
 First, start the MCP server:
 ```bash
@@ -67,22 +67,22 @@ uv run openai_agents/mcp/servers/prompt_server.py
 
 Then start the worker:
 ```bash
-uv run openai_agents/mcp/run_prompt_server_stateless_worker.py
+uv run openai_agents/mcp/run_prompt_server_worker.py
 ```
 
 Finally, run the workflow:
 ```bash
-uv run openai_agents/mcp/run_prompt_server_stateless_workflow.py
+uv run openai_agents/mcp/run_prompt_server_workflow.py
 ```
 
 
-### Memory MCP - Stateful (Research Scratchpad)
+### Memory MCP (Research Scratchpad)
 
 Demonstrates durable note-taking with the Memory MCP server: write seed notes, query by tags, synthesize a brief with citations, then update and delete notes.
 
 Start the worker:
 ```bash
-uv run openai_agents/mcp/run_memory_stateful_worker.py
+uv run openai_agents/mcp/run_memory_worker.py
 ```
 
 Run the research scratchpad workflow:

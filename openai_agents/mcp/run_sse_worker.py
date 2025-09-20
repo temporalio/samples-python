@@ -13,7 +13,7 @@ from temporalio.contrib.openai_agents import (
 )
 from temporalio.worker import Worker
 
-from openai_agents.mcp.workflows.sse_stateless_workflow import SseWorkflow
+from openai_agents.mcp.workflows.sse_workflow import SseWorkflow
 
 
 async def main():
@@ -46,7 +46,7 @@ async def main():
 
         worker = Worker(
             client,
-            task_queue="openai-agents-mcp-sse-stateless-task-queue",
+            task_queue="openai-agents-mcp-sse-task-queue",
             workflows=[
                 SseWorkflow,
             ],

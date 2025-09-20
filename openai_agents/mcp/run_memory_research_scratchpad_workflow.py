@@ -19,7 +19,7 @@ async def main():
     result = await client.execute_workflow(
         MemoryResearchScratchpadWorkflow.run,
         id="memory-research-scratchpad-workflow",
-        task_queue="openai-agents-mcp-memory-stateful-task-queue",
+        task_queue="openai-agents-mcp-memory-task-queue",
     )
 
     print(f"Result:\n{result}")

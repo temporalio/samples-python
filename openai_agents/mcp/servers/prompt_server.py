@@ -33,5 +33,26 @@ RESPONSE FORMAT:
 Use the available tools to check current time if you need timestamps for your analysis."""
 
 
+@mcp.prompt()
+def generate_review_rubric(target: str = "application code") -> str:
+    """Generate a scoring rubric for reviewing code or plans"""
+    return f"""You are evaluating {target}. Score each category 1-5 and justify briefly.
+
+CATEGORIES:
+- Correctness and Reliability
+- Security and Risk
+- Performance and Efficiency
+- Readability and Maintainability
+- Testability and Coverage
+- Compliance with Style/Guidelines
+
+FORMAT:
+- Overall Score (1-5)
+- Category Scores (bulleted)
+- Top 3 Issues (with impact level and suggested fix)
+- Quick Wins (3 bullets)
+"""
+
+
 if __name__ == "__main__":
     mcp.run(transport="streamable-http")

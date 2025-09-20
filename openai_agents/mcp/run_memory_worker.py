@@ -46,7 +46,7 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue="openai-agents-mcp-memory-stateful-task-queue",
+        task_queue="openai-agents-mcp-memory-task-queue",
         workflows=[
             MemoryResearchScratchpadWorkflow,
         ],

@@ -11,7 +11,7 @@ from temporalio.contrib import openai_agents
 class StreamableHttpWorkflow:
     @workflow.run
     async def run(self) -> str:
-        with trace(workflow_name="MCP Streamable HTTP Example"):
+        with trace(workflow_name="Streamable HTTP Example"):
             server: MCPServer = openai_agents.workflow.stateless_mcp_server(
                 "StreamableHttpServer"
             )

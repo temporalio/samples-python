@@ -13,9 +13,7 @@ from temporalio.contrib.openai_agents import (
 )
 from temporalio.worker import Worker
 
-from openai_agents.mcp.workflows.prompt_server_stateless_workflow import (
-    PromptServerWorkflow,
-)
+from openai_agents.mcp.workflows.streamable_http_workflow import StreamableHttpWorkflow
 
 
 async def main():
@@ -24,9 +22,9 @@ async def main():
     print("Setting up worker...\n")
 
     try:
-        prompt_server_provider = StatelessMCPServerProvider(
+        streamable_http_server_provider = StatelessMCPServerProvider(
             lambda: MCPServerStreamableHttp(
-                name="PromptServer",
+                name="StreamableHttpServer",
                 params={
                     "url": "http://localhost:8000/mcp",
                 },
@@ -39,18 +37,18 @@ async def main():
             plugins=[
                 OpenAIAgentsPlugin(
                     model_params=ModelActivityParameters(
-                        start_to_close_timeout=timedelta(seconds=120)
+                        start_to_close_timeout=timedelta(seconds=60)
                     ),
-                    mcp_servers=[prompt_server_provider],
+                    mcp_servers=[streamable_http_server_provider],
                 ),
             ],
         )
 
         worker = Worker(
             client,
-            task_queue="openai-agents-mcp-prompt-stateless-task-queue",
+            task_queue="openai-agents-mcp-streamable-http-task-queue",
             workflows=[
-                PromptServerWorkflow,
+                StreamableHttpWorkflow,
             ],
             activities=[
                 # No custom activities needed for these workflows

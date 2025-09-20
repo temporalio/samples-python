@@ -14,9 +14,7 @@ from temporalio.contrib.openai_agents import (
 )
 from temporalio.worker import Worker
 
-from openai_agents.mcp.workflows.file_system_stateless_workflow import (
-    FileSystemWorkflow,
-)
+from openai_agents.mcp.workflows.file_system_workflow import FileSystemWorkflow
 
 
 async def main():
@@ -49,7 +47,7 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue=f"openai-agents-mcp-filesystem-stateless-task-queue",
+        task_queue=f"openai-agents-mcp-filesystem-task-queue",
         workflows=[
             FileSystemWorkflow,
         ],

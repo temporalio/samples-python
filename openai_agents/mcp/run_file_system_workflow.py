@@ -1,25 +1,25 @@
-from __future__ import annotations
-
 import asyncio
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.mcp.workflows.sse_stateless_workflow import SseWorkflow
+from openai_agents.mcp.workflows.file_system_workflow import FileSystemWorkflow
 
 
 async def main():
     # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",
-        plugins=[OpenAIAgentsPlugin()],
+        plugins=[
+            OpenAIAgentsPlugin(),
+        ],
     )
 
     # Execute a workflow
     result = await client.execute_workflow(
-        SseWorkflow.run,
-        id="sse-stateless-workflow",
-        task_queue="openai-agents-mcp-sse-stateless-task-queue",
+        FileSystemWorkflow.run,
+        id="file-system-workflow",
+        task_queue="openai-agents-mcp-filesystem-task-queue",
     )
 
     print(f"Result: {result}")

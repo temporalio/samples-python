@@ -5,9 +5,7 @@ import asyncio
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.mcp.workflows.streamable_http_stateless_workflow import (
-    StreamableHttpWorkflow,
-)
+from openai_agents.mcp.workflows.streamable_http_workflow import StreamableHttpWorkflow
 
 
 async def main():
@@ -20,8 +18,8 @@ async def main():
     # Execute a workflow
     result = await client.execute_workflow(
         StreamableHttpWorkflow.run,
-        id="streamable-http-stateless-workflow",
-        task_queue="openai-agents-mcp-streamable-http-stateless-task-queue",
+        id="streamable-http-workflow",
+        task_queue="openai-agents-mcp-streamable-http-task-queue",
     )
 
     print(f"Result: {result}")

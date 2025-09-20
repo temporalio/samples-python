@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import shutil
+import logging
 from datetime import timedelta
 
 from agents.mcp import MCPServerSse
@@ -11,15 +11,14 @@ from temporalio.contrib.openai_agents import (
     OpenAIAgentsPlugin,
     StatelessMCPServerProvider,
 )
-import logging
 from temporalio.worker import Worker
 
 from openai_agents.mcp.workflows.sse_stateless_workflow import SseWorkflow
 
 
 async def main():
-    logging.basicConfig(level=logging.DEBUG)
-    
+    logging.basicConfig(level=logging.INFO)
+
     print("Setting up worker...\n")
 
     try:
@@ -55,7 +54,6 @@ async def main():
                 # No custom activities needed for these workflows
             ],
         )
-        logging.debug("STARTED WORKER")
         await worker.run()
     except Exception as e:
         print(f"Worker failed: {e}")

@@ -21,19 +21,19 @@ class FileSystemWorkflow:
 
                 # List the files it can read
                 message = "Read the files and list them."
-                print(f"Running: {message}")
+                workflow.logger.info(f"Running: {message}")
                 result1 = await Runner.run(starting_agent=agent, input=message)
 
                 # Ask about books
                 message = "What is my #1 favorite book?"
-                print(f"\n\nRunning: {message}")
+                workflow.logger.info(f"Running: {message}")
                 result2 = await Runner.run(starting_agent=agent, input=message)
 
                 # Ask a question that reads then reasons.
                 message = (
                     "Look at my favorite songs. Suggest one new song that I might like."
                 )
-                print(f"\n\nRunning: {message}")
+                workflow.logger.info(f"Running: {message}")
                 result3 = await Runner.run(starting_agent=agent, input=message)
 
                 return f"{result1.final_output}\n\n{result2.final_output}\n\n{result3.final_output}"

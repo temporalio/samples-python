@@ -1,11 +1,11 @@
 import asyncio
+import uuid
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.mcp.workflows.file_system_stateful_workflow import FileSystemWorkflow
 
-import uuid
 
 async def main():
     # Create client connected to server at the given address

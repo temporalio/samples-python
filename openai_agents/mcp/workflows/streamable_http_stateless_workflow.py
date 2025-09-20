@@ -22,17 +22,17 @@ class StreamableHttpWorkflow:
 
             # Use the `add` tool to add two numbers
             message = "Add these numbers: 7 and 22."
-            print(f"Running: {message}")
+            workflow.logger.info(f"Running: {message}")
             result1 = await Runner.run(starting_agent=agent, input=message)
 
             # Run the `get_weather` tool
             message = "What's the weather in Tokyo?"
-            print(f"\n\nRunning: {message}")
+            workflow.logger.info(f"Running: {message}")
             result2 = await Runner.run(starting_agent=agent, input=message)
 
             # Run the `get_secret_word` tool
             message = "What's the secret word?"
-            print(f"\n\nRunning: {message}")
+            workflow.logger.info(f"Running: {message}")
             result3 = await Runner.run(starting_agent=agent, input=message)
 
             return f"{result1.final_output}\n\n{result2.final_output}\n\n{result3.final_output}"

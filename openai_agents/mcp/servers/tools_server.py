@@ -36,9 +36,9 @@ if __name__ == "__main__":
         "--transport",
         choices=["streamable-http", "sse"],
         default="streamable-http",
-        help="Transport type (default: streamable-http)"
+        help="Transport type (default: streamable-http)",
     )
     args = parser.parse_args()
-    
+
     print(f"Starting Tools Server with {args.transport} transport...")
     mcp.run(transport=args.transport)

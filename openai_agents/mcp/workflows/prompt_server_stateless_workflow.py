@@ -16,31 +16,33 @@ class PromptServerWorkflow:
             )
 
             # Show available prompts
-            print("=== AVAILABLE PROMPTS ===")
+            workflow.logger.info("=== AVAILABLE PROMPTS ===")
             prompts_result = await server.list_prompts()
-            print("User can select from these prompts:")
+            workflow.logger.info("User can select from these prompts:")
             for i, prompt in enumerate(prompts_result.prompts, 1):
-                print(f"  {i}. {prompt.name} - {prompt.description}")
-            print()
+                workflow.logger.info(f"  {i}. {prompt.name} - {prompt.description}")
+            workflow.logger.info("")
 
             # Demo code review with user-selected prompt
-            print("=== CODE REVIEW DEMO ===")
+            workflow.logger.info("=== CODE REVIEW DEMO ===")
 
             # Get instructions from prompt
-            print("Getting instructions from prompt: generate_code_review_instructions")
+            workflow.logger.info(
+                "Getting instructions from prompt: generate_code_review_instructions"
+            )
             try:
-                prompt_result = await server.get_prompt("generate_code_review_instructions", {
-                    "focus": "security vulnerabilities",
-                    "language": "python"
-                })
+                prompt_result = await server.get_prompt(
+                    "generate_code_review_instructions",
+                    {"focus": "security vulnerabilities", "language": "python"},
+                )
                 content = prompt_result.messages[0].content
                 if hasattr(content, "text"):
                     instructions = content.text
                 else:
                     instructions = str(content)
-                print("Generated instructions")
+                workflow.logger.info("Generated instructions")
             except Exception as e:
-                print(f"Failed to get instructions: {e}")
+                workflow.logger.info(f"Failed to get instructions: {e}")
                 instructions = f"You are a helpful assistant. Error: {e}"
 
             agent = Agent(
@@ -57,9 +59,9 @@ def process_user_input(user_input):
 
 """
 
-            print(f"Running: {message[:60]}...")
+            workflow.logger.info(f"Running: {message[:60]}...")
             result = await Runner.run(starting_agent=agent, input=message)
-            print(result.final_output)
-            print("\n" + "=" * 50 + "\n")
+            workflow.logger.info(result.final_output)
+            workflow.logger.info("\n" + "=" * 50 + "\n")
 
             return "Prompt server demo completed successfully"

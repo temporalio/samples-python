@@ -4,7 +4,9 @@ import asyncio
 
 from temporalio.client import Client
 
-from openai_agents.mcp.workflows.prompt_server_stateless_workflow import PromptServerWorkflow
+from openai_agents.mcp.workflows.prompt_server_stateless_workflow import (
+    PromptServerWorkflow,
+)
 
 
 async def main():

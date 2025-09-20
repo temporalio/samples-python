@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from datetime import timedelta
-import uuid
 
 from agents.mcp import MCPServerStdio
 from temporalio.client import Client
@@ -20,6 +20,7 @@ from openai_agents.mcp.workflows.file_system_stateless_workflow import (
 
 
 async def main():
+    logging.basicConfig(level=logging.INFO)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     samples_dir = os.path.join(current_dir, "sample_files")
 
@@ -49,7 +50,7 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue=f"openai-agents-mcp-stateless-task-queue-{uuid.uuid4()}",
+        task_queue=f"openai-agents-mcp-stateless-task-queue",
         workflows=[
             FileSystemWorkflow,
         ],

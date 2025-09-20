@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from datetime import timedelta
 
@@ -11,16 +12,13 @@ from temporalio.contrib.openai_agents import (
     OpenAIAgentsPlugin,
     StatefulMCPServerProvider,
 )
-import logging
 from temporalio.worker import Worker
 
 from openai_agents.mcp.workflows.file_system_stateful_workflow import FileSystemWorkflow
 
 
 async def main():
-
-    logging.basicConfig(level=logging.DEBUG)
-    
+    logging.basicConfig(level=logging.INFO)
     current_dir = os.path.dirname(os.path.abspath(__file__))
     samples_dir = os.path.join(current_dir, "sample_files")
 
@@ -57,7 +55,6 @@ async def main():
             # No custom activities needed for these workflows
         ],
     )
-    logging.debug("STARTED WORKER")
     await worker.run()
 
 

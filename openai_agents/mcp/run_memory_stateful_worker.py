@@ -13,24 +13,25 @@ from temporalio.contrib.openai_agents import (
 )
 from temporalio.worker import Worker
 
-from openai_agents.mcp.workflows.sequentialthinking_stateful_workflow import (
-    SequentialThinkingWorkflow,
+from openai_agents.mcp.workflows.memory_research_scratchpad_workflow import (
+    MemoryResearchScratchpadWorkflow,
 )
 
 
 async def main():
     logging.basicConfig(level=logging.INFO)
 
-    sequential_server_provider = StatefulMCPServerProvider(
+    memory_server_provider = StatefulMCPServerProvider(
         lambda: MCPServerStdio(
-            name="SequentialThinkingServer",
+            name="MemoryServer",
             params={
                 "command": "npx",
-                "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+                "args": ["-y", "@modelcontextprotocol/server-memory"],
             },
         )
     )
 
+    # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",
         plugins=[
@@ -38,16 +39,16 @@ async def main():
                 model_params=ModelActivityParameters(
                     start_to_close_timeout=timedelta(seconds=60)
                 ),
-                mcp_servers=[sequential_server_provider],
+                mcp_servers=[memory_server_provider],
             ),
         ],
     )
 
     worker = Worker(
         client,
-        task_queue="openai-agents-mcp-sequential-stateful-task-queue",
+        task_queue="openai-agents-mcp-memory-stateful-task-queue",
         workflows=[
-            SequentialThinkingWorkflow,
+            MemoryResearchScratchpadWorkflow,
         ],
         activities=[],
     )

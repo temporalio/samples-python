@@ -23,21 +23,6 @@ uv run openai_agents/mcp/run_file_system_stateless_workflow.py
 
 This sample assumes that the worker and `run_file_system_workflow.py` are on the same machine.
 
-### Sequential Thinking MCP - Stateful
-
-This example demonstrates a stateful MCP server that maintains a sequential plan across multiple agent runs within a single workflow execution.
-
-Note: This example is not a direct port from the OpenAI SDK samples; it is added here because it better illustrates stateful behavior than the filesystem server.
-
-First, start the worker:
-```bash
-uv run openai_agents/mcp/run_sequentialthinking_stateful_worker.py
-```
-
-Run the workflow:
-```bash
-uv run openai_agents/mcp/run_sequentialthinking_stateful_workflow.py
-```
 
 ### Streamable HTTP MCP - Stateless
 
@@ -88,4 +73,19 @@ uv run openai_agents/mcp/run_prompt_server_stateless_worker.py
 Finally, run the workflow:
 ```bash
 uv run openai_agents/mcp/run_prompt_server_stateless_workflow.py
+```
+
+
+### Memory MCP - Stateful (Research Scratchpad)
+
+Demonstrates durable note-taking with the Memory MCP server: write seed notes, query by tags, synthesize a brief with citations, then update and delete notes.
+
+Start the worker:
+```bash
+uv run openai_agents/mcp/run_memory_stateful_worker.py
+```
+
+Run the research scratchpad workflow:
+```bash
+uv run openai_agents/mcp/run_memory_research_scratchpad_workflow.py
 ```

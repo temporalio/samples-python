@@ -5,8 +5,8 @@ import asyncio
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.mcp.workflows.sequentialthinking_stateful_workflow import (
-    SequentialThinkingWorkflow,
+from openai_agents.mcp.workflows.memory_research_scratchpad_workflow import (
+    MemoryResearchScratchpadWorkflow,
 )
 
 
@@ -17,12 +17,12 @@ async def main():
     )
 
     result = await client.execute_workflow(
-        SequentialThinkingWorkflow.run,
-        id="sequentialthinking-stateful-workflow",
-        task_queue="openai-agents-mcp-sequential-stateful-task-queue",
+        MemoryResearchScratchpadWorkflow.run,
+        id="memory-research-scratchpad-workflow",
+        task_queue="openai-agents-mcp-memory-stateful-task-queue",
     )
 
-    print(f"Result: {result}")
+    print(f"Result:\n{result}")
 
 
 if __name__ == "__main__":

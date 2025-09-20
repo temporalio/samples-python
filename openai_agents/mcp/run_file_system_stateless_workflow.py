@@ -1,5 +1,4 @@
 import asyncio
-import uuid
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
@@ -21,8 +20,8 @@ async def main():
     # Execute a workflow
     result = await client.execute_workflow(
         FileSystemWorkflow.run,
-        id=f"file-system-workflow-{uuid.uuid4()}",
-        task_queue="openai-agents-mcp-stateless-task-queue",
+        id="file-system-stateless-workflow",
+        task_queue="openai-agents-mcp-filesystem-stateless-task-queue",
     )
 
     print(f"Result: {result}")

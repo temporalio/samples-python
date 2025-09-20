@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from agents import Agent, Runner, trace
 from agents.mcp import MCPServer
+from agents.model_settings import ModelSettings
 from temporalio import workflow
 from temporalio.contrib import openai_agents
 
@@ -48,6 +49,7 @@ class PromptServerWorkflow:
             agent = Agent(
                 name="Code Reviewer Agent",
                 instructions=instructions,
+                model_settings=ModelSettings(tool_choice="auto"),
             )
 
             message = """Please review this code:

@@ -47,7 +47,7 @@ async def main():
 
     worker = Worker(
         client,
-        task_queue="openai-agents-mcp-stateful-task-queue",
+        task_queue="openai-agents-mcp-filesystem-stateful-task-queue",
         workflows=[
             FileSystemWorkflow,
         ],

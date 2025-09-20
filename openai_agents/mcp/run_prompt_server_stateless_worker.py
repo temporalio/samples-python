@@ -48,7 +48,7 @@ async def main():
 
         worker = Worker(
             client,
-            task_queue="openai-agents-mcp-stateless-task-queue",
+            task_queue="openai-agents-mcp-prompt-stateless-task-queue",
             workflows=[
                 PromptServerWorkflow,
             ],

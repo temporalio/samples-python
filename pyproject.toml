@@ -57,6 +57,7 @@ open-telemetry = [
 openai-agents = [
     "openai-agents[litellm] == 0.3.0",
     "temporalio[openai-agents] >= 1.18.0",
+    "requests>=2.32.0,<3",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=2.13.0"]

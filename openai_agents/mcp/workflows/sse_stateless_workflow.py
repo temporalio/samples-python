@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from agents import Agent, Runner, trace
 from agents.mcp import MCPServer
+from agents.model_settings import ModelSettings
 from temporalio import workflow
 from temporalio.contrib import openai_agents
 
@@ -16,6 +17,7 @@ class SseWorkflow:
                 name="Assistant",
                 instructions="Use the tools to answer the questions.",
                 mcp_servers=[server],
+                model_settings=ModelSettings(tool_choice="required"),
             )
 
             # Use the `add` tool to add two numbers

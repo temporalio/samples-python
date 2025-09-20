@@ -1,6 +1,6 @@
 # MCP Examples
 
-Integration with hosted MCP (Model Context Protocol) servers using OpenAI agents in Temporal workflows.
+Integration with MCP (Model Context Protocol) servers using OpenAI agents in Temporal workflows.
 
 *Adapted from [OpenAI Agents SDK MCP examples](https://github.com/openai/openai-agents-python/tree/main/examples/mcp)*
 

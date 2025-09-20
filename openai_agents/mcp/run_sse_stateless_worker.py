@@ -46,7 +46,7 @@ async def main():
 
         worker = Worker(
             client,
-            task_queue="openai-agents-mcp-stateless-task-queue",
+            task_queue="openai-agents-mcp-sse-stateless-task-queue",
             workflows=[
                 SseWorkflow,
             ],

@@ -2797,6 +2797,7 @@ open-telemetry = [
 ]
 openai-agents = [
     { name = "openai-agents", extra = ["litellm"] },
+    { name = "requests" },
     { name = "temporalio", extra = ["openai-agents"] },
 ]
 pydantic-converter = [
@@ -2859,6 +2860,7 @@ open-telemetry = [
 ]
 openai-agents = [
     { name = "openai-agents", extras = ["litellm"], specifier = "==0.3.0" },
+    { name = "requests", specifier = ">=2.32.0,<3" },
     { name = "temporalio", extras = ["openai-agents"], specifier = ">=1.18.0" },
 ]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]

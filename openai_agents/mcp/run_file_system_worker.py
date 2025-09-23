@@ -40,7 +40,7 @@ async def main():
                 model_params=ModelActivityParameters(
                     start_to_close_timeout=timedelta(seconds=60)
                 ),
-                mcp_servers=[file_system_server],
+                mcp_server_providers=[file_system_server],
             ),
         ],
     )

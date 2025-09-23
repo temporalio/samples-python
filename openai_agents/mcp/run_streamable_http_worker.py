@@ -39,7 +39,7 @@ async def main():
                     model_params=ModelActivityParameters(
                         start_to_close_timeout=timedelta(seconds=60)
                     ),
-                    mcp_servers=[streamable_http_server_provider],
+                    mcp_server_providers=[streamable_http_server_provider],
                 ),
             ],
         )

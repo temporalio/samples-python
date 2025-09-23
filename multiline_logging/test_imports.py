@@ -4,7 +4,7 @@ Test that all imports work correctly
 """
 
 try:
-    from interceptor import MultilineLoggingInterceptor
+    from .interceptor import MultilineLoggingInterceptor
 
     print("✅ Interceptor imports successfully")
 
@@ -12,7 +12,7 @@ try:
 
     print("✅ Activities import successfully")
 
-    from workflows import MultilineLoggingWorkflow
+    from .workflows import MultilineLoggingWorkflow
 
     print("✅ Workflows import successfully")
 

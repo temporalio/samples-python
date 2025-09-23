@@ -1,5 +1,7 @@
 import asyncio
+
 from temporalio.client import Client
+
 from multiline_logging.workflows import MultilineLoggingWorkflow
 
 
@@ -8,8 +10,8 @@ async def main():
 
     test_cases = [
         "activity_exception",
-        "complex_activity_exception", 
-        "workflow_exception"
+        "complex_activity_exception",
+        "workflow_exception",
     ]
 
     for test_case in test_cases:
@@ -19,7 +21,7 @@ async def main():
                 MultilineLoggingWorkflow.run,
                 test_case,
                 id=f"multiline-logging-{test_case}",
-                task_queue="multiline-logging-task-queue"
+                task_queue="multiline-logging-task-queue",
             )
             print(f"Result: {result}")
         except Exception as e:

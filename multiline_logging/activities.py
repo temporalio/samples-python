@@ -16,10 +16,12 @@ async def failing_activity(should_fail: bool) -> str:
 @activity.defn
 async def complex_failing_activity() -> str:
     """Activity that creates a complex multiline traceback"""
+
     def nested_function():
         def deeply_nested():
             raise Exception("Deep exception with\nvery long\nmultiline\nerror message")
+
         deeply_nested()
-    
+
     nested_function()
     return "This won't be reached"

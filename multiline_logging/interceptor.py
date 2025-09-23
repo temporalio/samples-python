@@ -24,11 +24,11 @@ class _MultilineLoggingActivityInboundInterceptor(ActivityInboundInterceptor):
             exception_data = {
                 "message": str(e),
                 "type": type(e).__name__,
-                "traceback": traceback.format_exc().replace("\n", " | ")
+                "traceback": traceback.format_exc().replace("\n", " | "),
             }
-            
+
             logger.error(f"Activity exception: {json.dumps(exception_data)}")
-            
+
             raise e
 
 
@@ -40,13 +40,13 @@ class _MultilineLoggingWorkflowInterceptor(WorkflowInboundInterceptor):
             exception_data = {
                 "message": str(e),
                 "type": type(e).__name__,
-                "traceback": traceback.format_exc().replace("\n", " | ")
+                "traceback": traceback.format_exc().replace("\n", " | "),
             }
-            
+
             if not workflow.unsafe.is_replaying():
                 with workflow.unsafe.sandbox_unrestricted():
                     logger.error(f"Workflow exception: {json.dumps(exception_data)}")
-            
+
             raise e
 
 
@@ -56,7 +56,9 @@ class MultilineLoggingInterceptor(Interceptor):
     def intercept_activity(
         self, next: ActivityInboundInterceptor
     ) -> ActivityInboundInterceptor:
-        return _MultilineLoggingActivityInboundInterceptor(super().intercept_activity(next))
+        return _MultilineLoggingActivityInboundInterceptor(
+            super().intercept_activity(next)
+        )
 
     def workflow_interceptor_class(
         self, input: WorkflowInterceptorClassInput

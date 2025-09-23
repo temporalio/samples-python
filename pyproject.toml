@@ -91,6 +91,7 @@ packages = [
     "hello",
     "langchain",
     "message_passing",
+    "multiline_logging",
     "nexus",
     "open_telemetry",
     "patching",

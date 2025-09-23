@@ -19,11 +19,11 @@ def test_multiline_formatting():
         exception_data = {
             "message": str(e),
             "type": type(e).__name__,
-            "traceback": traceback.format_exc().replace("\n", " | ")
+            "traceback": traceback.format_exc().replace("\n", " | "),
         }
-        
+
         json_output = json.dumps(exception_data)
-        
+
         print("Original exception message:")
         print(repr(str(e)))
         print("\nFormatted JSON output:")
@@ -32,7 +32,7 @@ def test_multiline_formatting():
         print(f"- Contains newlines in JSON: {'\\n' in json_output}")
         print(f"- JSON is valid: {json.loads(json_output) is not None}")
         print(f"- Single line: {json_output.count('\\n') == 0}")
-        
+
         return json_output
 
 

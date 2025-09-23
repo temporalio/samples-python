@@ -1,13 +1,15 @@
 import asyncio
 import logging
+
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from multiline_logging.activities import failing_activity, complex_failing_activity
+from multiline_logging.activities import complex_failing_activity, failing_activity
 from multiline_logging.interceptor import MultilineLoggingInterceptor
 from multiline_logging.workflows import MultilineLoggingWorkflow
 
 logging.basicConfig(level=logging.INFO)
+
 
 async def main():
     client = await Client.connect("localhost:7233")

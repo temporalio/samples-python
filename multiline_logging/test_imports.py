@@ -8,7 +8,7 @@ try:
 
     print("✅ Interceptor imports successfully")
 
-    from activities import complex_failing_activity, failing_activity
+    from .activities import complex_failing_activity, failing_activity
 
     print("✅ Activities import successfully")
 

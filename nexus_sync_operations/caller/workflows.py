@@ -2,7 +2,6 @@ from temporalio import workflow
 
 from message_passing.introduction import Language
 from message_passing.introduction.workflows import (
-    ApproveInput,
     GetLanguagesInput,
     SetLanguageInput,
     SetLanguageUsingActivityInput,
@@ -49,8 +48,3 @@ class CallerWorkflow:
             == Language.ARABIC
         )
         print(f"language changed: {previous_language.name} -> {Language.ARABIC.name}")
-
-        # Approve
-        await nexus_client.execute_operation(
-            GreetingService.approve, ApproveInput(name="")
-        )

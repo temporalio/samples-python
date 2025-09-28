@@ -2,7 +2,6 @@ import nexusrpc
 
 from message_passing.introduction import Language
 from message_passing.introduction.workflows import (
-    ApproveInput,
     GetLanguagesInput,
     SetLanguageInput,
     SetLanguageUsingActivityInput,
@@ -17,4 +16,3 @@ class GreetingService:
     set_language_using_activity: nexusrpc.Operation[
         SetLanguageUsingActivityInput, Language
     ]
-    approve: nexusrpc.Operation[ApproveInput, None]

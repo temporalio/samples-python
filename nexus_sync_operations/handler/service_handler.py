@@ -7,13 +7,11 @@ workflow.
 from __future__ import annotations
 
 import nexusrpc
-from temporalio import nexus
 from temporalio.client import Client, WorkflowHandle
 from temporalio.common import WorkflowIDConflictPolicy
 
 from message_passing.introduction import Language
 from message_passing.introduction.workflows import (
-    ApproveInput,
     GetLanguagesInput,
     GreetingWorkflow,
     SetLanguageInput,
@@ -77,13 +75,4 @@ class GreetingServiceHandler:
     ) -> Language:
         return await self.greeting_workflow_handle.execute_update(
             GreetingWorkflow.set_language_using_activity, input.language
-        )
-
-    @nexusrpc.handler.sync_operation
-    async def approve(
-        self, ctx: nexusrpc.handler.StartOperationContext, input: ApproveInput
-    ) -> None:
-        await self.greeting_workflow_handle.signal(GreetingWorkflow.approve, input)
-        self.greeting_workflow_handle = await self._get_workflow_handle(
-            nexus.client(), nexus.info().task_queue
         )

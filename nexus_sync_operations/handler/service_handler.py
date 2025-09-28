@@ -7,6 +7,7 @@ workflow.
 from __future__ import annotations
 
 import nexusrpc
+from temporalio import nexus
 from temporalio.client import Client, WorkflowHandle
 from temporalio.common import WorkflowIDConflictPolicy
 
@@ -31,15 +32,20 @@ class GreetingServiceHandler:
 
     @classmethod
     async def create(cls, client: Client, task_queue: str) -> GreetingServiceHandler:
-        # Obtain a workflow handle to the long-running workflow that baxks this service, starting
+        # Obtain a workflow handle to the long-running workflow that backs this service, starting
         # the workflow if it is not already running.
-        wf_handle = await client.start_workflow(
+        return cls(await cls._get_workflow_handle(client, task_queue))
+
+    @staticmethod
+    async def _get_workflow_handle(
+        client: Client, task_queue: str
+    ) -> WorkflowHandle[GreetingWorkflow, str]:
+        return await client.start_workflow(
             GreetingWorkflow.run,
             id="nexus-sync-operations-greeting-workflow",
             task_queue=task_queue,
             id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
         )
-        return cls(wf_handle)
 
     @nexusrpc.handler.sync_operation
     async def get_languages(
@@ -77,6 +83,7 @@ class GreetingServiceHandler:
     async def approve(
         self, ctx: nexusrpc.handler.StartOperationContext, input: ApproveInput
     ) -> None:
-        return await self.greeting_workflow_handle.signal(
-            GreetingWorkflow.approve, input
+        await self.greeting_workflow_handle.signal(GreetingWorkflow.approve, input)
+        self.greeting_workflow_handle = await self._get_workflow_handle(
+            nexus.client(), nexus.info().task_queue
         )

@@ -30,8 +30,8 @@ async def main(client: Optional[Client] = None):
     previous_language = await wf_handle.execute_update(
         GreetingWorkflow.set_language, Language.CHINESE
     )
-    current_language = await wf_handle.query(GreetingWorkflow.get_language)
-    print(f"language changed: {previous_language.name} -> {current_language.name}")
+    assert await wf_handle.query(GreetingWorkflow.get_language) == Language.CHINESE
+    print(f"language changed: {previous_language.name} -> {Language.CHINESE.name}")
 
     # 👉 Start an Update and then wait for it to complete
     update_handle = await wf_handle.start_update(
@@ -40,8 +40,8 @@ async def main(client: Optional[Client] = None):
         wait_for_stage=WorkflowUpdateStage.ACCEPTED,
     )
     previous_language = await update_handle.result()
-    current_language = await wf_handle.query(GreetingWorkflow.get_language)
-    print(f"language changed: {previous_language.name} -> {current_language.name}")
+    assert await wf_handle.query(GreetingWorkflow.get_language) == Language.ARABIC
+    print(f"language changed: {previous_language.name} -> {Language.ARABIC.name}")
 
     # 👉 Send a Signal
     await wf_handle.signal(GreetingWorkflow.approve, ApproveInput(name=""))

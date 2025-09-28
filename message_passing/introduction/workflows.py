@@ -17,6 +17,16 @@ class GetLanguagesInput:
 
 
 @dataclass
+class SetLanguageInput:
+    language: Language
+
+
+@dataclass
+class SetLanguageUsingActivityInput:
+    language: Language
+
+
+@dataclass
 class ApproveInput:
     name: str
 

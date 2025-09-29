@@ -15,7 +15,6 @@ from message_passing.introduction.workflows import (
     GetLanguagesInput,
     GreetingWorkflow,
     SetLanguageInput,
-    SetLanguageUsingActivityInput,
 )
 from nexus_sync_operations.service import GreetingService
 
@@ -61,18 +60,10 @@ class GreetingServiceHandler:
 
     @nexusrpc.handler.sync_operation
     async def set_language(
-        self, ctx: nexusrpc.handler.StartOperationContext, input: SetLanguageInput
-    ) -> Language:
-        return await self.greeting_workflow_handle.execute_update(
-            GreetingWorkflow.set_language, input.language
-        )
-
-    @nexusrpc.handler.sync_operation
-    async def set_language_using_activity(
         self,
         ctx: nexusrpc.handler.StartOperationContext,
-        input: SetLanguageUsingActivityInput,
+        input: SetLanguageInput,
     ) -> Language:
         return await self.greeting_workflow_handle.execute_update(
-            GreetingWorkflow.set_language_using_activity, input.language
+            GreetingWorkflow.set_language_using_activity, input
         )

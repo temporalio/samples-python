@@ -4,7 +4,6 @@ from message_passing.introduction import Language
 from message_passing.introduction.workflows import (
     GetLanguagesInput,
     SetLanguageInput,
-    SetLanguageUsingActivityInput,
 )
 
 with workflow.unsafe.imports_passed_through():
@@ -30,18 +29,8 @@ class CallerWorkflow:
 
         # Set language
         previous_language = await nexus_client.execute_operation(
-            GreetingService.set_language, SetLanguageInput(language=Language.CHINESE)
-        )
-        assert (
-            await nexus_client.execute_operation(GreetingService.get_language, None)
-            == Language.CHINESE
-        )
-        print(f"language changed: {previous_language.name} -> {Language.CHINESE.name}")
-
-        # Set language using remote service
-        previous_language = await nexus_client.execute_operation(
-            GreetingService.set_language_using_activity,
-            SetLanguageUsingActivityInput(language=Language.ARABIC),
+            GreetingService.set_language,
+            SetLanguageInput(language=Language.ARABIC),
         )
         assert (
             await nexus_client.execute_operation(GreetingService.get_language, None)

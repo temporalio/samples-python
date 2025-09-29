@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from typing import Type
 
 import pytest
 from temporalio import workflow
@@ -69,47 +70,7 @@ async def test_nexus_sync_operations(client: Client, env: WorkflowEnvironment):
     if env.supports_time_skipping:
         pytest.skip("Nexus tests don't work under the Java test server")
 
-    create_response = await create_nexus_endpoint(
-        name=NEXUS_ENDPOINT,
-        task_queue=nexus_sync_operations.handler.worker.TASK_QUEUE,
-        client=client,
-    )
-    try:
-        await (
-            nexus_sync_operations.handler.service_handler.GreetingServiceHandler.start(
-                client, nexus_sync_operations.handler.worker.TASK_QUEUE
-            )
-        )
-        handler_worker_task = asyncio.create_task(
-            nexus_sync_operations.handler.worker.main(client)
-        )
-        try:
-            async with Worker(
-                client,
-                task_queue="test-caller-task-queue",
-                workflows=[TestCallerWorkflow],
-            ):
-                await client.execute_workflow(
-                    TestCallerWorkflow.run,
-                    id=str(uuid.uuid4()),
-                    task_queue="test-caller-task-queue",
-                )
-        finally:
-            nexus_sync_operations.handler.worker.interrupt_event.set()
-            await handler_worker_task
-            nexus_sync_operations.handler.worker.interrupt_event.clear()
-            try:
-                await client.get_workflow_handle(
-                    nexus_sync_operations.handler.service_handler.GreetingServiceHandler.LONG_RUNNING_WORKFLOW_ID
-                ).terminate()
-            except Exception:
-                pass
-    finally:
-        await delete_nexus_endpoint(
-            id=create_response.endpoint.id,
-            version=create_response.endpoint.version,
-            client=client,
-        )
+    await _run_caller_workflow(client, TestCallerWorkflow)
 
 
 async def test_nexus_sync_operations_caller_workflow(
@@ -121,6 +82,10 @@ async def test_nexus_sync_operations_caller_workflow(
     if env.supports_time_skipping:
         pytest.skip("Nexus tests don't work under the Java test server")
 
+    await _run_caller_workflow(client, CallerWorkflow)
+
+
+async def _run_caller_workflow(client: Client, workflow: Type):
     create_response = await create_nexus_endpoint(
         name=NEXUS_ENDPOINT,
         task_queue=nexus_sync_operations.handler.worker.TASK_QUEUE,
@@ -139,10 +104,10 @@ async def test_nexus_sync_operations_caller_workflow(
             async with Worker(
                 client,
                 task_queue="test-caller-task-queue",
-                workflows=[CallerWorkflow],
+                workflows=[workflow],
             ):
                 await client.execute_workflow(
-                    CallerWorkflow.run,
+                    workflow.run,
                     id=str(uuid.uuid4()),
                     task_queue="test-caller-task-queue",
                 )

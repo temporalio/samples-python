@@ -1,5 +1,7 @@
 This sample shows how to create a Nexus service that is backed by a long-running workflow and
-exposes operations that use signals, queries, and updates against that workflow.
+exposes operations that execute updates and queries against that workflow. The long-running
+workflow, and the updates/queries are private implementation detail of the nexus service: the caller
+does not know how the operations are implemented.
 
 ### Sample directory structure
 

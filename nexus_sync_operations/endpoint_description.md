@@ -2,5 +2,3 @@
 - operation: `get_languages`
 - operation: `get_language`
 - operation: `set_language`
-- operation: `set_language_using_activity`
-- operation: `approve`

@@ -22,7 +22,8 @@ async def main(client: Optional[Client] = None):
         "localhost:7233",
         namespace=NAMESPACE,
     )
-    greeting_service_handler = await GreetingServiceHandler.create(client, TASK_QUEUE)
+    greeting_service_handler = GreetingServiceHandler()
+    await greeting_service_handler.start(client, TASK_QUEUE)
 
     async with Worker(
         client,

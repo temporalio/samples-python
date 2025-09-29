@@ -1,10 +1,12 @@
+"""
+This is a workflow that calls nexus operations. The caller does not have information about how these
+operations are implemented by the nexus service.
+"""
+
 from temporalio import workflow
 
 from message_passing.introduction import Language
-from message_passing.introduction.workflows import (
-    GetLanguagesInput,
-    SetLanguageInput,
-)
+from message_passing.introduction.workflows import GetLanguagesInput, SetLanguageInput
 
 with workflow.unsafe.imports_passed_through():
     from nexus_sync_operations.service import GreetingService

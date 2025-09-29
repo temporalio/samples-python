@@ -9,6 +9,7 @@ from message_passing.introduction.workflows import (
     GetLanguagesInput,
     GreetingWorkflow,
     Language,
+    SetLanguageInput,
 )
 
 
@@ -28,7 +29,7 @@ async def main(client: Optional[Client] = None):
 
     # 👉 Execute an Update
     previous_language = await wf_handle.execute_update(
-        GreetingWorkflow.set_language, Language.CHINESE
+        GreetingWorkflow.set_language, SetLanguageInput(language=Language.CHINESE)
     )
     assert await wf_handle.query(GreetingWorkflow.get_language) == Language.CHINESE
     print(f"language changed: {previous_language.name} -> {Language.CHINESE.name}")
@@ -36,7 +37,7 @@ async def main(client: Optional[Client] = None):
     # 👉 Start an Update and then wait for it to complete
     update_handle = await wf_handle.start_update(
         GreetingWorkflow.set_language_using_activity,
-        Language.ARABIC,
+        SetLanguageInput(language=Language.ARABIC),
         wait_for_stage=WorkflowUpdateStage.ACCEPTED,
     )
     previous_language = await update_handle.result()

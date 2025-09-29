@@ -22,11 +22,6 @@ class SetLanguageInput:
 
 
 @dataclass
-class SetLanguageUsingActivityInput:
-    language: Language
-
-
-@dataclass
 class ApproveInput:
     name: str
 
@@ -84,21 +79,21 @@ class GreetingWorkflow:
         self.approver_name = input.name
 
     @workflow.update
-    def set_language(self, language: Language) -> Language:
+    def set_language(self, input: SetLanguageInput) -> Language:
         # 👉 An Update handler can mutate the Workflow state and return a value.
-        previous_language, self.language = self.language, language
+        previous_language, self.language = self.language, input.language
         return previous_language
 
     @set_language.validator
-    def validate_language(self, language: Language) -> None:
-        if language not in self.greetings:
+    def validate_language(self, input: SetLanguageInput) -> None:
+        if input.language not in self.greetings:
             # 👉 In an Update validator you raise any exception to reject the Update.
-            raise ValueError(f"{language.name} is not supported")
+            raise ValueError(f"{input.language.name} is not supported")
 
     @workflow.update
-    async def set_language_using_activity(self, language: Language) -> Language:
+    async def set_language_using_activity(self, input: SetLanguageInput) -> Language:
         # 👉 This update handler is async, so it can execute an activity.
-        if language not in self.greetings:
+        if input.language not in self.greetings:
             # 👉 We use a lock so that, if this handler is executed multiple
             # times, each execution can schedule the activity only when the
             # previously scheduled activity has completed. This ensures that
@@ -106,7 +101,7 @@ class GreetingWorkflow:
             async with self.lock:
                 greeting = await workflow.execute_activity(
                     call_greeting_service,
-                    language,
+                    input.language,
                     start_to_close_timeout=timedelta(seconds=10),
                 )
                 # 👉 The requested language might not be supported by the remote
@@ -118,10 +113,10 @@ class GreetingWorkflow:
                 # this purpose.)
                 if greeting is None:
                     raise ApplicationError(
-                        f"Greeting service does not support {language.name}"
+                        f"Greeting service does not support {input.language.name}"
                     )
-                self.greetings[language] = greeting
-        previous_language, self.language = self.language, language
+                self.greetings[input.language] = greeting
+        previous_language, self.language = self.language, input.language
         return previous_language
 
     @workflow.query

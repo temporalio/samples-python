@@ -82,7 +82,7 @@ Demonstrates durable note-taking with the Memory MCP server: write seed notes, q
 
 Start the worker:
 ```bash
-uv run openai_agents/mcp/run_memory_worker.py
+uv run openai_agents/mcp/run_memory_research_scratchpad_worker.py
 ```
 
 Run the research scratchpad workflow:

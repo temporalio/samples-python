@@ -92,11 +92,6 @@ async def _run_caller_workflow(client: Client, workflow: Type):
         client=client,
     )
     try:
-        await (
-            nexus_sync_operations.handler.service_handler.GreetingServiceHandler.start(
-                client, nexus_sync_operations.handler.worker.TASK_QUEUE
-            )
-        )
         handler_worker_task = asyncio.create_task(
             nexus_sync_operations.handler.worker.main(client)
         )
@@ -115,12 +110,6 @@ async def _run_caller_workflow(client: Client, workflow: Type):
             nexus_sync_operations.handler.worker.interrupt_event.set()
             await handler_worker_task
             nexus_sync_operations.handler.worker.interrupt_event.clear()
-            try:
-                await client.get_workflow_handle(
-                    nexus_sync_operations.handler.service_handler.GreetingServiceHandler.LONG_RUNNING_WORKFLOW_ID
-                ).terminate()
-            except Exception:
-                pass
     finally:
         await delete_nexus_endpoint(
             id=create_response.endpoint.id,

@@ -21,22 +21,21 @@ from nexus_sync_operations.service import GreetingService
 
 @nexusrpc.handler.service_handler(service=GreetingService)
 class GreetingServiceHandler:
-    # This nexus service is backed by a long-running "entity" workflow. This means that the workflow
-    # is always running in the background, allowing the service to be stateful and durable. The
-    # service interacts with it via messages (updates and queries). All of this is implementation
-    # detail private to the nexus handler: the nexus caller does not know how the operations are
-    # implemented or what is providing the backing storage.
-    LONG_RUNNING_WORKFLOW_ID = "nexus-sync-operations-greeting-workflow"
+    def __init__(self, workflow_id: str):
+        self.workflow_id = workflow_id
 
     @classmethod
-    async def start(cls, client: Client, task_queue: str) -> None:
+    async def create(
+        cls, workflow_id: str, client: Client, task_queue: str
+    ) -> GreetingServiceHandler:
         # Start the long-running "entity" workflow, if it is not already running.
         await client.start_workflow(
             GreetingWorkflow.run,
-            id=cls.LONG_RUNNING_WORKFLOW_ID,
+            id=workflow_id,
             task_queue=task_queue,
             id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
         )
+        return cls(workflow_id)
 
     @property
     def greeting_workflow_handle(self) -> WorkflowHandle[GreetingWorkflow, str]:
@@ -48,7 +47,7 @@ class GreetingServiceHandler:
         # long-running work in a nexus operation handler, use
         # temporalio.nexus.workflow_run_operation (see the hello_nexus sample).
         return nexus.client().get_workflow_handle_for(
-            GreetingWorkflow.run, self.LONG_RUNNING_WORKFLOW_ID
+            GreetingWorkflow.run, self.workflow_id
         )
 
     # 👉 This is a handler for a nexus operation whose internal implementation involves executing a

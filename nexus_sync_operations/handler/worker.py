@@ -22,8 +22,12 @@ async def main(client: Optional[Client] = None):
         "localhost:7233",
         namespace=NAMESPACE,
     )
-    greeting_service_handler = GreetingServiceHandler()
-    await greeting_service_handler.start(client, TASK_QUEUE)
+
+    # Create the nexus service handler instance, starting the long-running entity workflow that
+    # backs the Nexus service
+    greeting_service_handler = await GreetingServiceHandler.create(
+        "nexus-sync-operations-greeting-workflow", client, TASK_QUEUE
+    )
 
     async with Worker(
         client,

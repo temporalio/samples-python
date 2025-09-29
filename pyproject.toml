@@ -55,7 +55,7 @@ open-telemetry = [
     "opentelemetry-exporter-otlp-proto-grpc",
 ]
 openai-agents = [
-    "openai-agents[litellm] == 0.3.0",
+    "openai-agents[litellm] == 0.3.2",
     "temporalio[openai-agents] >= 1.18.0",
     "requests>=2.32.0,<3",
 ]

@@ -17,7 +17,8 @@ NEXUS_ENDPOINT = "nexus-sync-operations-nexus-endpoint"
 @workflow.defn
 class CallerWorkflow:
     @workflow.run
-    async def run(self) -> None:
+    async def run(self) -> list[str]:
+        log = []
         nexus_client = workflow.create_nexus_client(
             service=GreetingService,
             endpoint=NEXUS_ENDPOINT,
@@ -27,7 +28,7 @@ class CallerWorkflow:
         supported_languages = await nexus_client.execute_operation(
             GreetingService.get_languages, GetLanguagesInput(include_unsupported=False)
         )
-        print(f"supported languages: {supported_languages}")
+        log.append(f"supported languages: {supported_languages}")
 
         # Set language
         previous_language = await nexus_client.execute_operation(
@@ -38,4 +39,8 @@ class CallerWorkflow:
             await nexus_client.execute_operation(GreetingService.get_language, None)
             == Language.ARABIC
         )
-        print(f"language changed: {previous_language.name} -> {Language.ARABIC.name}")
+        log.append(
+            f"language changed: {previous_language.name} -> {Language.ARABIC.name}"
+        )
+
+        return log

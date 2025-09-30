@@ -24,11 +24,13 @@ async def execute_caller_workflow(
         task_queue=TASK_QUEUE,
         workflows=[CallerWorkflow],
     ):
-        await client.execute_workflow(
+        log = await client.execute_workflow(
             CallerWorkflow.run,
             id=str(uuid.uuid4()),
             task_queue=TASK_QUEUE,
         )
+        for line in log:
+            print(line)
 
 
 if __name__ == "__main__":

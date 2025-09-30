@@ -12,7 +12,7 @@ call the operations from a workflow.
 
 Start a Temporal server. (See the main samples repo [README](../README.md)).
 
-Run the following:
+Run the following to create the caller and handler namespaces, and the Nexus endpoint:
 
 ```
 temporal operator namespace create --namespace hello-nexus-basic-handler-namespace

@@ -9,7 +9,8 @@ A Nexus service definition is used by Nexus callers (e.g. a Temporal workflow) t
 type-safe clients, and it is used by Nexus handlers to validate that they implement
 correctly-named operation handlers with the correct input and output types.
 
-The service defined in this file features two operations: echo and hello.
+The service defined in this file exposes two operations: my_sync_operation and
+my_workflow_run_operation.
 """
 
 from dataclasses import dataclass

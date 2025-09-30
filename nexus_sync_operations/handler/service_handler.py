@@ -69,7 +69,9 @@ class GreetingServiceHandler:
         return await self.greeting_workflow_handle.query(GreetingWorkflow.get_language)
 
     # 👉 This is a handler for a nexus operation whose internal implementation involves executing an
-    # update against a long-running workflow that is private to the nexus service.
+    # update against a long-running workflow that is private to the nexus service. Although updates
+    # can run for an arbitrarily long time, when exposing an update via a nexus sync operation the
+    # update should execute quickly (sync operations must complete in under 10s).
     @nexusrpc.handler.sync_operation
     async def set_language(
         self,

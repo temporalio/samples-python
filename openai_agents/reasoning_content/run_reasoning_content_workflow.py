@@ -27,10 +27,10 @@ async def main():
         "Write a haiku about recursion in programming",
     ]
 
-    model_name = os.getenv("EXAMPLE_MODEL_NAME") or "deepseek-reasoner"
+    model_name = os.getenv("EXAMPLE_MODEL_NAME") or "gpt-5"
     print(f"Using model: {model_name}")
     print("Note: This example requires a model that supports reasoning content.")
-    print("You may need to use a specific model like deepseek-reasoner or similar.\n")
+    print("You may need to use a specific model like gpt-5 or similar.\n")
 
     for i, prompt in enumerate(demo_prompts, 1):
         print(f"=== Example {i}: {prompt} ===")

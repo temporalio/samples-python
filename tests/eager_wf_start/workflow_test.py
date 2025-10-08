@@ -3,8 +3,9 @@ import uuid
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from eager_wf_start.workflows import EagerWorkflow
 from eager_wf_start.activities import greeting
+from eager_wf_start.workflows import EagerWorkflow
+
 
 async def test_eager_wf_start(client: Client):
     task_queue_name = str(uuid.uuid4())

@@ -45,6 +45,8 @@ async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
             dev_server_extra_args=[
                 "--dynamic-config-value",
                 "frontend.enableExecuteMultiOperation=true",
+                "--dynamic-config-value",
+                "system.enableEagerWorkflowStart=true",
             ]
         )
     elif env_type == "time-skipping":

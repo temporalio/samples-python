@@ -2,7 +2,7 @@
 
 This sample shows how to create a workflow that uses Eager Workflow Start.
 
-Eager Workflow Start is feature that reduces the time it takes to start a Workflow. The target use case is short-lived Workflows that interact with other services using Local Activities, as such, we'll be using Local Activities in this sample.
+The target use case is workflows whose first task needs to execute quickly (ex: payment verification in an online checkout workflow). That work typically can't be done directly in the workflow (ex: using web APIs, databases, etc.), and also needs to avoid the overhead of dispatching another task. Using a Local Activity suffices both needs, which this sample demonstrates.
 
 You can read more about Eager Workflow Start in our:
 

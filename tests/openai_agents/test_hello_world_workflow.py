@@ -7,12 +7,11 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from openai_agents.basic.activities.get_weather_activity import get_weather
+from openai_agents.basic.activities.image_activities import read_image_as_base64
 from openai_agents.basic.activities.math_activities import (
     multiply_by_two,
     random_number,
 )
-from openai_agents.basic.activities.image_activities import read_image_as_base64
-
 from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
 
 

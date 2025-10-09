@@ -36,11 +36,13 @@ def event_loop():
     yield loop
     loop.close()
 
+
 @pytest.fixture(scope="session")
 def plugins():
     # By default, no plugins.
     # Other tests can override this fixture, such as in tests/openai_agents/conftest.py
     return []
+
 
 @pytest_asyncio.fixture(scope="session")
 async def env(request, plugins) -> AsyncGenerator[WorkflowEnvironment, None]:
@@ -53,12 +55,14 @@ async def env(request, plugins) -> AsyncGenerator[WorkflowEnvironment, None]:
                 "--dynamic-config-value",
                 "system.enableEagerWorkflowStart=true",
             ],
-            plugins=plugins
+            plugins=plugins,
         )
     elif env_type == "time-skipping":
         env = await WorkflowEnvironment.start_time_skipping()
     else:
-        env = WorkflowEnvironment.from_client(await Client.connect(env_type, plugins=plugins))
+        env = WorkflowEnvironment.from_client(
+            await Client.connect(env_type, plugins=plugins)
+        )
     yield env
     await env.shutdown()
 

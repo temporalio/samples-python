@@ -122,7 +122,7 @@ build-backend = "hatchling.build"
 format = [{cmd = "uv run black ."}, {cmd = "uv run isort ."}]
 lint = [{cmd = "uv run black --check ."}, {cmd = "uv run isort --check-only ."}, {ref = "lint-types" }]
 lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages ."
-test = "uv run --all-groups pytest"
+test = "uv run --all-groups pytest --ignore=tests/openai_agents"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

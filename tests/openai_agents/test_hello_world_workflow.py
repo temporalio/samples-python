@@ -15,7 +15,6 @@ from openai_agents.basic.activities.math_activities import (
 from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
 
 
-@pytest.mark.fixt_data(42)
 async def test_execute_workflow(client: Client):
     task_queue_name = str(uuid.uuid4())
 

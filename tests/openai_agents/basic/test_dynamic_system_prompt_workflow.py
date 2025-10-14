@@ -1,7 +1,6 @@
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
 from temporalio.client import Client
 from temporalio.worker import Worker
 
@@ -18,7 +17,6 @@ async def test_execute_workflow_with_random_style(client: Client):
         task_queue=task_queue_name,
         workflows=[DynamicSystemPromptWorkflow],
         activity_executor=ThreadPoolExecutor(5),
-        # No external activities needed
     ):
         result = await client.execute_workflow(
             DynamicSystemPromptWorkflow.run,
@@ -41,7 +39,6 @@ async def test_execute_workflow_with_specific_style(client: Client):
         task_queue=task_queue_name,
         workflows=[DynamicSystemPromptWorkflow],
         activity_executor=ThreadPoolExecutor(5),
-        # No external activities needed
     ):
         result = await client.execute_workflow(
             DynamicSystemPromptWorkflow.run,

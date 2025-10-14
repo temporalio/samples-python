@@ -1,7 +1,6 @@
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
 from temporalio.client import Client
 from temporalio.worker import Worker
 
@@ -30,17 +29,14 @@ async def test_execute_workflow(client: Client):
         # Verify the result has the expected structure
         assert isinstance(result, dict)
 
-        # Should have either strict_result or strict_error
-        assert "strict_result" in result or "strict_error" in result
-
-        # Should have either non_strict_result or non_strict_error
-        assert "non_strict_result" in result or "non_strict_error" in result
+        assert "strict_error" in result
+        assert "non_strict_result" in result
 
         # If there's a strict_error, it should be a string
         if "strict_error" in result:
             assert isinstance(result["strict_error"], str)
             assert len(result["strict_error"]) > 0
 
-        # If there's a non_strict_result, verify it's valid
-        if "non_strict_result" in result:
-            assert result["non_strict_result"] is not None
+        jokes = result["non_strict_result"]["jokes"]
+        assert isinstance(jokes, dict)
+        assert isinstance(jokes[list(jokes.keys())[0]], str)

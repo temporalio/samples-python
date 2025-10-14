@@ -1,7 +1,6 @@
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
 from temporalio.client import Client
 from temporalio.worker import Worker
 
@@ -16,7 +15,6 @@ async def test_execute_workflow(client: Client):
         task_queue=task_queue_name,
         workflows=[LifecycleWorkflow],
         activity_executor=ThreadPoolExecutor(5),
-        # No external activities needed - workflow uses function tools
     ):
         result = await client.execute_workflow(
             LifecycleWorkflow.run,
@@ -26,7 +24,6 @@ async def test_execute_workflow(client: Client):
         )
 
         # Verify the result has the expected structure
-        assert hasattr(result, "number")
         assert isinstance(result.number, int)
         assert (
             0 <= result.number <= 20

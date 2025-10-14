@@ -1,7 +1,6 @@
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
-import pytest
 from temporalio.client import Client
 from temporalio.worker import Worker
 

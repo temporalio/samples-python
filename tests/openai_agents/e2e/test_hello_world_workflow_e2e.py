@@ -1,0 +1,26 @@
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+
+from temporalio.client import Client
+from temporalio.worker import Worker
+
+from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
+
+
+async def test_execute_workflow(client: Client):
+    task_queue_name = str(uuid.uuid4())
+
+    async with Worker(
+        client,
+        task_queue=task_queue_name,
+        workflows=[HelloWorldAgent],
+        activity_executor=ThreadPoolExecutor(5),
+    ):
+        result = await client.execute_workflow(
+            HelloWorldAgent.run,
+            "Write a recursive haiku about recursive haikus.",
+            id=str(uuid.uuid4()),
+            task_queue=task_queue_name,
+        )
+        assert isinstance(result, str)
+        assert len(result) > 0

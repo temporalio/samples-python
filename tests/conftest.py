@@ -37,14 +37,14 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def plugins():
     # By default, no plugins.
     # Other tests can override this fixture, such as in tests/openai_agents/conftest.py
     return []
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def env(request, plugins) -> AsyncGenerator[WorkflowEnvironment, None]:
     env_type = request.config.getoption("--workflow-environment")
     if env_type == "local":

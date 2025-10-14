@@ -1,10 +1,41 @@
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
+from agents import ModelResponse, Usage
+from openai.types.responses import ResponseOutputMessage, ResponseOutputText
 from temporalio.client import Client
 from temporalio.worker import Worker
 
 from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
+
+
+@pytest.fixture
+def mocked_model(mocker):
+    mock = mocker.AsyncMock()
+    mock.get_response.side_effect = [
+        ModelResponse(
+            output=[
+                ResponseOutputMessage(
+                    id="1",
+                    content=[
+                        ResponseOutputText(
+                            annotations=[],
+                            text="This is a haiku (not really)",
+                            type="output_text",
+                        )
+                    ],
+                    role="assistant",
+                    status="completed",
+                    type="message",
+                )
+            ],
+            usage=Usage(requests=1, input_tokens=1, output_tokens=1, total_tokens=1),
+            response_id="1",
+        )
+    ]
+
+    return mock
 
 
 async def test_execute_workflow(client: Client):

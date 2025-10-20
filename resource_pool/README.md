@@ -16,7 +16,7 @@ You should see output indicating that the `ResourcePoolWorkflow` serialized acce
 
 You can query the set of current resource resource holders with:
 
-    tctl wf query -w resource_pool --qt get_current_holders
+    temporal workflow query --workflow-id resource_pool --name get_current_holders
 
 # Other approaches
 
@@ -41,7 +41,7 @@ Temporal's durable execution guarantees, this can only happen if:
 
 If a leak were to happen, you could discover the identity of the leaker using the query above, then:
 
-    tctl wf signal -w resource_pool --name release_resource --input '{ "release_key": "<the key from the query above>" }
+    temporal workflow signal --workflow-id resource_pool --name release_resource --input '{ "release_key": "<the key from the query above>" }'
 
 Performance: A single ResourcePoolWorkflow scales to tens, but not hundreds, of request/release events per second. It is
 best suited for allocating resources to long-running workflows. Actual performance will depend on your temporal server's

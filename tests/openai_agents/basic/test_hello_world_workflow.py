@@ -8,34 +8,43 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
+from tests.openai_agents.conftest import sequential_test_model
 
 
 @pytest.fixture
-def mocked_model(mocker):
-    mock = mocker.AsyncMock()
-    mock.get_response.side_effect = [
-        ModelResponse(
-            output=[
-                ResponseOutputMessage(
-                    id="1",
-                    content=[
-                        ResponseOutputText(
-                            annotations=[],
-                            text="This is a haiku (not really)",
-                            type="output_text",
-                        )
-                    ],
-                    role="assistant",
-                    status="completed",
-                    type="message",
-                )
-            ],
-            usage=Usage(requests=1, input_tokens=1, output_tokens=1, total_tokens=1),
-            response_id="1",
-        )
-    ]
+def test_model():
+    return sequential_test_model(
+        [
+            ModelResponse(
+                output=[
+                    ResponseOutputMessage(
+                        id="1",
+                        content=[
+                            ResponseOutputText(
+                                annotations=[],
+                                text="This is a haiku (not really)",
+                                type="output_text",
+                            )
+                        ],
+                        role="assistant",
+                        status="completed",
+                        type="message",
+                    )
+                ],
+                usage=Usage(
+                    requests=1, input_tokens=1, output_tokens=1, total_tokens=1
+                ),
+                response_id="1",
+            )
+        ]
+    )
 
-    return mock
+
+@pytest.fixture
+def test_model():
+    return TestModel.returning_responses(
+        [ResponseBuilders.output_message("This is a haiku (not really)")]
+    )
 
 
 async def test_execute_workflow(client: Client):

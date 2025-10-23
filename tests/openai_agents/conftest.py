@@ -2,21 +2,23 @@ from datetime import timedelta
 from typing import Optional
 
 import pytest
-from agents import Model, ModelProvider
-from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
+from agents import ModelProvider, ModelResponse
+from temporalio.contrib.openai_agents import (
+    ModelActivityParameters,
+    OpenAIAgentsPlugin,
+    TestModel,
+    TestModelProvider,
+)
 
 
-class MockedModelProvider(ModelProvider):
-    def __init__(self, mocked_model):
-        self.mocked_model = mocked_model
-
-    def get_model(self, model_name: str | None) -> Model:
-        return self.mocked_model
+def sequential_test_model(responses: list[ModelResponse]) -> TestModel:
+    responses = iter(responses)
+    return TestModel(lambda: next(responses))
 
 
 @pytest.fixture
-def model_provider(mocked_model):
-    return MockedModelProvider(mocked_model)
+def model_provider(test_model):
+    return TestModelProvider(test_model)
 
 
 @pytest.fixture

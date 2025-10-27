@@ -11,7 +11,7 @@ from openai_agents.basic.workflows.tools_workflow import ToolsWorkflow
 
 def tools_test_model():
     return TestModel.returning_responses(
-        [ResponseBuilders.tool_call_message("get_weather", {"city": "New York"}),
+        [ResponseBuilders.tool_call('{"city": "New York"}', "get_weather"),
          ResponseBuilders.output_message("The weather in New York is sunny with a temperature of 75°F.")]
     )
 

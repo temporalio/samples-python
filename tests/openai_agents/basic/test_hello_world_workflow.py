@@ -12,7 +12,7 @@ from temporalio.contrib.openai_agents.testing import (
 from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
 
 
-def haiku_test_model():
+def hello_world_test_model():
     return TestModel.returning_responses(
         [ResponseBuilders.output_message("This is a haiku (not really)")]
     )
@@ -21,7 +21,7 @@ def haiku_test_model():
 async def test_execute_workflow(client: Client):
     task_queue_name = str(uuid.uuid4())
 
-    async with AgentEnvironment(model=haiku_test_model()) as agent_env:
+    async with AgentEnvironment(model=hello_world_test_model()) as agent_env:
         client = agent_env.applied_on_client(client)
         async with Worker(
             client,

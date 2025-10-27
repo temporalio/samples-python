@@ -37,15 +37,8 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture
-def plugins():
-    # By default, no plugins.
-    # Other tests can override this fixture, such as in tests/openai_agents/conftest.py
-    return []
-
-
-@pytest_asyncio.fixture
-async def env(request, plugins) -> AsyncGenerator[WorkflowEnvironment, None]:
+@pytest_asyncio.fixture(scope="session")
+async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
     env_type = request.config.getoption("--workflow-environment")
     if env_type == "local":
         env = await WorkflowEnvironment.start_local(
@@ -54,15 +47,12 @@ async def env(request, plugins) -> AsyncGenerator[WorkflowEnvironment, None]:
                 "frontend.enableExecuteMultiOperation=true",
                 "--dynamic-config-value",
                 "system.enableEagerWorkflowStart=true",
-            ],
-            plugins=plugins,
+            ]
         )
     elif env_type == "time-skipping":
         env = await WorkflowEnvironment.start_time_skipping()
     else:
-        env = WorkflowEnvironment.from_client(
-            await Client.connect(env_type, plugins=plugins)
-        )
+        env = WorkflowEnvironment.from_client(await Client.connect(env_type))
     yield env
     await env.shutdown()
 

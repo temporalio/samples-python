@@ -2,7 +2,11 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents.testing import AgentEnvironment, ResponseBuilders, TestModel
+from temporalio.contrib.openai_agents.testing import (
+    AgentEnvironment,
+    ResponseBuilders,
+    TestModel,
+)
 from temporalio.worker import Worker
 
 from openai_agents.basic.activities.get_weather_activity import get_weather
@@ -11,8 +15,12 @@ from openai_agents.basic.workflows.tools_workflow import ToolsWorkflow
 
 def tools_test_model():
     return TestModel.returning_responses(
-        [ResponseBuilders.tool_call('{"city": "New York"}', "get_weather"),
-         ResponseBuilders.output_message("The weather in New York is sunny with a temperature of 75°F.")]
+        [
+            ResponseBuilders.tool_call('{"city": "New York"}', "get_weather"),
+            ResponseBuilders.output_message(
+                "The weather in New York is sunny with a temperature of 75°F."
+            ),
+        ]
     )
 
 

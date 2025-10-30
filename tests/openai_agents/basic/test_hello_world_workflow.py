@@ -2,12 +2,12 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from temporalio.client import Client
-from temporalio.worker import Worker
 from temporalio.contrib.openai_agents.testing import (
     AgentEnvironment,
     ResponseBuilders,
     TestModel,
 )
+from temporalio.worker import Worker
 
 from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
 

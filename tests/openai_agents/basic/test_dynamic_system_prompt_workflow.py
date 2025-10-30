@@ -2,7 +2,11 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents.testing import AgentEnvironment, ResponseBuilders, TestModel
+from temporalio.contrib.openai_agents.testing import (
+    AgentEnvironment,
+    ResponseBuilders,
+    TestModel,
+)
 from temporalio.worker import Worker
 
 from openai_agents.basic.workflows.dynamic_system_prompt_workflow import (
@@ -12,7 +16,11 @@ from openai_agents.basic.workflows.dynamic_system_prompt_workflow import (
 
 def dynamic_system_prompt_test_model():
     return TestModel.returning_responses(
-        [ResponseBuilders.output_message("Style: haiku\nResponse: The weather is cloudy with a chance of meatballs.")]
+        [
+            ResponseBuilders.output_message(
+                "Style: haiku\nResponse: The weather is cloudy with a chance of meatballs."
+            )
+        ]
     )
 
 

@@ -2,7 +2,11 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents.testing import AgentEnvironment, ResponseBuilders, TestModel
+from temporalio.contrib.openai_agents.testing import (
+    AgentEnvironment,
+    ResponseBuilders,
+    TestModel,
+)
 from temporalio.worker import Worker
 
 from openai_agents.basic.workflows.remote_image_workflow import RemoteImageWorkflow
@@ -10,7 +14,11 @@ from openai_agents.basic.workflows.remote_image_workflow import RemoteImageWorkf
 
 def remote_image_test_model():
     return TestModel.returning_responses(
-        [ResponseBuilders.output_message("I can see the Golden Gate Bridge, a beautiful suspension bridge in San Francisco.")]
+        [
+            ResponseBuilders.output_message(
+                "I can see the Golden Gate Bridge, a beautiful suspension bridge in San Francisco."
+            )
+        ]
     )
 
 

@@ -2,7 +2,11 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents.testing import AgentEnvironment, ResponseBuilders, TestModel
+from temporalio.contrib.openai_agents.testing import (
+    AgentEnvironment,
+    ResponseBuilders,
+    TestModel,
+)
 from temporalio.worker import Worker
 
 from openai_agents.basic.workflows.agent_lifecycle_workflow import (

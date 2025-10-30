@@ -2,7 +2,11 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents.testing import AgentEnvironment, ResponseBuilders, TestModel
+from temporalio.contrib.openai_agents.testing import (
+    AgentEnvironment,
+    ResponseBuilders,
+    TestModel,
+)
 from temporalio.worker import Worker
 
 from openai_agents.basic.workflows.previous_response_id_workflow import (
@@ -14,7 +18,9 @@ def previous_response_id_test_model():
     return TestModel.returning_responses(
         [
             ResponseBuilders.output_message("The capital of France is Paris."),
-            ResponseBuilders.output_message("Paris has a population of approximately 2.1 million people within the city proper.")
+            ResponseBuilders.output_message(
+                "Paris has a population of approximately 2.1 million people within the city proper."
+            ),
         ]
     )
 

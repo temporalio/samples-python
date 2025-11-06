@@ -90,7 +90,3 @@ Some examples require extra dependencies. See each sample's directory for specif
 To run the tests:
 
     uv run poe test
-
-By default, this won't run the OpenAI SDK sample tests. To run those, set your `OPENAI_API_KEY` in your environment, and run:
-
-    uv run poe test tests/openai_agents

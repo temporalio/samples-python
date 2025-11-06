@@ -32,9 +32,13 @@ def non_strict_output_test_model():
 async def test_execute_workflow(client: Client, mock_model: bool):
     task_queue_name = str(uuid.uuid4())
     if not mock_model and not os.environ.get("OPENAI_API_KEY"):
-        pytest.skip(f"Skipping test (mock_model={mock_model}), because OPENAI_API_KEY is not set")
+        pytest.skip(
+            f"Skipping test (mock_model={mock_model}), because OPENAI_API_KEY is not set"
+        )
 
-    async with AgentEnvironment(model=non_strict_output_test_model() if mock_model else None) as agent_env:
+    async with AgentEnvironment(
+        model=non_strict_output_test_model() if mock_model else None
+    ) as agent_env:
         client = agent_env.applied_on_client(client)
         async with Worker(
             client,

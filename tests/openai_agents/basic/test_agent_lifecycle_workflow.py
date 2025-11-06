@@ -21,13 +21,18 @@ def agent_lifecycle_test_model():
         [ResponseBuilders.output_message('{"number": 10}')]
     )
 
+
 @pytest.mark.parametrize("mock_model", [True, False])
 async def test_execute_workflow(client: Client, mock_model: bool):
     task_queue_name = str(uuid.uuid4())
     if not mock_model and not os.environ.get("OPENAI_API_KEY"):
-        pytest.skip(f"Skipping test (mock_model={mock_model}), because OPENAI_API_KEY is not set")
+        pytest.skip(
+            f"Skipping test (mock_model={mock_model}), because OPENAI_API_KEY is not set"
+        )
 
-    async with AgentEnvironment(model=agent_lifecycle_test_model() if mock_model else None) as agent_env:
+    async with AgentEnvironment(
+        model=agent_lifecycle_test_model() if mock_model else None
+    ) as agent_env:
         client = agent_env.applied_on_client(client)
         async with Worker(
             client,

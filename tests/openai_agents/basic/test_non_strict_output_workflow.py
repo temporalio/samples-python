@@ -1,8 +1,8 @@
-import uuid
-import pytest
 import os
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
 from temporalio.client import Client
 from temporalio.contrib.openai_agents.testing import (
     AgentEnvironment,

@@ -15,10 +15,12 @@ from openai_agents.basic.workflows.non_strict_output_workflow import (
 
 
 def non_strict_output_test_model():
+    # NOTE: AgentOutputSchema (used in the workflow definition), has a schema where the outer
+    # object must be "response". Therefore, mocked model responses must use "response", just as the real model does. 
     return TestModel.returning_responses(
         [
             ResponseBuilders.output_message(
-                '{"jokes": {"1": "Why do programmers prefer dark mode? Because light attracts bugs!", "2": "How many programmers does it take to change a light bulb? None, that\'s a hardware problem.", "3": "Why do Java developers wear glasses? Because they can\'t C#!"}}'
+                '{"response": {"jokes": {"1": "Why do programmers prefer dark mode? Because light attracts bugs!", "2": "How many programmers does it take to change a light bulb? None, that\'s a hardware problem.", "3": "Why do Java developers wear glasses? Because they can\'t C#!"}}}'
             )
         ]
     )

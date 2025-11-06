@@ -40,4 +40,9 @@ async def test_execute_workflow(client: Client, mock_model: bool):
                 id=str(uuid.uuid4()),
                 task_queue=task_queue_name,
             )
-            assert result == "This is a haiku (not really)"
+
+            if mock_model:
+                assert result == "This is a haiku (not really)"
+            else:
+                assert isinstance(result, str)
+                assert len(result) > 0

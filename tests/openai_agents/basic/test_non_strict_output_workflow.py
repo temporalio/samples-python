@@ -16,7 +16,7 @@ from openai_agents.basic.workflows.non_strict_output_workflow import (
 
 def non_strict_output_test_model():
     # NOTE: AgentOutputSchema (used in the workflow definition), has a schema where the outer
-    # object must be "response". Therefore, mocked model responses must use "response", just as the real model does. 
+    # object must be "response". Therefore, mocked model responses must use "response", just as the real model does.
     return TestModel.returning_responses(
         [
             ResponseBuilders.output_message(

@@ -21,8 +21,8 @@ async def main(client: Optional[Client] = None):
     if client is None:
         config = ClientConfig.load_client_connect_config()
         config.setdefault("target_host", "localhost:7233")
-        client = await Client.connect(**config, namespace=NAMESPACE)
-    
+        config.setdefault("namespace", NAMESPACE)
+        client = await Client.connect(**config)
 
     # Start the worker, passing the Nexus service handler instance, in addition to the
     # workflow classes that are started by your nexus operations, and any activities

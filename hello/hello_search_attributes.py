@@ -2,7 +2,7 @@ import asyncio
 
 from temporalio import workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 

@@ -7,7 +7,7 @@ from typing import NoReturn
 
 from temporalio import activity, workflow
 from temporalio.client import Client, WorkflowFailureError
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.exceptions import CancelledError
 from temporalio.worker import Worker
 
@@ -55,7 +55,7 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
 
     # Start client
-    client = await Client.connect(**config.to_client_connect_config())
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(

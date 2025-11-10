@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from custom_converter.shared import (
     GreetingInput,
@@ -17,7 +17,7 @@ async def main():
 
     # Connect client
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         # Without this we get:
         #   TypeError: Object of type GreetingInput is not JSON serializable
         data_converter=greeting_data_converter,

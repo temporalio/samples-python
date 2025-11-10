@@ -7,7 +7,7 @@ import asyncio
 import logging
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from gevent_async import workflow
 from gevent_async.executor import GeventExecutor

@@ -9,7 +9,7 @@ from temporalio.client import (
     WorkflowHandle,
     WorkflowUpdateFailedError,
 )
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.exceptions import ApplicationError
 
 from message_passing.update_with_start.lazy_initialization import TASK_QUEUE

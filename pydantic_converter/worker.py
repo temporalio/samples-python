@@ -6,7 +6,7 @@ from typing import List
 
 from temporalio import activity, workflow
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 # Always pass through external modules to the sandbox that you know are safe for
@@ -48,7 +48,7 @@ async def main():
 
     # Connect client using the Pydantic converter
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         data_converter=pydantic_data_converter,
     )
 

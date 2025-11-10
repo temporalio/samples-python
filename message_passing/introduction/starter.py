@@ -2,7 +2,7 @@ import asyncio
 from typing import Optional
 
 from temporalio.client import Client, WorkflowUpdateStage
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from message_passing.introduction import TASK_QUEUE
 from message_passing.introduction.workflows import (

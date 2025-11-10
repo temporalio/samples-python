@@ -9,7 +9,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import TracingInterceptor
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.runtime import OpenTelemetryConfig, Runtime, TelemetryConfig
 from temporalio.worker import Worker
 
@@ -56,7 +56,7 @@ async def main():
 
     # Connect client
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         # Use OpenTelemetry interceptor
         interceptors=[TracingInterceptor()],
         runtime=runtime,

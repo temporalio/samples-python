@@ -2,7 +2,7 @@ import asyncio
 import sys
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from workflows import SignalQueryBedrockWorkflow
 
 

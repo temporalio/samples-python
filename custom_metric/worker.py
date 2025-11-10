@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from temporalio import activity
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.runtime import PrometheusConfig, Runtime, TelemetryConfig
 from temporalio.worker import (
     ActivityInboundInterceptor,
@@ -52,7 +52,7 @@ async def main():
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         runtime=runtime,
     )
     worker = Worker(

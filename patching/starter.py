@@ -2,7 +2,7 @@ import argparse
 import asyncio
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 # Since it's just used for typing purposes, it doesn't matter which one we
 # import

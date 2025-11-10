@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from sleep_for_days import TASK_QUEUE
 from sleep_for_days.workflows import SleepForDaysWorkflow

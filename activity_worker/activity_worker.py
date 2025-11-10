@@ -4,7 +4,7 @@ import string
 
 from temporalio import activity
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 task_queue = "say-hello-task-queue"

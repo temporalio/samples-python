@@ -3,7 +3,7 @@ import json
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from openai_agents.handoffs.workflows.message_filter_workflow import (
     MessageFilterWorkflow,
@@ -16,7 +16,7 @@ async def main():
 
     # Create client connected to server at the given address
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         plugins=[
             OpenAIAgentsPlugin(),
         ],

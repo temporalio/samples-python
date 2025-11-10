@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from openai_agents.basic.workflows.agent_lifecycle_workflow import (
     AgentLifecycleWorkflow,

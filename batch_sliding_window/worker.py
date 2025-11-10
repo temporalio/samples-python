@@ -6,7 +6,7 @@ import logging
 
 from temporalio import worker
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from batch_sliding_window.batch_workflow import ProcessBatchWorkflow
 from batch_sliding_window.record_loader_activity import RecordLoader

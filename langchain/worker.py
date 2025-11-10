@@ -3,7 +3,7 @@ import asyncio
 from activities import translate_phrase
 from langchain_interceptor import LangChainContextPropagationInterceptor
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 from workflow import LangChainChildWorkflow, LangChainWorkflow
 

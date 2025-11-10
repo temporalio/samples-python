@@ -9,7 +9,7 @@ from temporalio.client import (
     ScheduleSpec,
     ScheduleState,
 )
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from your_workflows import YourSchedulesWorkflow
 
 

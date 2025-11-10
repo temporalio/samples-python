@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from updatable_timer.workflow import Workflow
 

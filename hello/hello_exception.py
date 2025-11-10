@@ -8,7 +8,7 @@ from typing import NoReturn, Optional
 from temporalio import activity, workflow
 from temporalio.client import Client, WorkflowFailureError
 from temporalio.common import RetryPolicy
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.exceptions import FailureError
 from temporalio.worker import Worker
 

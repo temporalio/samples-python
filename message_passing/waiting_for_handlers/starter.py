@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio import client, common
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from message_passing.waiting_for_handlers import (
     TASK_QUEUE,

@@ -10,7 +10,7 @@ from temporalio.client import (
     ScheduleSpec,
     WorkflowFailureError,
 )
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from cloud_export_to_parquet.workflows import (
     ProtoToParquet,

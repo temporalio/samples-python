@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from custom_converter.shared import greeting_data_converter
@@ -16,7 +16,7 @@ async def main():
 
     # Connect client
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         # Without this, when trying to run a workflow, we get:
         #   KeyError: 'Unknown payload encoding my-greeting-encoding
         data_converter=greeting_data_converter,

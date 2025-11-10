@@ -18,7 +18,8 @@ async def execute_caller_workflow(
     if client is None:
         config = ClientConfig.load_client_connect_config()
         config.setdefault("target_host", "localhost:7233")
-        client = await Client.connect(**config, namespace=NAMESPACE)
+        config.setdefault("namespace", NAMESPACE)
+        client = await Client.connect(**config)
 
     async with Worker(
         client,

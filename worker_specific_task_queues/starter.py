@@ -2,7 +2,7 @@ import asyncio
 from uuid import uuid4
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from worker_specific_task_queues.tasks import FileProcessing
 

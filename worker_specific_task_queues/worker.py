@@ -6,7 +6,7 @@ from uuid import UUID
 
 from temporalio import activity
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from worker_specific_task_queues import tasks

@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from message_passing.waiting_for_handlers import TASK_QUEUE

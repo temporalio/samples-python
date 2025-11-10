@@ -5,7 +5,7 @@ from ipaddress import IPv4Address
 
 from temporalio.client import Client
 from temporalio.contrib.pydantic import pydantic_data_converter
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from pydantic_converter.worker import MyPydanticModel, MyWorkflow
 
@@ -19,7 +19,7 @@ async def main():
     # Connect client using the Pydantic converter
 
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         data_converter=pydantic_data_converter,
     )
 

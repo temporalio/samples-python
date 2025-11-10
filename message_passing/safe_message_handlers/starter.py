@@ -6,7 +6,7 @@ from typing import Optional
 
 from temporalio import common
 from temporalio.client import Client, WorkflowHandle
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from message_passing.safe_message_handlers.workflow import (
     ClusterManagerAssignNodesToJobInput,

@@ -12,7 +12,7 @@ async def main():
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(
-        **config,         
+        **config,
         plugins=[
             OpenAIAgentsPlugin(),
         ],

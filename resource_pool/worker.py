@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from temporalio.client import Client
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from resource_pool.pool_client.resource_pool_workflow import ResourcePoolWorkflow

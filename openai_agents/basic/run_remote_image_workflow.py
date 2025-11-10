@@ -2,7 +2,7 @@ import asyncio
 
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
-from temporalio.envconfig import ClientConfigProfile
+from temporalio.envconfig import ClientConfig
 
 from openai_agents.basic.workflows.remote_image_workflow import RemoteImageWorkflow
 
@@ -12,7 +12,7 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
 
     client = await Client.connect(
-        **config.to_client_connect_config(),
+        **config,
         plugins=[OpenAIAgentsPlugin()],
     )
 

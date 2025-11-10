@@ -32,15 +32,6 @@ async def main():
         ),
     )
 
-    # Connect client
-    client = await Client.connect(
-        **config,
-        # Use the default converter, but change the codec
-        data_converter=dataclasses.replace(
-            temporalio.converter.default(), payload_codec=EncryptionCodec()
-        ),
-    )
-
     # Run a worker for the workflow
     async with Worker(
         client,

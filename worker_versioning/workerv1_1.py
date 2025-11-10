@@ -5,6 +5,7 @@ import logging
 
 from temporalio.client import Client
 from temporalio.common import WorkerDeploymentVersion
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker, WorkerDeploymentConfig
 
 from worker_versioning.activities import some_activity, some_incompatible_activity
@@ -16,7 +17,9 @@ logging.basicConfig(level=logging.INFO)
 
 async def main() -> None:
     """Run worker v1.1."""
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Create worker v1.1
     worker = Worker(

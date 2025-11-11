@@ -5,6 +5,7 @@ import sys
 
 import trio_asyncio
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from trio_async import activities, workflows
@@ -15,7 +16,9 @@ async def main():
     logging.basicConfig(level=logging.INFO)
 
     # Connect client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Temporal runs threaded activities and workflow tasks via run_in_executor.
     # Due to how trio_asyncio works, you can only do run_in_executor with their

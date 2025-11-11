@@ -3,6 +3,7 @@ import uuid
 from typing import Optional
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from hello_nexus.caller.workflows import CallerWorkflow
@@ -15,10 +16,12 @@ TASK_QUEUE = "hello-nexus-basic-caller-task-queue"
 async def execute_caller_workflow(
     client: Optional[Client] = None,
 ) -> tuple[MyOutput, MyOutput]:
-    client = client or await Client.connect(
-        "localhost:7233",
-        namespace=NAMESPACE,
-    )
+    if not client:
+        config = ClientConfig.load_client_connect_config()
+        # Override the namespace from config file.
+        config.setdefault("target_host", "localhost:7233")
+        config.setdefault("namespace", NAMESPACE)
+        client = await Client.connect(**config)
 
     async with Worker(
         client,

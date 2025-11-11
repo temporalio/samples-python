@@ -12,6 +12,7 @@ from temporalio.contrib.openai_agents import (
     OpenAIAgentsPlugin,
     StatelessMCPServerProvider,
 )
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from openai_agents.mcp.workflows.file_system_workflow import FileSystemWorkflow
@@ -33,8 +34,10 @@ async def main():
     )
 
     # Create client connected to server at the given address
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(
-        "localhost:7233",
+        **config,
         plugins=[
             OpenAIAgentsPlugin(
                 model_params=ModelActivityParameters(

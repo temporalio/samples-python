@@ -1,6 +1,7 @@
 import asyncio
 
 from temporalio import client, common
+from temporalio.envconfig import ClientConfig
 
 from message_passing.waiting_for_handlers import (
     TASK_QUEUE,
@@ -12,7 +13,10 @@ from message_passing.waiting_for_handlers.workflows import WaitingForHandlersWor
 
 
 async def starter(exit_type: WorkflowExitType):
-    cl = await client.Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    cl = await client.Client.connect(**config)
+
     wf_handle = await cl.start_workflow(
         WaitingForHandlersWorkflow.run,
         WorkflowInput(exit_type=exit_type),

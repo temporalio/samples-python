@@ -3,6 +3,7 @@ import uuid
 from typing import Optional
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from nexus_multiple_args.caller.workflows import CallerWorkflow
@@ -14,10 +15,11 @@ TASK_QUEUE = "nexus-multiple-args-caller-task-queue"
 async def execute_caller_workflow(
     client: Optional[Client] = None,
 ) -> tuple[str, str]:
-    client = client or await Client.connect(
-        "localhost:7233",
-        namespace=NAMESPACE,
-    )
+    if client is None:
+        config = ClientConfig.load_client_connect_config()
+        config.setdefault("target_host", "localhost:7233")
+        config.setdefault("namespace", NAMESPACE)
+        client = await Client.connect(**config)
 
     async with Worker(
         client,

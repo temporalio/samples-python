@@ -2,6 +2,7 @@ import asyncio
 import uuid
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from eager_wf_start.activities import greeting
@@ -13,7 +14,10 @@ TASK_QUEUE = "eager-wf-start-task-queue"
 async def main():
 
     # Note that the worker and client run in the same process and share the same client connection.
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
+
     worker = Worker(
         client,
         task_queue=TASK_QUEUE,

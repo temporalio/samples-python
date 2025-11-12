@@ -1,4 +1,7 @@
 ## Service: [GreetingService](https://github.com/temporalio/samples-python/blob/main/nexus_sync_operations/service.py)
-- operation: `get_languages`
-- operation: `get_language`
-- operation: `set_language`
+- operation: `get_languages` (query)
+- operation: `get_language` (query)
+- operation: `set_language` (update - async with activity)
+- operation: `set_language_sync` (update - synchronous)
+- operation: `approve` (signal)
+- operation: `approve_with_start` (signal-with-start)

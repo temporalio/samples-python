@@ -6,8 +6,8 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from message_passing.introduction.activities import call_greeting_service
-from message_passing.introduction.workflows import GreetingWorkflow
 from nexus_sync_operations.handler.service_handler import GreetingServiceHandler
+from nexus_sync_operations.handler.workflows import GreetingEntityWorkflow
 
 interrupt_event = asyncio.Event()
 
@@ -32,7 +32,7 @@ async def main(client: Optional[Client] = None):
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[GreetingWorkflow],
+        workflows=[GreetingEntityWorkflow],
         activities=[call_greeting_service],
         nexus_service_handlers=[greeting_service_handler],
     ):

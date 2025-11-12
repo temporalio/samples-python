@@ -1,13 +1,24 @@
-This sample shows how to create a Nexus service that is backed by a long-running workflow and
-exposes operations that execute updates and queries against that workflow. The long-running
-workflow, and the updates/queries are private implementation detail of the nexus service: the caller
-does not know how the operations are implemented.
+This sample shows how to create a Nexus service that is backed by an entity workflow and
+exposes synchronous operations that execute queries, updates, signals, and signal-with-start
+operations against that workflow. 
+
+The entity workflow follows the entity pattern:
+- Runs indefinitely in a loop, processing operations as they arrive
+- Maintains state that persists across operations
+- Periodically continues-as-new to prevent history from growing too large
+- Waits for all handlers to finish before continuing as new
+
+The entity workflow and the queries/updates/signals are private implementation details of the
+nexus service: the caller does not know how the operations are implemented.
 
 ### Sample directory structure
 
 - [service.py](./service.py) - shared Nexus service definition
 - [caller](./caller) - a caller workflow that executes Nexus operations, together with a worker and starter code
-- [handler](./handler) - Nexus operation handlers, together with a workflow used by one of the Nexus operations, and a worker that polls for both workflow, activity, and Nexus tasks.
+- [handler](./handler) - Nexus operation handlers, entity workflow implementation, and a worker that polls for workflow, activity, and Nexus tasks
+  - [workflows.py](./handler/workflows.py) - entity workflow that follows the entity pattern
+  - [service_handler.py](./handler/service_handler.py) - Nexus operation handlers
+  - [worker.py](./handler/worker.py) - worker that runs the entity workflow and handles Nexus operations
 
 
 ### Instructions

@@ -24,12 +24,13 @@ async def main():
 
     try:
         streamable_http_server_provider = StatelessMCPServerProvider(
+            "StreamableHttpServer",
             lambda: MCPServerStreamableHttp(
                 name="StreamableHttpServer",
                 params={
                     "url": "http://localhost:8000/mcp",
                 },
-            )
+            ),
         )
 
         # Create client connected to server at the given address

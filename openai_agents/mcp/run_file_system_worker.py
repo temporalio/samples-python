@@ -24,13 +24,14 @@ async def main():
     samples_dir = os.path.join(current_dir, "sample_files")
 
     file_system_server = StatelessMCPServerProvider(
+        "FileSystemServer",
         lambda: MCPServerStdio(
             name="FileSystemServer",
             params={
                 "command": "npx",
                 "args": ["-y", "@modelcontextprotocol/server-filesystem", samples_dir],
             },
-        )
+        ),
     )
 
     # Create client connected to server at the given address

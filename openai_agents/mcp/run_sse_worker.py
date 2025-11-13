@@ -24,12 +24,13 @@ async def main():
 
     try:
         sse_server_provider = StatelessMCPServerProvider(
+            "SseServer",
             lambda: MCPServerSse(
                 name="SseServer",
                 params={
                     "url": "http://localhost:8000/sse",
                 },
-            )
+            ),
         )
 
         # Create client connected to server at the given address

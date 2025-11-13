@@ -24,12 +24,13 @@ async def main():
 
     try:
         prompt_server_provider = StatelessMCPServerProvider(
+            "PromptServer",
             lambda: MCPServerStreamableHttp(
                 name="PromptServer",
                 params={
                     "url": "http://localhost:8000/mcp",
                 },
-            )
+            ),
         )
 
         # Create client connected to server at the given address

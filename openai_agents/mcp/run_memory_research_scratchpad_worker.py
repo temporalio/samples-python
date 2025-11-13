@@ -23,13 +23,14 @@ async def main():
     logging.basicConfig(level=logging.INFO)
 
     memory_server_provider = StatefulMCPServerProvider(
-        lambda: MCPServerStdio(
+        "MemoryServer",
+        lambda _: MCPServerStdio(
             name="MemoryServer",
             params={
                 "command": "npx",
                 "args": ["-y", "@modelcontextprotocol/server-memory"],
             },
-        )
+        ),
     )
 
     # Create client connected to server at the given address

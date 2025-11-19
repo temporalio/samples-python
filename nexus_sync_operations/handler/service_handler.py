@@ -121,7 +121,7 @@ class GreetingServiceHandler:
         ctx: nexusrpc.handler.StartOperationContext,
         input: ApproveInput,
     ) -> None:
-        # Use start_workflow with start_signal to send a signal, starting the workflow if it doesn't exist
+        # Use signal_with_start synchronously - send signal and start workflow if needed
         await nexus.client().start_workflow(
             GreetingEntityWorkflow.run,
             id=self.workflow_id,

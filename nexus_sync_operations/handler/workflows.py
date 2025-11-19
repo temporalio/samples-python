@@ -12,11 +12,9 @@ from datetime import timedelta
 from typing import Dict, List, Optional
 
 from temporalio import workflow
-from temporalio.exceptions import ApplicationError
 
 with workflow.unsafe.imports_passed_through():
     from message_passing.introduction import Language
-    from message_passing.introduction.activities import call_greeting_service
     from message_passing.introduction.workflows import (
         ApproveInput,
         GetLanguagesInput,
@@ -51,7 +49,7 @@ class GreetingEntityWorkflow:
     """
 
     @workflow.init
-    def init(self, input: Optional[GreetingEntityInput] = None) -> None:
+    def __init__(self, input: Optional[GreetingEntityInput] = None) -> None:
         """Initialize workflow state, restoring from continue-as-new if provided."""
         if input and input.state:
             self.greetings = input.state.greetings.copy()
@@ -66,8 +64,6 @@ class GreetingEntityWorkflow:
             self.language = Language.ENGLISH
             self.approver_name = None
         
-        # Lock to protect state during async operations
-        self.lock = asyncio.Lock()
 
     @workflow.run
     async def run(self, input: Optional[GreetingEntityInput] = None) -> None:
@@ -178,32 +174,16 @@ class GreetingEntityWorkflow:
             raise ValueError(f"{input.language.name} is not supported")
 
     @workflow.update
-    async def set_language_using_activity(self, input: SetLanguageInput) -> Language:
+    def set_language_using_activity(self, input: SetLanguageInput) -> Language:
         """
-        Update: Set the language using an activity to fetch greeting.
+        Update: Set the language synchronously.
         
-        This update handler is async and can execute activities.
-        It uses a lock to ensure sequential processing of multiple updates.
+        This update handler is synchronous and only modifies local state.
         """
-        previous_language = self.language
-        
-        # If language not in greetings, fetch it via activity
         if input.language not in self.greetings:
-            # Use lock to ensure sequential processing
-            async with self.lock:
-                greeting = await workflow.execute_activity(
-                    call_greeting_service,
-                    input.language,
-                    start_to_close_timeout=timedelta(seconds=10),
-                )
-                
-                if greeting is None:
-                    raise ApplicationError(
-                        f"Greeting service does not support {input.language.name}"
-                    )
-                
-                self.greetings[input.language] = greeting
+            raise ValueError(f"{input.language.name} is not supported")
         
+        previous_language = self.language
         self.language = input.language
         return previous_language
 

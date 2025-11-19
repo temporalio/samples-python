@@ -28,19 +28,19 @@ class CallerWorkflow:
             endpoint=NEXUS_ENDPOINT,
         )
 
-        # 👉 QUERY OPERATION: Get supported languages
+        # QUERY OPERATION: Get supported languages
         supported_languages = await nexus_client.execute_operation(
             GreetingService.get_languages, GetLanguagesInput(include_unsupported=False)
         )
         log.append(f"Query - supported languages: {supported_languages}")
 
-        # 👉 QUERY OPERATION: Get current language
+        # QUERY OPERATION: Get current language
         current_language = await nexus_client.execute_operation(
             GreetingService.get_language, None
         )
         log.append(f"Query - current language: {current_language.name}")
 
-        # 👉 UPDATE OPERATION: Set language using synchronous update (non-async)
+        # UPDATE OPERATION: Set language using synchronous update (non-async)
         previous_language = await nexus_client.execute_operation(
             GreetingService.set_language_sync,
             SetLanguageInput(language=Language.CHINESE),
@@ -53,7 +53,7 @@ class CallerWorkflow:
             f"Update (sync) - language changed: {previous_language.name} -> {Language.CHINESE.name}"
         )
 
-        # 👉 UPDATE OPERATION: Set language using async update (with activity)
+        # UPDATE OPERATION: Set language using async update (with activity)
         previous_language = await nexus_client.execute_operation(
             GreetingService.set_language,
             SetLanguageInput(language=Language.ARABIC),
@@ -66,14 +66,14 @@ class CallerWorkflow:
             f"Update (async) - language changed: {previous_language.name} -> {Language.ARABIC.name}"
         )
 
-        # 👉 SIGNAL OPERATION: Send approval signal
+        # SIGNAL OPERATION: Send approval signal
         await nexus_client.execute_operation(
             GreetingService.approve,
             ApproveInput(name="CallerWorkflow"),
         )
         log.append("Signal - approval sent")
 
-        # 👉 SIGNAL-WITH-START OPERATION: Send approval signal, starting workflow if needed
+        # SIGNAL-WITH-START OPERATION: Send approval signal, starting workflow if needed
         # This demonstrates signal-with-start, which will start the workflow if it doesn't exist
         await nexus_client.execute_operation(
             GreetingService.approve_with_start,

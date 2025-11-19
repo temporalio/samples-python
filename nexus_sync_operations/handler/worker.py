@@ -14,6 +14,14 @@ interrupt_event = asyncio.Event()
 NAMESPACE = "nexus-sync-operations-handler-namespace"
 TASK_QUEUE = "nexus-sync-operations-handler-task-queue"
 
+'''
+ operator nexus endpoint create \
+  --name nexus-sync-operations-nexus-endpoint \
+  --target-namespace nexus-sync-operations-handler-namespace \
+  --target-task-queue nexus-sync-operations-handler-task-queue \
+  --description-file nexus_sync_operations/endpoint_description.md
+'''
+
 
 async def main(client: Optional[Client] = None):
     logging.basicConfig(level=logging.INFO)

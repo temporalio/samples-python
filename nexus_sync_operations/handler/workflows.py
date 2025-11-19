@@ -60,6 +60,7 @@ class GreetingEntityWorkflow:
             self.greetings = {
                 Language.CHINESE: "你好，世界",
                 Language.ENGLISH: "Hello, world",
+                Language.FRENCH: "Bonjour"
             }
             self.language = Language.ENGLISH
             self.approver_name = None
@@ -101,7 +102,7 @@ class GreetingEntityWorkflow:
                     
                     workflow.logger.info("Continuing as new to prevent history growth")
                     
-                    # Continue as new with current state
+                    # Continue as new with the current state
                     workflow.continue_as_new(
                         GreetingEntityInput(
                             state=GreetingEntityState(

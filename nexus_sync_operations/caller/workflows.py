@@ -56,14 +56,14 @@ class CallerWorkflow:
         # UPDATE OPERATION: Set language using async update (with activity)
         previous_language = await nexus_client.execute_operation(
             GreetingService.set_language,
-            SetLanguageInput(language=Language.ARABIC),
+            SetLanguageInput(language=Language.FRENCH),
         )
         assert (
             await nexus_client.execute_operation(GreetingService.get_language, None)
-            == Language.ARABIC
+            == Language.FRENCH
         )
         log.append(
-            f"Update (async) - language changed: {previous_language.name} -> {Language.ARABIC.name}"
+            f"Update (async) - language changed: {previous_language.name} -> {Language.FRENCH.name}"
         )
 
         # SIGNAL OPERATION: Send approval signal

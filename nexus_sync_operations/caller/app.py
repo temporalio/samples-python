@@ -14,23 +14,30 @@ TASK_QUEUE = "nexus-sync-operations-caller-task-queue"
 async def execute_caller_workflow(
     client: Optional[Client] = None,
 ) -> None:
+    # Use separate task queue for caller
+    caller_task_queue = "nexus-sync-operations-caller-task-queue"
+    
     client = client or await Client.connect(
         "localhost:7233",
         namespace=NAMESPACE,
     )
 
+    # Start worker in the background, keep it running
     async with Worker(
         client,
-        task_queue=TASK_QUEUE,
+        task_queue=caller_task_queue,
         workflows=[CallerWorkflow],
+        # Caller doesn't need activities or nexus handlers - 
+        # it only calls operations on remote endpoint
     ):
         log = await client.execute_workflow(
-            CallerWorkflow.run,
+            CallerWorkflow.run[None],
             id=str(uuid.uuid4()),
-            task_queue=TASK_QUEUE,
+            task_queue=caller_task_queue,  # Use caller's task queue
         )
         for line in log:
             print(line)
+        # Worker stays alive until the workflow completes
 
 
 if __name__ == "__main__":

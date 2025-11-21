@@ -1,12 +1,15 @@
 import asyncio
 import argparse
 import uuid
+import logging
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from workflow_multiprocessing import WORKFLOW_TASK_QUEUE
-from workflow_multiprocessing.workflows import ParallelizedWorkflow
+from workflow_task_multiprocessing import WORKFLOW_TASK_QUEUE
+from workflow_task_multiprocessing.workflows import ParallelizedWorkflow
+
+logger = logging.getLogger("starter")
 
 
 class Args(argparse.Namespace):
@@ -42,8 +45,9 @@ async def main():
     # Wait for workflow completion (runs indefinitely until it receives a signal)
     for wf in asyncio.as_completed(wf_handles):
         result = await wf
-        print(result)
+        logger.info(result)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     asyncio.run(main())

@@ -16,11 +16,11 @@ from temporalio.worker.workflow_sandbox import (
 )
 from temporalio.runtime import Runtime, TelemetryConfig
 
-from workflow_multiprocessing import ACTIVITY_TASK_QUEUE, WORKFLOW_TASK_QUEUE
-from workflow_multiprocessing.workflows import ParallelizedWorkflow
-from workflow_multiprocessing.activities import echo_pid_activity
+from workflow_task_multiprocessing import ACTIVITY_TASK_QUEUE, WORKFLOW_TASK_QUEUE
+from workflow_task_multiprocessing.workflows import ParallelizedWorkflow
+from workflow_task_multiprocessing.activities import echo_pid_activity
 
-logger = logging.getLogger()
+logger = logging.getLogger("worker")
 
 # Immediately prevent the default Runtime from being created to ensure
 # each process creates it's own
@@ -45,7 +45,7 @@ def main():
         f"starting {args.num_workflow_workers} workflow worker(s) and {args.num_activity_workers} activity worker(s)"
     )
 
-    # This sample prefers fork to avoid re-importing
+    # This sample prefers fork to avoid re-importing modules
     # and decrease startup time. Fork is not available on all
     # operating systems, so we fallback to 'spawn' when not available
     try:
@@ -59,18 +59,18 @@ def main():
         # Start workflow workers by submitting them to the
         # ProcessPoolExecutor
         worker_futures = [
-            executor.submit(worker_entry, "workflow")
-            for _ in range(args.num_workflow_workers)
+            executor.submit(worker_entry, "workflow", i)
+            for i in range(args.num_workflow_workers)
         ]
 
         # In this sample, we start activity workers as separate processes in the
         # same way we do workflow workers. In production, activity workers
         # are often deployed separately from workflow workers to account for
-        # the different scaling characteristics.
+        # differing scaling characteristics.
         worker_futures.extend(
             [
-                executor.submit(worker_entry, "activity")
-                for _ in range(args.num_activity_workers)
+                executor.submit(worker_entry, "activity", i)
+                for i in range(args.num_activity_workers)
             ]
         )
 
@@ -82,11 +82,9 @@ def main():
                     traceback.print_exception(worker.exception())
         except KeyboardInterrupt:
             pass
-        finally:
-            executor.shutdown(wait=True)
 
 
-def worker_entry(worker_type: Literal["workflow", "activity"]):
+def worker_entry(worker_type: Literal["workflow", "activity"], id: int):
     Runtime.set_default(Runtime(telemetry=TelemetryConfig()))
 
     async def run_worker():
@@ -100,8 +98,10 @@ def worker_entry(worker_type: Literal["workflow", "activity"]):
             worker = activity_worker(client)
 
         try:
+            logging.info(f"{worker_type}-worker:{id} starting")
             await asyncio.shield(worker.run())
         except asyncio.CancelledError:
+            logging.info(f"{worker_type}-worker:{id} shutting down")
             await worker.shutdown()
 
     asyncio.run(run_worker())

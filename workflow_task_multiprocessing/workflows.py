@@ -3,8 +3,8 @@ import os
 
 from temporalio import workflow
 
-from workflow_multiprocessing import ACTIVITY_TASK_QUEUE
-from workflow_multiprocessing.activities import echo_pid_activity
+from workflow_task_multiprocessing import ACTIVITY_TASK_QUEUE
+from workflow_task_multiprocessing.activities import echo_pid_activity
 
 
 @workflow.defn

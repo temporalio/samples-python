@@ -48,64 +48,46 @@ options:
 
 ## Example Output
 
-<table style="width:100%">
-<tr>
-<th style="width:45%">worker.py</th>
-<th>starter.py</th>
-</tr>
-
-<tr >
-<td style="vertical-align:top;">
-
 ```sh
 uv run workflow_task_multiprocessing/worker.py
 
-INFO:worker:starting 2 workflow worker(s) and 1 activity worker(s)
-INFO:worker:waiting for keyboard interrupt or for all workers to exit
-INFO:root:activity-worker:0 starting
-INFO:root:workflow-worker:1 starting
-INFO:root:workflow-worker:0 starting
-INFO:root:workflow-worker:1 shutting down
-INFO:root:activity-worker:0 shutting down
-INFO:root:workflow-worker:0 shutting down
-INFO:temporalio.worker._worker:Beginning worker shutdown, will wait 0:00:00 before cancelling activities
-INFO:temporalio.worker._worker:Beginning worker shutdown, will wait 0:00:00 before cancelling activities
-INFO:temporalio.worker._worker:Beginning worker shutdown, will wait 0:00:00 before cancelling activities
+starting 2 workflow worker(s) and 1 activity worker(s)
+waiting for keyboard interrupt or for all workers to exit
+workflow-worker:0 starting
+workflow-worker:1 starting
+activity-worker:0 starting
+workflow-worker:0 shutting down
+activity-worker:0 shutting down
+workflow-worker:1 shutting down
 ```
 
-</td>
-<td style="vertical-align:top;">
 
 ```sh
 uv run workflow_task_multiprocessing/starter.py
 
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18493 | activity-pid:18495 | wf-ending-pid:18493
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
-INFO:starter:wf-starting-pid:18494 | activity-pid:18495 | wf-ending-pid:18494
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
+wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
 ```
-
-</td>
-</tr>
-</table>

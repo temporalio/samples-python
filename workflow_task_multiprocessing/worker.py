@@ -4,7 +4,6 @@ import dataclasses
 import multiprocessing
 import traceback
 import asyncio
-import logging
 from typing import Literal
 
 from temporalio.client import Client
@@ -20,7 +19,6 @@ from workflow_task_multiprocessing import ACTIVITY_TASK_QUEUE, WORKFLOW_TASK_QUE
 from workflow_task_multiprocessing.workflows import ParallelizedWorkflow
 from workflow_task_multiprocessing.activities import echo_pid_activity
 
-logger = logging.getLogger("worker")
 
 # Immediately prevent the default Runtime from being created to ensure
 # each process creates it's own
@@ -41,7 +39,7 @@ def main():
     parser.add_argument("-w", "--num-workflow-workers", type=int, default=2)
     parser.add_argument("-a", "--num-activity-workers", type=int, default=1)
     args = parser.parse_args(namespace=Args())
-    logger.info(
+    print(
         f"starting {args.num_workflow_workers} workflow worker(s) and {args.num_activity_workers} activity worker(s)"
     )
 
@@ -75,9 +73,9 @@ def main():
         )
 
         try:
-            logger.info("waiting for keyboard interrupt or for all workers to exit")
+            print("waiting for keyboard interrupt or for all workers to exit")
             for worker in concurrent.futures.as_completed(worker_futures):
-                logger.error("worker exited unexpectedly")
+                print("ERROR: worker exited unexpectedly")
                 if worker.exception():
                     traceback.print_exception(worker.exception())
         except KeyboardInterrupt:
@@ -98,10 +96,10 @@ def worker_entry(worker_type: Literal["workflow", "activity"], id: int):
             worker = activity_worker(client)
 
         try:
-            logging.info(f"{worker_type}-worker:{id} starting")
+            print(f"{worker_type}-worker:{id} starting")
             await asyncio.shield(worker.run())
         except asyncio.CancelledError:
-            logging.info(f"{worker_type}-worker:{id} shutting down")
+            print(f"{worker_type}-worker:{id} shutting down")
             await worker.shutdown()
 
     asyncio.run(run_worker())
@@ -146,5 +144,4 @@ def activity_worker(client: Client) -> Worker:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()

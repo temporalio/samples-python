@@ -17,14 +17,14 @@ This sample demonstrates using `concurrent.futures.ProcessPoolExecutor` to run m
 
 To run, first see the root [README.md](../README.md) for prerequisites. Then, run the following from the root directory to run the `workflow_task_multiprocessing/` sample:
 
-```sh
+```
 uv run workflow_task_multiprocessing/worker.py
 uv run workflow_task_multiprocessing/starter.py
 ```
 
 Both `worker.py` and `starter.py` have minimal arguments that can be modified to run the sample in varying contexts.
 
-```sh
+```
 uv run workflow_task_multiprocessing/worker.py -h
 
 usage: worker.py [-h] [-w NUM_WORKFLOW_WORKERS] [-a NUM_ACTIVITY_WORKERS]
@@ -35,7 +35,7 @@ options:
   -a, --num-activity-workers NUM_ACTIVITY_WORKERS
 ```
 
-```sh
+```
 uv run workflow_task_multiprocessing/starter.py -h
 
 usage: starter.py [-h] [-n NUM_WORKFLOWS]
@@ -48,7 +48,7 @@ options:
 
 ## Example Output
 
-```sh
+```
 uv run workflow_task_multiprocessing/worker.py
 
 starting 2 workflow worker(s) and 1 activity worker(s)
@@ -62,7 +62,7 @@ workflow-worker:1 shutting down
 ```
 
 
-```sh
+```
 uv run workflow_task_multiprocessing/starter.py
 
 wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178

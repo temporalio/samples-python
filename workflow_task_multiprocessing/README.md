@@ -3,26 +3,26 @@
 
 ## Python Concurrency Limitations
 
-CPU bound tasks effectively cannot be run in parallel in Python due to the [global interpreter lock](https://docs.python.org/3/glossary.html#term-global-interpreter-lock). The [Python standard library `threading` module](https://docs.python.org/3/library/threading.html) shares the following advice:
+CPU-bound tasks effectively cannot run in parallel in Python due to the [Global Interpreter Lock (GIL)](https://docs.python.org/3/glossary.html#term-global-interpreter-lock). The Python standard library's [`threading` module](https://docs.python.org/3/library/threading.html) provides the following guidance:
 
 > CPython implementation detail: In CPython, due to the Global Interpreter Lock, only one thread can execute Python code at once (even though certain performance-oriented libraries might overcome this limitation). If you want your application to make better use of the computational resources of multi-core machines, you are advised to use multiprocessing or concurrent.futures.ProcessPoolExecutor. However, threading is still an appropriate model if you want to run multiple I/O-bound tasks simultaneously.
 
 ## Temporal Workflow Tasks in Python
 
-[Temporal Workflow Tasks](https://docs.temporal.io/tasks#workflow-task) are CPU bound operations and therefore cannot be run concurrently using threads or an async runtime. Instead, we can use [`concurrent.futures.ProcessPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor) or the [`multiprocessing` module](https://docs.python.org/3/library/multiprocessing.html) as suggested by the `threading` documentation to more appropriately utilize machine resources.
+[Temporal Workflow Tasks](https://docs.temporal.io/tasks#workflow-task) are CPU-bound operations and therefore cannot be run concurrently using threads or an async runtime. Instead, we can use [`concurrent.futures.ProcessPoolExecutor`](https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor) or the [`multiprocessing` module](https://docs.python.org/3/library/multiprocessing.html), as suggested by the `threading` documentation, to more appropriately utilize machine resources.
 
-This sample demonstrates using `concurrent.futures.ProcessPoolExecutor` to run multiple workflow worker processes.
+This sample demonstrates how to use `concurrent.futures.ProcessPoolExecutor` to run multiple workflow worker processes.
 
 ## Running the Sample
 
-To run, first see the root [README.md](../README.md) for prerequisites. Then, run the following from the root directory to run the `workflow_task_multiprocessing/` sample:
+To run, first see the root [README.md](../README.md) for prerequisites. Then execute the following commands from the root directory:
 
 ```
 uv run workflow_task_multiprocessing/worker.py
 uv run workflow_task_multiprocessing/starter.py
 ```
 
-Both `worker.py` and `starter.py` have minimal arguments that can be modified to run the sample in varying contexts.
+Both `worker.py` and `starter.py` have minimal arguments that can be adjusted to modify how the sample runs.
 
 ```
 uv run workflow_task_multiprocessing/worker.py -h

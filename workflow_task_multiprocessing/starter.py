@@ -1,5 +1,5 @@
-import asyncio
 import argparse
+import asyncio
 import uuid
 
 from temporalio.client import Client

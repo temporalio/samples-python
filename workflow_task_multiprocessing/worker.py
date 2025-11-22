@@ -1,24 +1,23 @@
 import argparse
+import asyncio
 import concurrent.futures
 import dataclasses
 import multiprocessing
 import traceback
-import asyncio
 from typing import Literal
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
-from temporalio.worker import Worker, PollerBehaviorSimpleMaximum
+from temporalio.runtime import Runtime, TelemetryConfig
+from temporalio.worker import PollerBehaviorSimpleMaximum, Worker
 from temporalio.worker.workflow_sandbox import (
     SandboxedWorkflowRunner,
     SandboxRestrictions,
 )
-from temporalio.runtime import Runtime, TelemetryConfig
 
 from workflow_task_multiprocessing import ACTIVITY_TASK_QUEUE, WORKFLOW_TASK_QUEUE
-from workflow_task_multiprocessing.workflows import ParallelizedWorkflow
 from workflow_task_multiprocessing.activities import echo_pid_activity
-
+from workflow_task_multiprocessing.workflows import ParallelizedWorkflow
 
 # Immediately prevent the default Runtime from being created to ensure
 # each process creates it's own
@@ -49,7 +48,7 @@ def main():
     try:
         mp_ctx = multiprocessing.get_context("fork")
     except ValueError:
-        mp_ctx = multiprocessing.get_context("spawn")
+        mp_ctx = multiprocessing.get_context("spawn")  # type: ignore
 
     with concurrent.futures.ProcessPoolExecutor(
         args.total_workers, mp_context=mp_ctx

@@ -39,7 +39,7 @@ async def main():
         for _ in range(args.num_workflows)
     ]
 
-    # Wait for workflow completion (runs indefinitely until it receives a signal)
+    # Wait for workflow completion
     for wf in asyncio.as_completed(wf_handles):
         result = await wf
         print(result)

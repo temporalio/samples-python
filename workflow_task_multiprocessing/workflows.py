@@ -10,7 +10,7 @@ from workflow_task_multiprocessing.activities import echo_pid_activity
 @workflow.defn
 class ParallelizedWorkflow:
     @workflow.run
-    async def run(self, input: str) -> str:
+    async def run(self) -> str:
         pid = os.getpid()
         activity_result = await workflow.execute_activity(
             echo_pid_activity,

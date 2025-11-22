@@ -32,7 +32,6 @@ async def main():
     wf_handles = [
         client.execute_workflow(
             ParallelizedWorkflow.run,
-            "temporal",
             id=f"greeting-workflow-id-{uuid.uuid4()}",
             task_queue=WORKFLOW_TASK_QUEUE,
         )

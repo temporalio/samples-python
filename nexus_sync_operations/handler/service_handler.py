@@ -64,7 +64,7 @@ class GreetingServiceHandler:
         self, ctx: nexusrpc.handler.StartOperationContext, inputLanguage: GetLanguagesInput
     ) -> list[Language]:
         return await self.greeting_workflow_handle.query(
-            GreetingEntityWorkflow.get_languages, inputLanguage
+            GreetingEntityWorkflow.get_languages, input=inputLanguage
         )
 
     # 👉 This is a handler for a nexus operation whose internal implementation involves executing a

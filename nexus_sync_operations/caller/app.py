@@ -31,7 +31,8 @@ async def execute_caller_workflow(
         # it only calls operations on remote endpoint
     ):
         log = await client.execute_workflow(
-            CallerWorkflow.run[None],
+            CallerWorkflow.run,
+            args=[],
             id=str(uuid.uuid4()),
             task_queue=caller_task_queue,  # Use caller's task queue
         )

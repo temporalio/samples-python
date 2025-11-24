@@ -3,8 +3,8 @@ from datetime import timedelta
 
 from temporalio import workflow
 
-from workflow_task_multiprocessing import ACTIVITY_TASK_QUEUE
-from workflow_task_multiprocessing.activities import echo_pid_activity
+from worker_multiprocessing import ACTIVITY_TASK_QUEUE
+from worker_multiprocessing.activities import echo_pid_activity
 
 
 @workflow.defn

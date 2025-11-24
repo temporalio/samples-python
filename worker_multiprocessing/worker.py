@@ -15,9 +15,9 @@ from temporalio.worker.workflow_sandbox import (
     SandboxRestrictions,
 )
 
-from workflow_task_multiprocessing import ACTIVITY_TASK_QUEUE, WORKFLOW_TASK_QUEUE
-from workflow_task_multiprocessing.activities import echo_pid_activity
-from workflow_task_multiprocessing.workflows import ParallelizedWorkflow
+from worker_multiprocessing import ACTIVITY_TASK_QUEUE, WORKFLOW_TASK_QUEUE
+from worker_multiprocessing.activities import echo_pid_activity
+from worker_multiprocessing.workflows import ParallelizedWorkflow
 
 # Immediately prevent the default Runtime from being created to ensure
 # each process creates it's own

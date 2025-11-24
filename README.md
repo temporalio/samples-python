@@ -84,7 +84,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
-* [workflow_task_multiprocessing](workflow_task_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks. 
+* [worker_multiprocessing](worker_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks and other CPU bound operations by running multiple workers. 
 
 ## Test
 

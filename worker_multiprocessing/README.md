@@ -1,4 +1,4 @@
-# Workflow Task Multiprocessing Sample
+# Worker Multiprocessing Sample
 
 
 ## Python Concurrency Limitations
@@ -18,14 +18,14 @@ This sample demonstrates how to use `concurrent.futures.ProcessPoolExecutor` to 
 To run, first see the root [README.md](../README.md) for prerequisites. Then execute the following commands from the root directory:
 
 ```
-uv run workflow_task_multiprocessing/worker.py
-uv run workflow_task_multiprocessing/starter.py
+uv run worker_multiprocessing/worker.py
+uv run worker_multiprocessing/starter.py
 ```
 
 Both `worker.py` and `starter.py` have minimal arguments that can be adjusted to modify how the sample runs.
 
 ```
-uv run workflow_task_multiprocessing/worker.py -h
+uv run worker_multiprocessing/worker.py -h
 
 usage: worker.py [-h] [-w NUM_WORKFLOW_WORKERS] [-a NUM_ACTIVITY_WORKERS]
 
@@ -36,7 +36,7 @@ options:
 ```
 
 ```
-uv run workflow_task_multiprocessing/starter.py -h
+uv run worker_multiprocessing/starter.py -h
 
 usage: starter.py [-h] [-n NUM_WORKFLOWS]
 
@@ -49,7 +49,7 @@ options:
 ## Example Output
 
 ```
-uv run workflow_task_multiprocessing/worker.py
+uv run worker_multiprocessing/worker.py
 
 starting 2 workflow worker(s) and 1 activity worker(s)
 waiting for keyboard interrupt or for all workers to exit
@@ -63,7 +63,7 @@ workflow-worker:1 shutting down
 
 
 ```
-uv run workflow_task_multiprocessing/starter.py
+uv run worker_multiprocessing/starter.py
 
 wf-starting-pid:19178 | activity-pid:19180 | wf-ending-pid:19178
 wf-starting-pid:19179 | activity-pid:19180 | wf-ending-pid:19179

@@ -5,8 +5,8 @@ import uuid
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from workflow_task_multiprocessing import WORKFLOW_TASK_QUEUE
-from workflow_task_multiprocessing.workflows import ParallelizedWorkflow
+from worker_multiprocessing import WORKFLOW_TASK_QUEUE
+from worker_multiprocessing.workflows import ParallelizedWorkflow
 
 
 class Args(argparse.Namespace):

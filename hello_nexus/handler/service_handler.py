@@ -4,8 +4,6 @@ This file demonstrates how to implement a Nexus service.
 
 from __future__ import annotations
 
-import uuid
-
 import nexusrpc
 from temporalio import nexus
 
@@ -33,7 +31,7 @@ class MyNexusServiceHandler:
         return await ctx.start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
-            id=str(uuid.uuid4()),
+            id=f"greeting-for-{input.name}",
         )
 
     # This is a Nexus operation that responds synchronously to all requests. That means

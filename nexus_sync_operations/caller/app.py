@@ -1,11 +1,10 @@
 import asyncio
-import uuid
 from typing import Optional
 
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from nexus_sync_operations.caller.workflows import CallerWorkflow
+from nexus_sync_operations.caller.workflows import CallerWorkflow, NEXUS_ENDPOINT
 
 NAMESPACE = "nexus-sync-operations-caller-namespace"
 TASK_QUEUE = "nexus-sync-operations-caller-task-queue"
@@ -24,9 +23,10 @@ async def execute_caller_workflow(
         task_queue=TASK_QUEUE,
         workflows=[CallerWorkflow],
     ):
+        workflow_id = f"{NEXUS_ENDPOINT}-caller"
         log = await client.execute_workflow(
             CallerWorkflow.run,
-            id=str(uuid.uuid4()),
+            id=workflow_id,
             task_queue=TASK_QUEUE,
         )
         for line in log:

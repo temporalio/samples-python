@@ -37,7 +37,7 @@ encryption = [
     "cryptography>=38.0.1,<39",
     "aiohttp>=3.8.1,<4",
 ]
-gevent = ["gevent==25.4.2 ; python_version >= '3.8'"]
+gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 langchain = [
     "langchain>=0.1.7,<0.2 ; python_version >= '3.8.1' and python_version < '4.0'",
     "langchain-openai>=0.0.6,<0.0.7 ; python_version >= '3.8.1' and python_version < '4.0'",

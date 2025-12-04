@@ -1,16 +1,15 @@
 import sys
 import uuid
 
+if sys.version_info >= (3, 14):
+    pytest.skip("trio-asyncio not supported on Python 3.14+", allow_module_level=True)
+
 import pytest
 import trio_asyncio
 from temporalio.client import Client
 from temporalio.worker import Worker
 
 from trio_async import activities, workflows
-
-# Skip entire module on Python 3.14+
-if sys.version_info >= (3, 14):
-    pytest.skip("trio-asyncio not supported on Python 3.14+", allow_module_level=True)
 
 
 async def test_workflow_with_trio(client: Client):

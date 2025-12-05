@@ -26,7 +26,6 @@ async def main():
     # for both activities and workflow tasks and by default the worker supports
     # 100 max concurrent activity tasks and 100 max concurrent workflow tasks.
     with trio_asyncio.TrioExecutor(max_workers=200) as thread_executor:
-
         # Run a worker for the workflow
         async with Worker(
             client,

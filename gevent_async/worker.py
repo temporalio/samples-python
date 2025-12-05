@@ -48,7 +48,6 @@ async def async_main():
     # running this async main. The max_workers here needs to have enough room to
     # support the max concurrent activities/workflows settings.
     with GeventExecutor(max_workers=200) as executor:
-
         # Run a worker for the workflow and activities
         async with Worker(
             client,
@@ -68,7 +67,6 @@ async def async_main():
             max_concurrent_activities=100,
             max_concurrent_workflow_tasks=100,
         ):
-
             # Wait until interrupted
             logging.info("Worker started, ctrl+c to exit")
             await interrupt_event.wait()

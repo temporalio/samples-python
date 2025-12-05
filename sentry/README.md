@@ -3,6 +3,8 @@
 This sample shows how to configure [Sentry](https://sentry.io) SDK (version 2) to intercept and capture errors from the Temporal SDK
 for workflows and activities. The integration adds some useful context to the errors, such as the activity type, task queue, etc.
 
+Note: Sentry currently does not support Python 3.14, likewise this sample does not support Python 3.14.
+
 ## Further details
 
 This is a small modification of the original example Sentry integration in this repo based on SDK v1. The integration

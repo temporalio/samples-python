@@ -10,7 +10,6 @@ from hello.hello_change_log_level import LOG_MESSAGE, GreetingWorkflow
 
 
 async def test_workflow_with_log_capture(client: Client):
-
     log_stream = io.StringIO()
     handler = logging.StreamHandler(log_stream)
     handler.setLevel(logging.ERROR)

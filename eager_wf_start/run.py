@@ -12,7 +12,6 @@ TASK_QUEUE = "eager-wf-start-task-queue"
 
 
 async def main():
-
     # Note that the worker and client run in the same process and share the same client connection.
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")

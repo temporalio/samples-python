@@ -22,7 +22,7 @@ async def main(client: Optional[Client] = None):
     if client is None:
         config = ClientConfig.load_client_connect_config()
         config.setdefault("target_host", "localhost:7233")
-        (config.setdefault("namespace", NAMESPACE),)
+        config.setdefault("namespace", NAMESPACE)
         client = await Client.connect(**config)
 
     # Create the nexus service handler instance, starting the long-running entity workflow that

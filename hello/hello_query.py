@@ -39,7 +39,6 @@ async def main():
         task_queue="hello-query-task-queue",
         workflows=[GreetingWorkflow],
     ):
-
         # While the worker is running, use the client to start the workflow.
         # Note, in many production setups, the client would be in a completely
         # separate process from the worker.

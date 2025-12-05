@@ -61,7 +61,6 @@ async def main():
         # This same thread pool could be passed to multiple workers if desired.
         activity_executor=ThreadPoolExecutor(5),
     ):
-
         # While the worker is running, use the client to run the workflow and
         # print out its result. Note, in many production setups, the client
         # would be in a completely separate process from the worker.

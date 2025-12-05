@@ -15,13 +15,13 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python: ["3.10", "3.13"]
+        python: ["3.10", "3.14"]
         os: [ubuntu-latest, macos-intel, macos-arm, windows-latest]
         include:
           - os: macos-intel
-            runsOn: macos-13
+            runsOn: macos-15-intel
           - os: macos-arm
-            runsOn: macos-14
+            runsOn: macos-latest
     runs-on: ${{ matrix.runsOn || matrix.os }}
     steps:
       - uses: astral-sh/setup-uv@v5

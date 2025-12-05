@@ -16,8 +16,7 @@ Documentation = "https://docs.temporal.io/docs/python"
 
 [dependency-groups]
 dev = [
-    "black>=22.3.0,<23",
-    "isort>=5.10.1,<6",
+    "ruff>=0.5.0,<0.6",
     "mypy>=1.4.1,<2",
     "pytest>=7.1.2,<8",
     "pytest-asyncio>=0.18.3,<0.19",
@@ -119,8 +118,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.poe.tasks]
-format = [{cmd = "uv run black ."}, {cmd = "uv run isort ."}]
-lint = [{cmd = "uv run black --check ."}, {cmd = "uv run isort --check-only ."}, {ref = "lint-types" }]
+format = [{cmd = "uv run ruff check --select I --fix"}, {cmd = "uv run ruff format"}]
+lint = [{cmd = "uv run ruff check --select I"}, {cmd = "uv run ruff format --check"}, {ref = "lint-types"}]
 lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages ."
 test = "uv run --all-groups pytest"
 
@@ -130,9 +129,8 @@ log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 
-[tool.isort]
-profile = "black"
-skip_gitignore = true
+[tool.ruff]
+target-version = "py310"
 
 [tool.mypy]
 ignore_missing_imports = true

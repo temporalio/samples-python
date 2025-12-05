@@ -77,9 +77,9 @@ async def on_seat_booking_handoff(
 ### AGENTS
 
 
-def init_agents() -> Tuple[
-    Agent[AirlineAgentContext], Dict[str, Agent[AirlineAgentContext]]
-]:
+def init_agents() -> (
+    Tuple[Agent[AirlineAgentContext], Dict[str, Agent[AirlineAgentContext]]]
+):
     """
     Initialize the agents for the airline customer service workflow.
     :return: triage agent

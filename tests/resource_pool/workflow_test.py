@@ -70,10 +70,10 @@ async def test_resource_pool_workflow(client: Client):
                     holder = None
 
         # Are all the resources free, per the query?
-        handle: WorkflowHandle[
-            ResourcePoolWorkflow, None
-        ] = client.get_workflow_handle_for(
-            ResourcePoolWorkflow.run, RESOURCE_POOL_WORKFLOW_ID
+        handle: WorkflowHandle[ResourcePoolWorkflow, None] = (
+            client.get_workflow_handle_for(
+                ResourcePoolWorkflow.run, RESOURCE_POOL_WORKFLOW_ID
+            )
         )
         query_result = await handle.query(ResourcePoolWorkflow.get_current_holders)
         assert query_result == {"r_a": None, "r_b": None, "r_c": None}

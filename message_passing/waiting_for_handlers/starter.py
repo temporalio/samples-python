@@ -37,7 +37,9 @@ async def _check_run(
             wait_for_stage=client.WorkflowUpdateStage.ACCEPTED,
         )
     except Exception as e:
-        print(f"    🔴 caught exception while starting update: {e}: {e.__cause__ or ''}")
+        print(
+            f"    🔴 caught exception while starting update: {e}: {e.__cause__ or ''}"
+        )
 
     if exit_type == WorkflowExitType.CANCELLATION:
         await wf_handle.cancel()

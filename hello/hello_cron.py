@@ -46,7 +46,6 @@ async def main():
         activities=[compose_greeting],
         activity_executor=ThreadPoolExecutor(5),
     ):
-
         print("Running workflow once a minute")
 
         # While the worker is running, use the client to start the workflow.

@@ -25,7 +25,6 @@ class SimpleWorkerInterceptor(Interceptor):
 
 class CustomScheduleToStartInterceptor(ActivityInboundInterceptor):
     async def execute_activity(self, input: ExecuteActivityInput):
-
         schedule_to_start = (
             activity.info().started_time
             - activity.info().current_attempt_scheduled_time

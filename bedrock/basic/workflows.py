@@ -10,7 +10,6 @@ with workflow.unsafe.imports_passed_through():
 class BasicBedrockWorkflow:
     @workflow.run
     async def run(self, prompt: str) -> str:
-
         workflow.logger.info("Prompt: %s" % prompt)
 
         response = await workflow.execute_activity_method(

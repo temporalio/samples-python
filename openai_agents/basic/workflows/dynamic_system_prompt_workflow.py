@@ -26,9 +26,9 @@ class DynamicSystemPromptWorkflow:
     @workflow.run
     async def run(self, user_message: str, style: Optional[str] = None) -> str:
         if style is None:
-            selected_style: Literal[
-                "haiku", "pirate", "robot"
-            ] = workflow.random().choice(["haiku", "pirate", "robot"])
+            selected_style: Literal["haiku", "pirate", "robot"] = (
+                workflow.random().choice(["haiku", "pirate", "robot"])
+            )
         else:
             # Validate that the provided style is one of the allowed values
             if style not in ["haiku", "pirate", "robot"]:

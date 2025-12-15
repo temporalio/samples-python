@@ -42,6 +42,8 @@ class ToolsWorkflow(ClaudeMessageReceiver):
         )
 
         # Create and use Claude session
+        # The context manager handles activity lifecycle - when exiting, it waits
+        # for the activity to complete gracefully before returning
         async with claude_workflow.claude_session("tools-session", config):
             # Create client for this workflow
             client = SimplifiedClaudeClient(self)
@@ -93,7 +95,8 @@ class ToolsWorkflow(ClaudeMessageReceiver):
                         if block.get("type") == "text":
                             result += block.get("text", "")
 
-            # Close the session
+            # Close the client (optional - kept for backwards compatibility)
+            # Actual cleanup happens when exiting the context manager
             await client.close()
 
         return result

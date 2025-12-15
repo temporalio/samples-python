@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -332,6 +332,23 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/44/96/392abd49b094d30b91d9fbda6a69519e95802250b777841cf3bda8fe136c/charset_normalizer-3.4.2-cp313-cp313-win32.whl", hash = "sha256:aaeeb6a479c7667fbe1099af9617c83aaca22182d6cf8c53966491a0f1b7ffb7", size = 98064, upload-time = "2025-05-02T08:33:17.06Z" },
     { url = "https://files.pythonhosted.org/packages/e9/b0/0200da600134e001d91851ddc797809e2fe0ea72de90e09bec5a2fbdaccb/charset_normalizer-3.4.2-cp313-cp313-win_amd64.whl", hash = "sha256:aa6af9e7d59f9c12b33ae4e9450619cf2488e2bbe9b44030905877f0b2324980", size = 105641, upload-time = "2025-05-02T08:33:18.753Z" },
     { url = "https://files.pythonhosted.org/packages/20/94/c5790835a017658cbfabd07f3bfb549140c3ac458cfc196323996b10095a/charset_normalizer-3.4.2-py3-none-any.whl", hash = "sha256:7f56930ab0abd1c45cd15be65cc741c28b1c9a34876ce8c17a2fa107810c0af0", size = 52626, upload-time = "2025-05-02T08:34:40.053Z" },
+]
+
+[[package]]
+name = "claude-agent-sdk"
+version = "0.1.16"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "mcp" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/58/44/cb098af3ec7045f3879c9dd22264f1e42ebe15047d6221320b5a61507def/claude_agent_sdk-0.1.16.tar.gz", hash = "sha256:d38d361eaafb2599ab6ba1472ac797f0420a2481f2893ab0b102e64b1cadf78a", size = 55985, upload-time = "2025-12-13T00:24:24.533Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/39/d5/09f8d74a36d26613d0bf0317b2ef2aa128df732a75d61b6da29dd325a97f/claude_agent_sdk-0.1.16-py3-none-macosx_11_0_arm64.whl", hash = "sha256:1061ec27599876ff4138d798147f2776c609328632a939e17103fa45a13d086e", size = 49599124, upload-time = "2025-12-13T00:24:11.613Z" },
+    { url = "https://files.pythonhosted.org/packages/cc/0c/5fcdc08e1bd3b3878ec6c7ee4aba5dead9dd1a69cf0ca45f9b284e9e9831/claude_agent_sdk-0.1.16-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:f287d7d003089cbe4da8f122ab7afd402d93c79bebbffa560f462dbbc4a78563", size = 63891863, upload-time = "2025-12-13T00:24:15.031Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/7d/84b3edbbe448a835a9b8a4bd8be6992e2535e20c1e7bc7992d58b73f9dea/claude_agent_sdk-0.1.16-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:562a16bcf6f2d67eeb62c31f2500f0d3fd3e6349983c85537e83343bbdddaef7", size = 65488353, upload-time = "2025-12-13T00:24:18.541Z" },
+    { url = "https://files.pythonhosted.org/packages/67/30/3de1196f5ffa099c9b1878fb4c2ec128961ec6973ca3e6be9b2c5a497769/claude_agent_sdk-0.1.16-py3-none-win_amd64.whl", hash = "sha256:48edca31d488a911248da0ba3c1bd1f4440ced2ab84e877040e4d8c31641c0eb", size = 67766031, upload-time = "2025-12-13T00:24:21.976Z" },
 ]
 
 [[package]]
@@ -1405,14 +1422,14 @@ wheels = [
 
 [[package]]
 name = "nexus-rpc"
-version = "1.1.0"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ef/66/540687556bd28cf1ec370cc6881456203dfddb9dab047b8979c6865b5984/nexus_rpc-1.1.0.tar.gz", hash = "sha256:d65ad6a2f54f14e53ebe39ee30555eaeb894102437125733fb13034a04a44553", size = 77383, upload-time = "2025-07-07T19:03:58.368Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/f2/d54f5c03d8f4672ccc0875787a385f53dcb61f98a8ae594b5620e85b9cb3/nexus_rpc-1.3.0.tar.gz", hash = "sha256:e56d3b57b60d707ce7a72f83f23f106b86eca1043aa658e44582ab5ff30ab9ad", size = 75650, upload-time = "2025-12-08T22:59:13.002Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/2f/9e9d0dcaa4c6ffa22b7aa31069a8a264c753ff8027b36af602cce038c92f/nexus_rpc-1.1.0-py3-none-any.whl", hash = "sha256:d1b007af2aba186a27e736f8eaae39c03aed05b488084ff6c3d1785c9ba2ad38", size = 27743, upload-time = "2025-07-07T19:03:57.556Z" },
+    { url = "https://files.pythonhosted.org/packages/d6/74/0afd841de3199c148146c1d43b4bfb5605b2f1dc4c9a9087fe395091ea5a/nexus_rpc-1.3.0-py3-none-any.whl", hash = "sha256:aee0707b4861b22d8124ecb3f27d62dafbe8777dc50c66c91e49c006f971b92d", size = 28873, upload-time = "2025-12-08T22:59:12.024Z" },
 ]
 
 [[package]]
@@ -2596,21 +2613,14 @@ wheels = [
 
 [[package]]
 name = "temporalio"
-version = "1.19.0"
-source = { registry = "https://pypi.org/simple" }
+version = "1.20.0"
+source = { directory = "../sdk-python" }
 dependencies = [
     { name = "nexus-rpc" },
     { name = "protobuf" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'" },
     { name = "types-protobuf" },
     { name = "typing-extensions" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/92/0775d831fa245d61b74db2059d5a24a04cef0532ed2c48310a5ab007de9c/temporalio-1.19.0-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:c2d6d5cad8aec56e048705aa4f0bab83fec15343757ea7acf8504f2e0c289b60", size = 13175255, upload-time = "2025-11-13T22:35:54.22Z" },
-    { url = "https://files.pythonhosted.org/packages/e2/e1/2a818fefc0023eb132bfff1a03440bcaff154d4d97445ef88a40c23c20c8/temporalio-1.19.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:d85c89018cba9471ce529d90c9cee5bcc31790fd64176b9ada32cc76440f8d73", size = 12854549, upload-time = "2025-11-13T22:35:57.217Z" },
-    { url = "https://files.pythonhosted.org/packages/ff/78/fe5c8c9b112b38e01aba845335df17a8bbfd60a434ffe3c1c4737ced40a0/temporalio-1.19.0-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f772f0698d60f808bc3c4a055fb53e40d757fa646411845b911863eebbf0549d", size = 13237772, upload-time = "2025-11-13T22:36:00.511Z" },
-    { url = "https://files.pythonhosted.org/packages/d9/82/be0fd31119651f518f8db8685fd61976d9d5bbecf3b562d51f13a6442a17/temporalio-1.19.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f706c8f49771daf342ac8daa8ed07f4124fae943177f9feef458a1255aee717c", size = 13374621, upload-time = "2025-11-13T22:36:03.431Z" },
-    { url = "https://files.pythonhosted.org/packages/d8/94/18f6ae06ffd91507ded9111af1041146a5ba4b56e9256520c5ce82629fc4/temporalio-1.19.0-cp310-abi3-win_amd64.whl", hash = "sha256:162459c293553be39994f20c635a132f7332ae71bd7ba4042f8473701fcf1c7c", size = 14256891, upload-time = "2025-11-13T22:36:06.778Z" },
 ]
 
 [package.optional-dependencies]
@@ -2621,6 +2631,51 @@ openai-agents = [
 opentelemetry = [
     { name = "opentelemetry-api" },
     { name = "opentelemetry-sdk" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "anyio", marker = "extra == 'claude-agent'", specifier = ">=3.0.0,<5" },
+    { name = "claude-agent-sdk", marker = "extra == 'claude-agent'", specifier = ">=0.0.20,<0.1" },
+    { name = "grpcio", marker = "extra == 'grpc'", specifier = ">=1.48.2,<2" },
+    { name = "mcp", marker = "extra == 'openai-agents'", specifier = ">=1.9.4,<2" },
+    { name = "nexus-rpc", specifier = "==1.3.0" },
+    { name = "openai-agents", marker = "extra == 'openai-agents'", specifier = ">=0.3,<0.5" },
+    { name = "opentelemetry-api", marker = "extra == 'opentelemetry'", specifier = ">=1.11.1,<2" },
+    { name = "opentelemetry-sdk", marker = "extra == 'opentelemetry'", specifier = ">=1.11.1,<2" },
+    { name = "protobuf", specifier = ">=3.20,<7.0.0" },
+    { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.0.0,<3" },
+    { name = "python-dateutil", marker = "python_full_version < '3.11'", specifier = ">=2.8.2,<3" },
+    { name = "types-protobuf", specifier = ">=3.20" },
+    { name = "typing-extensions", specifier = ">=4.2.0,<5" },
+]
+provides-extras = ["grpc", "opentelemetry", "pydantic", "openai-agents", "claude-agent"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "cibuildwheel", specifier = ">=2.22.0,<3" },
+    { name = "claude-agent-sdk", specifier = ">=0.0.20,<0.1" },
+    { name = "googleapis-common-protos", specifier = "==1.70.0" },
+    { name = "grpcio-tools", specifier = ">=1.48.2,<2" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "maturin", specifier = ">=1.8.2" },
+    { name = "mypy", specifier = "==1.18.2" },
+    { name = "mypy-protobuf", specifier = ">=3.3.0,<4" },
+    { name = "openai-agents", marker = "python_full_version >= '3.14'", specifier = ">=0.3,<0.5" },
+    { name = "openai-agents", extras = ["litellm"], marker = "python_full_version < '3.14'", specifier = ">=0.3,<0.4" },
+    { name = "psutil", specifier = ">=5.9.3,<6" },
+    { name = "pydocstyle", specifier = ">=6.3.0,<7" },
+    { name = "pydoctor", specifier = ">=25.10.1,<26" },
+    { name = "pyright", specifier = "==1.1.403" },
+    { name = "pytest", specifier = "~=7.4" },
+    { name = "pytest-asyncio", specifier = ">=0.21,<0.22" },
+    { name = "pytest-cov", specifier = ">=6.1.1" },
+    { name = "pytest-pretty", specifier = ">=1.3.0" },
+    { name = "pytest-rerunfailures", specifier = ">=16.1" },
+    { name = "pytest-timeout", specifier = "~=2.2" },
+    { name = "ruff", specifier = ">=0.5.0,<0.6" },
+    { name = "toml", specifier = ">=0.10.2,<0.11" },
+    { name = "twine", specifier = ">=4.0.1,<5" },
 ]
 
 [[package]]
@@ -2634,6 +2689,10 @@ dependencies = [
 [package.dev-dependencies]
 bedrock = [
     { name = "boto3" },
+]
+claude-agents = [
+    { name = "claude-agent-sdk" },
+    { name = "temporalio" },
 ]
 cloud-export-to-parquet = [
     { name = "boto3" },
@@ -2702,6 +2761,10 @@ requires-dist = [{ name = "temporalio", specifier = ">=1.19.0,<2" }]
 
 [package.metadata.requires-dev]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
+claude-agents = [
+    { name = "claude-agent-sdk", specifier = ">=0.1.0" },
+    { name = "temporalio", directory = "../sdk-python" },
+]
 cloud-export-to-parquet = [
     { name = "boto3", specifier = ">=1.34.89,<2" },
     { name = "numpy", marker = "python_full_version >= '3.10' and python_full_version < '3.13'", specifier = ">=1.26.0,<2" },

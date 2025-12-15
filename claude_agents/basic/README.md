@@ -42,12 +42,12 @@ Demonstrates using Temporal activities as tools that Claude can invoke.
 
 **Run the worker (if not already running):**
 ```bash
-python -m claude_agents.basic.run_worker
+uv run python -m claude_agents.basic.run_worker
 ```
 
 **Run the workflow:**
 ```bash
-python -m claude_agents.basic.run_tools_workflow
+uv run python -m claude_agents.basic.run_tools_workflow
 ```
 
 This example shows Claude using a weather tool to answer questions about weather conditions.
@@ -69,13 +69,40 @@ class MyWorkflow(ClaudeMessageReceiver):
 
 ### Session Management
 
-Claude sessions are managed using context managers:
+Claude sessions are managed using context managers. The context manager handles the complete activity lifecycle:
 
 ```python
 async with claude_workflow.claude_session("session-name", config):
     client = SimplifiedClaudeClient(self)
     # Use client to interact with Claude
+    await client.close()  # Optional - kept for backwards compatibility
+# Context cancels the activity and waits for cleanup before exiting
 ```
+
+**Important**: The context manager handles all cleanup automatically. When exiting, it cancels the activity and waits for it to complete. The `await client.close()` call is optional and kept for backwards compatibility.
+
+#### Resource Optimization with Pause/Resume
+
+For long-running workflows with idle periods, use `ManagedClaudeSession` to pause/resume the activity:
+
+```python
+from temporalio.contrib.claude_agent import ManagedClaudeSession
+
+async with ManagedClaudeSession("session-name", config, self) as session:
+    # Activity is running
+    result1 = await session.send_query("Create a file")
+
+    # Pause to free resources during idle period
+    await session.pause()
+
+    # Sleep without consuming worker resources
+    await asyncio.sleep(3600)
+
+    # Resume - Claude remembers previous conversation and files
+    result2 = await session.send_query("What's in the file?")
+```
+
+Claude's session state (conversation history, filesystem changes) persists across pause/resume because it's stored on the filesystem.
 
 ### Configuration
 
@@ -96,7 +123,9 @@ Process Claude's responses by iterating over messages:
 ```python
 async for message in client.send_query(prompt):
     if message.get("type") == "assistant":
-        for block in message.get("content", []):
+        # Extract text from nested message structure
+        msg_content = message.get("message", {}).get("content", [])
+        for block in msg_content:
             if block.get("type") == "text":
                 result += block.get("text", "")
 ```
@@ -113,6 +142,17 @@ This design ensures:
 - Workflow determinism (all I/O happens in activities)
 - State persistence (conversations survive worker restarts)
 - Proper isolation (Claude SDK runs outside the workflow sandbox)
+
+### Activity Lifecycle Management
+
+The integration includes robust activity lifecycle management:
+
+- **Graceful Shutdown**: When workflows complete, the context manager waits for the Claude activity to shut down cleanly before returning
+- **Race Condition Handling**: If Claude sends messages after a workflow completes, they're handled gracefully without errors
+- **Coordinated Cleanup**: All background tasks (message readers, heartbeats) coordinate shutdown using internal events
+- **Clean Logs**: No spurious "workflow execution already completed" errors in production logs
+
+This ensures that workflows complete cleanly without leaving orphaned activities or noisy error logs.
 
 ## Differences from OpenAI Agents
 
@@ -140,9 +180,6 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 
 ### Timeout Errors
 Increase the activity timeout in your session configuration if Claude needs more time to respond.
-
-### Multi-turn Conversations
-The current implementation has a known issue with multi-turn conversations timing out. This is being actively debugged.
 
 ## Next Steps
 

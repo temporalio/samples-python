@@ -2,7 +2,7 @@
 
 This sample demonstrates how to create a Temporal workflow that runs forever, sending an email every 30 days.
 
-To run, first see the main [README.md](../../README.md) for prerequisites.
+To run, first see the main [README.md](../README.md) for prerequisites.
 
 Then create two terminals.
 

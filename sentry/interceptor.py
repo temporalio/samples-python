@@ -13,6 +13,7 @@ from temporalio.worker import (
 )
 
 with workflow.unsafe.imports_passed_through():
+    import asyncio
     import sentry_sdk
 
 
@@ -43,7 +44,7 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
                     if is_dataclass(arg) and not isinstance(arg, type):
                         scope.set_context("temporal.activity.input", asdict(arg))
                 scope.set_context("temporal.activity.info", activity.info().__dict__)
-                scope.capture_exception()
+                await asyncio.to_thread(scope.capture_exception, e)
                 raise e
 
 
@@ -71,7 +72,7 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
                 scope.set_context("temporal.workflow.info", workflow.info().__dict__)
                 if not workflow.unsafe.is_replaying():
                     with workflow.unsafe.sandbox_unrestricted():
-                        scope.capture_exception()
+                        await asyncio.to_thread(scope.capture_exception, e)
                 raise e
 
 

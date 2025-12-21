@@ -6,13 +6,13 @@ This is a rare scenario where polling requires execution of a Sequence of Activi
 
 To run, first see [README.md](../../README.md) for prerequisites.
 
-Then, run the following from this directory to run the sample:
+Then, run the following from the root directory to run the sample:
 
-    uv run run_worker.py
+    uv run polling/periodic_sequence/run_worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    uv run run_periodic.py
+    uv run polling/periodic_sequence/run_periodic.py
 
 
 This will start a Workflow and Child Workflow to periodically poll an Activity.

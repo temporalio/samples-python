@@ -10,7 +10,7 @@ from temporalio.worker import Worker
 from updatable_timer.workflow import Workflow
 
 
-async def test_updatable_timer_workflow(client: Client):
+async def test_updatable_timer_workflow():
     logging.basicConfig(level=logging.DEBUG)
 
     task_queue_name = str(uuid.uuid4())

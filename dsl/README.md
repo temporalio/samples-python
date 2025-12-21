@@ -8,22 +8,22 @@ For this sample, the optional `dsl` dependency group must be included. To includ
 
     uv sync --group dsl
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from the root directory to start the
 worker:
 
-    uv run worker.py
+    uv run dsl/worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute a workflow of steps defined in
-[workflow1.yaml](workflow1.yaml):
+[workflow1.yaml](dsl/workflow1.yaml):
 
-    uv run starter.py workflow1.yaml
+    uv run dsl/starter.py dsl/workflow1.yaml
 
 This will run the workflow and show the final variables that the workflow returns. Looking in the worker terminal, each
 step executed will be visible.
 
-Similarly we can do the same for the more advanced [workflow2.yaml](workflow2.yaml) file:
+Similarly we can do the same for the more advanced [workflow2.yaml](dsl/workflow2.yaml) file:
 
-    uv run starter.py workflow2.yaml
+    uv run dsl/starter.py dsl/workflow2.yaml
 
 This sample gives a guide of how one can write a workflow to interpret arbitrary steps from a user-provided DSL. Many
 DSL models are more advanced and are more specific to conform to business logic needs.

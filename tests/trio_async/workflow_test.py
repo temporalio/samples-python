@@ -1,4 +1,11 @@
+import sys
 import uuid
+
+import pytest
+
+if sys.version_info >= (3, 14):
+    pytest.skip("trio-asyncio not supported on Python 3.14+", allow_module_level=True)
+
 
 import trio_asyncio
 from temporalio.client import Client
@@ -33,7 +40,11 @@ async def test_workflow_with_trio(client: Client):
                     task_queue=task_queue,
                 )
 
+    if sys.version_info[:2] < (3, 12):
+        pytest.skip("Trio support requires >= 3.12")
+
     result = trio_asyncio.run(inside_trio, client)
+
     assert result == [
         "Hello, some-user! (from asyncio)",
         "Hello, some-user! (from thread)",

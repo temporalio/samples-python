@@ -10,7 +10,7 @@ Prerequisites:
 * [Temporal CLI installed](https://docs.temporal.io/cli#install)
 * [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
 
-The SDK requires Python >= 3.9. You can install Python using uv. For example,
+The SDK requires Python >= 3.10. You can install Python using uv. For example,
 
     uv python install 3.13
 
@@ -41,6 +41,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_async_activity_completion](hello/hello_async_activity_completion.py) - Complete an activity outside of the
     function that was called.
   * [hello_cancellation](hello/hello_cancellation.py) - Manually react to cancellation inside workflows and activities.
+  * [hello_change_log_level](hello/hello_change_log_level.py) - Change the level of workflow task failure from WARN to ERROR.
   * [hello_child_workflow](hello/hello_child_workflow.py) - Execute a child workflow from a workflow.
   * [hello_continue_as_new](hello/hello_continue_as_new.py) - Use continue as new to restart a workflow.
   * [hello_cron](hello/hello_cron.py) - Execute a workflow once a minute.
@@ -56,6 +57,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
+* [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
 * [cloud_export_to_parquet](cloud_export_to_parquet) - Set up schedule workflow to process exported files on an hourly basis
 * [context_propagation](context_propagation) - Context propagation through workflows/activities via interceptor.
@@ -63,7 +65,9 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [custom_metric](custom_metric) - Custom metric to record the workflow type in the activity schedule to start latency.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
+* [eager_wf_start](eager_wf_start) - Run a workflow using Eager Workflow Start
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
+* [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
@@ -80,13 +84,10 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
+* [worker_multiprocessing](worker_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks and other CPU bound operations by running multiple workers. 
 
 ## Test
 
-Running the tests requires `poe` to be installed.
+To run the tests:
 
-    uv tool install poethepoet
-
-Once you have `poe` installed you can run:
-
-    poe test
+    uv run poe test

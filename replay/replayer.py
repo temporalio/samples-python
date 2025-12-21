@@ -1,6 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Replayer
 
 from replay.worker import JustActivity, JustTimer, TimerThenActivity
@@ -8,7 +9,9 @@ from replay.worker import JustActivity, JustTimer, TimerThenActivity
 
 async def main():
     # Connect client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Fetch the histories of the workflows to be replayed
     workflows = client.list_workflows('WorkflowId="replayer-workflow-id"')

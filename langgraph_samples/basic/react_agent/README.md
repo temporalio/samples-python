@@ -38,37 +38,13 @@ Then, in a separate terminal, run the workflow:
 uv run langgraph_samples/basic/react_agent/run_workflow.py
 ```
 
-## Example Queries
-
-The sample runs three queries demonstrating different tool usage:
-
-1. **Weather tool**: "What's the weather like in Tokyo?"
-2. **Calculator tool**: "What is 25 * 4 + 10?"
-3. **Knowledge search**: "Tell me about Temporal and LangGraph"
-
 ## Expected Output
 
 ```
-============================================================
-Query: What's the weather like in Tokyo?
-============================================================
-
-Agent Response:
-The current weather in Tokyo is 68°F with clear skies.
-
-============================================================
-Query: What is 25 * 4 + 10?
-============================================================
-
-Agent Response:
-The result of 25 * 4 + 10 is 110.
-
-============================================================
-Query: Tell me about Temporal and LangGraph
-============================================================
-
-Agent Response:
-Temporal is a durable execution platform that helps developers build reliable
-applications. LangGraph is a library for building stateful, multi-actor
-applications with LLMs...
+The weather in Tokyo is currently 68°F with clear skies.
 ```
+
+You can modify the query in `run_workflow.py` to test different tools:
+- **Weather tool**: "What's the weather like in Tokyo?"
+- **Calculator tool**: "What is 25 * 4 + 10?"
+- **Knowledge search**: "Tell me about Temporal and LangGraph"

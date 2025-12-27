@@ -13,7 +13,7 @@ from typing import Any
 
 from langchain_openai import ChatOpenAI
 
-from temporalio.contrib.langgraph import create_durable_react_agent
+from temporalio.contrib.langgraph import activity_options, create_durable_react_agent
 
 from langgraph_samples.basic.react_agent.tools import (
     calculate,
@@ -57,6 +57,10 @@ def build_react_agent() -> Any:
     return create_durable_react_agent(
         model,
         tools,
-        model_start_to_close_timeout=timedelta(minutes=2),
-        tool_start_to_close_timeout=timedelta(seconds=30),
+        model_activity_options=activity_options(
+            start_to_close_timeout=timedelta(minutes=2),
+        ),
+        tool_activity_options=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
     )

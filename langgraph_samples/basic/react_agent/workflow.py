@@ -18,13 +18,13 @@ from temporalio.contrib.langgraph import compile
 class ReActAgentWorkflow:
     """Temporal workflow that executes a ReAct agent with fully durable execution.
 
-    This workflow demonstrates:
-    - Using temporal_model() to wrap the LLM for durable calls
-    - Using temporal_tool() for durable tool execution
-    - The think-act-observe loop pattern (ReAct)
+    This workflow demonstrates using Temporal's create_durable_react_agent which:
+    - Runs agent nodes inline in the workflow (deterministic orchestration)
+    - Executes LLM calls as Temporal activities (durable, retryable)
+    - Executes tool calls as Temporal activities (durable, retryable)
 
-    Both LLM calls and tool invocations run as Temporal activities,
-    providing automatic retries, failure recovery, and replay safety.
+    This provides fine-grained durability where each LLM call and tool
+    invocation is individually recoverable on failure.
     """
 
     @workflow.run

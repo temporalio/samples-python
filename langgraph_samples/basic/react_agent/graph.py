@@ -1,7 +1,7 @@
 """ReAct Agent Graph Definition.
 
-This module builds a ReAct agent using LangGraph's create_react_agent
-with Temporal-wrapped model and tools for fully durable execution.
+This module builds a ReAct agent using Temporal's create_durable_react_agent
+for fully durable execution of both LLM calls and tool invocations.
 
 Note: This module is only imported by the worker (not by the workflow).
 LangGraph cannot be imported in the workflow sandbox.
@@ -12,9 +12,8 @@ from datetime import timedelta
 from typing import Any
 
 from langchain_openai import ChatOpenAI
-from langgraph.prebuilt import create_react_agent
 
-from temporalio.contrib.langgraph import temporal_model, temporal_tool
+from temporalio.contrib.langgraph import create_durable_react_agent
 
 from langgraph_samples.basic.react_agent.tools import (
     calculate,
@@ -26,9 +25,13 @@ from langgraph_samples.basic.react_agent.tools import (
 def build_react_agent() -> Any:
     """Build a ReAct agent with fully durable execution.
 
-    This function creates a ReAct agent where both LLM calls and tool
-    invocations execute as Temporal activities with durability and
-    automatic retries.
+    Uses Temporal's create_durable_react_agent which automatically wraps:
+    - The model with temporal_model() for durable LLM calls
+    - The tools with temporal_tool() for durable tool execution
+
+    The agent nodes run inline in the workflow while model and tool
+    calls execute as separate Temporal activities with their own
+    timeouts and retry policies.
 
     The agent follows the ReAct pattern:
     1. Think: LLM decides what action to take (durable activity)
@@ -39,24 +42,21 @@ def build_react_agent() -> Any:
     Returns:
         A compiled LangGraph that can be executed with ainvoke().
     """
-    # Create and wrap the model for durable LLM execution
-    # Each LLM call becomes a Temporal activity with its own timeout and retries
-    model = temporal_model(
-        ChatOpenAI(
-            model=os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
-            temperature=0,
-        ),
-        start_to_close_timeout=timedelta(minutes=2),
+    # Create the model - will be automatically wrapped for durable execution
+    model = ChatOpenAI(
+        model=os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
+        temperature=0,
     )
 
-    # Wrap tools for durable execution as Temporal activities
-    # Each tool call becomes a Temporal activity with its own timeout and retries
-    tools = [
-        temporal_tool(get_weather, start_to_close_timeout=timedelta(seconds=30)),
-        temporal_tool(calculate, start_to_close_timeout=timedelta(seconds=10)),
-        temporal_tool(search_knowledge, start_to_close_timeout=timedelta(seconds=30)),
-    ]
+    # Tools - will be automatically wrapped for durable execution
+    tools = [get_weather, calculate, search_knowledge]
 
-    # Create the ReAct agent using LangGraph's prebuilt function
-    # This creates a cyclic graph: agent -> tools -> agent (repeat until done)
-    return create_react_agent(model, tools)
+    # Create the ReAct agent using Temporal's durable version
+    # This automatically wraps model and tools, and marks nodes to run
+    # inline in the workflow (with model/tool calls as activities)
+    return create_durable_react_agent(
+        model,
+        tools,
+        model_start_to_close_timeout=timedelta(minutes=2),
+        tool_start_to_close_timeout=timedelta(seconds=30),
+    )

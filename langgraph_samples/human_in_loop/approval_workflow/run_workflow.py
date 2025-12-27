@@ -1,20 +1,21 @@
 """Execute the Approval Workflow.
 
-Demonstrates the human-in-the-loop approval pattern:
-1. Start a workflow that pauses for approval
-2. Query the pending approval details
-3. Send an approval signal
-4. Get the final result
+Starts an approval workflow that pauses for human approval.
+The worker will print instructions for how to approve/reject.
 
 Usage:
     # First, start the worker in another terminal:
     python -m langgraph_samples.human_in_loop.approval_workflow.run_worker
 
-    # Then run this script:
+    # Then run this script to start a workflow:
     python -m langgraph_samples.human_in_loop.approval_workflow.run_workflow
+
+    # Use the respond script to approve/reject:
+    python -m langgraph_samples.human_in_loop.approval_workflow.run_respond <workflow-id> --approve --reason "OK"
 """
 
 import asyncio
+import uuid
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -32,10 +33,10 @@ async def main() -> None:
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config)
 
-    # Example 1: Approve a request
-    print("\n" + "=" * 60)
-    print("Example 1: Approving a purchase request")
-    print("=" * 60)
+    # Generate a unique workflow ID
+    workflow_id = f"approval-{uuid.uuid4().hex[:8]}"
+
+    print(f"Starting approval workflow: {workflow_id}")
 
     handle = await client.start_workflow(
         ApprovalWorkflow.run,
@@ -44,72 +45,19 @@ async def main() -> None:
             amount=500.00,
             request_data={"item": "Office supplies", "vendor": "Acme Corp"},
         ),
-        id="approval-workflow-approve",
+        id=workflow_id,
         task_queue=TASK_QUEUE,
     )
 
-    # Wait for the workflow to reach the interrupt
-    await asyncio.sleep(1)
+    print(f"Workflow started. Waiting for result...")
+    print(f"\nTo approve/reject, use the run_respond script (see worker output for commands)")
 
-    # Query the pending approval
-    pending = await handle.query(ApprovalWorkflow.get_pending_approval)
-    print(f"\nPending approval: {pending}")
-
-    status = await handle.query(ApprovalWorkflow.get_status)
-    print(f"Workflow status: {status}")
-
-    # Send approval signal
-    print("\nSending approval signal...")
-    await handle.signal(
-        ApprovalWorkflow.provide_approval,
-        {
-            "approved": True,
-            "reason": "Within budget",
-            "approver": "manager@example.com",
-        },
-    )
-
-    # Wait for result
+    # Wait for the workflow to complete
     result = await handle.result()
-    print(f"\nResult: {result.get('result')}")
+
+    print(f"\n{'='*60}")
+    print(f"Result: {result.get('result')}")
     print(f"Executed: {result.get('executed')}")
-
-    # Example 2: Reject a request
-    print("\n" + "=" * 60)
-    print("Example 2: Rejecting a high-risk request")
-    print("=" * 60)
-
-    handle2 = await client.start_workflow(
-        ApprovalWorkflow.run,
-        ApprovalRequest(
-            request_type="transfer",
-            amount=50000.00,
-            request_data={"destination": "External account"},
-        ),
-        id="approval-workflow-reject",
-        task_queue=TASK_QUEUE,
-    )
-
-    await asyncio.sleep(1)
-
-    # Query pending approval
-    pending2 = await handle2.query(ApprovalWorkflow.get_pending_approval)
-    print(f"\nPending approval: {pending2}")
-
-    # Reject it
-    print("\nSending rejection signal...")
-    await handle2.signal(
-        ApprovalWorkflow.provide_approval,
-        {
-            "approved": False,
-            "reason": "Amount exceeds single-approval limit",
-            "approver": "compliance@example.com",
-        },
-    )
-
-    result2 = await handle2.result()
-    print(f"\nResult: {result2.get('result')}")
-    print(f"Executed: {result2.get('executed')}")
 
 
 if __name__ == "__main__":

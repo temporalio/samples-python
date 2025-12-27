@@ -1,30 +1,27 @@
 # Human-in-the-Loop Approval Workflow
 
-A workflow demonstrating human-in-the-loop approval using LangGraph's `interrupt()` function with Temporal signals and queries.
+A workflow demonstrating human-in-the-loop approval using LangGraph's `interrupt()` function with Temporal signals, queries, and notification activities.
 
 ## What This Sample Demonstrates
 
 - **LangGraph interrupt**: Using `interrupt()` to pause graph execution for human input
+- **Notification activity**: Alerting approvers when approval is needed
 - **Temporal signals**: Receiving approval/rejection decisions from external systems
 - **Temporal queries**: Checking pending approval status and workflow state
+- **CLI response tool**: Separate script for approvers to respond to requests
 - **Timeout handling**: Optional approval deadlines with auto-rejection
 
 ## How It Works
 
 1. **process_request**: Validates the request and determines risk level based on amount
 2. **request_approval**: Calls `interrupt()` to pause execution and wait for human input
-3. **execute_action**: Processes the approved request or handles rejection
+3. **notify_approver** (activity): Sends notification with instructions on how to respond
+4. **execute_action**: Processes the approved request or handles rejection
 
 The workflow flow:
 ```
-Request → [Process & Assess Risk] → [Interrupt for Approval] → [Execute or Reject] → Result
+Request → [Process & Assess Risk] → [Interrupt] → [Notify Approver] → [Wait for Signal] → [Execute or Reject] → Result
 ```
-
-When the graph hits `interrupt()`:
-1. Workflow receives `__interrupt__` in the result with approval request details
-2. Workflow waits for a signal with human input (with optional timeout)
-3. Workflow resumes the graph with `Command(resume=response)`
-4. Graph completes with the execute_action node
 
 ## Prerequisites
 
@@ -32,46 +29,73 @@ When the graph hits `interrupt()`:
 
 ## Running the Example
 
-First, start the worker:
+**Terminal 1 - Start the worker:**
 ```bash
 uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_worker
 ```
 
-Then, in a separate terminal, run the workflow:
+**Terminal 2 - Start a workflow:**
 ```bash
 uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_workflow
 ```
 
-## Expected Output
+The worker will print notification instructions like:
+```
+*** APPROVAL NEEDED ***
+Workflow ID: approval-abc12345
+Request: Please approve purchase for $500.00 (Risk: medium)
+
+To respond, run:
+  Approve: uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --approve --reason 'Your reason'
+  Reject:  uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --reject --reason 'Your reason'
+```
+
+**Terminal 3 - Respond to the approval request:**
+```bash
+# Check status
+uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --status
+
+# Approve
+uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --approve --reason "Within budget"
+
+# Or reject
+uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --reject --reason "Needs manager approval"
+```
+
+## Response Script Options
 
 ```
+usage: run_respond.py [-h] [--approve] [--reject] [--status] [--reason REASON] [--approver APPROVER] workflow_id
+
+positional arguments:
+  workflow_id          The workflow ID to respond to
+
+options:
+  --approve            Approve the request
+  --reject             Reject the request
+  --status             Check workflow status
+  --reason REASON      Reason for approval/rejection
+  --approver APPROVER  Approver identifier (default: cli-user)
+```
+
+## Expected Output
+
+**Workflow starter (Terminal 2):**
+```
+Starting approval workflow: approval-abc12345
+Workflow started. Waiting for result...
+
+To approve/reject, use the run_respond script (see worker output for commands)
+
 ============================================================
-Example 1: Approving a purchase request
-============================================================
-
-Pending approval: {'request_type': 'purchase', 'amount': 500.0, 'risk_level': 'medium', ...}
-Workflow status: waiting_for_approval
-
-Sending approval signal...
-
-Result: Successfully processed purchase for $500.00. Approved by manager@example.com: Within budget
+Result: Successfully processed purchase for $500.00. Approved by cli-user: Within budget
 Executed: True
-
-============================================================
-Example 2: Rejecting a high-risk request
-============================================================
-
-Pending approval: {'request_type': 'transfer', 'amount': 50000.0, 'risk_level': 'high', ...}
-
-Sending rejection signal...
-
-Result: Request rejected by compliance@example.com: Amount exceeds single-approval limit
-Executed: False
 ```
 
 ## Key APIs Used
 
 - `interrupt(value)`: Pauses graph execution and returns `value` in `__interrupt__`
 - `Command(resume=response)`: Resumes graph execution with the given response
+- `@activity.defn`: Notification activity to alert approvers
 - `@workflow.signal`: Receives external input (approval response)
 - `@workflow.query`: Exposes workflow state (pending approval, status)

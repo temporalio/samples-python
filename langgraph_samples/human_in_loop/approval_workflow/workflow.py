@@ -4,6 +4,7 @@ This workflow demonstrates human-in-the-loop approval using:
 - LangGraph's interrupt() for pausing execution
 - Temporal signals for receiving human input
 - Temporal queries for checking pending approvals
+- Notification activity to alert approvers
 - Timeout handling for approval deadlines
 """
 
@@ -16,6 +17,9 @@ from temporalio import workflow
 with workflow.unsafe.imports_passed_through():
     from langgraph.types import Command
 
+    from langgraph_samples.human_in_loop.approval_workflow.activities import (
+        notify_approver,
+    )
     from temporalio.contrib.langgraph import compile as lg_compile
 
 
@@ -117,6 +121,13 @@ class ApprovalWorkflow:
 
             workflow.logger.info(
                 "Workflow paused for approval: %s", self._interrupt_value.get("message")
+            )
+
+            # Notify the approver via activity
+            await workflow.execute_activity(
+                notify_approver,
+                self._interrupt_value,
+                start_to_close_timeout=timedelta(seconds=30),
             )
 
             # Wait for approval signal (with optional timeout)

@@ -14,6 +14,7 @@ from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
+from langgraph_samples.human_in_loop.approval_workflow.activities import notify_approver
 from langgraph_samples.human_in_loop.approval_workflow.graph import build_approval_graph
 from langgraph_samples.human_in_loop.approval_workflow.workflow import ApprovalWorkflow
 
@@ -37,7 +38,7 @@ async def main() -> None:
         client,
         task_queue=TASK_QUEUE,
         workflows=[ApprovalWorkflow],
-        # Activities are registered by the plugin
+        activities=[notify_approver],
     )
 
     print(f"Starting approval workflow worker on task queue: {TASK_QUEUE}")

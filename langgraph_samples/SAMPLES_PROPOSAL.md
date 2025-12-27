@@ -33,7 +33,7 @@ Samples are organized by complexity and use case, inspired by [OpenAI Agents sam
 **Description:** Classic ReAct (Reasoning + Acting) agent that can use tools to answer questions. Implements the think-act-observe loop.
 
 **Demonstrates:**
-- Native LangGraph `create_react_agent` with Temporal integration
+- LangChain's `create_agent` with Temporal integration
 - Durable execution where each node runs as a Temporal activity
 - Automatic retries and crash recovery at the node level
 - Cyclic graph execution (agent → tools → agent → ...)

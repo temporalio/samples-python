@@ -1,6 +1,6 @@
 # ReAct Agent with Tools
 
-A ReAct (Reasoning + Acting) agent using LangGraph's `create_react_agent` with Temporal for durable execution.
+A ReAct (Reasoning + Acting) agent using LangChain's `create_agent` with Temporal for durable execution.
 
 ## What This Sample Demonstrates
 
@@ -12,7 +12,7 @@ A ReAct (Reasoning + Acting) agent using LangGraph's `create_react_agent` with T
 ## How It Works
 
 1. **Tools**: Three LangChain tools (`get_weather`, `calculate`, `search_knowledge`) simulate external APIs
-2. **ReAct agent**: `create_react_agent()` builds a cyclic graph with "agent" and "tools" nodes
+2. **Agent**: `create_agent()` builds a cyclic graph with "agent" and "tools" nodes
 3. **Temporal integration**: Each node runs as a separate activity, providing durability
 4. **Workflow**: Invokes the agent and returns the final conversation state
 

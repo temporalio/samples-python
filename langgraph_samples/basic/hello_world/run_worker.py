@@ -8,6 +8,7 @@ import asyncio
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from langgraph_samples.basic.hello_world.graph import build_hello_graph
@@ -21,7 +22,9 @@ async def main() -> None:
     )
 
     # Connect to Temporal with the plugin
-    client = await Client.connect("localhost:7233", plugins=[plugin])
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config, plugins=[plugin])
 
     # Create and run the worker
     # Note: Activities are automatically registered by the plugin

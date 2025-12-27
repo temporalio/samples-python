@@ -1,25 +1,30 @@
 # ReAct Agent with Tools
 
-A ReAct (Reasoning + Acting) agent using LangGraph's `create_react_agent` with Temporal-wrapped tools for durable execution.
+A ReAct (Reasoning + Acting) agent using LangGraph's `create_react_agent` with Temporal for durable execution.
 
 ## What This Sample Demonstrates
 
 - **ReAct pattern**: The think-act-observe loop where the LLM decides actions and observes results
-- **Durable tool execution**: Using `temporal_tool()` to wrap LangChain tools as Temporal activities
-- **Automatic retries**: Each tool invocation has its own timeout and retry policy
+- **Durable execution**: Each graph node runs as a Temporal activity with automatic retries
+- **Crash recovery**: If the worker fails, execution resumes from the last completed node
 - **Cyclic graph execution**: The agent loops between thinking and acting until it has an answer
 
 ## How It Works
 
 1. **Tools**: Three LangChain tools (`get_weather`, `calculate`, `search_knowledge`) simulate external APIs
-2. **Temporal wrapping**: Each tool is wrapped with `temporal_tool()` for durable execution
-3. **ReAct agent**: `create_react_agent()` builds a cyclic graph that alternates between LLM calls and tool execution
+2. **ReAct agent**: `create_react_agent()` builds a cyclic graph with "agent" and "tools" nodes
+3. **Temporal integration**: Each node runs as a separate activity, providing durability
 4. **Workflow**: Invokes the agent and returns the final conversation state
 
 The ReAct pattern:
 ```
-User Query → [Think] → [Act (tool)] → [Observe] → [Think] → ... → Final Answer
+User Query → [Agent Node] → [Tools Node] → [Agent Node] → ... → Final Answer
 ```
+
+Each node execution is:
+- **Durable**: Progress is saved after each node completes
+- **Retryable**: Failed nodes can be automatically retried
+- **Recoverable**: If the worker crashes, execution resumes from the last completed node
 
 ## Prerequisites
 

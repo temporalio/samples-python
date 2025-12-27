@@ -1,3 +1,4 @@
+
 """ReAct Agent Workflow.
 
 Temporal workflow that executes the ReAct agent with durable execution.
@@ -16,15 +17,15 @@ from temporalio.contrib.langgraph import compile
 
 @workflow.defn
 class ReActAgentWorkflow:
-    """Temporal workflow that executes a ReAct agent with fully durable execution.
+    """Temporal workflow that executes a ReAct agent with durable execution.
 
-    This workflow demonstrates using Temporal's create_durable_react_agent which:
-    - Runs agent nodes inline in the workflow (deterministic orchestration)
-    - Executes LLM calls as Temporal activities (durable, retryable)
-    - Executes tool calls as Temporal activities (durable, retryable)
+    This workflow uses LangGraph's create_react_agent with the Temporal
+    integration. Each graph node runs as a Temporal activity:
+    - The "agent" node calls the LLM to decide what to do
+    - The "tools" node executes the requested tools
 
-    This provides fine-grained durability where each LLM call and tool
-    invocation is individually recoverable on failure.
+    If any node fails, it is automatically retried. If the worker crashes,
+    execution resumes from the last completed node.
     """
 
     @workflow.run

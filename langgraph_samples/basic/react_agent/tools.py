@@ -1,7 +1,8 @@
 """Tool definitions for the ReAct Agent.
 
-These tools demonstrate how to wrap LangChain tools for durable execution
-using temporal_tool().
+These are standard LangChain tools. When used with the Temporal LangGraph
+integration, they execute inside the "tools" node activity, which provides
+automatic retries and failure recovery.
 """
 
 from langchain_core.tools import tool

@@ -164,8 +164,7 @@ def build_agentic_rag_graph() -> Any:
     # Build retrieval agent using create_agent
     # Note: create_agent returns a compiled graph. The Temporal plugin automatically
     # detects this subgraph and runs its inner nodes (model, tools) as separate activities.
-    retrieval_graph: Any = create_agent(model, tools)
-    retrieve_agent = retrieval_graph.compile() if hasattr(retrieval_graph, 'compile') else retrieval_graph
+    retrieve_agent: Any = create_agent(model, tools)
 
     # Grade documents for relevance (as a node/activity, not conditional edge)
     def grade_documents(state: AgentState) -> dict[str, Any]:

@@ -50,27 +50,3 @@ def calculate(expression: str) -> str:
         return str(result)
     except Exception as e:
         return f"Error calculating: {e}"
-
-
-@tool
-def search_knowledge(query: str) -> str:
-    """Search a knowledge base for information.
-
-    Args:
-        query: The search query.
-
-    Returns:
-        Relevant information from the knowledge base.
-    """
-    # Simulated knowledge base - in production, use a real search/RAG system
-    knowledge = {
-        "temporal": "Temporal is a durable execution platform that helps developers build reliable applications. It provides fault tolerance, state management, and workflow orchestration.",
-        "langgraph": "LangGraph is a library for building stateful, multi-actor applications with LLMs. It enables creating agent workflows with cycles, conditionals, and state management.",
-        "react": "ReAct (Reasoning + Acting) is an agent pattern where the AI alternates between thinking about what to do and taking actions. It improves reliability by making the reasoning process explicit.",
-        "python": "Python is a high-level programming language known for its readability and versatility. It's widely used in AI/ML, web development, and automation.",
-    }
-    query_lower = query.lower()
-    for key, value in knowledge.items():
-        if key in query_lower:
-            return value
-    return f"No specific information found for '{query}'. Try searching for: temporal, langgraph, react, or python."

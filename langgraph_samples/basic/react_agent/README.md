@@ -5,21 +5,27 @@ A ReAct (Reasoning + Acting) agent using LangChain's `create_agent` with Tempora
 ## What This Sample Demonstrates
 
 - **ReAct pattern**: The think-act-observe loop where the LLM decides actions and observes results
+- **Multi-step reasoning**: The agent makes multiple tool calls to gather information and compute results
 - **Durable execution**: Each graph node runs as a Temporal activity with automatic retries
 - **Crash recovery**: If the worker fails, execution resumes from the last completed node
 - **Cyclic graph execution**: The agent loops between thinking and acting until it has an answer
 
 ## How It Works
 
-1. **Tools**: Three LangChain tools (`get_weather`, `calculate`, `search_knowledge`) simulate external APIs
+1. **Tools**: Two LangChain tools (`get_weather`, `calculate`) provide weather data and math operations
 2. **Agent**: `create_agent()` builds a cyclic graph with "agent" and "tools" nodes
 3. **Temporal integration**: Each node runs as a separate activity, providing durability
 4. **Workflow**: Invokes the agent and returns the final conversation state
 
 The ReAct pattern:
 ```
-User Query → [Agent Node] → [Tools Node] → [Agent Node] → ... → Final Answer
+User Query → [Agent Node] → [Tools Node] → [Agent Node] → [Tools Node] → ... → Final Answer
 ```
+
+The sample query "What's the weather in Tokyo? Convert the temperature to Celsius." demonstrates multiple agentic loops:
+1. Agent decides to call `get_weather("Tokyo")` → gets "68°F, Clear skies"
+2. Agent decides to call `calculate("(68-32)*5/9")` → gets the Celsius conversion
+3. Agent synthesizes final answer
 
 Each node execution is:
 - **Durable**: Progress is saved after each node completes
@@ -46,10 +52,10 @@ uv run langgraph_samples/basic/react_agent/run_workflow.py
 ## Expected Output
 
 ```
-The weather in Tokyo is currently 68°F with clear skies.
+The weather in Tokyo is 68°F (20°C) with clear skies.
 ```
 
-You can modify the query in `run_workflow.py` to test different tools:
-- **Weather tool**: "What's the weather like in Tokyo?"
-- **Calculator tool**: "What is 25 * 4 + 10?"
-- **Knowledge search**: "Tell me about Temporal and LangGraph"
+You can modify the query in `run_workflow.py` to test different scenarios:
+- **Weather only**: "What's the weather like in Paris?"
+- **Calculator only**: "What is 25 * 4 + 10?"
+- **Multi-step**: "What's the weather in New York and London? Which city is warmer?"

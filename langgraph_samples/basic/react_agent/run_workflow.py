@@ -21,9 +21,12 @@ async def main() -> None:
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config)
 
+    # This query requires multiple tool calls:
+    # 1. First, get_weather to find the temperature in Tokyo
+    # 2. Then, calculate to convert Fahrenheit to Celsius
     result = await client.execute_workflow(
         ReActAgentWorkflow.run,
-        "What's the weather like in Tokyo?",
+        "What's the weather in Tokyo? Convert the temperature to Celsius.",
         id="react-agent-workflow",
         task_queue="langgraph-react-agent",
     )

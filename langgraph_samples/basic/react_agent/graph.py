@@ -14,11 +14,7 @@ from typing import Any
 from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
-from langgraph_samples.basic.react_agent.tools import (
-    calculate,
-    get_weather,
-    search_knowledge,
-)
+from langgraph_samples.basic.react_agent.tools import calculate, get_weather
 
 
 def build_react_agent() -> Any:
@@ -48,8 +44,9 @@ def build_react_agent() -> Any:
         temperature=0,
     )
 
-    # Define the tools
-    tools = [get_weather, calculate, search_knowledge]
+    # Define the tools - get_weather and calculate
+    # The sample query requires both: get weather, then calculate F to C conversion
+    tools = [get_weather, calculate]
 
     # Create the agent using LangChain's create_agent
     # (Note: langgraph.prebuilt.create_react_agent is deprecated)

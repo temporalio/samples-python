@@ -2734,8 +2734,11 @@ langchain = [
     { name = "uvicorn", extra = ["standard"] },
 ]
 langgraph = [
+    { name = "langchain" },
     { name = "langchain-core" },
+    { name = "langchain-openai" },
     { name = "langgraph" },
+    { name = "numpy" },
 ]
 nexus = [
     { name = "nexus-rpc" },
@@ -2802,8 +2805,11 @@ langchain = [
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.24.0" },
 ]
 langgraph = [
+    { name = "langchain", specifier = ">=0.3.0" },
     { name = "langchain-core", specifier = ">=0.1.0" },
+    { name = "langchain-openai", specifier = ">=0.2.0" },
     { name = "langgraph", specifier = ">=0.2.0" },
+    { name = "numpy", specifier = ">=1.26.0,<3" },
 ]
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [

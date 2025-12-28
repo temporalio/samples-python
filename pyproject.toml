@@ -60,7 +60,10 @@ cloud-export-to-parquet = [
 ]
 langgraph = [
     "langgraph>=0.2.0",
+    "langchain>=0.3.0",
     "langchain-core>=0.1.0",
+    "langchain-openai>=0.2.0",
+    "numpy>=1.26.0,<3",
 ]
 
 [tool.hatch.metadata]

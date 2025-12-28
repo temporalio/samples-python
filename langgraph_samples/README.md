@@ -22,3 +22,5 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 Each directory contains complete examples with their own README for detailed instructions:
 
 - **[Basic Examples](./basic/README.md)** - Simple examples including a hello world agent demonstrating basic plugin setup and graph registration.
+- **[Human-in-the-Loop](./human_in_loop/README.md)** - Examples demonstrating interrupt/resume workflows with human approval.
+- **[RAG (Retrieval Augmented Generation)](./rag/README.md)** - Intelligent retrieval with document grading and query rewriting.

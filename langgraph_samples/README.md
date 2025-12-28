@@ -1,8 +1,8 @@
 # Temporal LangGraph Samples
 
-These samples demonstrate the [Temporal LangGraph integration](https://github.com/temporalio/sdk-python/blob/main/temporalio/contrib/langgraph/README.md) - combining LangGraph's agent framework with Temporal's durable execution.
+These samples demonstrate the Temporal LangGraph integration - combining LangGraph's agent framework with Temporal's durable execution.
 
-See the [module documentation](https://github.com/temporalio/sdk-python/blob/main/temporalio/contrib/langgraph/README.md) for more information.
+> **Note:** The LangGraph integration is currently available as a preview feature in the `langgraph_plugin` branch of the SDK repository.
 
 ## Overview
 
@@ -15,7 +15,37 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 ## Prerequisites
 
 - Temporal server [running locally](https://docs.temporal.io/cli/server#start-dev)
-- Required dependencies installed via `uv sync --group langgraph`
+- Python 3.9+
+- [uv](https://docs.astral.sh/uv/) package manager (recommended)
+
+## Installation
+
+Since the LangGraph integration is currently in a branch, you need to install from the branch repositories.
+
+### Running the Samples
+
+1. Clone this samples repository:
+   ```bash
+   git clone -b langgraph_plugin https://github.com/mfateev/samples-python.git
+   cd samples-python
+   ```
+
+2. Install dependencies:
+   ```bash
+   uv sync --group langgraph
+   ```
+
+3. Install the SDK from the `langgraph-plugin` branch:
+   ```bash
+   uv pip install "temporalio @ git+https://github.com/mfateev/sdk-python.git@langgraph-plugin"
+   ```
+
+4. Start a local Temporal server:
+   ```bash
+   temporal server start-dev
+   ```
+
+5. Navigate to a sample directory and follow its README for specific instructions
 
 ## Examples
 

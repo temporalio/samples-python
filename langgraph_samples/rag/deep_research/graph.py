@@ -3,24 +3,29 @@
 This module implements a multi-step research agent that performs iterative
 research to produce comprehensive reports. It demonstrates:
 - Parallel search execution using LangGraph's Send API
+- Real web search using DuckDuckGo
 - Result evaluation and iteration
 - Long-running research workflows (showcasing Temporal's durability)
 - Report synthesis from multiple sources
 
 The research flow:
 1. plan_research - Analyze the topic and generate search queries
-2. search (parallel) - Execute multiple searches concurrently
+2. search (parallel) - Execute multiple web searches concurrently
 3. evaluate_results - Grade search results for relevance
 4. decide_next - Either continue researching or synthesize
 5. synthesize - Produce final research report
 
 Note: This module is only imported by the worker (not by the workflow).
 LangGraph cannot be imported in the workflow sandbox.
+
+Prerequisites:
+    - OPENAI_API_KEY environment variable set
 """
 
 import os
 from typing import Annotated, Any, Literal
 
+from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -83,33 +88,8 @@ class SearchTaskState(TypedDict):
     purpose: str
 
 
-# Simulated web search results (in production, use a real search API)
-MOCK_SEARCH_RESULTS = {
-    "langgraph": """LangGraph is a library for building stateful, multi-actor applications
-    with LLMs. It provides support for cycles, branches, and state persistence. Key features:
-    - StateGraph for defining application flow
-    - Built-in persistence and checkpointing
-    - Human-in-the-loop support with interrupts
-    - Streaming support for real-time updates""",
-    "temporal": """Temporal is a durable execution platform. Key concepts:
-    - Workflows: Long-running processes that survive failures
-    - Activities: Units of work with automatic retries
-    - Signals: External events sent to workflows
-    - Queries: Read-only state inspection""",
-    "durable": """Durable execution ensures code runs to completion despite failures.
-    Benefits include: automatic retry of failed operations, state preservation
-    across restarts, and reliable execution of long-running processes.""",
-    "agent": """AI agents are autonomous systems that use LLMs to decide actions.
-    Common patterns include ReAct (reasoning + acting), plan-and-execute,
-    and multi-agent collaboration. Tools enable agents to interact with
-    external systems and data sources.""",
-    "rag": """RAG (Retrieval Augmented Generation) enhances LLM responses with
-    external knowledge. Agentic RAG adds decision-making about when to retrieve,
-    document grading, and query rewriting for better results.""",
-    "research": """Research agents perform multi-step information gathering.
-    They plan queries, execute searches, evaluate results, and synthesize
-    findings into comprehensive reports.""",
-}
+# Initialize DuckDuckGo search tool
+search_tool = DuckDuckGoSearchRun()
 
 
 def build_deep_research_graph() -> Any:
@@ -172,32 +152,29 @@ Consider:
         }
 
     def execute_search(state: SearchTaskState) -> dict[str, Any]:
-        """Execute a single search query.
+        """Execute a single web search query using DuckDuckGo.
 
-        In production, this would call a real search API.
-        Here we use mock results for demonstration.
+        Performs real web search and returns the results.
+        Each search runs as a separate Temporal activity for durability.
         """
-        query = state["query"].lower()
+        query = state["query"]
         purpose = state["purpose"]
 
-        # Find matching mock results
-        results_parts = []
-        for keyword, content in MOCK_SEARCH_RESULTS.items():
-            if keyword in query:
-                results_parts.append(content)
-
-        if not results_parts:
-            results = "No specific results found. The topic may require more specialized research."
-        else:
-            results = "\n\n".join(results_parts)
+        try:
+            # Execute real web search
+            results = search_tool.invoke(query)
+            has_results = bool(results and len(results.strip()) > 0)
+        except Exception as e:
+            results = f"Search failed: {e}"
+            has_results = False
 
         return {
             "search_results": [
                 {
-                    "query": state["query"],
+                    "query": query,
                     "purpose": purpose,
                     "results": results,
-                    "relevant": len(results_parts) > 0,
+                    "relevant": has_results,
                 }
             ]
         }

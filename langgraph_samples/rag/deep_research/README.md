@@ -1,21 +1,21 @@
 # Deep Research Agent
 
-A multi-step research agent that performs iterative research to produce comprehensive reports. This sample demonstrates how Temporal's durable execution enables long-running research workflows.
+A multi-step research agent that performs iterative research using real web search to produce comprehensive reports. This sample demonstrates how Temporal's durable execution enables long-running research workflows with LangGraph's parallel execution.
 
 ## Overview
 
 The Deep Research Agent:
-1. **Plans research** - Analyzes the topic and generates targeted search queries
-2. **Parallel search** - Executes multiple searches concurrently using LangGraph's Send API
+1. **Plans research** - Analyzes the topic and generates targeted search queries using OpenAI
+2. **Parallel search** - Executes multiple DuckDuckGo web searches concurrently using LangGraph's Send API
 3. **Evaluates results** - Grades search results for relevance and coverage
 4. **Iterates** - Continues researching if more information is needed
-5. **Synthesizes** - Produces a comprehensive research report
+5. **Synthesizes** - Produces a comprehensive research report using OpenAI
 
 ## Why Temporal?
 
 Research workflows are ideal for Temporal because:
 - **Long-running**: Research can take minutes to hours
-- **Parallel execution**: Multiple searches run as separate activities
+- **Parallel execution**: Multiple web searches run as separate activities
 - **Fault tolerance**: If a search fails, only that activity retries
 - **Visibility**: Progress is tracked in Temporal's UI
 - **Resumable**: Interrupted research continues where it left off
@@ -112,17 +112,16 @@ search_results: Annotated[list[SearchResult], lambda x, y: x + y]
 
 ## Customization
 
-### Using Real Search APIs
+### Using Alternative Search APIs
 
-Replace the mock search with real APIs:
+The sample uses DuckDuckGo by default. To use other search providers:
 
 ```python
-from langchain_community.tools import DuckDuckGoSearchRun
+# Tavily (requires TAVILY_API_KEY)
+from langchain_community.tools import TavilySearchResults
+search_tool = TavilySearchResults()
 
-def execute_search(state: SearchTaskState) -> dict[str, Any]:
-    search = DuckDuckGoSearchRun()
-    results = search.run(state["query"])
-    return {"search_results": [{"query": state["query"], "results": results, ...}]}
+# Or use any LangChain-compatible search tool
 ```
 
 ### Adjusting Research Depth
@@ -139,7 +138,7 @@ result = await client.execute_workflow(
 
 ## Next Steps
 
-- Add real search API integration (DuckDuckGo, Tavily, Exa)
+- Integrate additional search providers (Tavily, Exa, Google)
 - Implement continue-as-new for very long research sessions
 - Add human review checkpoints for important findings
 - Store research artifacts in Temporal's data store

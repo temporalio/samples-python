@@ -49,6 +49,5 @@ def build_react_agent() -> Any:
     tools = [get_weather, calculate]
 
     # Create the agent using LangChain's create_agent
-    # (Note: langgraph.prebuilt.create_react_agent is deprecated)
     # The Temporal integration will run each node as an activity
     return create_agent(model, tools)

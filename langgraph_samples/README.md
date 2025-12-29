@@ -49,11 +49,15 @@ Since the LangGraph integration is currently in a branch, you need to install fr
 
 ## Examples
 
-Each directory contains complete examples with their own README for detailed instructions:
+Each directory contains a complete example with its own README for detailed instructions:
 
-- **[Basic Examples](./basic/README.md)** - Simple examples including a hello world agent demonstrating basic plugin setup and graph registration.
-- **[Human-in-the-Loop](./human_in_loop/README.md)** - Examples demonstrating interrupt/resume workflows with human approval.
-- **[Multi-Agent](./multi_agent/README.md)** - Multi-agent patterns including supervisor coordination.
-- **[RAG (Retrieval Augmented Generation)](./rag/README.md)** - Intelligent retrieval with document grading, query rewriting, and deep research.
-- **[Planning](./planning/README.md)** - Plan-and-execute patterns with structured step execution.
-- **[Advanced Patterns](./advanced/README.md)** - Advanced techniques including reflection and self-improvement.
+| Sample | Description |
+|--------|-------------|
+| [hello_world](./hello_world/) | Simple starter example demonstrating basic plugin setup and graph registration |
+| [react_agent](./react_agent/) | ReAct agent pattern with tool calling and multi-step reasoning |
+| [approval_workflow](./approval_workflow/) | Human-in-the-loop with interrupt/resume for approval workflows |
+| [supervisor](./supervisor/) | Multi-agent supervisor pattern coordinating specialized agents |
+| [agentic_rag](./agentic_rag/) | Retrieval-augmented generation with document grading and query rewriting |
+| [deep_research](./deep_research/) | Multi-step research with web search and iterative refinement |
+| [plan_and_execute](./plan_and_execute/) | Plan-and-execute pattern with structured step execution |
+| [reflection](./reflection/) | Self-reflection pattern for iterative improvement |

@@ -1,12 +1,4 @@
-"""Execute the Reflection workflow.
-
-Usage:
-    # First, in another terminal, start the worker:
-    python -m langgraph_samples.advanced.reflection.run_worker
-
-    # Then run this script:
-    python -m langgraph_samples.advanced.reflection.run_workflow
-"""
+"""Execute the Reflection workflow."""
 
 import asyncio
 

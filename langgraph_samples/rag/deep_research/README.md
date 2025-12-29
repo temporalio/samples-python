@@ -51,12 +51,12 @@ Each search runs as a separate Temporal activity, enabling parallel execution.
 2. In one terminal, start the worker:
    ```bash
    export OPENAI_API_KEY=your-key-here
-   python -m langgraph_samples.rag.deep_research.run_worker
+   uv run langgraph_samples/rag/deep_research/run_worker.py
    ```
 
 3. In another terminal, run the workflow:
    ```bash
-   python -m langgraph_samples.rag.deep_research.run_workflow
+   uv run langgraph_samples/rag/deep_research/run_workflow.py
    ```
 
 ## Sample Output

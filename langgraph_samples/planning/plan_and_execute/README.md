@@ -57,12 +57,12 @@ The executor agent has access to:
 2. In one terminal, start the worker:
    ```bash
    export OPENAI_API_KEY=your-key-here
-   python -m langgraph_samples.planning.plan_and_execute.run_worker
+   uv run langgraph_samples/planning/plan_and_execute/run_worker.py
    ```
 
 3. In another terminal, run the workflow:
    ```bash
-   python -m langgraph_samples.planning.plan_and_execute.run_workflow
+   uv run langgraph_samples/planning/plan_and_execute/run_workflow.py
    ```
 
 ## Sample Output

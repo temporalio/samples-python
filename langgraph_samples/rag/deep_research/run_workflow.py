@@ -1,12 +1,4 @@
-"""Execute the Deep Research workflow.
-
-Usage:
-    # First, in another terminal, start the worker:
-    python -m langgraph_samples.rag.deep_research.run_worker
-
-    # Then run this script:
-    python -m langgraph_samples.rag.deep_research.run_workflow
-"""
+"""Execute the Deep Research workflow."""
 
 import asyncio
 

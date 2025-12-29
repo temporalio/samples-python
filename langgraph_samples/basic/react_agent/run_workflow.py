@@ -1,12 +1,4 @@
-"""Execute the ReAct Agent workflow.
-
-Usage:
-    # First, in another terminal, start the worker:
-    python -m langgraph_samples.basic.react_agent.run_worker
-
-    # Then run this script:
-    python -m langgraph_samples.basic.react_agent.run_workflow
-"""
+"""Execute the ReAct Agent workflow."""
 
 import asyncio
 

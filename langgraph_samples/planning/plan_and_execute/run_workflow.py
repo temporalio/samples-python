@@ -1,12 +1,4 @@
-"""Execute the Plan-and-Execute workflow.
-
-Usage:
-    # First, in another terminal, start the worker:
-    python -m langgraph_samples.planning.plan_and_execute.run_worker
-
-    # Then run this script:
-    python -m langgraph_samples.planning.plan_and_execute.run_workflow
-"""
+"""Execute the Plan-and-Execute workflow."""
 
 import asyncio
 

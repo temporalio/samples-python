@@ -1,12 +1,4 @@
-"""Execute the Supervisor Multi-Agent workflow.
-
-Usage:
-    # First, in another terminal, start the worker:
-    python -m langgraph_samples.multi_agent.supervisor.run_worker
-
-    # Then run this script:
-    python -m langgraph_samples.multi_agent.supervisor.run_workflow
-"""
+"""Execute the Supervisor Multi-Agent workflow."""
 
 import asyncio
 

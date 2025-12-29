@@ -2,16 +2,6 @@
 
 Starts an approval workflow that pauses for human approval.
 The worker will print instructions for how to approve/reject.
-
-Usage:
-    # First, start the worker in another terminal:
-    python -m langgraph_samples.human_in_loop.approval_workflow.run_worker
-
-    # Then run this script to start a workflow:
-    python -m langgraph_samples.human_in_loop.approval_workflow.run_workflow
-
-    # Use the respond script to approve/reject:
-    python -m langgraph_samples.human_in_loop.approval_workflow.run_respond <workflow-id> --approve --reason "OK"
 """
 
 import asyncio

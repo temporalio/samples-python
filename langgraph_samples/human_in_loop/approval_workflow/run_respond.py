@@ -1,16 +1,6 @@
 """Respond to an approval request.
 
 This script allows an approver to approve or reject a pending approval workflow.
-
-Usage:
-    # Approve a request:
-    python -m langgraph_samples.human_in_loop.approval_workflow.run_respond <workflow-id> --approve --reason "Approved by manager"
-
-    # Reject a request:
-    python -m langgraph_samples.human_in_loop.approval_workflow.run_respond <workflow-id> --reject --reason "Budget exceeded"
-
-    # Check status first:
-    python -m langgraph_samples.human_in_loop.approval_workflow.run_respond <workflow-id> --status
 """
 
 import argparse

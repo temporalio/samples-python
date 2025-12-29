@@ -31,12 +31,12 @@ Request → [Process & Assess Risk] → [Interrupt] → [Notify Approver] → [W
 
 **Terminal 1 - Start the worker:**
 ```bash
-uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_worker
+uv run langgraph_samples/human_in_loop/approval_workflow/run_worker.py
 ```
 
 **Terminal 2 - Start a workflow:**
 ```bash
-uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_workflow
+uv run langgraph_samples/human_in_loop/approval_workflow/run_workflow.py
 ```
 
 The worker will print notification instructions like:
@@ -46,20 +46,20 @@ Workflow ID: approval-abc12345
 Request: Please approve purchase for $500.00 (Risk: medium)
 
 To respond, run:
-  Approve: uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --approve --reason 'Your reason'
-  Reject:  uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --reject --reason 'Your reason'
+  Approve: uv run langgraph_samples/human_in_loop/approval_workflow/run_respond.py approval-abc12345 --approve --reason 'Your reason'
+  Reject:  uv run langgraph_samples/human_in_loop/approval_workflow/run_respond.py approval-abc12345 --reject --reason 'Your reason'
 ```
 
 **Terminal 3 - Respond to the approval request:**
 ```bash
 # Check status
-uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --status
+uv run langgraph_samples/human_in_loop/approval_workflow/run_respond.py approval-abc12345 --status
 
 # Approve
-uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --approve --reason "Within budget"
+uv run langgraph_samples/human_in_loop/approval_workflow/run_respond.py approval-abc12345 --approve --reason "Within budget"
 
 # Or reject
-uv run python -m langgraph_samples.human_in_loop.approval_workflow.run_respond approval-abc12345 --reject --reason "Needs manager approval"
+uv run langgraph_samples/human_in_loop/approval_workflow/run_respond.py approval-abc12345 --reject --reason "Needs manager approval"
 ```
 
 ## Response Script Options

@@ -1,9 +1,6 @@
 """Run the Approval Workflow worker.
 
 Starts a Temporal worker that can execute the approval workflow.
-
-Usage:
-    python -m langgraph_samples.human_in_loop.approval_workflow.run_worker
 """
 
 import asyncio

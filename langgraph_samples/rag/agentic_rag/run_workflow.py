@@ -1,12 +1,4 @@
-"""Execute the Agentic RAG workflow.
-
-Usage:
-    # First, in another terminal, start the worker:
-    python -m langgraph_samples.rag.agentic_rag.run_worker
-
-    # Then run this script:
-    python -m langgraph_samples.rag.agentic_rag.run_workflow
-"""
+"""Execute the Agentic RAG workflow."""
 
 import asyncio
 

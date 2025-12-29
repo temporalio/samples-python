@@ -60,6 +60,7 @@ cloud-export-to-parquet = [
 ]
 langgraph = [
     "langgraph>=0.2.0",
+    "langgraph-supervisor>=0.0.1",
     "langchain>=0.3.0",
     "langchain-core>=0.1.0",
     "langchain-openai>=0.2.0",

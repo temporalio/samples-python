@@ -53,4 +53,7 @@ Each directory contains complete examples with their own README for detailed ins
 
 - **[Basic Examples](./basic/README.md)** - Simple examples including a hello world agent demonstrating basic plugin setup and graph registration.
 - **[Human-in-the-Loop](./human_in_loop/README.md)** - Examples demonstrating interrupt/resume workflows with human approval.
-- **[RAG (Retrieval Augmented Generation)](./rag/README.md)** - Intelligent retrieval with document grading and query rewriting.
+- **[Multi-Agent](./multi_agent/README.md)** - Multi-agent patterns including supervisor coordination.
+- **[RAG (Retrieval Augmented Generation)](./rag/README.md)** - Intelligent retrieval with document grading, query rewriting, and deep research.
+- **[Planning](./planning/README.md)** - Plan-and-execute patterns with structured step execution.
+- **[Advanced Patterns](./advanced/README.md)** - Advanced techniques including reflection and self-improvement.

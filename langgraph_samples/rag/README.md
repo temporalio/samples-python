@@ -14,6 +14,17 @@ An intelligent RAG system that decides when to retrieve documents, grades their 
 - Query rewriting for better retrieval
 - Durable execution with Temporal
 
+### [Deep Research Agent](./deep_research/README.md)
+
+A multi-step research agent that performs iterative research to produce comprehensive reports.
+
+**Key Features:**
+- Research planning with targeted search queries
+- Parallel search execution using LangGraph's Send API
+- Result evaluation and iteration
+- Long-running research with Temporal durability
+- Report synthesis from multiple sources
+
 ## Prerequisites
 
 - Temporal server [running locally](https://docs.temporal.io/cli/server#start-dev)

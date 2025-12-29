@@ -68,12 +68,12 @@ With Temporal, the multi-agent system gains:
 
 First, start the worker:
 ```bash
-uv run langgraph_samples/multi_agent/supervisor/run_worker.py
+uv run langgraph_samples/supervisor/run_worker.py
 ```
 
 Then, in a separate terminal, run the workflow:
 ```bash
-uv run langgraph_samples/multi_agent/supervisor/run_workflow.py
+uv run langgraph_samples/supervisor/run_workflow.py
 ```
 
 ## Expected Output

@@ -21,12 +21,12 @@ Minimal LangGraph agent with Temporal integration. A single-node graph that proc
 
 First, start the worker:
 ```bash
-uv run langgraph_samples/basic/hello_world/run_worker.py
+uv run langgraph_samples/hello_world/run_worker.py
 ```
 
 Then, in a separate terminal, run the workflow:
 ```bash
-uv run langgraph_samples/basic/hello_world/run_workflow.py
+uv run langgraph_samples/hello_world/run_workflow.py
 ```
 
 ## Expected Output

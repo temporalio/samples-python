@@ -15,7 +15,9 @@ from langgraph_samples.human_in_the_loop.approval_wait_condition.graph import (
     build_approval_graph,
     notify_approver,
 )
-from langgraph_samples.human_in_the_loop.approval_wait_condition.workflow import ApprovalWorkflow
+from langgraph_samples.human_in_the_loop.approval_wait_condition.workflow import (
+    ApprovalWorkflow,
+)
 
 TASK_QUEUE = "langgraph-approval-condition"
 

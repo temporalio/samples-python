@@ -27,8 +27,8 @@ async def notify_approver(request_info: dict) -> str:
         f"NOTIFICATION: {message}\n"
         f"  Workflow ID: {workflow_id}\n"
         f"  To respond, run:\n"
-        f"    python -m langgraph_samples.human_in_the_loop.approval_workflow_interrupt.run_respond {workflow_id} --approve --reason 'Approved'\n"
-        f"    python -m langgraph_samples.human_in_the_loop.approval_workflow_interrupt.run_respond {workflow_id} --reject --reason 'Rejected'"
+        f"    python -m langgraph_samples.human_in_the_loop.approval_graph_interrupt.run_respond {workflow_id} --approve --reason 'Approved'\n"
+        f"    python -m langgraph_samples.human_in_the_loop.approval_graph_interrupt.run_respond {workflow_id} --reject --reason 'Rejected'"
     )
 
     # In production, you would send actual notification here
@@ -37,10 +37,10 @@ async def notify_approver(request_info: dict) -> str:
     print(f"Request: {message}")
     print("\nTo respond, run:")
     print(
-        f"  Approve: uv run python -m langgraph_samples.human_in_the_loop.approval_workflow_interrupt.run_respond {workflow_id} --approve --reason 'Your reason'"
+        f"  Approve: uv run python -m langgraph_samples.human_in_the_loop.approval_graph_interrupt.run_respond {workflow_id} --approve --reason 'Your reason'"
     )
     print(
-        f"  Reject:  uv run python -m langgraph_samples.human_in_the_loop.approval_workflow_interrupt.run_respond {workflow_id} --reject --reason 'Your reason'"
+        f"  Reject:  uv run python -m langgraph_samples.human_in_the_loop.approval_graph_interrupt.run_respond {workflow_id} --reject --reason 'Your reason'"
     )
     print()
 

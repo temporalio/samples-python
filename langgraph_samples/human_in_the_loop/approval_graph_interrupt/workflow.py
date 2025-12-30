@@ -18,7 +18,7 @@ with workflow.unsafe.imports_passed_through():
     from langgraph.types import Command
     from temporalio.contrib.langgraph import compile as lg_compile
 
-    from langgraph_samples.human_in_the_loop.approval_workflow_interrupt.activities import (
+    from langgraph_samples.human_in_the_loop.approval_graph_interrupt.activities import (
         notify_approver,
     )
 

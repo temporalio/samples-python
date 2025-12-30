@@ -1,4 +1,4 @@
-"""Run the Approval Workflow worker (Condition-based).
+"""Run the Approval Workflow worker.
 
 Starts a Temporal worker that can execute the approval workflow.
 """
@@ -11,13 +11,11 @@ from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from langgraph_samples.human_in_the_loop.approval_workflow_condition.graph import (
-    build_approval_graph,
-    notify_approver,
-)
-from langgraph_samples.human_in_the_loop.approval_workflow_condition.workflow import ApprovalWorkflow
+from langgraph_samples.human_in_the_loop.approval_graph_interrupt.activities import notify_approver
+from langgraph_samples.human_in_the_loop.approval_graph_interrupt.graph import build_approval_graph
+from langgraph_samples.human_in_the_loop.approval_graph_interrupt.workflow import ApprovalWorkflow
 
-TASK_QUEUE = "langgraph-approval-condition"
+TASK_QUEUE = "langgraph-approval-interrupt"
 
 
 async def main() -> None:

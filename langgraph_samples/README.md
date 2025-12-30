@@ -56,7 +56,9 @@ Each directory contains a complete example with its own README for detailed inst
 | [hello_world](./hello_world/) | Simple starter example demonstrating basic plugin setup and graph registration |
 | [activity_from_node](./activity_from_node/) | Calling Temporal activities from a graph node using run_in_workflow |
 | [react_agent](./react_agent/) | ReAct agent pattern with tool calling and multi-step reasoning |
-| [approval_workflow](./approval_workflow/) | Human-in-the-loop with interrupt/resume for approval workflows |
+| [human_in_the_loop](./human_in_the_loop/) | Human-in-the-loop approval workflows using two approaches |
+| ↳ [approval_graph_interrupt](./human_in_the_loop/approval_graph_interrupt/) | Uses LangGraph's `interrupt()` function |
+| ↳ [approval_wait_condition](./human_in_the_loop/approval_wait_condition/) | Uses `run_in_workflow=True` with `workflow.wait_condition()` |
 | [supervisor](./supervisor/) | Multi-agent supervisor pattern coordinating specialized agents |
 | [agentic_rag](./agentic_rag/) | Retrieval-augmented generation with document grading and query rewriting |
 | [deep_research](./deep_research/) | Multi-step research with web search and iterative refinement |

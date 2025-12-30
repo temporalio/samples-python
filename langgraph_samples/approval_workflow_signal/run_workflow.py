@@ -1,4 +1,4 @@
-"""Execute the Approval Workflow.
+"""Execute the Approval Workflow (Signal-based).
 
 Starts an approval workflow that pauses for human approval.
 The worker will print instructions for how to approve/reject.
@@ -10,12 +10,12 @@ import uuid
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from langgraph_samples.approval_workflow.workflow import (
+from langgraph_samples.approval_workflow_signal.workflow import (
     ApprovalRequest,
     ApprovalWorkflow,
 )
 
-TASK_QUEUE = "langgraph-approval"
+TASK_QUEUE = "langgraph-approval-signal"
 
 
 async def main() -> None:
@@ -24,7 +24,7 @@ async def main() -> None:
     client = await Client.connect(**config)
 
     # Generate a unique workflow ID
-    workflow_id = f"approval-{uuid.uuid4().hex[:8]}"
+    workflow_id = f"approval-signal-{uuid.uuid4().hex[:8]}"
 
     print(f"Starting approval workflow: {workflow_id}")
 
@@ -39,9 +39,9 @@ async def main() -> None:
         task_queue=TASK_QUEUE,
     )
 
-    print(f"Workflow started. Waiting for result...")
+    print("Workflow started. Waiting for result...")
     print(
-        f"\nTo approve/reject, use the run_respond script (see worker output for commands)"
+        "\nTo approve/reject, use the run_respond script (see worker output for commands)"
     )
 
     # Wait for the workflow to complete

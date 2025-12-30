@@ -9,7 +9,7 @@ import asyncio
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from langgraph_samples.approval_workflow.workflow import ApprovalWorkflow
+from langgraph_samples.approval_workflow_interrupt.workflow import ApprovalWorkflow
 
 
 async def main() -> None:

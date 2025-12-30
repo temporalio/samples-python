@@ -1,0 +1,103 @@
+"""Approval Workflow Definition (Signal-based).
+
+This workflow demonstrates human-in-the-loop approval using:
+- run_in_workflow=True to access Temporal operations from graph nodes
+- Temporal signals for receiving human input
+- Temporal queries for checking pending approvals
+"""
+
+from dataclasses import dataclass
+from typing import Any
+
+from temporalio import workflow
+
+with workflow.unsafe.imports_passed_through():
+    from temporalio.contrib.langgraph import compile as lg_compile
+
+
+@dataclass
+class ApprovalRequest:
+    """Input for the approval workflow."""
+
+    request_type: str
+    amount: float
+    request_data: dict[str, Any] | None = None
+
+
+@workflow.defn
+class ApprovalWorkflow:
+    """Workflow that pauses for human approval before executing actions.
+
+    This demonstrates using run_in_workflow=True to access Temporal
+    operations directly from graph nodes:
+    1. Graph runs until request_approval node
+    2. request_approval node (run_in_workflow=True) waits for signal
+    3. Signal received, approval response stored
+    4. Graph continues with execute_action node
+    """
+
+    def __init__(self) -> None:
+        self._approval_response: dict[str, Any] | None = None
+        self._pending_approval: dict[str, Any] | None = None
+
+    @workflow.signal
+    def provide_approval(self, response: dict[str, Any]) -> None:
+        """Signal to provide approval response.
+
+        Args:
+            response: Dict with 'approved' (bool), 'reason' (str), 'approver' (str)
+        """
+        self._approval_response = response
+
+    @workflow.query
+    def get_pending_approval(self) -> dict[str, Any] | None:
+        """Query to get the current pending approval request.
+
+        Returns:
+            The pending approval request details, or None.
+        """
+        return self._pending_approval
+
+    @workflow.query
+    def get_status(self) -> str:
+        """Query to get the current workflow status."""
+        if self._pending_approval is None:
+            return "processing"
+        elif self._approval_response is None:
+            return "waiting_for_approval"
+        else:
+            return "approved" if self._approval_response.get("approved") else "rejected"
+
+    @workflow.run
+    async def run(self, request: ApprovalRequest) -> dict[str, Any]:
+        """Run the approval workflow.
+
+        Args:
+            request: The approval request details.
+
+        Returns:
+            The final state containing result and executed status.
+        """
+        app = lg_compile("approval_workflow")
+
+        # Handle both dataclass and dict input (Temporal deserializes to dict)
+        if isinstance(request, dict):
+            request_type = request.get("request_type", "unknown")
+            amount = request.get("amount", 0.0)
+            request_data = request.get("request_data") or {}
+        else:
+            request_type = request.request_type
+            amount = request.amount
+            request_data = request.request_data or {}
+
+        # Prepare initial state
+        initial_state = {
+            "request_type": request_type,
+            "amount": amount,
+            "request_data": request_data,
+        }
+
+        # Run the graph - the request_approval node will wait for signal internally
+        result = await app.ainvoke(initial_state)
+
+        return result

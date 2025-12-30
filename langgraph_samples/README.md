@@ -54,6 +54,7 @@ Each directory contains a complete example with its own README for detailed inst
 | Sample | Description |
 |--------|-------------|
 | [hello_world](./hello_world/) | Simple starter example demonstrating basic plugin setup and graph registration |
+| [activity_from_node](./activity_from_node/) | Calling Temporal activities from a graph node using run_in_workflow |
 | [react_agent](./react_agent/) | ReAct agent pattern with tool calling and multi-step reasoning |
 | [approval_workflow](./approval_workflow/) | Human-in-the-loop with interrupt/resume for approval workflows |
 | [supervisor](./supervisor/) | Multi-agent supervisor pattern coordinating specialized agents |

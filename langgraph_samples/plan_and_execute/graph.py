@@ -23,7 +23,6 @@ LangGraph cannot be imported in the workflow sandbox.
 import os
 from typing import Annotated, Any, Literal
 
-from langchain.agents import create_agent
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -33,6 +32,8 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
+
+from langchain.agents import create_agent
 
 
 class PlanStep(BaseModel):
@@ -167,7 +168,7 @@ def build_plan_and_execute_graph() -> Any:
 
     # Build executor agent with tools
     tools = [calculate, lookup, analyze]
-    executor_agent = create_agent(model, tools)
+    executor_agent: Any = create_agent(model, tools)
 
     def create_plan(state: PlanExecuteState) -> dict[str, Any]:
         """Create an execution plan from the objective.
@@ -243,9 +244,7 @@ Create 2-4 steps that can be executed sequentially.""",
         if result.get("messages"):
             last_msg = result["messages"][-1]
             result_content = (
-                last_msg.content
-                if hasattr(last_msg, "content")
-                else str(last_msg)
+                last_msg.content if hasattr(last_msg, "content") else str(last_msg)
             )
 
         step_result = StepResult(

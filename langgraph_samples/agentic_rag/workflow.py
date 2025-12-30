@@ -54,8 +54,6 @@ class AgenticRAGWorkflow:
 
         # Execute the agent
         # The input format is a dict with "messages"
-        result = await app.ainvoke(
-            {"messages": [{"role": "user", "content": query}]}
-        )
+        result = await app.ainvoke({"messages": [{"role": "user", "content": query}]})
 
         return result

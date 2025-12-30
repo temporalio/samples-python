@@ -38,9 +38,7 @@ class Critique(BaseModel):
     strengths: list[str] = Field(description="What's good about the content")
     weaknesses: list[str] = Field(description="What needs improvement")
     suggestions: list[str] = Field(description="Specific suggestions for improvement")
-    quality_score: int = Field(
-        description="Quality score from 1-10", ge=1, le=10
-    )
+    quality_score: int = Field(description="Quality score from 1-10", ge=1, le=10)
     is_satisfactory: bool = Field(
         description="Whether the content meets quality standards (score >= 7)"
     )
@@ -164,7 +162,9 @@ Score 7+ means the content is ready for publication.""",
         )
 
         critic = reflect_prompt | critic_model.with_structured_output(Critique)
-        critique = critic.invoke({"task": task, "draft": draft, "iteration": iteration})
+        critique: Any = critic.invoke(
+            {"task": task, "draft": draft, "iteration": iteration}
+        )
 
         return {
             "critiques": state.get("critiques", []) + [critique],

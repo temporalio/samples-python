@@ -1,4 +1,3 @@
-
 """ReAct Agent Workflow.
 
 Temporal workflow that executes the ReAct agent with durable execution.
@@ -48,8 +47,6 @@ class ReActAgentWorkflow:
 
         # Execute the agent
         # The input format for create_react_agent is a dict with "messages"
-        result = await app.ainvoke(
-            {"messages": [{"role": "user", "content": query}]}
-        )
+        result = await app.ainvoke({"messages": [{"role": "user", "content": query}]})
 
         return result

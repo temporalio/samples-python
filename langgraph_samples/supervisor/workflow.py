@@ -50,8 +50,6 @@ class SupervisorWorkflow:
 
         # Execute the multi-agent system
         # The supervisor will coordinate the specialized agents
-        result = await app.ainvoke(
-            {"messages": [{"role": "user", "content": request}]}
-        )
+        result = await app.ainvoke({"messages": [{"role": "user", "content": request}]})
 
         return result

@@ -36,8 +36,12 @@ async def notify_approver(request_info: dict) -> str:
     print(f"Workflow ID: {workflow_id}")
     print(f"Request: {message}")
     print(f"\nTo respond, run:")
-    print(f"  Approve: uv run python -m langgraph_samples.approval_workflow.run_respond {workflow_id} --approve --reason 'Your reason'")
-    print(f"  Reject:  uv run python -m langgraph_samples.approval_workflow.run_respond {workflow_id} --reject --reason 'Your reason'")
+    print(
+        f"  Approve: uv run python -m langgraph_samples.approval_workflow.run_respond {workflow_id} --approve --reason 'Your reason'"
+    )
+    print(
+        f"  Reject:  uv run python -m langgraph_samples.approval_workflow.run_respond {workflow_id} --reject --reason 'Your reason'"
+    )
     print()
 
     return f"Notification sent for workflow {workflow_id}"

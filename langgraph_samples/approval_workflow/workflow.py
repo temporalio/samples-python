@@ -16,11 +16,11 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from langgraph.types import Command
+    from temporalio.contrib.langgraph import compile as lg_compile
 
     from langgraph_samples.approval_workflow.activities import (
         notify_approver,
     )
-    from temporalio.contrib.langgraph import compile as lg_compile
 
 
 @dataclass
@@ -147,7 +147,9 @@ class ApprovalWorkflow:
 
             workflow.logger.info(
                 "Received approval response: approved=%s",
-                self._approval_response.get("approved") if self._approval_response else None,
+                self._approval_response.get("approved")
+                if self._approval_response
+                else None,
             )
 
             # Resume with the approval response

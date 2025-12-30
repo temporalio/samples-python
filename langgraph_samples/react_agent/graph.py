@@ -11,9 +11,9 @@ LangGraph cannot be imported in the workflow sandbox.
 import os
 from typing import Any
 
-from langchain.agents import create_agent
 from langchain_openai import ChatOpenAI
 
+from langchain.agents import create_agent
 from langgraph_samples.react_agent.tools import calculate, get_weather
 
 

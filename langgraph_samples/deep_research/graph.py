@@ -23,7 +23,7 @@ Prerequisites:
 """
 
 import os
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, cast
 
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_core.messages import BaseMessage, HumanMessage
@@ -142,7 +142,7 @@ Consider:
         )
 
         planner = plan_prompt | model.with_structured_output(ResearchPlan)
-        plan = planner.invoke({"topic": topic_str})
+        plan = cast(ResearchPlan, planner.invoke({"topic": topic_str}))
 
         return {
             "topic": topic_str,
@@ -253,9 +253,7 @@ Consider:
         findings = []
         for result in results:
             if result.get("relevant", False):
-                findings.append(
-                    f"### {result['purpose']}\n{result['results']}"
-                )
+                findings.append(f"### {result['purpose']}\n{result['results']}")
 
         if not findings:
             findings_text = "Limited information was found on this topic."

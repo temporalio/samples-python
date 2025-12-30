@@ -32,9 +32,7 @@ class DeepResearchWorkflow:
     """
 
     @workflow.run
-    async def run(
-        self, topic: str, max_iterations: int = 2
-    ) -> dict[str, Any]:
+    async def run(self, topic: str, max_iterations: int = 2) -> dict[str, Any]:
         """Run deep research on a topic.
 
         Args:

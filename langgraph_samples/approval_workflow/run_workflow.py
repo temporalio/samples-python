@@ -40,7 +40,9 @@ async def main() -> None:
     )
 
     print(f"Workflow started. Waiting for result...")
-    print(f"\nTo approve/reject, use the run_respond script (see worker output for commands)")
+    print(
+        f"\nTo approve/reject, use the run_respond script (see worker output for commands)"
+    )
 
     # Wait for the workflow to complete
     result = await handle.result()

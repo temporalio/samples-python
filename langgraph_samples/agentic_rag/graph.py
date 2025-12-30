@@ -29,7 +29,6 @@ LangGraph cannot be imported in the workflow sandbox.
 import os
 from typing import Annotated, Any, Literal, Sequence, cast
 
-from langchain.agents import create_agent
 from langchain_core.documents import Document
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
@@ -41,6 +40,8 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
+
+from langchain.agents import create_agent
 
 # Sample documents about AI agents and LangGraph for the knowledge base
 SAMPLE_DOCUMENTS = [

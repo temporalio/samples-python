@@ -32,9 +32,7 @@ class ReflectionWorkflow:
     """
 
     @workflow.run
-    async def run(
-        self, task: str, max_iterations: int = 3
-    ) -> dict[str, Any]:
+    async def run(self, task: str, max_iterations: int = 3) -> dict[str, Any]:
         """Run the reflection agent on a writing task.
 
         Args:

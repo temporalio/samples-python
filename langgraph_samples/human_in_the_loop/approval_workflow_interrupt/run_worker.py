@@ -11,9 +11,9 @@ from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from langgraph_samples.approval_workflow_interrupt.activities import notify_approver
-from langgraph_samples.approval_workflow_interrupt.graph import build_approval_graph
-from langgraph_samples.approval_workflow_interrupt.workflow import ApprovalWorkflow
+from langgraph_samples.human_in_the_loop.approval_workflow_interrupt.activities import notify_approver
+from langgraph_samples.human_in_the_loop.approval_workflow_interrupt.graph import build_approval_graph
+from langgraph_samples.human_in_the_loop.approval_workflow_interrupt.workflow import ApprovalWorkflow
 
 TASK_QUEUE = "langgraph-approval-interrupt"
 

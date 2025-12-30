@@ -1,7 +1,7 @@
-"""Approval Workflow Graph Definition (Signal-based).
+"""Approval Workflow Graph Definition (Condition-based).
 
 This module builds a graph that demonstrates human-in-the-loop approval
-using run_in_workflow=True to access Temporal signals directly.
+using run_in_workflow=True with workflow.wait_condition().
 
 The graph flow:
 1. process_request: Validates and prepares the request
@@ -84,8 +84,8 @@ async def notify_approver(request_info: dict) -> str:
         f"NOTIFICATION: {message}\n"
         f"  Workflow ID: {workflow_id}\n"
         f"  To respond, run:\n"
-        f"    python -m langgraph_samples.approval_workflow_signal.run_respond {workflow_id} --approve --reason 'Approved'\n"
-        f"    python -m langgraph_samples.approval_workflow_signal.run_respond {workflow_id} --reject --reason 'Rejected'"
+        f"    python -m langgraph_samples.human_in_the_loop.approval_workflow_condition.run_respond {workflow_id} --approve --reason 'Approved'\n"
+        f"    python -m langgraph_samples.human_in_the_loop.approval_workflow_condition.run_respond {workflow_id} --reject --reason 'Rejected'"
     )
 
     # In production, you would send actual notification here
@@ -94,10 +94,10 @@ async def notify_approver(request_info: dict) -> str:
     print(f"Request: {message}")
     print("\nTo respond, run:")
     print(
-        f"  Approve: uv run python -m langgraph_samples.approval_workflow_signal.run_respond {workflow_id} --approve --reason 'Your reason'"
+        f"  Approve: uv run python -m langgraph_samples.human_in_the_loop.approval_workflow_condition.run_respond {workflow_id} --approve --reason 'Your reason'"
     )
     print(
-        f"  Reject:  uv run python -m langgraph_samples.approval_workflow_signal.run_respond {workflow_id} --reject --reason 'Your reason'"
+        f"  Reject:  uv run python -m langgraph_samples.human_in_the_loop.approval_workflow_condition.run_respond {workflow_id} --reject --reason 'Your reason'"
     )
     print()
 

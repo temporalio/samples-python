@@ -1,4 +1,4 @@
-"""Execute the Approval Workflow.
+"""Execute the Approval Workflow (Condition-based).
 
 Starts an approval workflow that pauses for human approval.
 The worker will print instructions for how to approve/reject.
@@ -10,12 +10,12 @@ import uuid
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from langgraph_samples.approval_workflow_interrupt.workflow import (
+from langgraph_samples.human_in_the_loop.approval_workflow_condition.workflow import (
     ApprovalRequest,
     ApprovalWorkflow,
 )
 
-TASK_QUEUE = "langgraph-approval-interrupt"
+TASK_QUEUE = "langgraph-approval-condition"
 
 
 async def main() -> None:
@@ -24,7 +24,7 @@ async def main() -> None:
     client = await Client.connect(**config)
 
     # Generate a unique workflow ID
-    workflow_id = f"approval-{uuid.uuid4().hex[:8]}"
+    workflow_id = f"approval-condition-{uuid.uuid4().hex[:8]}"
 
     print(f"Starting approval workflow: {workflow_id}")
 

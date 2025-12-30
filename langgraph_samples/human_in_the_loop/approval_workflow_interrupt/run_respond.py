@@ -1,4 +1,4 @@
-"""Respond to an approval request (Signal-based).
+"""Respond to an approval request.
 
 This script allows an approver to approve or reject a pending approval workflow.
 """
@@ -9,7 +9,7 @@ import asyncio
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from langgraph_samples.approval_workflow_signal.workflow import ApprovalWorkflow
+from langgraph_samples.human_in_the_loop.approval_workflow_interrupt.workflow import ApprovalWorkflow
 
 
 async def main() -> None:

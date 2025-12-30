@@ -1,7 +1,7 @@
-"""Approval Workflow Sample (Signal-based).
+"""Approval Workflow Sample (Condition-based).
 
 Demonstrates human-in-the-loop approval pattern using run_in_workflow=True
-to access Temporal signals directly from graph nodes.
+with workflow.wait_condition() to wait for signals directly in graph nodes.
 
 Components:
 - graph.py: LangGraph graph with approval node using run_in_workflow=True

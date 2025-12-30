@@ -196,7 +196,13 @@ Score 7+ means the content is ready for publication.""",
         latest_critique = critiques[-1]
 
         # Finalize if satisfactory or max iterations reached
-        if latest_critique.is_satisfactory or iteration >= max_iterations:
+        # Note: After Temporal serialization, Critique objects become dicts
+        is_satisfactory = (
+            latest_critique.get("is_satisfactory", False)
+            if isinstance(latest_critique, dict)
+            else latest_critique.is_satisfactory
+        )
+        if is_satisfactory or iteration >= max_iterations:
             return "finalize"
 
         return "revise"
@@ -217,10 +223,20 @@ Score 7+ means the content is ready for publication.""",
         latest_critique = critiques[-1]
 
         # Format the feedback
+        # Note: After Temporal serialization, Critique objects become dicts
+        if isinstance(latest_critique, dict):
+            strengths = latest_critique.get("strengths", [])
+            weaknesses = latest_critique.get("weaknesses", [])
+            suggestions = latest_critique.get("suggestions", [])
+        else:
+            strengths = latest_critique.strengths
+            weaknesses = latest_critique.weaknesses
+            suggestions = latest_critique.suggestions
+
         feedback = f"""
-Strengths: {', '.join(latest_critique.strengths)}
-Weaknesses: {', '.join(latest_critique.weaknesses)}
-Suggestions: {', '.join(latest_critique.suggestions)}
+Strengths: {', '.join(strengths)}
+Weaknesses: {', '.join(weaknesses)}
+Suggestions: {', '.join(suggestions)}
 """
 
         revise_prompt = ChatPromptTemplate.from_messages(
@@ -264,7 +280,16 @@ Produce an improved version that addresses the critique.""",
         iteration = state.get("iteration", 1)
 
         # Get final score
-        final_score = critiques[-1].quality_score if critiques else 0
+        # Note: After Temporal serialization, Critique objects become dicts
+        if critiques:
+            last_critique = critiques[-1]
+            final_score = (
+                last_critique.get("quality_score", 0)
+                if isinstance(last_critique, dict)
+                else last_critique.quality_score
+            )
+        else:
+            final_score = 0
 
         summary = f"""
 Content finalized after {iteration} iteration(s).

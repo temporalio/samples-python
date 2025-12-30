@@ -84,6 +84,30 @@ class PlanExecuteState(TypedDict):
     needs_replan: bool
 
 
+# Helper functions to handle dict/object access after Temporal serialization
+def _get_plan_steps(plan: Plan | dict[str, Any]) -> list[Any]:
+    """Get steps from Plan, handling both object and dict forms."""
+    if isinstance(plan, dict):
+        return plan.get("steps", [])
+    return list(plan.steps)
+
+
+def _get_step_attr(
+    step: PlanStep | dict[str, Any], attr: str, default: Any = ""
+) -> Any:
+    """Get attribute from PlanStep, handling both object and dict forms."""
+    if isinstance(step, dict):
+        return step.get(attr, default)
+    return getattr(step, attr, default)
+
+
+def _get_result_success(result: StepResult | dict[str, Any]) -> bool:
+    """Get success from StepResult, handling both object and dict forms."""
+    if isinstance(result, dict):
+        return result.get("success", False)
+    return result.success
+
+
 # Define tools for the executor agent
 @tool
 def calculate(expression: str) -> str:
@@ -220,21 +244,25 @@ Create 2-4 steps that can be executed sequentially.""",
         plan = state.get("plan")
         current_step = state.get("current_step", 0)
 
-        if not plan or current_step >= len(plan.steps):
+        steps = _get_plan_steps(plan) if plan else []
+        if not plan or current_step >= len(steps):
             return {"needs_replan": False}
 
-        step = plan.steps[current_step]
+        step = steps[current_step]
+        step_number = _get_step_attr(step, "step_number", 0)
+        step_desc = _get_step_attr(step, "description", "")
+        tool_hint = _get_step_attr(step, "tool_hint", "")
 
         # Run the executor agent for this step
         result = executor_agent.invoke(
             {
                 "messages": [
                     SystemMessage(
-                        content=f"You are executing step {step.step_number} of a plan. "
-                        f"Complete this step: {step.description}\n"
-                        f"Suggested tool: {step.tool_hint}"
+                        content=f"You are executing step {step_number} of a plan. "
+                        f"Complete this step: {step_desc}\n"
+                        f"Suggested tool: {tool_hint}"
                     ),
-                    HumanMessage(content=step.description),
+                    HumanMessage(content=step_desc),
                 ]
             }
         )
@@ -248,8 +276,8 @@ Create 2-4 steps that can be executed sequentially.""",
             )
 
         step_result = StepResult(
-            step_number=step.step_number,
-            description=step.description,
+            step_number=step_number,
+            description=step_desc,
             result=result_content,
             success=True,
         )
@@ -260,7 +288,7 @@ Create 2-4 steps that can be executed sequentially.""",
             "messages": [
                 {
                     "role": "assistant",
-                    "content": f"Step {step.step_number} completed: {result_content[:200]}...",
+                    "content": f"Step {step_number} completed: {result_content[:200]}...",
                 }
             ],
         }
@@ -278,17 +306,18 @@ Create 2-4 steps that can be executed sequentially.""",
             return {"needs_replan": True}
 
         # Check if all steps completed
-        all_complete = current_step >= len(plan.steps)
+        steps = _get_plan_steps(plan)
+        all_complete = current_step >= len(steps)
 
         # Check if any step failed
-        failed_steps = [r for r in step_results if not r.success]
+        failed_steps = [r for r in step_results if not _get_result_success(r)]
 
         return {
             "needs_replan": len(failed_steps) > 0,
             "messages": [
                 {
                     "role": "assistant",
-                    "content": f"Progress: {current_step}/{len(plan.steps)} steps complete. "
+                    "content": f"Progress: {current_step}/{len(steps)} steps complete. "
                     f"Failures: {len(failed_steps)}",
                 }
             ]
@@ -312,7 +341,7 @@ Create 2-4 steps that can be executed sequentially.""",
         plan = state.get("plan")
         current_step = state.get("current_step", 0)
 
-        if plan and current_step < len(plan.steps):
+        if plan and current_step < len(_get_plan_steps(plan)):
             return "execute"
 
         return "respond"

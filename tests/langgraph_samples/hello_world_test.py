@@ -2,20 +2,12 @@
 
 import uuid
 
-import pytest
 from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
-from temporalio.contrib.langgraph._graph_registry import get_global_registry
 from temporalio.worker import Worker
 
 from langgraph_samples.hello_world.graph import build_hello_graph
 from langgraph_samples.hello_world.workflow import HelloWorldWorkflow
-
-
-@pytest.fixture(autouse=True)
-def clear_registry() -> None:
-    """Clear the global graph registry before each test."""
-    get_global_registry().clear()
 
 
 async def test_hello_world_workflow(client: Client) -> None:

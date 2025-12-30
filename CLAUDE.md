@@ -1,5 +1,9 @@
 # Temporal Python Samples
 
+## Serena MCP Server
+
+Always consult Serena memories at the start of a session using `mcp__serena__list_memories` and read relevant ones with `mcp__serena__read_memory`. Save important project-specific learnings to Serena for future sessions.
+
 ## Client Initialization Pattern
 
 Use the `ClientConfig` pattern for client initialization to support environment-based configuration:

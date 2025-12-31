@@ -95,6 +95,34 @@ class ApprovalWorkflow:
             return "Graph not yet initialized"
         return self._app.get_graph_mermaid()
 
+    @workflow.query
+    def get_graph_state(self) -> dict[str, Any]:
+        """Query to get the current graph execution state.
+
+        Returns a dictionary containing:
+        - values: Current state values (request_type, amount, result, etc.)
+        - next: Tuple of next node(s) to execute
+        - metadata: Execution metadata (step count, completed nodes)
+        - tasks: Pending interrupt information if any
+        """
+        if self._app is None:
+            return {"error": "Graph not yet initialized"}
+        snapshot = self._app.get_state()
+        return {
+            "values": snapshot.values,
+            "next": list(snapshot.next),
+            "metadata": snapshot.metadata,
+            "tasks": [
+                {
+                    "interrupt_value": t.get("interrupt_value"),
+                    "interrupt_node": t.get("interrupt_node"),
+                }
+                for t in snapshot.tasks
+            ]
+            if snapshot.tasks
+            else [],
+        }
+
     @workflow.run
     async def run(self, request: ApprovalRequest) -> dict[str, Any]:
         """Run the approval workflow.

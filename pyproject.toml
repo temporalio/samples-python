@@ -91,7 +91,7 @@ packages = [
     "gevent_async",
     "hello",
     "langchain",
-    "langgraph_samples",
+    "langgraph_plugin",
     "message_passing",
     "nexus",
     "open_telemetry",

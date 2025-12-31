@@ -32,3 +32,41 @@ Uses `run_in_workflow=True` to access Temporal operations directly in graph node
 | Graph portability | Higher | Lower |
 | Workflow complexity | More code | Less code |
 | Temporal API access | Indirect | Direct |
+
+## Available Queries
+
+Both samples expose these queries for monitoring workflow progress:
+
+```bash
+# Get workflow status
+temporal workflow query --workflow-id <id> --type get_status
+# Returns: "processing" | "waiting_for_approval" | "approved" | "rejected"
+
+# Get pending approval details
+temporal workflow query --workflow-id <id> --type get_pending_approval
+
+# Get ASCII diagram of graph execution progress
+temporal workflow query --workflow-id <id> --type get_graph_ascii
+# Output:
+# ┌───────────────────┐
+# │       START       │ ✓
+# └─────────┬─────────┘
+#           │
+#           ▼
+# ┌───────────────────┐
+# │  request_approval │ ▶ INTERRUPTED
+# └─────────┬─────────┘
+#           │
+#           ▼
+# ┌───────────────────┐
+# │        END        │ ○
+# └───────────────────┘
+# Legend: ✓ completed  ▶ current/interrupted  ○ pending
+
+# Get Mermaid diagram (renders in GitHub, Notion, etc.)
+temporal workflow query --workflow-id <id> --type get_graph_mermaid
+
+# Get full typed state
+temporal workflow query --workflow-id <id> --type get_graph_state
+# Returns: { values: ApprovalState, next: [...], step: N, interrupted: bool, ... }
+```

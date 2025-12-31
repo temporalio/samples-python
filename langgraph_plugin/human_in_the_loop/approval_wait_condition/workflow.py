@@ -7,12 +7,16 @@ This workflow demonstrates human-in-the-loop approval using:
 """
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from temporalio.contrib.langgraph import compile as lg_compile
+
+    from langgraph_plugin.human_in_the_loop.approval_wait_condition.graph import (
+        ApprovalState,
+    )
 
 
 @dataclass
@@ -22,6 +26,29 @@ class ApprovalRequest:
     request_type: str
     amount: float
     request_data: dict[str, Any] | None = None
+
+
+@dataclass
+class GraphStateResponse:
+    """Response from get_graph_state query."""
+
+    values: ApprovalState
+    """Current state values from the graph."""
+
+    next: list[str]
+    """Next node(s) to execute."""
+
+    step: int
+    """Current execution step count."""
+
+    interrupted: bool
+    """Whether the graph is currently interrupted."""
+
+    interrupt_node: str | None
+    """Node that triggered the interrupt, if any."""
+
+    interrupt_value: dict[str, Any] | None
+    """Value passed to interrupt(), if any."""
 
 
 @workflow.defn
@@ -96,32 +123,34 @@ class ApprovalWorkflow:
         return self._app.get_graph_mermaid()
 
     @workflow.query
-    def get_graph_state(self) -> dict[str, Any]:
+    def get_graph_state(self) -> GraphStateResponse:
         """Query to get the current graph execution state.
 
-        Returns a dictionary containing:
-        - values: Current state values (request_type, amount, result, etc.)
-        - next: Tuple of next node(s) to execute
-        - metadata: Execution metadata (step count, completed nodes)
-        - tasks: Pending interrupt information if any
+        Returns a GraphStateResponse with typed ApprovalState values.
         """
         if self._app is None:
-            return {"error": "Graph not yet initialized"}
+            return GraphStateResponse(
+                values=cast(ApprovalState, {}),
+                next=[],
+                step=0,
+                interrupted=False,
+                interrupt_node=None,
+                interrupt_value=None,
+            )
         snapshot = self._app.get_state()
-        return {
-            "values": snapshot.values,
-            "next": list(snapshot.next),
-            "metadata": snapshot.metadata,
-            "tasks": [
-                {
-                    "interrupt_value": t.get("interrupt_value"),
-                    "interrupt_node": t.get("interrupt_node"),
-                }
-                for t in snapshot.tasks
-            ]
-            if snapshot.tasks
-            else [],
-        }
+        interrupt_task = snapshot.tasks[0] if snapshot.tasks else None
+        return GraphStateResponse(
+            values=cast(ApprovalState, snapshot.values),
+            next=list(snapshot.next),
+            step=snapshot.metadata.get("step", 0) if snapshot.metadata else 0,
+            interrupted=bool(snapshot.tasks),
+            interrupt_node=interrupt_task.get("interrupt_node")
+            if interrupt_task
+            else None,
+            interrupt_value=interrupt_task.get("interrupt_value")
+            if interrupt_task
+            else None,
+        )
 
     @workflow.run
     async def run(self, request: ApprovalRequest) -> dict[str, Any]:

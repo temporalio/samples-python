@@ -39,6 +39,7 @@ class ApprovalWorkflow:
     def __init__(self) -> None:
         self._approval_response: dict[str, Any] | None = None
         self._pending_approval: dict[str, Any] | None = None
+        self._app: Any = None  # Store runner for visualization queries
 
     @workflow.signal
     def provide_approval(self, response: dict[str, Any]) -> None:
@@ -68,6 +69,32 @@ class ApprovalWorkflow:
         else:
             return "approved" if self._approval_response.get("approved") else "rejected"
 
+    @workflow.query
+    def get_graph_ascii(self) -> str:
+        """Query to get ASCII art visualization of graph execution progress.
+
+        Returns an ASCII diagram showing which nodes have completed,
+        which is currently executing/interrupted, and which are pending.
+        """
+        if self._app is None:
+            return "Graph not yet initialized"
+        return self._app.get_graph_ascii()
+
+    @workflow.query
+    def get_graph_mermaid(self) -> str:
+        """Query to get Mermaid diagram of graph execution progress.
+
+        Returns a Mermaid flowchart with nodes colored by status:
+        - Green: completed nodes
+        - Yellow: current/interrupted node
+        - Gray: pending nodes
+
+        Can be rendered in GitHub, Notion, or any Mermaid-compatible viewer.
+        """
+        if self._app is None:
+            return "Graph not yet initialized"
+        return self._app.get_graph_mermaid()
+
     @workflow.run
     async def run(self, request: ApprovalRequest) -> dict[str, Any]:
         """Run the approval workflow.
@@ -78,7 +105,7 @@ class ApprovalWorkflow:
         Returns:
             The final state containing result and executed status.
         """
-        app = lg_compile("approval_workflow")
+        self._app = lg_compile("approval_workflow")
 
         # Handle both dataclass and dict input (Temporal deserializes to dict)
         if isinstance(request, dict):
@@ -98,6 +125,6 @@ class ApprovalWorkflow:
         }
 
         # Run the graph - the request_approval node will wait for signal internally
-        result = await app.ainvoke(initial_state)
+        result = await self._app.ainvoke(initial_state)
 
         return result

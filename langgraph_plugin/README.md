@@ -95,3 +95,126 @@ StateGraph-based examples using nodes and edges:
 | [deep_research](./functional_api/deep_research/) | Multi-step research with parallel search execution via concurrent tasks |
 | [plan_and_execute](./functional_api/plan_and_execute/) | Plan-and-execute pattern with step-by-step task execution |
 | [reflection](./functional_api/reflection/) | Self-reflection pattern for iterative content improvement |
+
+## Usage
+
+### Graph API Usage
+
+The Graph API uses `StateGraph` to define nodes and edges, with each node running as a Temporal activity:
+
+```python
+from langgraph.graph import StateGraph, START, END
+from temporalio import workflow
+from temporalio.contrib.langgraph import LangGraphPlugin, compile
+
+# 1. Define your graph
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
+
+def chatbot(state: State) -> State:
+    response = model.invoke(state["messages"])
+    return {"messages": [response]}
+
+graph = StateGraph(State)
+graph.add_node("chatbot", chatbot)
+graph.add_edge(START, "chatbot")
+graph.add_edge("chatbot", END)
+
+# 2. Register graph with plugin
+plugin = LangGraphPlugin(graphs={"my_graph": graph.compile()})
+
+# 3. Use in workflow
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self, query: str) -> dict:
+        app = compile("my_graph")  # Get runner for registered graph
+        return await app.ainvoke({"messages": [("user", query)]})
+
+# 4. Start worker with plugin
+async with Worker(client, task_queue="q", workflows=[MyWorkflow], plugins=[plugin]):
+    result = await client.execute_workflow(MyWorkflow.run, "Hello", ...)
+```
+
+### Functional API Usage
+
+The Functional API uses `@task` and `@entrypoint` decorators. Tasks run as Temporal activities:
+
+```python
+from langgraph.func import task, entrypoint
+from temporalio import workflow
+from temporalio.contrib.langgraph import LangGraphFunctionalPlugin, compile_functional
+
+# 1. Define tasks (run as Temporal activities)
+@task
+def research(topic: str) -> str:
+    """Each @task call becomes a Temporal activity."""
+    return search_web(topic)
+
+@task
+def summarize(content: str) -> str:
+    return model.invoke(f"Summarize: {content}")
+
+# 2. Define entrypoint (orchestrates tasks)
+@entrypoint()
+async def research_workflow(topic: str) -> dict:
+    """The entrypoint runs in the workflow, orchestrating tasks."""
+    # Tasks can run in parallel
+    results = [research(q) for q in generate_queries(topic)]
+    content = [await r for r in results]  # Wait for all
+
+    summary = await summarize("\n".join(content))
+    return {"summary": summary}
+
+# 3. Register entrypoint with plugin
+plugin = LangGraphFunctionalPlugin(
+    entrypoints={"research": research_workflow}
+)
+
+# 4. Use in workflow
+@workflow.defn
+class ResearchWorkflow:
+    @workflow.run
+    async def run(self, topic: str) -> dict:
+        app = compile_functional("research")
+        return await app.ainvoke(topic)
+
+# 5. Start worker with plugin
+async with Worker(client, task_queue="q", workflows=[ResearchWorkflow], plugins=[plugin]):
+    result = await client.execute_workflow(ResearchWorkflow.run, "AI trends", ...)
+```
+
+### Key Differences
+
+| Feature | Graph API | Functional API |
+|---------|-----------|----------------|
+| Task definition | Graph nodes | `@task` decorator |
+| Orchestration | Graph edges | Python control flow |
+| Parallel execution | `Send` API | Concurrent `await` |
+| State management | Shared `TypedDict` | Function arguments |
+| Compile function | `compile("graph_id")` | `compile_functional("entrypoint_id")` |
+| Plugin class | `LangGraphPlugin` | `LangGraphFunctionalPlugin` |
+
+### Configuration Options
+
+Both APIs support activity configuration:
+
+```python
+# Graph API - per-node options
+plugin = LangGraphPlugin(
+    graphs={"my_graph": graph},
+    default_start_to_close_timeout=timedelta(minutes=5),
+    node_options={
+        "expensive_node": {"start_to_close_timeout": timedelta(minutes=30)}
+    }
+)
+
+# Functional API - per-task options
+plugin = LangGraphFunctionalPlugin(
+    entrypoints={"my_entrypoint": entrypoint_func},
+    default_task_timeout=timedelta(minutes=5),
+    task_options={
+        "expensive_task": {"start_to_close_timeout": timedelta(minutes=30)}
+    }
+)
+```

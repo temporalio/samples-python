@@ -10,9 +10,16 @@ from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from langgraph_plugin.graph_api.activity_from_node.activities import enrich_data, validate_data
-from langgraph_plugin.graph_api.activity_from_node.graph import build_activity_from_node_graph
-from langgraph_plugin.graph_api.activity_from_node.workflow import ActivityFromNodeWorkflow
+from langgraph_plugin.graph_api.activity_from_node.activities import (
+    enrich_data,
+    validate_data,
+)
+from langgraph_plugin.graph_api.activity_from_node.graph import (
+    build_activity_from_node_graph,
+)
+from langgraph_plugin.graph_api.activity_from_node.workflow import (
+    ActivityFromNodeWorkflow,
+)
 
 
 async def main() -> None:

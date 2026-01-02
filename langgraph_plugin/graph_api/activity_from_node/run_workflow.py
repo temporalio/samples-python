@@ -9,7 +9,9 @@ import uuid
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from langgraph_plugin.graph_api.activity_from_node.workflow import ActivityFromNodeWorkflow
+from langgraph_plugin.graph_api.activity_from_node.workflow import (
+    ActivityFromNodeWorkflow,
+)
 
 
 async def main() -> None:

@@ -6,7 +6,9 @@ from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
-from langgraph_plugin.graph_api.plan_and_execute.graph import build_plan_and_execute_graph
+from langgraph_plugin.graph_api.plan_and_execute.graph import (
+    build_plan_and_execute_graph,
+)
 from langgraph_plugin.graph_api.plan_and_execute.workflow import PlanAndExecuteWorkflow
 
 from .conftest import requires_openai

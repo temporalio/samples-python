@@ -87,4 +87,11 @@ StateGraph-based examples using nodes and edges:
 
 | Sample | Description |
 |--------|-------------|
-| [functional_api](./functional_api/) | Document creation workflow demonstrating tasks and entrypoints |
+| [hello_world](./functional_api/hello_world/) | Simple starter example demonstrating basic plugin setup with `@task` and `@entrypoint` |
+| [react_agent](./functional_api/react_agent/) | ReAct agent pattern with tool calling using tasks for model and tool execution |
+| [human_in_the_loop](./functional_api/human_in_the_loop/) | Human-in-the-loop approval workflow using `interrupt()` for pause/resume |
+| [supervisor](./functional_api/supervisor/) | Multi-agent supervisor pattern with tasks for each agent role |
+| [agentic_rag](./functional_api/agentic_rag/) | RAG with document grading and query rewriting using task-based retrieval |
+| [deep_research](./functional_api/deep_research/) | Multi-step research with parallel search execution via concurrent tasks |
+| [plan_and_execute](./functional_api/plan_and_execute/) | Plan-and-execute pattern with step-by-step task execution |
+| [reflection](./functional_api/reflection/) | Self-reflection pattern for iterative content improvement |

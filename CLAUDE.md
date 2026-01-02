@@ -4,6 +4,21 @@
 
 Always consult Serena memories at the start of a session using `mcp__serena__list_memories` and read relevant ones with `mcp__serena__read_memory`. Save important project-specific learnings to Serena for future sessions.
 
+## Pre-Commit Checks
+
+Before any type checking or committing, always run `poe lint` on both repositories:
+
+```bash
+# In samples repo (langgraph_plugin)
+poe lint
+
+# In SDK repo (sdk-python langgraph-plugin branch)
+cd /Users/maxim/temporal/sdk-python-root/langgraph-plugin
+poe lint
+```
+
+This catches import sorting and other style issues that mypy won't find.
+
 ## Client Initialization Pattern
 
 Use the `ClientConfig` pattern for client initialization to support environment-based configuration:

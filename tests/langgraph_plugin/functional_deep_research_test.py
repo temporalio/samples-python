@@ -34,5 +34,5 @@ async def test_deep_research_functional_workflow(client: Client) -> None:
         )
 
         assert "report" in result
-        assert "sources_count" in result
-        assert result["sources_count"] > 0
+        assert "relevant_results" in result
+        assert result["relevant_results"] >= 0

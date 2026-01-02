@@ -31,6 +31,6 @@ async def test_reflection_functional_workflow(client: Client) -> None:
             task_queue=task_queue,
         )
 
-        assert "content" in result
+        assert "final_content" in result
         assert "iterations" in result
         assert result["iterations"] >= 1

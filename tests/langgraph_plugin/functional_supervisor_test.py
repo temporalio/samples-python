@@ -31,6 +31,6 @@ async def test_supervisor_functional_workflow(client: Client) -> None:
             task_queue=task_queue,
         )
 
-        assert "final_report" in result
-        assert "agents_used" in result
-        assert len(result["agents_used"]) > 0
+        assert "final_answer" in result
+        assert "agent_outputs" in result
+        assert len(result["agent_outputs"]) > 0

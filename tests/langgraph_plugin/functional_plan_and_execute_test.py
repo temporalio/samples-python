@@ -35,6 +35,6 @@ async def test_plan_execute_functional_workflow(client: Client) -> None:
             task_queue=task_queue,
         )
 
-        assert "response" in result
-        assert "steps_completed" in result
-        assert result["steps_completed"] > 0
+        assert "final_response" in result
+        assert "step_results" in result
+        assert len(result["step_results"]) > 0

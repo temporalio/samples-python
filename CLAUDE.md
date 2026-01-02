@@ -4,9 +4,9 @@
 
 Always consult Serena memories at the start of a session using `mcp__serena__list_memories` and read relevant ones with `mcp__serena__read_memory`. Save important project-specific learnings to Serena for future sessions.
 
-## Pre-Commit Checks
+## Pre-Commit and Pre-Push Checks
 
-Before any type checking or committing, always run `poe lint` on both repositories:
+**ALWAYS run `poe lint` before committing or pushing** on both repositories:
 
 ```bash
 # In samples repo (langgraph_plugin)
@@ -17,7 +17,7 @@ cd /Users/maxim/temporal/sdk-python-root/langgraph-plugin
 poe lint
 ```
 
-This catches import sorting and other style issues that mypy won't find.
+This catches import sorting, formatting, type errors, and other style issues. Never push without confirming lint passes.
 
 ## Test Failures
 
@@ -43,6 +43,16 @@ client = await Client.connect(**config)
 ```
 
 This pattern allows configuration via environment variables while providing sensible defaults.
+
+## Design Decisions
+
+**NEVER jump to implementation when presenting multiple design options.** When you identify several possible approaches to solve a problem:
+
+1. Present all options with their pros and cons
+2. Wait for the user to confirm which approach to take
+3. Only implement after receiving explicit confirmation
+
+This prevents wasted effort implementing the wrong solution and ensures alignment with user preferences.
 
 ## LangGraph Guidelines
 

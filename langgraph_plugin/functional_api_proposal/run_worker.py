@@ -2,16 +2,12 @@
 
 This shows the proposed developer experience with LangGraphFunctionalPlugin.
 
-Key insight: LangGraph doesn't pre-register tasks. When @task functions are
-called, they go through CONFIG_KEY_CALL which receives the actual function
-object. The `identifier()` function returns `module.qualname` for the function.
-
-This means we DON'T need explicit task registration! The plugin can:
-1. Inject CONFIG_KEY_CALL callback that schedules a dynamic activity
-2. The activity receives the function identifier (module.qualname) + args
-3. The activity imports and executes the function
-
-The worker just needs the task modules to be importable.
+Design approach:
+1. @entrypoint functions run directly in the Temporal workflow sandbox
+2. LangGraph modules are passed through the sandbox (langgraph, langchain_core, etc.)
+3. @task calls are routed to activities via CONFIG_KEY_CALL injection
+4. Sandbox enforces determinism - non-deterministic code rejected at runtime
+5. Tasks are discovered dynamically when called (no explicit registration needed)
 """
 
 import asyncio
@@ -32,19 +28,19 @@ from langgraph_plugin.functional_api_proposal.workflow import (
 )
 
 # Note: tasks module is NOT imported here - tasks are discovered dynamically
-# at runtime when called within the entrypoint. The worker just needs the
-# module to be importable (which it is since it's in the Python path).
+# when called within the entrypoint via CONFIG_KEY_CALL injection.
 
 
 async def main() -> None:
     # Create the functional plugin
     #
-    # NO explicit task registration needed!
-    # Tasks are discovered dynamically when called via CONFIG_KEY_CALL.
-    # The callback receives the function object and uses identifier() to get
-    # the module.qualname (e.g., "langgraph_plugin.functional_api_proposal.tasks.research_topic")
+    # The plugin:
+    # 1. Registers entrypoints (which are Pregel objects)
+    # 2. Configures sandbox to passthrough LangGraph modules
+    # 3. Injects CONFIG_KEY_CALL to route @task calls to activities
+    # 4. Provides a dynamic activity to execute any @task by module path
     #
-    # Entrypoints are passed as a list - plugin extracts names from func.__name__
+    # NO explicit task registration needed - tasks discovered at runtime!
     plugin = LangGraphFunctionalPlugin(
         # Pass entrypoint functions directly - names extracted from __name__
         entrypoints=[document_workflow, review_workflow],
@@ -60,12 +56,15 @@ async def main() -> None:
     )
 
     # Connect to Temporal with the plugin
+    # Plugin configures:
+    # - Data converter for Pydantic/LangChain types
+    # - Sandbox passthrough for langgraph, langchain_core, pydantic_core, etc.
+    # - Dynamic activity for task execution
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config, plugins=[plugin])
 
     # Create worker with user-defined workflows
-    # Note: The plugin provides a single dynamic activity that can execute any task
     worker = Worker(
         client,
         task_queue="langgraph-functional",

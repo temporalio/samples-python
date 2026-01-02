@@ -4,59 +4,82 @@ This sample demonstrates the **proposed** integration between LangGraph's Functi
 
 > ⚠️ **Note**: `LangGraphFunctionalPlugin` is a **proposal** and does not exist yet. This sample shows the intended developer experience.
 
-## Key Insights
+## Design Approach
 
-### 1. `@entrypoint` returns `Pregel`
+### Core Principle: Entrypoints Run in Workflow Sandbox
 
-`@entrypoint` returns a `Pregel` object (same as `StateGraph.compile()`), so we can use the same `compile("name")` API in workflows.
+The `@entrypoint` function runs **directly in the Temporal workflow sandbox**, not in an activity. This works because:
 
-### 2. No Explicit Task Registration Needed
+1. **LangGraph modules passed through sandbox** - `langgraph`, `langchain_core`, `pydantic_core`, etc.
+2. **LangGraph machinery is deterministic** - `Pregel`, `call()`, `CONFIG_KEY_CALL` are all deterministic operations
+3. **@task calls routed to activities** - via `CONFIG_KEY_CALL` injection
+4. **Sandbox enforces determinism** - `time.time()`, `random()`, etc. in entrypoint code is rejected
 
-LangGraph **doesn't pre-register tasks**. When `@task` functions are called:
-1. They go through `CONFIG_KEY_CALL` callback in the config
-2. The callback receives the **actual function object**
-3. `identifier(func)` returns `module.qualname` (e.g., `mymodule.research_topic`)
+This aligns with LangGraph's own checkpoint/replay model where:
+- Task results are cached for replay
+- Entrypoint control flow must be deterministic
+- Non-deterministic operations belong in tasks
 
-This means the Temporal plugin can discover tasks **dynamically at runtime**:
-- Inject `CONFIG_KEY_CALL` callback that schedules a dynamic activity
-- The activity receives function identifier + serialized args
-- The activity imports the function by module path and executes it
+### Execution Model
 
-**The worker just needs the task modules to be importable.**
-
-## Overview
-
-```python
-# NO explicit task registration!
-# Pass entrypoints as list - names extracted from func.__name__
-plugin = LangGraphFunctionalPlugin(
-    entrypoints=[document_workflow, review_workflow],
-)
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Temporal Workflow (sandbox)                                │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  @entrypoint function (runs in workflow sandbox)      │  │
+│  │                                                       │  │
+│  │  research = await research_topic(topic)               │  │
+│  │              └──── CONFIG_KEY_CALL ──────────────────────► Activity
+│  │                                                       │  │
+│  │  intro = write_section(topic, "intro", research)      │  │
+│  │  body = write_section(topic, "body", research)        │  │
+│  │          └──── CONFIG_KEY_CALL ──────────────────────────► Activities
+│  │                                                       │  │  (parallel)
+│  │  sections = [await intro, await body]                 │  │
+│  │                                                       │  │
+│  │  return {"sections": sections}                        │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Key mappings:
-- **`@task` calls → Dynamic Activities**: Discovered at runtime via `CONFIG_KEY_CALL`
-- **`@entrypoint` functions → Pregel graphs**: Executed via `compile()` in workflows
-- **`interrupt()` → User-handled signals**: Workflow controls pause/resume
+### Why This Design?
 
-## How It Works Internally
+**Option rejected: Entrypoint as activity**
+- Activities can't schedule other activities
+- Would lose per-task durability
+- All tasks would be local function calls
+
+**Option chosen: Entrypoint in workflow sandbox**
+- Matches LangGraph's determinism expectations
+- Per-task durability via activities
+- Sandbox catches non-deterministic code
+- Same pattern as graph API (traversal in workflow, nodes as activities)
+
+## Key Insights
+
+### 1. `@entrypoint` Returns `Pregel`
+
+`@entrypoint` returns a `Pregel` object (same as `StateGraph.compile()`), so we use the same `compile("name")` API.
+
+### 2. No Explicit Task Registration
+
+LangGraph discovers tasks dynamically via `CONFIG_KEY_CALL`:
+- When `@task` is called, `call()` reads callback from config
+- Callback receives actual function object
+- `identifier(func)` returns `module.qualname`
+- Plugin schedules dynamic activity with identifier + args
+
+### 3. Sandbox Passthrough
+
+The plugin configures sandbox to allow LangGraph modules:
 
 ```python
-# When you call a @task function:
-result = await research_topic("AI")
-
-# Internally, @task wraps this in call():
-fut = call(research_topic_func, "AI", ...)
-
-# call() reads CONFIG_KEY_CALL from config:
-config = get_config()
-impl = config[CONF][CONFIG_KEY_CALL]
-fut = impl(func, args, ...)  # func is the actual function object!
-
-# The plugin's callback:
-# 1. Gets identifier: "langgraph_plugin.functional_api_proposal.tasks.research_topic"
-# 2. Schedules dynamic activity with identifier + args
-# 3. Activity imports function and executes it
+restrictions.with_passthrough_modules(
+    "pydantic_core",      # Already in graph plugin
+    "langchain_core",     # Already in graph plugin
+    "annotated_types",    # Already in graph plugin
+    "langgraph",          # For functional API
+)
 ```
 
 ## Developer Experience
@@ -69,11 +92,12 @@ from langgraph.func import task
 
 @task
 async def research_topic(topic: str) -> dict:
-    """Discovered dynamically when called."""
+    """Runs as Temporal activity. Can use time, random, I/O, etc."""
     return {"facts": [...]}
 
 @task
 async def write_section(topic: str, section: str, research: dict) -> str:
+    """Non-deterministic operations belong here."""
     return f"Content about {topic}..."
 ```
 
@@ -87,14 +111,27 @@ from .tasks import research_topic, write_section
 
 @entrypoint()
 async def document_workflow(topic: str) -> dict:
-    # Task calls discovered at runtime via CONFIG_KEY_CALL
+    """Runs in workflow sandbox. Must be deterministic."""
+    # Task calls become activities
     research = await research_topic(topic)
 
+    # Parallel execution
     intro = write_section(topic, "intro", research)
     body = write_section(topic, "body", research)
     sections = [await intro, await body]
 
+    # Control flow is deterministic
     return {"sections": sections}
+
+@entrypoint()
+async def review_workflow(topic: str) -> dict:
+    """Entrypoint with human-in-the-loop."""
+    draft = await generate_draft(topic)
+
+    # interrupt() handled by workflow's on_interrupt callback
+    review = interrupt({"document": draft, "action": "review"})
+
+    return {"status": review["decision"], "document": draft}
 ```
 
 ### 3. Define Temporal Workflows
@@ -109,29 +146,60 @@ class DocumentWorkflow:
     @workflow.run
     async def run(self, topic: str) -> dict:
         app = compile("document_workflow")
+        # Entrypoint runs in workflow, tasks become activities
         result = await app.ainvoke(topic)
         return result
+
+@workflow.defn
+class ReviewWorkflow:
+    """Full control over Temporal features."""
+
+    def __init__(self):
+        self._resume_value = None
+
+    @workflow.signal
+    async def resume(self, value: dict) -> None:
+        self._resume_value = value
+
+    @workflow.query
+    def get_status(self) -> dict:
+        return {"waiting": self._waiting}
+
+    @workflow.run
+    async def run(self, topic: str) -> dict:
+        app = compile("review_workflow")
+        result = await app.ainvoke(
+            topic,
+            on_interrupt=self._handle_interrupt,
+        )
+        return result
+
+    async def _handle_interrupt(self, value: dict) -> dict:
+        self._waiting = True
+        await workflow.wait_condition(lambda: self._resume_value is not None)
+        self._waiting = False
+        return self._resume_value
 ```
 
-### 4. Register with Plugin (No Task Registration!)
+### 4. Register with Plugin
 
 ```python
 # run_worker.py
 from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
 
-# NO tasks={} needed!
-# Pass entrypoints as list - names extracted from func.__name__
+# NO explicit task registration - discovered dynamically!
 plugin = LangGraphFunctionalPlugin(
     entrypoints=[document_workflow, review_workflow],
-    # Optional: default timeout for all task activities
     default_task_timeout=timedelta(minutes=10),
-    # Optional: per-task options by function name
     task_options={
         "research_topic": {
             "start_to_close_timeout": timedelta(minutes=15),
         },
     },
 )
+
+# Plugin configures sandbox passthrough automatically
+client = await Client.connect("localhost:7233", plugins=[plugin])
 
 worker = Worker(
     client,
@@ -140,17 +208,14 @@ worker = Worker(
 )
 ```
 
-Note: In workflows, you still use `compile("document_workflow")` by name string
-because the workflow sandbox restricts imports (Pregel isn't sandbox-safe).
-
 ## Sample Structure
 
 ```
 functional_api_proposal/
-├── tasks.py          # @task functions (discovered dynamically)
-├── entrypoint.py     # @entrypoint functions (→ Pregel)
+├── tasks.py          # @task functions (→ activities, can be non-deterministic)
+├── entrypoint.py     # @entrypoint functions (→ run in workflow, must be deterministic)
 ├── workflow.py       # User-defined Temporal workflows
-├── run_worker.py     # Plugin setup (no task registration!)
+├── run_worker.py     # Plugin setup
 ├── run_workflow.py   # Execute workflows
 └── README.md
 ```
@@ -171,40 +236,84 @@ python -m langgraph_plugin.functional_api_proposal.run_workflow review
 
 ## Implementation Details
 
-### Dynamic Activity Execution
-
-The plugin provides a single dynamic activity:
+### Plugin Responsibilities
 
 ```python
-@activity.defn(name="execute_langgraph_task")
-async def execute_task(task_id: str, args: bytes, kwargs: bytes) -> bytes:
-    """Execute any @task function by module path."""
-    # Import the function
-    module_name, func_name = task_id.rsplit(".", 1)
-    module = importlib.import_module(module_name)
-    func = getattr(module, func_name)
+class LangGraphFunctionalPlugin(SimplePlugin):
+    def __init__(self, entrypoints, ...):
+        # 1. Register entrypoints by name (extracted from __name__)
+        for ep in entrypoints:
+            register_entrypoint(ep.__name__, ep)
 
-    # Execute
-    result = await func(*deserialize(args), **deserialize(kwargs))
-    return serialize(result)
+        # 2. Configure sandbox passthrough
+        def workflow_runner(runner):
+            return runner.with_passthrough_modules(
+                "pydantic_core", "langchain_core",
+                "annotated_types", "langgraph"
+            )
+
+        # 3. Provide dynamic task activity
+        def add_activities(activities):
+            return list(activities) + [execute_langgraph_task]
+
+        # 4. Configure data converter
+        super().__init__(
+            workflow_runner=workflow_runner,
+            activities=add_activities,
+            data_converter=pydantic_converter,
+        )
 ```
 
 ### CONFIG_KEY_CALL Injection
 
-When `compile()` is called in a workflow, the plugin injects a custom callback:
+When `compile()` returns the runner, it injects a custom callback:
 
 ```python
-def temporal_call_callback(func, args, retry_policy, cache_policy, callbacks):
-    task_id = identifier(func)  # e.g., "mymodule.research_topic"
+def temporal_call_callback(func, args, retry_policy, ...):
+    task_id = identifier(func)  # "mymodule.research_topic"
 
-    # Schedule the dynamic activity
+    # Schedule dynamic activity
     return workflow.execute_activity(
-        "execute_langgraph_task",
+        execute_langgraph_task,
         args=(task_id, serialize(args)),
         start_to_close_timeout=get_timeout(task_id),
-        retry_policy=convert_retry_policy(retry_policy),
     )
 ```
+
+### Dynamic Task Activity
+
+```python
+@activity.defn
+async def execute_langgraph_task(task_id: str, args: bytes) -> bytes:
+    """Execute any @task function by module path."""
+    module_name, func_name = task_id.rsplit(".", 1)
+    module = importlib.import_module(module_name)
+    func = getattr(module, func_name)
+
+    result = await func(*deserialize(args))
+    return serialize(result)
+```
+
+## Determinism Rules
+
+### ✅ Allowed in @entrypoint (runs in workflow)
+- Control flow: `if`, `for`, `while`, `match`
+- Task calls: `await my_task(...)`
+- Parallel tasks: `asyncio.gather(*[task1(), task2()])`
+- `interrupt()` for human-in-the-loop
+- Pure functions, data transformations
+
+### ❌ Not allowed in @entrypoint (sandbox rejects)
+- `time.time()`, `datetime.now()`
+- `random.random()`, `uuid.uuid4()`
+- Network I/O, file I/O
+- Non-deterministic libraries
+
+### ✅ Allowed in @task (runs as activity)
+- Everything! Tasks are activities with no sandbox restrictions
+- API calls, database access, file I/O
+- Time, random, UUIDs
+- Any non-deterministic operation
 
 ## Comparison with Graph API
 
@@ -212,14 +321,8 @@ def temporal_call_callback(func, args, retry_policy, cache_policy, callbacks):
 |--------|-----------|----------------|
 | Definition | `StateGraph` + `add_node()` | `@task` + `@entrypoint` |
 | Control flow | Graph edges | Python code |
-| Returns | `Pregel` | `Pregel` |
+| Execution context | Traversal in workflow, nodes as activities | Entrypoint in workflow, tasks as activities |
 | In-workflow API | `compile("name")` | `compile("name")` |
 | Activity discovery | From graph nodes | Dynamic via `CONFIG_KEY_CALL` |
 | Registration | `graphs={name: builder}` | `entrypoints=[func, ...]` |
-
-## Why This Works
-
-1. **LangGraph's extensibility**: `CONFIG_KEY_CALL` is designed for custom execution backends
-2. **Function identification**: `identifier()` provides stable module paths
-3. **Dynamic activities**: Temporal supports activity execution by name
-4. **Serialization**: Args/results serialized for activity transport
+| Sandbox | Passthrough for langchain_core | + passthrough for langgraph |

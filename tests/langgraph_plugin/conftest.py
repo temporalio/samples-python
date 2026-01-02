@@ -6,13 +6,17 @@ import os
 os.environ["LANGCHAIN_TRACING_V2"] = "false"
 
 import pytest
+from temporalio.contrib.langgraph._functional_registry import (
+    get_global_entrypoint_registry,
+)
 from temporalio.contrib.langgraph._graph_registry import get_global_registry
 
 
 @pytest.fixture(autouse=True)
 def clear_registry() -> None:
-    """Clear the global graph registry before each test."""
+    """Clear the global registries before each test."""
     get_global_registry().clear()
+    get_global_entrypoint_registry().clear()
 
 
 def has_openai_api_key() -> bool:

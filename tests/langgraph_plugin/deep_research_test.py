@@ -6,8 +6,8 @@ from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
-from langgraph_plugin.deep_research.graph import build_deep_research_graph
-from langgraph_plugin.deep_research.workflow import DeepResearchWorkflow
+from langgraph_plugin.graph_api.deep_research.graph import build_deep_research_graph
+from langgraph_plugin.graph_api.deep_research.workflow import DeepResearchWorkflow
 
 from .conftest import requires_openai
 

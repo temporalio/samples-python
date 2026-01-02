@@ -6,8 +6,8 @@ from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
-from langgraph_plugin.hello_world.graph import build_hello_graph
-from langgraph_plugin.hello_world.workflow import HelloWorldWorkflow
+from langgraph_plugin.graph_api.hello_world.graph import build_hello_graph
+from langgraph_plugin.graph_api.hello_world.workflow import HelloWorldWorkflow
 
 
 async def test_hello_world_workflow(client: Client) -> None:

@@ -6,13 +6,13 @@ from temporalio.client import Client, WorkflowHandle
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
-from langgraph_plugin.human_in_the_loop.approval_graph_interrupt.activities import (
+from langgraph_plugin.graph_api.human_in_the_loop.approval_graph_interrupt.activities import (
     notify_approver,
 )
-from langgraph_plugin.human_in_the_loop.approval_graph_interrupt.graph import (
+from langgraph_plugin.graph_api.human_in_the_loop.approval_graph_interrupt.graph import (
     build_approval_graph,
 )
-from langgraph_plugin.human_in_the_loop.approval_graph_interrupt.workflow import (
+from langgraph_plugin.graph_api.human_in_the_loop.approval_graph_interrupt.workflow import (
     ApprovalRequest,
     ApprovalWorkflow,
 )

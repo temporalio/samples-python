@@ -1,0 +1,80 @@
+"""Worker for the LangGraph Functional API sample.
+
+This shows the proposed developer experience with LangGraphFunctionalPlugin.
+
+Design approach:
+1. @entrypoint functions run directly in the Temporal workflow sandbox
+2. LangGraph modules are passed through the sandbox (langgraph, langchain_core, etc.)
+3. @task calls are routed to activities via CONFIG_KEY_CALL injection
+4. Sandbox enforces determinism - non-deterministic code rejected at runtime
+5. Tasks are discovered dynamically when called (no explicit registration needed)
+"""
+
+import asyncio
+from datetime import timedelta
+
+from temporalio.client import Client
+from temporalio.contrib.langgraph import LangGraphFunctionalPlugin  # type: ignore[attr-defined]
+from temporalio.envconfig import ClientConfig
+from temporalio.worker import Worker
+
+from langgraph_plugin.functional_api.entrypoint import (
+    document_workflow,
+    review_workflow,
+)
+from langgraph_plugin.functional_api.workflow import (
+    DocumentWorkflow,
+    ReviewWorkflow,
+)
+
+# Note: tasks module is NOT imported here - tasks are discovered dynamically
+# when called within the entrypoint via CONFIG_KEY_CALL injection.
+
+
+async def main() -> None:
+    # Create the functional plugin
+    #
+    # The plugin:
+    # 1. Registers entrypoints (which are Pregel objects)
+    # 2. Configures sandbox to passthrough LangGraph modules
+    # 3. Injects CONFIG_KEY_CALL to route @task calls to activities
+    # 4. Provides a dynamic activity to execute any @task by module path
+    #
+    # NO explicit task registration needed - tasks discovered at runtime!
+    plugin = LangGraphFunctionalPlugin(
+        # Pass entrypoint functions directly - names extracted from __name__
+        entrypoints=[document_workflow, review_workflow],
+        # Default timeout for dynamically discovered task activities
+        default_task_timeout=timedelta(minutes=1),
+        # Per-task options by function name (optional)
+        task_options={
+            "research_topic": {
+                "start_to_close_timeout": timedelta(minutes=15),
+                "retry_policy": {"maximum_attempts": 5},
+            },
+        },
+    )
+
+    # Connect to Temporal with the plugin
+    # Plugin configures:
+    # - Data converter for Pydantic/LangChain types
+    # - Sandbox passthrough for langgraph, langchain_core, pydantic_core, etc.
+    # - Dynamic activity for task execution
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config, plugins=[plugin])
+
+    # Create worker with user-defined workflows
+    worker = Worker(
+        client,
+        task_queue="langgraph-functional",
+        workflows=[DocumentWorkflow, ReviewWorkflow],
+    )
+
+    print("Worker started on task queue 'langgraph-functional'")
+    print("Press Ctrl+C to exit.")
+    await worker.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

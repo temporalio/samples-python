@@ -6,8 +6,8 @@ from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
-from langgraph_plugin.supervisor.graph import build_supervisor_graph
-from langgraph_plugin.supervisor.workflow import SupervisorWorkflow
+from langgraph_plugin.graph_api.supervisor.graph import build_supervisor_graph
+from langgraph_plugin.graph_api.supervisor.workflow import SupervisorWorkflow
 
 from .conftest import requires_openai
 

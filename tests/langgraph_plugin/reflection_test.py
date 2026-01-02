@@ -6,8 +6,8 @@ from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
-from langgraph_plugin.reflection.graph import build_reflection_graph
-from langgraph_plugin.reflection.workflow import ReflectionWorkflow
+from langgraph_plugin.graph_api.reflection.graph import build_reflection_graph
+from langgraph_plugin.graph_api.reflection.workflow import ReflectionWorkflow
 
 from .conftest import requires_openai
 

@@ -6,8 +6,8 @@ from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
-from langgraph_plugin.agentic_rag.graph import build_agentic_rag_graph
-from langgraph_plugin.agentic_rag.workflow import AgenticRAGWorkflow
+from langgraph_plugin.graph_api.agentic_rag.graph import build_agentic_rag_graph
+from langgraph_plugin.graph_api.agentic_rag.workflow import AgenticRAGWorkflow
 
 from .conftest import requires_openai
 

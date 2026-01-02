@@ -47,20 +47,44 @@ Since the LangGraph integration is currently in a branch, you need to install fr
 
 5. Navigate to a sample directory and follow its README for specific instructions
 
+## LangGraph API Styles
+
+LangGraph provides two API styles for defining workflows:
+
+| Aspect | Graph API | Functional API |
+|--------|-----------|----------------|
+| Definition | `StateGraph` + `add_node()` + `add_edge()` | `@task` + `@entrypoint` |
+| Control flow | Explicit graph edges | Python code (loops, conditionals) |
+| State | Shared TypedDict with reducers | Function arguments/returns |
+| Parallelism | Send API, conditional edges | Concurrent task calls |
+| Compile | `compile(graph, "id")` | `compile_functional("id")` |
+
 ## Examples
 
-Each directory contains a complete example with its own README for detailed instructions:
+Examples are organized by API style:
+
+### Graph API (`graph_api/`)
+
+StateGraph-based examples using nodes and edges:
 
 | Sample | Description |
 |--------|-------------|
-| [hello_world](./hello_world/) | Simple starter example demonstrating basic plugin setup and graph registration |
-| [activity_from_node](./activity_from_node/) | Calling Temporal activities from a graph node using run_in_workflow |
-| [react_agent](./react_agent/) | ReAct agent pattern with tool calling and multi-step reasoning |
-| [human_in_the_loop](./human_in_the_loop/) | Human-in-the-loop approval workflows using two approaches |
-| ↳ [approval_graph_interrupt](./human_in_the_loop/approval_graph_interrupt/) | Uses LangGraph's `interrupt()` function |
-| ↳ [approval_wait_condition](./human_in_the_loop/approval_wait_condition/) | Uses `run_in_workflow=True` with `workflow.wait_condition()` |
-| [supervisor](./supervisor/) | Multi-agent supervisor pattern coordinating specialized agents |
-| [agentic_rag](./agentic_rag/) | Retrieval-augmented generation with document grading and query rewriting |
-| [deep_research](./deep_research/) | Multi-step research with web search and iterative refinement |
-| [plan_and_execute](./plan_and_execute/) | Plan-and-execute pattern with structured step execution |
-| [reflection](./reflection/) | Self-reflection pattern for iterative improvement |
+| [hello_world](./graph_api/hello_world/) | Simple starter example demonstrating basic plugin setup and graph registration |
+| [activity_from_node](./graph_api/activity_from_node/) | Calling Temporal activities from a graph node using run_in_workflow |
+| [react_agent](./graph_api/react_agent/) | ReAct agent pattern with tool calling and multi-step reasoning |
+| [human_in_the_loop](./graph_api/human_in_the_loop/) | Human-in-the-loop approval workflows using two approaches |
+| ↳ [approval_graph_interrupt](./graph_api/human_in_the_loop/approval_graph_interrupt/) | Uses LangGraph's `interrupt()` function |
+| ↳ [approval_wait_condition](./graph_api/human_in_the_loop/approval_wait_condition/) | Uses `run_in_workflow=True` with `workflow.wait_condition()` |
+| [supervisor](./graph_api/supervisor/) | Multi-agent supervisor pattern coordinating specialized agents |
+| [agentic_rag](./graph_api/agentic_rag/) | Retrieval-augmented generation with document grading and query rewriting |
+| [deep_research](./graph_api/deep_research/) | Multi-step research with web search and iterative refinement |
+| [plan_and_execute](./graph_api/plan_and_execute/) | Plan-and-execute pattern with structured step execution |
+| [reflection](./graph_api/reflection/) | Self-reflection pattern for iterative improvement |
+
+### Functional API (`functional_api/`)
+
+`@task` and `@entrypoint` decorator-based examples:
+
+| Sample | Description |
+|--------|-------------|
+| [functional_api](./functional_api/) | Document creation workflow demonstrating tasks and entrypoints |

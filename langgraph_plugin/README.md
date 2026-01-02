@@ -218,3 +218,150 @@ plugin = LangGraphFunctionalPlugin(
     }
 )
 ```
+
+### Adapting LangGraph Functional API for Temporal
+
+When adapting a standard LangGraph functional API graph to run with Temporal, there are a few key changes required:
+
+#### 1. Use `await` When Calling Tasks
+
+In standard LangGraph, you can call tasks with `.result()`:
+
+```python
+# Standard LangGraph (won't work with Temporal)
+@entrypoint()
+def my_workflow(input: str) -> dict:
+    result = my_task(input).result()  # ❌ Blocks - not allowed in Temporal
+    return {"output": result}
+```
+
+With Temporal, you must use `await` because blocking is not allowed in workflows:
+
+```python
+# Temporal-compatible
+@entrypoint()
+async def my_workflow(input: str) -> dict:
+    result = await my_task(input)  # ✅ Async await
+    return {"output": result}
+```
+
+#### 2. Entrypoints Must Be Async
+
+Since tasks require `await`, your entrypoint function must be `async`:
+
+```python
+# Standard LangGraph
+@entrypoint()
+def process(data: str) -> dict:  # sync function
+    ...
+
+# Temporal-compatible
+@entrypoint()
+async def process(data: str) -> dict:  # async function
+    ...
+```
+
+#### 3. Tasks Must Be Importable
+
+Tasks run as Temporal activities in a separate context. They must be defined at module level (not inside functions or classes) so they can be imported by the worker:
+
+```python
+# ✅ Correct - module level
+@task
+def analyze(text: str) -> str:
+    return llm.invoke(text)
+
+# ❌ Wrong - can't be imported
+def make_workflow():
+    @task
+    def analyze(text: str) -> str:  # Closure - not importable
+        return llm.invoke(text)
+```
+
+#### 4. Parallel Task Execution
+
+Standard LangGraph parallel execution works the same way, just use `await`:
+
+```python
+@entrypoint()
+async def research(topic: str) -> dict:
+    # Start multiple tasks concurrently
+    futures = [search(query) for query in queries]
+
+    # Wait for all results
+    results = [await f for f in futures]
+
+    return {"results": results}
+```
+
+#### Complete Migration Example
+
+**Before (Standard LangGraph):**
+
+```python
+from langgraph.func import task, entrypoint
+
+@task
+def fetch_data(url: str) -> dict:
+    return requests.get(url).json()
+
+@task
+def process_data(data: dict) -> str:
+    return transform(data)
+
+@entrypoint()
+def pipeline(url: str) -> dict:
+    data = fetch_data(url).result()      # Blocking call
+    output = process_data(data).result()  # Blocking call
+    return {"output": output}
+
+# Direct invocation
+result = pipeline.invoke("https://api.example.com")
+```
+
+**After (Temporal-compatible):**
+
+```python
+from langgraph.func import task, entrypoint
+from temporalio import workflow
+from temporalio.contrib.langgraph import LangGraphFunctionalPlugin, compile_functional
+
+@task
+def fetch_data(url: str) -> dict:
+    return requests.get(url).json()
+
+@task
+def process_data(data: dict) -> str:
+    return transform(data)
+
+@entrypoint()
+async def pipeline(url: str) -> dict:       # Made async
+    data = await fetch_data(url)             # Use await
+    output = await process_data(data)        # Use await
+    return {"output": output}
+
+# Workflow wrapper
+@workflow.defn
+class PipelineWorkflow:
+    @workflow.run
+    async def run(self, url: str) -> dict:
+        app = compile_functional("pipeline")
+        return await app.ainvoke(url)
+
+# Plugin registration
+plugin = LangGraphFunctionalPlugin(entrypoints={"pipeline": pipeline})
+
+# Worker setup
+async with Worker(client, task_queue="q", workflows=[PipelineWorkflow], plugins=[plugin]):
+    result = await client.execute_workflow(PipelineWorkflow.run, "https://api.example.com", ...)
+```
+
+#### Summary of Changes
+
+| Aspect | Standard LangGraph | Temporal Integration |
+|--------|-------------------|---------------------|
+| Task calls | `task(x).result()` | `await task(x)` |
+| Entrypoint | `def func():` (sync OK) | `async def func():` (must be async) |
+| Task location | Anywhere | Module level only |
+| Invocation | `entrypoint.invoke(x)` | `compile_functional("id").ainvoke(x)` |
+| Execution | Direct | Via Temporal workflow |

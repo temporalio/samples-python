@@ -19,6 +19,16 @@ poe lint
 
 This catches import sorting and other style issues that mypy won't find.
 
+## Test Failures
+
+**NEVER delete tests just because they fail.** Failing tests indicate real issues with the implementation that need to be fixed. If tests fail:
+
+1. Investigate the root cause of the failure
+2. Fix the implementation, not the tests
+3. Only modify tests if they have incorrect assertions or are testing the wrong behavior
+
+Tests are valuable signals - treat failures as bugs to fix, not inconveniences to remove.
+
 ## Client Initialization Pattern
 
 Use the `ClientConfig` pattern for client initialization to support environment-based configuration:

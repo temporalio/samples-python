@@ -6,7 +6,7 @@ Temporal workflow for the deep research agent.
 from typing import Any
 
 from temporalio import workflow
-from temporalio.contrib.langgraph import compile_functional
+from temporalio.contrib.langgraph import compile
 
 
 @workflow.defn
@@ -31,6 +31,6 @@ class DeepResearchWorkflow:
         Returns:
             Research report with metadata.
         """
-        app = compile_functional("deep_research_entrypoint")
+        app = compile("deep_research_entrypoint")
         result = await app.ainvoke(topic)
         return result

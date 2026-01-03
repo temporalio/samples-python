@@ -79,7 +79,7 @@ class ApprovalWorkflow:
 
     @workflow.run
     async def run(self, request: ApprovalRequest) -> dict:
-        runner = compile_functional(approval_entrypoint)
+        runner = compile("approval_entrypoint")
 
         async for event in runner.astream_events(...):
             if event["event"] == "on_interrupt":

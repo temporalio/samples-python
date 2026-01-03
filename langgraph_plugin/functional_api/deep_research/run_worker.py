@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import (
-    LangGraphFunctionalPlugin,
+    LangGraphPlugin,
     activity_options,
 )
 from temporalio.envconfig import ClientConfig
@@ -23,9 +23,9 @@ from langgraph_plugin.functional_api.deep_research.workflow import DeepResearchW
 
 
 async def main() -> None:
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"deep_research_entrypoint": deep_research_entrypoint},
-        task_options={
+    plugin = LangGraphPlugin(
+        graphs={"deep_research_entrypoint": deep_research_entrypoint},
+        activity_options={
             "plan_research": activity_options(
                 start_to_close_timeout=timedelta(minutes=2),
             ),

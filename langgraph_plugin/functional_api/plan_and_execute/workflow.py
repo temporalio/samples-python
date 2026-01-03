@@ -6,7 +6,7 @@ Temporal workflow for the plan-and-execute agent.
 from typing import Any
 
 from temporalio import workflow
-from temporalio.contrib.langgraph import compile_functional
+from temporalio.contrib.langgraph import compile
 
 
 @workflow.defn
@@ -31,6 +31,6 @@ class PlanExecuteWorkflow:
         Returns:
             Plan, step results, and final response.
         """
-        app = compile_functional("plan_execute_entrypoint")
+        app = compile("plan_execute_entrypoint")
         result = await app.ainvoke(objective)
         return result

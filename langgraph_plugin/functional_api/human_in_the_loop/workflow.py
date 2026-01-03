@@ -11,7 +11,11 @@ from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
     from langgraph.types import Command
-    from temporalio.contrib.langgraph import activity_options, compile_functional
+    from temporalio.contrib.langgraph import (
+        TemporalFunctionalRunner,
+        activity_options,
+        compile,
+    )
 
 
 @dataclass
@@ -80,10 +84,10 @@ class ApprovalWorkflow:
         """
         # Workflow-level task options override plugin-level settings.
         # This demonstrates how to customize timeouts per-workflow when needed.
-        # The plugin's task_options set defaults; compile_functional can override.
-        app = compile_functional(
+        # The plugin's activity_options set defaults; compile() can override.
+        app = compile(
             "approval_entrypoint",
-            task_options={
+            activity_options={
                 "process_request": activity_options(
                     start_to_close_timeout=timedelta(
                         seconds=10
@@ -92,6 +96,7 @@ class ApprovalWorkflow:
                 # execute_action uses plugin default (30s) - not specified here
             },
         )
+        assert isinstance(app, TemporalFunctionalRunner)
 
         # Handle both dataclass and dict input
         if isinstance(request, dict):

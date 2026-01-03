@@ -6,7 +6,7 @@ Temporal workflow that executes the reflection agent with durable execution.
 from typing import Any
 
 from temporalio import workflow
-from temporalio.contrib.langgraph import compile_functional
+from temporalio.contrib.langgraph import compile
 
 
 @workflow.defn
@@ -37,7 +37,7 @@ class ReflectionWorkflow:
         Returns:
             The final content with iteration history.
         """
-        app = compile_functional("reflection_entrypoint")
+        app = compile("reflection_entrypoint")
 
         # Pass max_iterations through config or as part of input
         result = await app.ainvoke(task_description)

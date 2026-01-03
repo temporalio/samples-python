@@ -9,7 +9,7 @@ are in separate files and are imported by the worker.
 from typing import Any
 
 from temporalio import workflow
-from temporalio.contrib.langgraph import compile_functional
+from temporalio.contrib.langgraph import compile
 
 
 @workflow.defn
@@ -17,7 +17,7 @@ class HelloWorldWorkflow:
     """Temporal workflow that executes the hello world LangGraph entrypoint.
 
     This workflow demonstrates:
-    - Using compile_functional() to get an entrypoint runner by name
+    - Using compile() to get an entrypoint runner by name
     - Executing the entrypoint with ainvoke()
     - Each @task runs as a Temporal activity with durability guarantees
     """
@@ -33,7 +33,7 @@ class HelloWorldWorkflow:
             The final state containing the processed result.
         """
         # Get the compiled entrypoint runner by name
-        app = compile_functional("hello_world_entrypoint")
+        app = compile("hello_world_entrypoint")
 
         # Execute the entrypoint - the "process_query" task runs as a Temporal activity
         result = await app.ainvoke(query)

@@ -3,7 +3,7 @@
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.functional_api.plan_and_execute.entrypoint import (
@@ -18,8 +18,8 @@ async def test_plan_execute_functional_workflow(client: Client) -> None:
     """Test that the plan-and-execute functional workflow creates and executes a plan."""
     task_queue = f"plan-execute-functional-test-{uuid.uuid4()}"
 
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"plan_execute_entrypoint": plan_execute_entrypoint},
+    plugin = LangGraphPlugin(
+        graphs={"plan_execute_entrypoint": plan_execute_entrypoint},
     )
 
     async with Worker(

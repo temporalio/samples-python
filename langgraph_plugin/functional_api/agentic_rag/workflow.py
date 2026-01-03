@@ -6,7 +6,7 @@ Temporal workflow for the agentic RAG system.
 from typing import Any
 
 from temporalio import workflow
-from temporalio.contrib.langgraph import compile_functional
+from temporalio.contrib.langgraph import compile
 
 
 @workflow.defn
@@ -32,6 +32,6 @@ class AgenticRagWorkflow:
         Returns:
             Answer with metadata.
         """
-        app = compile_functional("agentic_rag_entrypoint")
+        app = compile("agentic_rag_entrypoint")
         result = await app.ainvoke(question)
         return result

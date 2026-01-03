@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import (
-    LangGraphFunctionalPlugin,
+    LangGraphPlugin,
     activity_options,
 )
 from temporalio.envconfig import ClientConfig
@@ -22,9 +22,9 @@ from langgraph_plugin.functional_api.human_in_the_loop.workflow import ApprovalW
 
 
 async def main() -> None:
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"approval_entrypoint": approval_entrypoint},
-        task_options={
+    plugin = LangGraphPlugin(
+        graphs={"approval_entrypoint": approval_entrypoint},
+        activity_options={
             "process_request": activity_options(
                 start_to_close_timeout=timedelta(seconds=30),
             ),

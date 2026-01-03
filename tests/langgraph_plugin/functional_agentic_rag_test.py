@@ -3,7 +3,7 @@
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.functional_api.agentic_rag.entrypoint import (
@@ -16,8 +16,8 @@ async def test_agentic_rag_functional_workflow(client: Client) -> None:
     """Test that the agentic RAG functional workflow retrieves and generates."""
     task_queue = f"agentic-rag-functional-test-{uuid.uuid4()}"
 
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"agentic_rag_entrypoint": agentic_rag_entrypoint},
+    plugin = LangGraphPlugin(
+        graphs={"agentic_rag_entrypoint": agentic_rag_entrypoint},
     )
 
     async with Worker(

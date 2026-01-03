@@ -57,7 +57,7 @@ LangGraph provides two API styles for defining workflows:
 | Control flow | Explicit graph edges | Python code (loops, conditionals) |
 | State | Shared TypedDict with reducers | Function arguments/returns |
 | Parallelism | Send API, conditional edges | Concurrent task calls |
-| Compile | `compile(graph, "id")` | `compile_functional("id")` |
+| Compile | `compile("id")` | `compile("id")` |
 
 ## Examples
 
@@ -143,7 +143,7 @@ The Functional API uses `@task` and `@entrypoint` decorators. Tasks run as Tempo
 ```python
 from langgraph.func import task, entrypoint
 from temporalio import workflow
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin, compile_functional
+from temporalio.contrib.langgraph import LangGraphPlugin, compile
 
 # 1. Define tasks (run as Temporal activities)
 @task
@@ -167,8 +167,8 @@ async def research_workflow(topic: str) -> dict:
     return {"summary": summary}
 
 # 3. Register entrypoint with plugin
-plugin = LangGraphFunctionalPlugin(
-    entrypoints={"research": research_workflow}
+plugin = LangGraphPlugin(
+    graphs={"research": research_workflow}
 )
 
 # 4. Use in workflow
@@ -176,7 +176,7 @@ plugin = LangGraphFunctionalPlugin(
 class ResearchWorkflow:
     @workflow.run
     async def run(self, topic: str) -> dict:
-        app = compile_functional("research")
+        app = compile("research")
         return await app.ainvoke(topic)
 
 # 5. Start worker with plugin
@@ -192,8 +192,8 @@ async with Worker(client, task_queue="q", workflows=[ResearchWorkflow], plugins=
 | Orchestration | Graph edges | Python control flow |
 | Parallel execution | `Send` API | Concurrent `await` |
 | State management | Shared `TypedDict` | Function arguments |
-| Compile function | `compile("graph_id")` | `compile_functional("entrypoint_id")` |
-| Plugin class | `LangGraphPlugin` | `LangGraphFunctionalPlugin` |
+| Compile function | `compile("graph_id")` | `compile("entrypoint_id")` |
+| Plugin class | `LangGraphPlugin` | `LangGraphPlugin` |
 
 ### Configuration Options
 
@@ -204,7 +204,6 @@ from datetime import timedelta
 from temporalio.common import RetryPolicy
 from temporalio.contrib.langgraph import (
     LangGraphPlugin,
-    LangGraphFunctionalPlugin,
     activity_options,
 )
 
@@ -224,30 +223,34 @@ def build_graph():
 
 plugin = LangGraphPlugin(
     graphs={"my_graph": build_graph},
-    default_activity_timeout=timedelta(minutes=5),
+    default_activity_options=activity_options(
+        start_to_close_timeout=timedelta(minutes=5),
+    ),
     # Or configure per-node at plugin level:
-    per_node_activity_options={
+    activity_options={
         "expensive_node": activity_options(
             start_to_close_timeout=timedelta(minutes=30),
         ),
     },
 )
 
-# Functional API - per-task options (also uses activity_options)
-plugin = LangGraphFunctionalPlugin(
-    entrypoints={"my_entrypoint": entrypoint_func},
-    default_task_timeout=timedelta(minutes=5),
-    task_options={
+# Functional API - same plugin, same activity_options parameter
+plugin = LangGraphPlugin(
+    graphs={"my_entrypoint": entrypoint_func},
+    default_activity_options=activity_options(
+        start_to_close_timeout=timedelta(minutes=5),
+    ),
+    activity_options={
         "expensive_task": activity_options(
             start_to_close_timeout=timedelta(minutes=30),
         ),
     },
 )
 
-# Or configure in workflow via compile_functional()
-app = compile_functional(
+# Or configure in workflow via compile()
+app = compile(
     "my_entrypoint",
-    task_options={
+    activity_options={
         "my_task": activity_options(
             start_to_close_timeout=timedelta(minutes=2),
             retry_policy=RetryPolicy(maximum_attempts=3),
@@ -361,7 +364,7 @@ result = pipeline.invoke("https://api.example.com")
 ```python
 from langgraph.func import task, entrypoint
 from temporalio import workflow
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin, compile_functional
+from temporalio.contrib.langgraph import LangGraphPlugin, compile
 
 @task
 def fetch_data(url: str) -> dict:
@@ -382,11 +385,11 @@ async def pipeline(url: str) -> dict:       # Made async
 class PipelineWorkflow:
     @workflow.run
     async def run(self, url: str) -> dict:
-        app = compile_functional("pipeline")
+        app = compile("pipeline")
         return await app.ainvoke(url)
 
 # Plugin registration
-plugin = LangGraphFunctionalPlugin(entrypoints={"pipeline": pipeline})
+plugin = LangGraphPlugin(graphs={"pipeline": pipeline})
 
 # Worker setup
 async with Worker(client, task_queue="q", workflows=[PipelineWorkflow], plugins=[plugin]):
@@ -400,5 +403,5 @@ async with Worker(client, task_queue="q", workflows=[PipelineWorkflow], plugins=
 | Task calls | `task(x).result()` | `await task(x)` |
 | Entrypoint | `def func():` (sync OK) | `async def func():` (must be async) |
 | Task location | Anywhere | Module level only |
-| Invocation | `entrypoint.invoke(x)` | `compile_functional("id").ainvoke(x)` |
+| Invocation | `entrypoint.invoke(x)` | `compile("id").ainvoke(x)` |
 | Execution | Direct | Via Temporal workflow |

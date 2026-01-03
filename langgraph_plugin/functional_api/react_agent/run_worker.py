@@ -1,7 +1,7 @@
 """Worker for the ReAct Agent Functional API sample.
 
 Starts a Temporal worker that can execute ReActAgentWorkflow.
-The LangGraphFunctionalPlugin registers the entrypoint and handles activity registration.
+The LangGraphPlugin registers the entrypoint and handles activity registration.
 
 Prerequisites:
     - Temporal server running locally
@@ -13,7 +13,7 @@ from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import (
-    LangGraphFunctionalPlugin,
+    LangGraphPlugin,
     activity_options,
 )
 from temporalio.envconfig import ClientConfig
@@ -27,9 +27,9 @@ from langgraph_plugin.functional_api.react_agent.workflow import ReActAgentWorkf
 
 async def main() -> None:
     # Create the plugin with the ReAct agent entrypoint registered
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"react_agent_entrypoint": react_agent_entrypoint},
-        task_options={
+    plugin = LangGraphPlugin(
+        graphs={"react_agent_entrypoint": react_agent_entrypoint},
+        activity_options={
             "call_model": activity_options(
                 start_to_close_timeout=timedelta(minutes=2),
             ),

@@ -37,7 +37,7 @@ async def hello_world_entrypoint(query: str) -> dict:
 class HelloWorldWorkflow:
     @workflow.run
     async def run(self, query: str) -> dict:
-        app = compile_functional("hello_world")
+        app = compile("hello_world")
         return await app.ainvoke(query)
 ```
 

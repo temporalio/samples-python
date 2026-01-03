@@ -9,7 +9,7 @@ are in separate files and are imported by the worker.
 from typing import Any
 
 from temporalio import workflow
-from temporalio.contrib.langgraph import compile_functional
+from temporalio.contrib.langgraph import compile
 
 
 @workflow.defn
@@ -36,7 +36,7 @@ class ReActAgentWorkflow:
             The final state containing the conversation messages and result.
         """
         # Get the compiled entrypoint runner by name
-        app = compile_functional("react_agent_entrypoint")
+        app = compile("react_agent_entrypoint")
 
         # Execute the agent
         result = await app.ainvoke(query)

@@ -6,7 +6,7 @@ Temporal workflow that executes the supervisor multi-agent system.
 from typing import Any
 
 from temporalio import workflow
-from temporalio.contrib.langgraph import compile_functional
+from temporalio.contrib.langgraph import compile
 
 
 @workflow.defn
@@ -31,6 +31,6 @@ class SupervisorWorkflow:
         Returns:
             The final result with conversation history.
         """
-        app = compile_functional("supervisor_entrypoint")
+        app = compile("supervisor_entrypoint")
         result = await app.ainvoke(query)
         return result

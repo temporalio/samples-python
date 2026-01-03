@@ -3,7 +3,7 @@
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.functional_api.deep_research.entrypoint import (
@@ -16,8 +16,8 @@ async def test_deep_research_functional_workflow(client: Client) -> None:
     """Test that the deep research functional workflow produces a report."""
     task_queue = f"deep-research-functional-test-{uuid.uuid4()}"
 
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"deep_research_entrypoint": deep_research_entrypoint},
+    plugin = LangGraphPlugin(
+        graphs={"deep_research_entrypoint": deep_research_entrypoint},
     )
 
     async with Worker(

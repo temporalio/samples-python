@@ -7,7 +7,7 @@ import asyncio
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphPlugin
+from temporalio.contrib.langgraph import LangGraphPlugin, activity_options
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
@@ -26,7 +26,9 @@ async def main() -> None:
     # Create the LangGraph plugin with the approval graph
     plugin = LangGraphPlugin(
         graphs={"approval_workflow": build_approval_graph},
-        default_activity_timeout=timedelta(seconds=30),
+        default_activity_options=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
     )
 
     # Connect to Temporal

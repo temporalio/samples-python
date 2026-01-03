@@ -3,7 +3,7 @@
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.functional_api.supervisor.entrypoint import supervisor_entrypoint
@@ -14,8 +14,8 @@ async def test_supervisor_functional_workflow(client: Client) -> None:
     """Test that the supervisor functional workflow coordinates agents."""
     task_queue = f"supervisor-functional-test-{uuid.uuid4()}"
 
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"supervisor_entrypoint": supervisor_entrypoint},
+    plugin = LangGraphPlugin(
+        graphs={"supervisor_entrypoint": supervisor_entrypoint},
     )
 
     async with Worker(

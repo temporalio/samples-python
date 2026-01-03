@@ -1,7 +1,7 @@
 """Worker for the Hello World LangGraph Functional API example.
 
 Starts a Temporal worker that can execute HelloWorldWorkflow.
-The LangGraphFunctionalPlugin registers the entrypoint and handles activity registration.
+The LangGraphPlugin registers the entrypoint and handles activity registration.
 """
 
 import asyncio
@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import (
-    LangGraphFunctionalPlugin,
+    LangGraphPlugin,
     activity_options,
 )
 from temporalio.envconfig import ClientConfig
@@ -24,9 +24,9 @@ from langgraph_plugin.functional_api.hello_world.workflow import HelloWorldWorkf
 async def main() -> None:
     # Create the plugin with our entrypoint registered by name
     # Use activity_options() to configure task-specific timeouts
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"hello_world_entrypoint": hello_world_entrypoint},
-        task_options={
+    plugin = LangGraphPlugin(
+        graphs={"hello_world_entrypoint": hello_world_entrypoint},
+        activity_options={
             "process_query": activity_options(
                 start_to_close_timeout=timedelta(seconds=30),
             ),

@@ -3,7 +3,7 @@
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.functional_api.reflection.entrypoint import reflection_entrypoint
@@ -14,8 +14,8 @@ async def test_reflection_functional_workflow(client: Client) -> None:
     """Test that the reflection functional workflow improves content."""
     task_queue = f"reflection-functional-test-{uuid.uuid4()}"
 
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"reflection_entrypoint": reflection_entrypoint},
+    plugin = LangGraphPlugin(
+        graphs={"reflection_entrypoint": reflection_entrypoint},
     )
 
     async with Worker(

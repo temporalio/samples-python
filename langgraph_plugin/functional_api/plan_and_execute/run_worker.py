@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import (
-    LangGraphFunctionalPlugin,
+    LangGraphPlugin,
     activity_options,
 )
 from temporalio.envconfig import ClientConfig
@@ -25,9 +25,9 @@ from langgraph_plugin.functional_api.plan_and_execute.workflow import (
 
 
 async def main() -> None:
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"plan_execute_entrypoint": plan_execute_entrypoint},
-        task_options={
+    plugin = LangGraphPlugin(
+        graphs={"plan_execute_entrypoint": plan_execute_entrypoint},
+        activity_options={
             "create_plan": activity_options(
                 start_to_close_timeout=timedelta(minutes=2),
             ),

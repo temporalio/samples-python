@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import (
-    LangGraphFunctionalPlugin,
+    LangGraphPlugin,
     activity_options,
 )
 from temporalio.envconfig import ClientConfig
@@ -23,9 +23,9 @@ from langgraph_plugin.functional_api.agentic_rag.workflow import AgenticRagWorkf
 
 
 async def main() -> None:
-    plugin = LangGraphFunctionalPlugin(
-        entrypoints={"agentic_rag_entrypoint": agentic_rag_entrypoint},
-        task_options={
+    plugin = LangGraphPlugin(
+        graphs={"agentic_rag_entrypoint": agentic_rag_entrypoint},
+        activity_options={
             "retrieve_documents": activity_options(
                 start_to_close_timeout=timedelta(minutes=1),
             ),

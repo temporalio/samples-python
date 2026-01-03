@@ -197,16 +197,40 @@ async with Worker(client, task_queue="q", workflows=[ResearchWorkflow], plugins=
 
 ### Configuration Options
 
-Both APIs support activity configuration:
+Both APIs support activity configuration using `activity_options()` helper:
 
 ```python
-# Graph API - per-node options
+from datetime import timedelta
+from temporalio.common import RetryPolicy
+from temporalio.contrib.langgraph import (
+    LangGraphPlugin,
+    LangGraphFunctionalPlugin,
+    activity_options,
+)
+
+# Graph API - use activity_options() in node metadata
+def build_graph():
+    graph = StateGraph(MyState)
+    graph.add_node(
+        "expensive_node",
+        expensive_func,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=30),
+            retry_policy=RetryPolicy(maximum_attempts=5),
+        ),
+    )
+    # ... add edges ...
+    return graph.compile()
+
 plugin = LangGraphPlugin(
-    graphs={"my_graph": graph},
-    default_start_to_close_timeout=timedelta(minutes=5),
-    node_options={
-        "expensive_node": {"start_to_close_timeout": timedelta(minutes=30)}
-    }
+    graphs={"my_graph": build_graph},
+    default_activity_timeout=timedelta(minutes=5),
+    # Or configure per-node at plugin level:
+    per_node_activity_options={
+        "expensive_node": activity_options(
+            start_to_close_timeout=timedelta(minutes=30),
+        ),
+    },
 )
 
 # Functional API - per-task options
@@ -215,7 +239,7 @@ plugin = LangGraphFunctionalPlugin(
     default_task_timeout=timedelta(minutes=5),
     task_options={
         "expensive_task": {"start_to_close_timeout": timedelta(minutes=30)}
-    }
+    },
 )
 ```
 

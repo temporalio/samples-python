@@ -5,9 +5,13 @@ The LangGraphFunctionalPlugin registers the entrypoint and handles activity regi
 """
 
 import asyncio
+from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import (
+    LangGraphFunctionalPlugin,
+    activity_options,
+)
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
@@ -19,8 +23,14 @@ from langgraph_plugin.functional_api.hello_world.workflow import HelloWorldWorkf
 
 async def main() -> None:
     # Create the plugin with our entrypoint registered by name
+    # Use activity_options() to configure task-specific timeouts
     plugin = LangGraphFunctionalPlugin(
         entrypoints={"hello_world_entrypoint": hello_world_entrypoint},
+        task_options={
+            "process_query": activity_options(
+                start_to_close_timeout=timedelta(seconds=30),
+            ),
+        },
     )
 
     # Connect to Temporal with the plugin

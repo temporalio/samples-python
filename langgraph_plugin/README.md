@@ -233,12 +233,25 @@ plugin = LangGraphPlugin(
     },
 )
 
-# Functional API - per-task options
+# Functional API - per-task options (also uses activity_options)
 plugin = LangGraphFunctionalPlugin(
     entrypoints={"my_entrypoint": entrypoint_func},
     default_task_timeout=timedelta(minutes=5),
     task_options={
-        "expensive_task": {"start_to_close_timeout": timedelta(minutes=30)}
+        "expensive_task": activity_options(
+            start_to_close_timeout=timedelta(minutes=30),
+        ),
+    },
+)
+
+# Or configure in workflow via compile_functional()
+app = compile_functional(
+    "my_entrypoint",
+    task_options={
+        "my_task": activity_options(
+            start_to_close_timeout=timedelta(minutes=2),
+            retry_policy=RetryPolicy(maximum_attempts=3),
+        ),
     },
 )
 ```

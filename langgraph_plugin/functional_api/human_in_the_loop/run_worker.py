@@ -5,9 +5,13 @@ Prerequisites:
 """
 
 import asyncio
+from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import (
+    LangGraphFunctionalPlugin,
+    activity_options,
+)
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
@@ -20,6 +24,14 @@ from langgraph_plugin.functional_api.human_in_the_loop.workflow import ApprovalW
 async def main() -> None:
     plugin = LangGraphFunctionalPlugin(
         entrypoints={"approval_entrypoint": approval_entrypoint},
+        task_options={
+            "process_request": activity_options(
+                start_to_close_timeout=timedelta(seconds=30),
+            ),
+            "execute_action": activity_options(
+                start_to_close_timeout=timedelta(seconds=30),
+            ),
+        },
     )
 
     config = ClientConfig.load_client_connect_config()

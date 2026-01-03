@@ -6,9 +6,13 @@ Prerequisites:
 """
 
 import asyncio
+from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import (
+    LangGraphFunctionalPlugin,
+    activity_options,
+)
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
@@ -21,6 +25,20 @@ from langgraph_plugin.functional_api.agentic_rag.workflow import AgenticRagWorkf
 async def main() -> None:
     plugin = LangGraphFunctionalPlugin(
         entrypoints={"agentic_rag_entrypoint": agentic_rag_entrypoint},
+        task_options={
+            "retrieve_documents": activity_options(
+                start_to_close_timeout=timedelta(minutes=1),
+            ),
+            "grade_documents": activity_options(
+                start_to_close_timeout=timedelta(minutes=1),
+            ),
+            "rewrite_query": activity_options(
+                start_to_close_timeout=timedelta(minutes=1),
+            ),
+            "generate_answer": activity_options(
+                start_to_close_timeout=timedelta(minutes=2),
+            ),
+        },
     )
 
     config = ClientConfig.load_client_connect_config()

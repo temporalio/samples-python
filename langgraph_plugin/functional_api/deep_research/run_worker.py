@@ -6,9 +6,13 @@ Prerequisites:
 """
 
 import asyncio
+from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import (
+    LangGraphFunctionalPlugin,
+    activity_options,
+)
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
@@ -21,6 +25,17 @@ from langgraph_plugin.functional_api.deep_research.workflow import DeepResearchW
 async def main() -> None:
     plugin = LangGraphFunctionalPlugin(
         entrypoints={"deep_research_entrypoint": deep_research_entrypoint},
+        task_options={
+            "plan_research": activity_options(
+                start_to_close_timeout=timedelta(minutes=2),
+            ),
+            "execute_search": activity_options(
+                start_to_close_timeout=timedelta(minutes=1),
+            ),
+            "synthesize_report": activity_options(
+                start_to_close_timeout=timedelta(minutes=3),
+            ),
+        },
     )
 
     config = ClientConfig.load_client_connect_config()

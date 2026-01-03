@@ -9,9 +9,13 @@ Prerequisites:
 """
 
 import asyncio
+from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import (
+    LangGraphFunctionalPlugin,
+    activity_options,
+)
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
@@ -25,6 +29,14 @@ async def main() -> None:
     # Create the plugin with the ReAct agent entrypoint registered
     plugin = LangGraphFunctionalPlugin(
         entrypoints={"react_agent_entrypoint": react_agent_entrypoint},
+        task_options={
+            "call_model": activity_options(
+                start_to_close_timeout=timedelta(minutes=2),
+            ),
+            "execute_tools": activity_options(
+                start_to_close_timeout=timedelta(minutes=1),
+            ),
+        },
     )
 
     # Connect to Temporal with the plugin

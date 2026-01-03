@@ -8,9 +8,13 @@ Prerequisites:
 """
 
 import asyncio
+from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphFunctionalPlugin
+from temporalio.contrib.langgraph import (
+    LangGraphFunctionalPlugin,
+    activity_options,
+)
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
@@ -21,6 +25,17 @@ from langgraph_plugin.functional_api.reflection.workflow import ReflectionWorkfl
 async def main() -> None:
     plugin = LangGraphFunctionalPlugin(
         entrypoints={"reflection_entrypoint": reflection_entrypoint},
+        task_options={
+            "generate_content": activity_options(
+                start_to_close_timeout=timedelta(minutes=2),
+            ),
+            "critique_content": activity_options(
+                start_to_close_timeout=timedelta(minutes=2),
+            ),
+            "revise_content": activity_options(
+                start_to_close_timeout=timedelta(minutes=2),
+            ),
+        },
     )
 
     config = ClientConfig.load_client_connect_config()

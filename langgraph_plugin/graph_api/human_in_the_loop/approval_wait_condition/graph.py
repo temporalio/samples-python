@@ -14,6 +14,7 @@ from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 from temporalio import activity
+from temporalio.contrib.langgraph import activity_options
 from typing_extensions import TypedDict
 
 
@@ -190,15 +191,27 @@ def build_approval_graph() -> Any:
 
     graph = StateGraph(ApprovalState)
 
-    # Add nodes
-    graph.add_node("process_request", process_request)
+    # Add nodes with activity options
+    graph.add_node(
+        "process_request",
+        process_request,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
     # Mark request_approval as run_in_workflow - it can access Temporal operations
     graph.add_node(
         "request_approval",
         request_approval,
         metadata=temporal_node_metadata(run_in_workflow=True),
     )
-    graph.add_node("execute_action", execute_action)
+    graph.add_node(
+        "execute_action",
+        execute_action,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
 
     # Define edges
     graph.add_edge(START, "process_request")

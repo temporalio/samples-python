@@ -23,6 +23,7 @@ Prerequisites:
 """
 
 import os
+from datetime import timedelta
 from typing import Annotated, Any, Literal, cast
 
 from langchain_community.tools import DuckDuckGoSearchRun
@@ -34,6 +35,7 @@ from langgraph.constants import Send
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
+from temporalio.contrib.langgraph import activity_options
 from typing_extensions import TypedDict
 
 
@@ -287,11 +289,35 @@ Be thorough but concise. Cite the source topics when presenting findings.""",
     # Build the research graph
     workflow = StateGraph(ResearchState)
 
-    # Add nodes
-    workflow.add_node("plan", plan_research)
-    workflow.add_node("search", execute_search)
-    workflow.add_node("evaluate", evaluate_results)
-    workflow.add_node("synthesize", synthesize_report)
+    # Add nodes with activity options
+    workflow.add_node(
+        "plan",
+        plan_research,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=2),
+        ),
+    )
+    workflow.add_node(
+        "search",
+        execute_search,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=1),
+        ),
+    )
+    workflow.add_node(
+        "evaluate",
+        evaluate_results,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
+    workflow.add_node(
+        "synthesize",
+        synthesize_report,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=3),
+        ),
+    )
 
     # Add edges
     workflow.add_edge(START, "plan")

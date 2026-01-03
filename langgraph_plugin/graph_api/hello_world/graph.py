@@ -4,9 +4,11 @@ This module defines the graph structure and node functions.
 It is imported only by the worker (not by the workflow).
 """
 
+from datetime import timedelta
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
+from temporalio.contrib.langgraph import activity_options
 from typing_extensions import TypedDict
 
 # =============================================================================
@@ -49,8 +51,14 @@ def build_hello_graph() -> Any:
     """
     graph = StateGraph(HelloState)
 
-    # Add a single processing node
-    graph.add_node("process", process_query)
+    # Add a single processing node with activity options
+    graph.add_node(
+        "process",
+        process_query,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
 
     # Define edges: START -> process -> END
     graph.add_edge(START, "process")

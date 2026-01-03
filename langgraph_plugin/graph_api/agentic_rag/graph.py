@@ -27,6 +27,7 @@ LangGraph cannot be imported in the workflow sandbox.
 """
 
 import os
+from datetime import timedelta
 from typing import Annotated, Any, Literal, Sequence, cast
 
 from langchain_core.documents import Document
@@ -39,6 +40,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
+from temporalio.contrib.langgraph import activity_options
 from typing_extensions import TypedDict
 
 from langchain.agents import create_agent
@@ -308,12 +310,31 @@ def build_agentic_rag_graph() -> Any:
     # Build the outer graph with grading logic
     workflow = StateGraph(AgentState)
 
-    # Add nodes
+    # Add nodes with activity options
     # retrieve_agent is a compiled graph from create_agent - inner nodes run as separate activities
+    # Use per_node_activity_options in LangGraphPlugin to configure its inner nodes
     workflow.add_node("retrieve_agent", retrieve_agent)
-    workflow.add_node("grade_documents", grade_documents)  # LLM grading as activity
-    workflow.add_node("generate", generate)
-    workflow.add_node("rewrite", rewrite)
+    workflow.add_node(
+        "grade_documents",
+        grade_documents,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=1),
+        ),
+    )
+    workflow.add_node(
+        "generate",
+        generate,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=2),
+        ),
+    )
+    workflow.add_node(
+        "rewrite",
+        rewrite,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=1),
+        ),
+    )
 
     # Add edges
     workflow.add_edge(START, "retrieve_agent")

@@ -35,6 +35,22 @@ def build_react_agent() -> Any:
     3. Observe: Feed tool results back to LLM
     4. Repeat until done
 
+    Activity Configuration:
+        Since create_agent() returns a pre-built graph, configure activity
+        options at the plugin level using per_node_activity_options:
+
+        ```python
+        from temporalio.contrib.langgraph import LangGraphPlugin, activity_options
+
+        plugin = LangGraphPlugin(
+            graphs={"react_agent": build_react_agent},
+            per_node_activity_options={
+                "agent": activity_options(start_to_close_timeout=timedelta(minutes=2)),
+                "tools": activity_options(start_to_close_timeout=timedelta(minutes=1)),
+            },
+        )
+        ```
+
     Returns:
         A compiled LangGraph that can be executed with ainvoke().
     """

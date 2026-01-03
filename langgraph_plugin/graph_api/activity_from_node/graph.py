@@ -86,7 +86,7 @@ def build_activity_from_node_graph() -> Any:
     The orchestrator node uses run_in_workflow=True to execute directly
     in the workflow context, allowing it to call Temporal activities.
     """
-    from temporalio.contrib.langgraph import temporal_node_metadata
+    from temporalio.contrib.langgraph import activity_options, temporal_node_metadata
 
     graph = StateGraph(ProcessingState)
 
@@ -97,8 +97,14 @@ def build_activity_from_node_graph() -> Any:
         metadata=temporal_node_metadata(run_in_workflow=True),
     )
 
-    # Finalize runs as a regular activity
-    graph.add_node("finalize", finalize_node)
+    # Finalize runs as a regular activity with timeout config
+    graph.add_node(
+        "finalize",
+        finalize_node,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
 
     graph.add_edge(START, "orchestrator")
     graph.add_edge("orchestrator", "finalize")

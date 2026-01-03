@@ -9,10 +9,12 @@ The graph flow:
 3. execute_action: Processes the approved request (or rejects it)
 """
 
+from datetime import timedelta
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
+from temporalio.contrib.langgraph import activity_options
 from typing_extensions import TypedDict
 
 
@@ -114,10 +116,28 @@ def build_approval_graph() -> Any:
     """
     graph = StateGraph(ApprovalState)
 
-    # Add nodes
-    graph.add_node("process_request", process_request)
-    graph.add_node("request_approval", request_approval)
-    graph.add_node("execute_action", execute_action)
+    # Add nodes with activity options
+    graph.add_node(
+        "process_request",
+        process_request,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
+    graph.add_node(
+        "request_approval",
+        request_approval,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
+    graph.add_node(
+        "execute_action",
+        execute_action,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
 
     # Define edges
     graph.add_edge(START, "process_request")

@@ -134,6 +134,26 @@ def build_supervisor_graph() -> Any:
     - Progress is checkpointed between agent handoffs
     - The entire multi-agent workflow survives worker crashes
 
+    Activity Configuration:
+        Since create_supervisor() and create_agent() return pre-built graphs,
+        configure activity options at the plugin level using per_node_activity_options:
+
+        ```python
+        from temporalio.contrib.langgraph import LangGraphPlugin, activity_options
+
+        plugin = LangGraphPlugin(
+            graphs={"supervisor": build_supervisor_graph},
+            per_node_activity_options={
+                # Supervisor node makes routing decisions
+                "supervisor": activity_options(start_to_close_timeout=timedelta(minutes=1)),
+                # Agent nodes make LLM calls
+                "researcher": activity_options(start_to_close_timeout=timedelta(minutes=3)),
+                "writer": activity_options(start_to_close_timeout=timedelta(minutes=3)),
+                "analyst": activity_options(start_to_close_timeout=timedelta(minutes=2)),
+            },
+        )
+        ```
+
     Returns:
         A compiled LangGraph supervisor that can be executed with ainvoke().
     """

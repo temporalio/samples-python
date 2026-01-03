@@ -20,6 +20,7 @@ LangGraph cannot be imported in the workflow sandbox.
 """
 
 import os
+from datetime import timedelta
 from typing import Annotated, Any, Literal
 
 from langchain_core.messages import BaseMessage, HumanMessage
@@ -29,6 +30,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
+from temporalio.contrib.langgraph import activity_options
 from typing_extensions import TypedDict
 
 
@@ -307,11 +309,35 @@ Final quality score: {final_score}/10
     # Build the reflection graph
     workflow = StateGraph(ReflectionState)
 
-    # Add nodes
-    workflow.add_node("generate", generate)
-    workflow.add_node("reflect", reflect)
-    workflow.add_node("revise", revise)
-    workflow.add_node("finalize", finalize)
+    # Add nodes with activity options for LLM calls
+    workflow.add_node(
+        "generate",
+        generate,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=2),
+        ),
+    )
+    workflow.add_node(
+        "reflect",
+        reflect,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=2),
+        ),
+    )
+    workflow.add_node(
+        "revise",
+        revise,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=2),
+        ),
+    )
+    workflow.add_node(
+        "finalize",
+        finalize,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(seconds=30),
+        ),
+    )
 
     # Add edges
     workflow.add_edge(START, "generate")

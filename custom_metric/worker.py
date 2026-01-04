@@ -1,5 +1,6 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import threading
 
 from temporalio import activity
 from temporalio.client import Client
@@ -14,12 +15,14 @@ from temporalio.worker import (
 
 from custom_metric.activity import print_and_sleep
 from custom_metric.workflow import StartTwoActivitiesWorkflow
+from custom_metric.shared import user_id
 
 
 class SimpleWorkerInterceptor(Interceptor):
     def intercept_activity(
         self, next: ActivityInboundInterceptor
     ) -> ActivityInboundInterceptor:
+        user_id.set(activity.info().activity_id)  # Set a user ID for the activity context
         return CustomScheduleToStartInterceptor(next)
 
 
@@ -31,6 +34,9 @@ class CustomScheduleToStartInterceptor(ActivityInboundInterceptor):
         )
         # Could do the original schedule time instead of current attempt
         # schedule_to_start_second_option = activity.info().started_time - activity.info().scheduled_time
+
+        # print the thread name for debugging
+        print(f"In the activity interceptor. in thread {threading.current_thread().name}")
 
         meter = activity.metric_meter()
         histogram = meter.create_histogram_timedelta(
@@ -62,8 +68,8 @@ async def main():
         activities=[print_and_sleep],
         # only one activity executor with two concurrently scheduled activities
         # to force a nontrivial schedule to start times
-        activity_executor=ThreadPoolExecutor(1),
-        max_concurrent_activities=1,
+        activity_executor=ThreadPoolExecutor(10),
+        max_concurrent_activities=10,
     )
 
     await worker.run()

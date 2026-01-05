@@ -95,6 +95,7 @@ StateGraph-based examples using nodes and edges:
 | [deep_research](./functional_api/deep_research/) | Multi-step research with parallel search execution via concurrent tasks |
 | [plan_and_execute](./functional_api/plan_and_execute/) | Plan-and-execute pattern with step-by-step task execution |
 | [reflection](./functional_api/reflection/) | Self-reflection pattern for iterative content improvement |
+| [continue_as_new](./functional_api/continue_as_new/) | Task result caching across continue-as-new boundaries |
 
 ## Usage
 

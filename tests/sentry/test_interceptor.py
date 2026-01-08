@@ -1,7 +1,15 @@
+import sys
 import unittest.mock
 from collections import abc
 
 import pytest
+
+if sys.version_info >= (3, 14):
+    pytest.skip(
+        "Sentry does not support Python 3.14 yet.",
+        allow_module_level=True,
+    )
+
 import sentry_sdk
 import temporalio.activity
 import temporalio.workflow

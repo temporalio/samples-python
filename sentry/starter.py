@@ -1,13 +1,17 @@
 import asyncio
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
 from sentry.workflow import SentryExampleWorkflow, SentryExampleWorkflowInput
 
 
 async def main():
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Connect client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(**config)
 
     # Run workflow
     try:

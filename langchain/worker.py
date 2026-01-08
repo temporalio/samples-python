@@ -3,6 +3,7 @@ import asyncio
 from activities import translate_phrase
 from langchain_interceptor import LangChainContextPropagationInterceptor
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 from workflow import LangChainChildWorkflow, LangChainWorkflow
 
@@ -10,7 +11,10 @@ interrupt_event = asyncio.Event()
 
 
 async def main():
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
+
     worker = Worker(
         client,
         task_queue="langchain-task-queue",

@@ -5,6 +5,8 @@ This sample shows how to use Temporal asyncio with [Trio](https://trio.readthedo
 and worker in a Trio setting, and how Trio-based code can run in both asyncio async activities and threaded sync
 activities.
 
+NOTE: This sample only works on Python versions < 3.14.
+
 For this sample, the optional `trio_async` dependency group must be included. To include, run:
 
     uv sync --group trio_async

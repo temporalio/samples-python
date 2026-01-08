@@ -8,7 +8,7 @@ from temporalio.testing import WorkflowEnvironment
 import hello_nexus.caller.app
 import hello_nexus.caller.workflows
 import hello_nexus.handler.worker
-from tests.hello_nexus.helpers import create_nexus_endpoint, delete_nexus_endpoint
+from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
 
 
 async def test_nexus_service_basic(client: Client, env: WorkflowEnvironment):

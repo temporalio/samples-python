@@ -59,9 +59,10 @@ class ForcingToolUseWorkflow:
         config = RunConfig()
 
         if tool_use_behavior == "default":
-            behavior: Literal[
-                "run_llm_again", "stop_on_first_tool"
-            ] | ToolsToFinalOutputFunction = "run_llm_again"
+            behavior: (
+                Literal["run_llm_again", "stop_on_first_tool"]
+                | ToolsToFinalOutputFunction
+            ) = "run_llm_again"
         elif tool_use_behavior == "first_tool":
             behavior = "stop_on_first_tool"
         elif tool_use_behavior == "custom":

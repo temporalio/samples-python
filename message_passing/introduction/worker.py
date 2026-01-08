@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from message_passing.introduction import TASK_QUEUE
@@ -14,7 +15,9 @@ interrupt_event = asyncio.Event()
 async def main():
     logging.basicConfig(level=logging.INFO)
 
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     async with Worker(
         client,

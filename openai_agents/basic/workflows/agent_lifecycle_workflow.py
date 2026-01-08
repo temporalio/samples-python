@@ -71,7 +71,6 @@ class FinalResult(BaseModel):
 class AgentLifecycleWorkflow:
     @workflow.run
     async def run(self, max_number: int) -> FinalResult:
-
         multiply_agent = Agent(
             name="Multiply Agent",
             instructions="Multiply the number by 2 and then return the final result.",

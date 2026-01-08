@@ -7,6 +7,7 @@ from typing import NoReturn
 
 from temporalio import activity, workflow
 from temporalio.client import Client, WorkflowFailureError
+from temporalio.envconfig import ClientConfig
 from temporalio.exceptions import CancelledError
 from temporalio.worker import Worker
 
@@ -50,8 +51,11 @@ class CancellationWorkflow:
 
 
 async def main():
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Start client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(
@@ -61,7 +65,6 @@ async def main():
         activities=[never_complete_activity, cleanup_activity],
         activity_executor=ThreadPoolExecutor(5),
     ):
-
         # While the worker is running, use the client to start the workflow.
         # Note, in many production setups, the client would be in a completely
         # separate process from the worker.

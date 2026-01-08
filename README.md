@@ -65,6 +65,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [custom_metric](custom_metric) - Custom metric to record the workflow type in the activity schedule to start latency.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
+* [eager_wf_start](eager_wf_start) - Run a workflow using Eager Workflow Start
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
@@ -83,6 +84,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
+* [worker_multiprocessing](worker_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks and other CPU bound operations by running multiple workers. 
 
 ## Test
 

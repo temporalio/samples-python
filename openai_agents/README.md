@@ -30,9 +30,9 @@ Each directory contains a complete example with its own README for detailed inst
 - **[Tools](./tools/README.md)** - Demonstrates available tools such as file search, image generation, and others.
 - **[Handoffs](./handoffs/README.md)** - Agents collaborating via handoffs.
 - **[Hosted MCP](./hosted_mcp/README.md)** - Using the MCP client functionality of the OpenAI Responses API.
+- **[MCP](./mcp/README.md)** - Local MCP servers (filesystem/stdio, streamable HTTP, SSE, prompt server) integrated with Temporal workflows.
 - **[Model Providers](./model_providers/README.md)** - Using custom LLM providers (e.g., Anthropic via LiteLLM).
 - **[Research Bot](./research_bot/README.md)** - Multi-agent research system with specialized roles: a planner agent, search agent, and writer agent working together to conduct comprehensive research.
 - **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 - **[Reasoning Content](./reasoning_content/README.md)** - Example of how to retrieve the thought process of reasoning models.
 - **[Financial Research Agent](./financial_research_agent/README.md)** - Multi-agent financial research system with planner, search, analyst, writer, and verifier agents collaborating.
-

@@ -1,13 +1,19 @@
 """Continue-as-New Workflow for LangGraph Functional API.
 
-Demonstrates task result caching across continue-as-new boundaries.
+This workflow uses should_continue callback to stop execution after
+a configurable number of tasks, then uses continue-as-new to resume from
+where it left off. The entrypoint itself has NO knowledge of continue-as-new.
 """
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from temporalio import workflow
-from temporalio.contrib.langgraph import compile
+from temporalio.contrib.langgraph import (
+    CHECKPOINT_KEY,
+    TemporalFunctionalRunner,
+    compile,
+)
 
 
 @dataclass
@@ -15,20 +21,24 @@ class PipelineInput:
     """Input for the pipeline workflow."""
 
     value: int
+    # Number of tasks to execute before continue-as-new
+    tasks_per_execution: int = 3
+    # Checkpoint from previous execution (None for first execution)
     checkpoint: dict[str, Any] | None = None
-    phase: int = 1  # 1 = first run (3 tasks), 2 = second run (all 5)
 
 
 @workflow.defn
 class ContinueAsNewWorkflow:
-    """Workflow demonstrating continue-as-new with task caching.
+    """Workflow demonstrating continue-as-new with should_continue callback.
 
-    This workflow runs in two phases:
-    1. Phase 1: Execute tasks 1-3, cache results, continue-as-new
-    2. Phase 2: Execute all 5 tasks (1-3 use cached results, 4-5 execute fresh)
+    The workflow uses should_continue callback to stop execution after
+    a configurable number of tasks, then continues-as-new to resume.
+    This demonstrates how to use continue-as-new with Functional API without
+    the entrypoint needing any knowledge of Temporal.
 
     This demonstrates that:
     - Task results are cached in memory
+    - should_continue callback controls when to checkpoint
     - get_state() serializes the cache for continue-as-new
     - compile(checkpoint=...) restores the cache in the new execution
     - Cached tasks return immediately without re-execution
@@ -39,46 +49,50 @@ class ContinueAsNewWorkflow:
         """Execute the pipeline with continue-as-new checkpoint.
 
         Args:
-            input_data: Pipeline input with value, checkpoint, and phase.
+            input_data: Pipeline input with value, tasks_per_execution, and checkpoint.
 
         Returns:
-            Final result after all 5 tasks complete.
+            Final result after all tasks complete.
         """
-        # Compile with checkpoint to restore cached task results
-        app = compile("pipeline_entrypoint", checkpoint=input_data.checkpoint)
+        # Track tasks executed in this execution
+        tasks_executed = 0
 
-        if input_data.phase == 1:
-            # Phase 1: Run first 3 tasks only
-            workflow.logger.info("Phase 1: Executing tasks 1-3")
-            result = await app.ainvoke(
-                {
-                    "value": input_data.value,
-                    "stop_after": 3,
-                }
+        def should_continue() -> bool:
+            """Stop after configured number of tasks."""
+            nonlocal tasks_executed
+            tasks_executed += 1
+            return tasks_executed <= input_data.tasks_per_execution
+
+        # Create runner, restoring from checkpoint if provided
+        # Cast to TemporalFunctionalRunner since we know this is a Functional API entrypoint
+        app = cast(
+            TemporalFunctionalRunner,
+            compile("pipeline_entrypoint", checkpoint=input_data.checkpoint),
+        )
+
+        # Execute the entrypoint with should_continue callback
+        result = await app.ainvoke(
+            {"value": input_data.value},
+            should_continue=should_continue,
+        )
+
+        # Check if we stopped for checkpointing (more work to do)
+        if CHECKPOINT_KEY in result:
+            checkpoint = result[CHECKPOINT_KEY]
+
+            workflow.logger.info(
+                f"Stopping after {tasks_executed} tasks for checkpointing"
             )
-            workflow.logger.info(f"Phase 1 result: {result}")
 
-            # Get checkpoint with cached task results
-            checkpoint: dict[str, Any] = app.get_state()  # type: ignore[assignment]
-
-            # Continue-as-new with checkpoint for phase 2
-            workflow.logger.info("Continuing as new for phase 2...")
+            # Continue-as-new with checkpoint
             workflow.continue_as_new(
                 PipelineInput(
                     value=input_data.value,
+                    tasks_per_execution=input_data.tasks_per_execution,
                     checkpoint=checkpoint,
-                    phase=2,
                 )
             )
 
-        # Phase 2: Run all 5 tasks (tasks 1-3 are cached)
-        workflow.logger.info("Phase 2: Executing all 5 tasks (1-3 cached)")
-        result = await app.ainvoke(
-            {
-                "value": input_data.value,
-                "stop_after": 5,
-            }
-        )
-        workflow.logger.info(f"Final result: {result}")
-
+        # Entrypoint completed - return final result
+        workflow.logger.info(f"Pipeline completed. Result: {result}")
         return result

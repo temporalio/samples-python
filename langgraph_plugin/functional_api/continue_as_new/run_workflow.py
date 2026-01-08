@@ -1,7 +1,7 @@
 """Execute the Continue-as-New workflow.
 
-Runs the ContinueAsNewWorkflow which demonstrates task caching across
-continue-as-new boundaries.
+Runs the ContinueAsNewWorkflow which demonstrates should_continue callback
+and task caching across continue-as-new boundaries.
 """
 
 import asyncio
@@ -25,17 +25,17 @@ async def main() -> None:
     # Start the workflow
     workflow_id = f"continue-as-new-{uuid.uuid4()}"
     print(f"Starting workflow: {workflow_id}")
-    print("Input value: 10")
+    print("Input value: 10, tasks_per_execution: 3")
     print()
     print("Expected execution:")
-    print("  Phase 1: step_1(10)=20, step_2(20)=25, step_3(25)=75")
-    print("  [continue-as-new with checkpoint]")
-    print("  Phase 2: step_1-3 CACHED, step_4(75)=65, step_5(65)=165")
+    print("  Execution 1: step_1(10)=20, step_2(20)=25, step_3(25)=75")
+    print("  [should_continue returns False -> checkpoint -> continue-as-new]")
+    print("  Execution 2: step_1-3 CACHED, step_4(75)=65, step_5(65)=165")
     print()
 
     result = await client.execute_workflow(
         ContinueAsNewWorkflow.run,
-        PipelineInput(value=10),
+        PipelineInput(value=10, tasks_per_execution=3),
         id=workflow_id,
         task_queue="langgraph-functional-continue-as-new",
     )
@@ -43,8 +43,8 @@ async def main() -> None:
     print(f"Result: {result}")
     print()
     print("Check the worker logs to verify:")
-    print("  - step_1, step_2, step_3 logged only ONCE (in phase 1)")
-    print("  - step_4, step_5 logged only in phase 2")
+    print("  - step_1, step_2, step_3 logged only ONCE (in execution 1)")
+    print("  - step_4, step_5 logged only in execution 2")
     print("  - No re-execution of cached tasks!")
 
 

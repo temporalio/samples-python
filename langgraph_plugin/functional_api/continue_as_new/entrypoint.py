@@ -1,6 +1,8 @@
 """Continue-as-New Entrypoint Definition.
 
-Demonstrates partial execution with task caching for continue-as-new.
+Demonstrates a pipeline that can be interrupted via should_continue callback.
+The entrypoint itself has NO knowledge of continue-as-new - it just runs
+all tasks. The workflow controls when to checkpoint via the callback.
 """
 
 from typing import Any
@@ -20,15 +22,13 @@ from langgraph_plugin.functional_api.continue_as_new.tasks import (
 async def pipeline_entrypoint(input_data: dict[str, Any]) -> dict[str, Any]:
     """Pipeline entrypoint with 5 sequential tasks.
 
-    Supports partial execution via 'stop_after' parameter.
-    This enables the workflow to:
-    1. Run tasks 1-3, cache results, continue-as-new
-    2. Run all 5 tasks, but 1-3 use cached results
+    This entrypoint runs all 5 tasks. If should_continue callback is provided
+    to ainvoke() and returns False after a task completes, execution will
+    stop early and return a checkpoint for continue-as-new.
 
     Args:
         input_data: Dict with:
             - value: Starting integer value
-            - stop_after: Stop after N tasks (1-5), default 5
 
     Returns:
         Dict with result and number of completed tasks.
@@ -37,30 +37,22 @@ async def pipeline_entrypoint(input_data: dict[str, Any]) -> dict[str, Any]:
         10 * 2 = 20 -> 20 + 5 = 25 -> 25 * 3 = 75 -> 75 - 10 = 65 -> 65 + 100 = 165
     """
     value = input_data["value"]
-    stop_after = input_data.get("stop_after", 5)
 
     result = value
 
-    # Task 1
+    # Task 1: multiply by 2
     result = await step_1(result)
-    if stop_after == 1:
-        return {"result": result, "completed_tasks": 1}
 
-    # Task 2
+    # Task 2: add 5
     result = await step_2(result)
-    if stop_after == 2:
-        return {"result": result, "completed_tasks": 2}
 
-    # Task 3
+    # Task 3: multiply by 3
     result = await step_3(result)
-    if stop_after == 3:
-        return {"result": result, "completed_tasks": 3}
 
-    # Task 4
+    # Task 4: subtract 10
     result = await step_4(result)
-    if stop_after == 4:
-        return {"result": result, "completed_tasks": 4}
 
-    # Task 5
+    # Task 5: add 100
     result = await step_5(result)
+
     return {"result": result, "completed_tasks": 5}

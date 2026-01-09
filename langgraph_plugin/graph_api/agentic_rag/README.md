@@ -67,12 +67,12 @@ The sample includes a knowledge base with documents about:
 
 First, start the worker:
 ```bash
-uv run langgraph_plugin/agentic_rag/run_worker.py
+uv run langgraph_plugin/graph_api/agentic_rag/run_worker.py
 ```
 
 Then, in a separate terminal, run the workflow:
 ```bash
-uv run langgraph_plugin/agentic_rag/run_workflow.py
+uv run langgraph_plugin/graph_api/agentic_rag/run_workflow.py
 ```
 
 ## Expected Output

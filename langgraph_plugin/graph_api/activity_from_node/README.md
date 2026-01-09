@@ -36,12 +36,12 @@ Use `run_in_workflow=True` when your node needs to:
 
 First, start the worker:
 ```bash
-uv run langgraph_plugin/activity_from_node/run_worker.py
+uv run langgraph_plugin/graph_api/activity_from_node/run_worker.py
 ```
 
 Then, in a separate terminal, run the workflow:
 ```bash
-uv run langgraph_plugin/activity_from_node/run_workflow.py
+uv run langgraph_plugin/graph_api/activity_from_node/run_workflow.py
 ```
 
 ## Expected Output

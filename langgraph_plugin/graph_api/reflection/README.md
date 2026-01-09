@@ -56,12 +56,12 @@ Each node runs as a Temporal activity with automatic retry.
 2. In one terminal, start the worker:
    ```bash
    export OPENAI_API_KEY=your-key-here
-   uv run langgraph_plugin/reflection/run_worker.py
+   uv run langgraph_plugin/graph_api/reflection/run_worker.py
    ```
 
 3. In another terminal, run the workflow:
    ```bash
-   uv run langgraph_plugin/reflection/run_workflow.py
+   uv run langgraph_plugin/graph_api/reflection/run_workflow.py
    ```
 
 ## Sample Output

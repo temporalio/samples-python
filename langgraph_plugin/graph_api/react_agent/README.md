@@ -41,12 +41,12 @@ Each node execution is:
 
 First, start the worker:
 ```bash
-uv run langgraph_plugin/react_agent/run_worker.py
+uv run langgraph_plugin/graph_api/react_agent/run_worker.py
 ```
 
 Then, in a separate terminal, run the workflow:
 ```bash
-uv run langgraph_plugin/react_agent/run_workflow.py
+uv run langgraph_plugin/graph_api/react_agent/run_workflow.py
 ```
 
 ## Expected Output

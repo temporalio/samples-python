@@ -1,0 +1,408 @@
+# Temporal LangGraph Samples
+
+These samples demonstrate the Temporal LangGraph integration - combining LangGraph's agent framework with Temporal's durable execution.
+
+> **Note:** The LangGraph integration is currently available as a preview feature in the `langgraph_plugin` branch of the SDK repository.
+
+## Overview
+
+The integration combines:
+- **Temporal workflows** for orchestrating agent control flow and state management
+- **LangGraph** for defining agent graphs with conditional logic, cycles, and state
+
+This approach ensures that AI agent workflows are durable, observable, and can handle failures gracefully.
+
+## Prerequisites
+
+- Temporal server [running locally](https://docs.temporal.io/cli/server#start-dev)
+- Python 3.9+
+- [uv](https://docs.astral.sh/uv/) package manager (recommended)
+
+## Installation
+
+Since the LangGraph integration is currently in a branch, you need to install from the branch repositories.
+
+### Running the Samples
+
+1. Clone this samples repository:
+   ```bash
+   git clone -b langgraph_plugin https://github.com/mfateev/samples-python.git
+   cd samples-python
+   ```
+
+2. Install dependencies:
+   ```bash
+   uv sync --group langgraph
+   ```
+
+3. Install the SDK from the `langgraph-plugin` branch:
+   ```bash
+   uv pip install "temporalio @ git+https://github.com/mfateev/sdk-python.git@langgraph-plugin"
+   ```
+
+4. Start a local Temporal server:
+   ```bash
+   temporal server start-dev
+   ```
+
+5. Navigate to a sample directory and follow its README for specific instructions
+
+## LangGraph API Styles
+
+LangGraph provides two API styles for defining workflows:
+
+| Aspect | Graph API | Functional API |
+|--------|-----------|----------------|
+| Definition | `StateGraph` + `add_node()` + `add_edge()` | `@task` + `@entrypoint` |
+| Control flow | Explicit graph edges | Python code (loops, conditionals) |
+| State | Shared TypedDict with reducers | Function arguments/returns |
+| Parallelism | Send API, conditional edges | Concurrent task calls |
+| Compile | `compile("id")` | `compile("id")` |
+
+## Examples
+
+Examples are organized by API style:
+
+### Graph API (`graph_api/`)
+
+StateGraph-based examples using nodes and edges:
+
+| Sample | Description |
+|--------|-------------|
+| [hello_world](./graph_api/hello_world/) | Simple starter example demonstrating basic plugin setup and graph registration |
+| [activity_from_node](./graph_api/activity_from_node/) | Calling Temporal activities from a graph node using run_in_workflow |
+| [react_agent](./graph_api/react_agent/) | ReAct agent pattern with tool calling and multi-step reasoning |
+| [human_in_the_loop](./graph_api/human_in_the_loop/) | Human-in-the-loop approval workflows using two approaches |
+| ↳ [approval_graph_interrupt](./graph_api/human_in_the_loop/approval_graph_interrupt/) | Uses LangGraph's `interrupt()` function |
+| ↳ [approval_wait_condition](./graph_api/human_in_the_loop/approval_wait_condition/) | Uses `run_in_workflow=True` with `workflow.wait_condition()` |
+| [supervisor](./graph_api/supervisor/) | Multi-agent supervisor pattern coordinating specialized agents |
+| [agentic_rag](./graph_api/agentic_rag/) | Retrieval-augmented generation with document grading and query rewriting |
+| [deep_research](./graph_api/deep_research/) | Multi-step research with web search and iterative refinement |
+| [plan_and_execute](./graph_api/plan_and_execute/) | Plan-and-execute pattern with structured step execution |
+| [reflection](./graph_api/reflection/) | Self-reflection pattern for iterative improvement |
+
+### Functional API (`functional_api/`)
+
+`@task` and `@entrypoint` decorator-based examples:
+
+| Sample | Description |
+|--------|-------------|
+| [hello_world](./functional_api/hello_world/) | Simple starter example demonstrating basic plugin setup with `@task` and `@entrypoint` |
+| [react_agent](./functional_api/react_agent/) | ReAct agent pattern with tool calling using tasks for model and tool execution |
+| [human_in_the_loop](./functional_api/human_in_the_loop/) | Human-in-the-loop approval workflow using `interrupt()` for pause/resume |
+| [supervisor](./functional_api/supervisor/) | Multi-agent supervisor pattern with tasks for each agent role |
+| [agentic_rag](./functional_api/agentic_rag/) | RAG with document grading and query rewriting using task-based retrieval |
+| [deep_research](./functional_api/deep_research/) | Multi-step research with parallel search execution via concurrent tasks |
+| [plan_and_execute](./functional_api/plan_and_execute/) | Plan-and-execute pattern with step-by-step task execution |
+| [reflection](./functional_api/reflection/) | Self-reflection pattern for iterative content improvement |
+| [continue_as_new](./functional_api/continue_as_new/) | Task result caching across continue-as-new boundaries |
+
+## Usage
+
+### Graph API Usage
+
+The Graph API uses `StateGraph` to define nodes and edges, with each node running as a Temporal activity:
+
+```python
+from langgraph.graph import StateGraph, START, END
+from temporalio import workflow
+from temporalio.contrib.langgraph import LangGraphPlugin, compile
+
+# 1. Define your graph
+class State(TypedDict):
+    messages: Annotated[list, add_messages]
+
+def chatbot(state: State) -> State:
+    response = model.invoke(state["messages"])
+    return {"messages": [response]}
+
+graph = StateGraph(State)
+graph.add_node("chatbot", chatbot)
+graph.add_edge(START, "chatbot")
+graph.add_edge("chatbot", END)
+
+# 2. Register graph with plugin
+plugin = LangGraphPlugin(graphs={"my_graph": graph.compile()})
+
+# 3. Use in workflow
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self, query: str) -> dict:
+        app = compile("my_graph")  # Get runner for registered graph
+        return await app.ainvoke({"messages": [("user", query)]})
+
+# 4. Start worker with plugin
+async with Worker(client, task_queue="q", workflows=[MyWorkflow], plugins=[plugin]):
+    result = await client.execute_workflow(MyWorkflow.run, "Hello", ...)
+```
+
+### Functional API Usage
+
+The Functional API uses `@task` and `@entrypoint` decorators. Tasks run as Temporal activities:
+
+```python
+from langgraph.func import task, entrypoint
+from temporalio import workflow
+from temporalio.contrib.langgraph import LangGraphPlugin, compile
+
+# 1. Define tasks (run as Temporal activities)
+@task
+def research(topic: str) -> str:
+    """Each @task call becomes a Temporal activity."""
+    return search_web(topic)
+
+@task
+def summarize(content: str) -> str:
+    return model.invoke(f"Summarize: {content}")
+
+# 2. Define entrypoint (orchestrates tasks)
+@entrypoint()
+async def research_workflow(topic: str) -> dict:
+    """The entrypoint runs in the workflow, orchestrating tasks."""
+    # Tasks can run in parallel
+    results = [research(q) for q in generate_queries(topic)]
+    content = [await r for r in results]  # Wait for all
+
+    summary = await summarize("\n".join(content))
+    return {"summary": summary}
+
+# 3. Register entrypoint with plugin
+plugin = LangGraphPlugin(
+    graphs={"research": research_workflow}
+)
+
+# 4. Use in workflow
+@workflow.defn
+class ResearchWorkflow:
+    @workflow.run
+    async def run(self, topic: str) -> dict:
+        app = compile("research")
+        return await app.ainvoke(topic)
+
+# 5. Start worker with plugin
+async with Worker(client, task_queue="q", workflows=[ResearchWorkflow], plugins=[plugin]):
+    result = await client.execute_workflow(ResearchWorkflow.run, "AI trends", ...)
+```
+
+### Key Differences
+
+| Feature | Graph API | Functional API |
+|---------|-----------|----------------|
+| Task definition | Graph nodes | `@task` decorator |
+| Orchestration | Graph edges | Python control flow |
+| Parallel execution | `Send` API | Concurrent `await` |
+| State management | Shared `TypedDict` | Function arguments |
+| Compile function | `compile("graph_id")` | `compile("entrypoint_id")` |
+| Plugin class | `LangGraphPlugin` | `LangGraphPlugin` |
+
+### Configuration Options
+
+Both APIs support activity configuration using `activity_options()` helper:
+
+```python
+from datetime import timedelta
+from temporalio.common import RetryPolicy
+from temporalio.contrib.langgraph import (
+    LangGraphPlugin,
+    activity_options,
+)
+
+# Graph API - use activity_options() in node metadata
+def build_graph():
+    graph = StateGraph(MyState)
+    graph.add_node(
+        "expensive_node",
+        expensive_func,
+        metadata=activity_options(
+            start_to_close_timeout=timedelta(minutes=30),
+            retry_policy=RetryPolicy(maximum_attempts=5),
+        ),
+    )
+    # ... add edges ...
+    return graph.compile()
+
+plugin = LangGraphPlugin(
+    graphs={"my_graph": build_graph},
+    default_activity_options=activity_options(
+        start_to_close_timeout=timedelta(minutes=5),
+    ),
+    # Or configure per-node at plugin level:
+    activity_options={
+        "expensive_node": activity_options(
+            start_to_close_timeout=timedelta(minutes=30),
+        ),
+    },
+)
+
+# Functional API - same plugin, same activity_options parameter
+plugin = LangGraphPlugin(
+    graphs={"my_entrypoint": entrypoint_func},
+    default_activity_options=activity_options(
+        start_to_close_timeout=timedelta(minutes=5),
+    ),
+    activity_options={
+        "expensive_task": activity_options(
+            start_to_close_timeout=timedelta(minutes=30),
+        ),
+    },
+)
+
+# Or configure in workflow via compile()
+app = compile(
+    "my_entrypoint",
+    activity_options={
+        "my_task": activity_options(
+            start_to_close_timeout=timedelta(minutes=2),
+            retry_policy=RetryPolicy(maximum_attempts=3),
+        ),
+    },
+)
+```
+
+### Adapting LangGraph Functional API for Temporal
+
+When adapting a standard LangGraph functional API graph to run with Temporal, there are a few key changes required:
+
+#### 1. Use `await` When Calling Tasks
+
+In standard LangGraph, you can call tasks with `.result()`:
+
+```python
+# Standard LangGraph (won't work with Temporal)
+@entrypoint()
+def my_workflow(input: str) -> dict:
+    result = my_task(input).result()  # ❌ Blocks - not allowed in Temporal
+    return {"output": result}
+```
+
+With Temporal, you must use `await` because blocking is not allowed in workflows:
+
+```python
+# Temporal-compatible
+@entrypoint()
+async def my_workflow(input: str) -> dict:
+    result = await my_task(input)  # ✅ Async await
+    return {"output": result}
+```
+
+#### 2. Entrypoints Must Be Async
+
+Since tasks require `await`, your entrypoint function must be `async`:
+
+```python
+# Standard LangGraph
+@entrypoint()
+def process(data: str) -> dict:  # sync function
+    ...
+
+# Temporal-compatible
+@entrypoint()
+async def process(data: str) -> dict:  # async function
+    ...
+```
+
+#### 3. Tasks Must Be Importable
+
+Tasks run as Temporal activities in a separate context. They must be defined at module level (not inside functions or classes) so they can be imported by the worker:
+
+```python
+# ✅ Correct - module level
+@task
+def analyze(text: str) -> str:
+    return llm.invoke(text)
+
+# ❌ Wrong - can't be imported
+def make_workflow():
+    @task
+    def analyze(text: str) -> str:  # Closure - not importable
+        return llm.invoke(text)
+```
+
+#### 4. Parallel Task Execution
+
+Standard LangGraph parallel execution works the same way, just use `await`:
+
+```python
+@entrypoint()
+async def research(topic: str) -> dict:
+    # Start multiple tasks concurrently
+    futures = [search(query) for query in queries]
+
+    # Wait for all results
+    results = [await f for f in futures]
+
+    return {"results": results}
+```
+
+#### Complete Migration Example
+
+**Before (Standard LangGraph):**
+
+```python
+from langgraph.func import task, entrypoint
+
+@task
+def fetch_data(url: str) -> dict:
+    return requests.get(url).json()
+
+@task
+def process_data(data: dict) -> str:
+    return transform(data)
+
+@entrypoint()
+def pipeline(url: str) -> dict:
+    data = fetch_data(url).result()      # Blocking call
+    output = process_data(data).result()  # Blocking call
+    return {"output": output}
+
+# Direct invocation
+result = pipeline.invoke("https://api.example.com")
+```
+
+**After (Temporal-compatible):**
+
+```python
+from langgraph.func import task, entrypoint
+from temporalio import workflow
+from temporalio.contrib.langgraph import LangGraphPlugin, compile
+
+@task
+def fetch_data(url: str) -> dict:
+    return requests.get(url).json()
+
+@task
+def process_data(data: dict) -> str:
+    return transform(data)
+
+@entrypoint()
+async def pipeline(url: str) -> dict:       # Made async
+    data = await fetch_data(url)             # Use await
+    output = await process_data(data)        # Use await
+    return {"output": output}
+
+# Workflow wrapper
+@workflow.defn
+class PipelineWorkflow:
+    @workflow.run
+    async def run(self, url: str) -> dict:
+        app = compile("pipeline")
+        return await app.ainvoke(url)
+
+# Plugin registration
+plugin = LangGraphPlugin(graphs={"pipeline": pipeline})
+
+# Worker setup
+async with Worker(client, task_queue="q", workflows=[PipelineWorkflow], plugins=[plugin]):
+    result = await client.execute_workflow(PipelineWorkflow.run, "https://api.example.com", ...)
+```
+
+#### Summary of Changes
+
+| Aspect | Standard LangGraph | Temporal Integration |
+|--------|-------------------|---------------------|
+| Task calls | `task(x).result()` | `await task(x)` |
+| Entrypoint | `def func():` (sync OK) | `async def func():` (must be async) |
+| Task location | Anywhere | Module level only |
+| Invocation | `entrypoint.invoke(x)` | `compile("id").ainvoke(x)` |
+| Execution | Direct | Via Temporal workflow |

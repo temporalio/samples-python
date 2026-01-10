@@ -1,0 +1,1 @@
+"""Activity from Node sample."""

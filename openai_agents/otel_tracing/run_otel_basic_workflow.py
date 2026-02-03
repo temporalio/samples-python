@@ -1,13 +1,3 @@
-#!/usr/bin/env python3
-"""Client for basic OTEL tracing example.
-
-This demonstrates the simplest OTEL integration - automatic instrumentation
-of agent/model/activity spans without any custom code.
-
-The worker configuration handles all OTEL setup. This client just executes
-the workflow normally.
-"""
-
 import asyncio
 import uuid
 from datetime import timedelta
@@ -20,7 +10,6 @@ from openai_agents.otel_tracing.workflows.otel_basic_workflow import OtelBasicWo
 
 
 async def main():
-    # Configure OTLP exporter (same as worker)
     exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
 
     client = await Client.connect(
@@ -36,25 +25,14 @@ async def main():
         ],
     )
 
-    question = "What's the weather like in Tokyo?"
-    print(f"Question: {question}\n")
-
     result = await client.execute_workflow(
         OtelBasicWorkflow.run,
-        question,
+        "What's the weather like in Tokyo?",
         id=f"otel-basic-workflow-{uuid.uuid4()}",
         task_queue="otel-task-queue",
     )
 
-    print(f"Answer: {result}\n")
-    print("✓ Workflow completed")
-    print("\nView traces at:")
-    print("  - Grafana Tempo: http://localhost:3000/explore")
-    print("  - Jaeger: http://localhost:16686/")
-    print("\nExpected spans in trace:")
-    print("  - Agent run (Weather Assistant)")
-    print("  - Model invocation (activity)")
-    print("  - Tool call (get_weather activity)")
+    print(f"Result: {result}")
 
 
 if __name__ == "__main__":

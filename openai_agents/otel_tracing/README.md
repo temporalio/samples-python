@@ -36,19 +36,19 @@ Then run examples in separate terminals:
 ### 1. Basic Example - Pure Automatic Instrumentation
 Shows automatic tracing without any manual code:
 ```bash
-uv run openai_agents/otel_tracing/run_otel_basic.py
+uv run openai_agents/otel_tracing/run_otel_basic_workflow.py
 ```
 
 ### 2. Custom Spans Example - Logical Grouping
 Shows using `custom_span()` to group related operations:
 ```bash
-uv run openai_agents/otel_tracing/run_otel_custom_spans.py
+uv run openai_agents/otel_tracing/run_otel_custom_spans_workflow.py
 ```
 
 ### 3. Direct API Example - Detailed Custom Instrumentation
 Shows using direct OpenTelemetry API for fine-grained custom instrumentation:
 ```bash
-uv run openai_agents/otel_tracing/run_otel_direct_api.py
+uv run openai_agents/otel_tracing/run_otel_direct_api_workflow.py
 ```
 
 ## Example Progression

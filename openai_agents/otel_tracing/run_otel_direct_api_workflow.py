@@ -1,22 +1,11 @@
 import asyncio
+import uuid
 from datetime import timedelta
 
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
-from temporalio.worker import Worker
-from temporalio.worker.workflow_sandbox import (
-    SandboxedWorkflowRunner,
-    SandboxRestrictions,
-)
 
-from openai_agents.otel_tracing.workflows.otel_basic_workflow import (
-    OtelBasicWorkflow,
-    get_weather,
-)
-from openai_agents.otel_tracing.workflows.otel_custom_spans_workflow import (
-    OtelCustomSpansWorkflow,
-)
 from openai_agents.otel_tracing.workflows.otel_direct_api_workflow import (
     OtelDirectApiWorkflow,
 )
@@ -38,17 +27,14 @@ async def main():
         ],
     )
 
-    worker = Worker(
-        client,
+    result = await client.execute_workflow(
+        OtelDirectApiWorkflow.run,
+        "Paris",
+        id=f"otel-direct-api-workflow-{uuid.uuid4()}",
         task_queue="otel-task-queue",
-        workflows=[OtelBasicWorkflow, OtelCustomSpansWorkflow, OtelDirectApiWorkflow],
-        activities=[get_weather],
-        workflow_runner=SandboxedWorkflowRunner(
-            SandboxRestrictions.default.with_passthrough_modules("opentelemetry")
-        ),
     )
 
-    await worker.run()
+    print(f"Result:\n{result}")
 
 
 if __name__ == "__main__":

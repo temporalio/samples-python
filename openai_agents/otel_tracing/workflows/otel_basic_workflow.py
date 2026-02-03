@@ -1,7 +1,7 @@
 """Basic OTEL tracing workflow demonstrating automatic instrumentation.
 
-This workflow shows the simplest OTEL integration - just configure exporters in the
-plugin and all agent/model/activity spans are automatically instrumented.
+This workflow shows pure automatic instrumentation - the plugin handles all trace
+creation and span instrumentation without any manual code.
 """
 
 from dataclasses import dataclass
@@ -38,7 +38,7 @@ class OtelBasicWorkflow:
     - Model invocations (as activities)
     - Tool/activity calls
 
-    No manual span creation needed!
+    No manual instrumentation needed - just configure the plugin!
     """
 
     @workflow.run

@@ -26,6 +26,9 @@ from openai_agents.otel_tracing.workflows.otel_basic_workflow import (
     OtelBasicWorkflow,
     get_weather,
 )
+from openai_agents.otel_tracing.workflows.otel_custom_spans_workflow import (
+    OtelCustomSpansWorkflow,
+)
 from openai_agents.otel_tracing.workflows.otel_direct_api_workflow import (
     OtelDirectApiWorkflow,
 )
@@ -54,7 +57,7 @@ async def main():
     worker = Worker(
         client,
         task_queue="otel-task-queue",
-        workflows=[OtelBasicWorkflow, OtelDirectApiWorkflow],
+        workflows=[OtelBasicWorkflow, OtelCustomSpansWorkflow, OtelDirectApiWorkflow],
         activities=[get_weather],
         # CRITICAL: Sandbox passthrough required for direct OTEL API usage
         # If you only use automatic instrumentation (OtelBasicWorkflow),
@@ -67,9 +70,12 @@ async def main():
     print("Starting OTEL tracing worker...")
     print("- Task queue: otel-task-queue")
     print("- OTLP endpoint: http://localhost:4317")
-    print("- Workflows: OtelBasicWorkflow, OtelDirectApiWorkflow")
+    print(
+        "- Workflows: OtelBasicWorkflow, OtelCustomSpansWorkflow, OtelDirectApiWorkflow"
+    )
     print("\nConfiguration:")
     print("  - Automatic instrumentation: ENABLED (all workflows)")
+    print("  - Custom spans support: ENABLED")
     print("  - Direct OTEL API support: ENABLED (sandbox passthrough configured)")
     print("  - Temporal spans: DISABLED (add_temporal_spans=False)")
     print("\nView traces at: http://localhost:3000/explore (Grafana Tempo)")

@@ -5,8 +5,9 @@ This demonstrates using the OpenTelemetry API directly in workflows to
 instrument custom business logic, add domain-specific spans, and set
 custom attributes.
 
-The workflow uses custom_span() to establish OTEL context, then creates
-custom spans for validation, business logic, and formatting operations.
+The workflow uses trace() + custom_span() to establish OTEL context, then creates
+custom spans for validation, business logic, and formatting operations using the
+direct OpenTelemetry tracer API.
 """
 
 import asyncio
@@ -42,6 +43,8 @@ async def main():
     city = "Paris"
     print(f"Getting travel recommendation for: {city}\n")
 
+    # The plugin automatically creates the root trace context.
+    # The workflow uses custom_span() to bridge to OpenTelemetry context for direct API usage.
     result = await client.execute_workflow(
         OtelDirectApiWorkflow.run,
         city,
@@ -55,7 +58,8 @@ async def main():
     print("  - Grafana Tempo: http://localhost:3000/explore")
     print("  - Jaeger: http://localhost:16686/")
     print("\nExpected spans in trace:")
-    print("  - Travel recommendation workflow (custom_span)")
+    print("  - Travel recommendation workflow (trace)")
+    print("  - Travel recommendation processing (custom_span)")
     print("  - validate-input (direct OTEL span)")
     print("  - Agent run (Travel Weather Assistant)")
     print("  - fetch-weather-info (direct OTEL span)")

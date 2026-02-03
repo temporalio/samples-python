@@ -52,7 +52,6 @@ async def main():
     print("  - Grafana Tempo: http://localhost:3000/explore")
     print("  - Jaeger: http://localhost:16686/")
     print("\nExpected spans in trace:")
-    print("  - Workflow execution")
     print("  - Agent run (Weather Assistant)")
     print("  - Model invocation (activity)")
     print("  - Tool call (get_weather activity)")

@@ -1,48 +1,17 @@
-# OpenTelemetry (OTEL) Tracing for OpenAI Agents
+# OpenTelemetry (OTEL) Tracing
 
-This example demonstrates how to instrument OpenAI Agents workflows with OpenTelemetry (OTEL) for distributed tracing and observability.
+Examples demonstrating OpenTelemetry tracing integration for OpenAI Agents workflows.
 
-Traces can be exported to any OTEL-compatible backend such as Jaeger, Grafana Tempo, Datadog, New Relic, or other tracing systems.
+*For background on OpenTelemetry integration, see the [SDK documentation](https://github.com/temporalio/sdk-python/blob/main/temporalio/contrib/openai_agents/README.md#opentelemetry-integration).*
 
-## Overview
+This example shows three progressive patterns:
+1. **Basic**: Pure automatic instrumentation - plugin handles everything
+2. **Custom Spans**: Automatic instrumentation + `custom_span()` for logical grouping
+3. **Direct API**: `custom_span()` + direct OpenTelemetry API for detailed instrumentation
 
-The Temporal OpenAI Agents SDK provides built-in OTEL integration that:
-- **Automatically instruments** agent runs, model calls, and activities
-- **Is replay-safe** - spans are only exported when workflows actually complete (not during replay)
-- **Provides deterministic IDs** - consistent span/trace IDs across workflow replays
-- **Supports multiple exporters** - send traces to multiple backends simultaneously
+## Prerequisites
 
-## Two Instrumentation Patterns
-
-### 1. Automatic Instrumentation (Recommended for Most Users)
-
-The SDK automatically creates spans for:
-- Agent execution
-- Model invocations (as Temporal activities)
-- Tool/activity calls
-- Workflow lifecycle events
-
-**Use this when:** You want visibility into agent behavior without custom instrumentation.
-
-See `run_otel_basic.py` for an example.
-
-### 2. Direct OTEL API Usage (Advanced)
-
-You can use the OpenTelemetry API directly in workflows to:
-- Instrument custom business logic
-- Add domain-specific spans and attributes
-- Integrate with organization-wide OTEL conventions
-- Monitor performance of specific operations
-
-**Use this when:** You need to trace custom workflow logic beyond agent/model calls.
-
-See `run_otel_direct_api.py` for an example.
-
-## Quick Start
-
-### Prerequisites
-
-Ensure you have an OTEL collector or backend running. For local testing with Grafana Tempo:
+You need an OTEL-compatible backend running locally. For quick setup with Grafana Tempo:
 
 ```bash
 git clone https://github.com/grafana/tempo.git
@@ -53,78 +22,205 @@ docker compose up -d
 
 View traces at: http://localhost:3000/explore
 
-### Install Dependencies
+Alternatively, use Jaeger at http://localhost:16686/
 
-```bash
-uv sync
-```
+## Running the Examples
 
-### Start the Worker
-
+First, start the worker:
 ```bash
 uv run openai_agents/otel_tracing/run_worker.py
 ```
 
-### Run Examples
+Then run examples in separate terminals:
 
-In separate terminals:
-
-**Basic automatic instrumentation:**
+### 1. Basic Example - Pure Automatic Instrumentation
+Shows automatic tracing without any manual code:
 ```bash
 uv run openai_agents/otel_tracing/run_otel_basic.py
 ```
 
-**Direct OTEL API usage:**
+### 2. Custom Spans Example - Logical Grouping
+Shows using `custom_span()` to group related operations:
+```bash
+uv run openai_agents/otel_tracing/run_otel_custom_spans.py
+```
+
+### 3. Direct API Example - Detailed Custom Instrumentation
+Shows using direct OpenTelemetry API for fine-grained custom instrumentation:
 ```bash
 uv run openai_agents/otel_tracing/run_otel_direct_api.py
 ```
 
-## Implementation Details
+## Example Progression
 
-### Plugin Configuration
+The three examples show increasing levels of instrumentation:
 
-Configure OTEL exporters in the `OpenAIAgentsPlugin`:
+| Example | Manual Code | Use Case |
+|---------|-------------|----------|
+| **1. Basic** | None | Just want automatic tracing |
+| **2. Custom Spans** | `custom_span()` | Group related operations logically |
+| **3. Direct API** | `custom_span()` + OTEL tracer | Add detailed spans with custom attributes |
+
+## What Gets Traced
+
+The integration automatically creates spans for:
+- Agent execution
+- Model invocations (as Temporal activities)
+- Tool/activity calls
+- Workflow lifecycle events (optional)
+
+You can add custom instrumentation using three patterns:
+1. **Pure Automatic** (example 1): No code needed - plugin handles everything
+2. **Custom Spans** (example 2): `trace()` + `custom_span()` from Agents SDK for logical grouping
+3. **Direct OTEL API** (example 3): `trace()` + `custom_span()` + OTEL tracer for detailed spans with attributes
+
+**Key Rule**: Never use `trace()` in client code. Only use it inside workflows when you need `custom_span()` (patterns 2 and 3).
+
+## Key Configuration
+
+### Plugin Setup (Worker & Client)
 
 ```python
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin, ModelActivityParameters
+
+exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
 
 client = await Client.connect(
     "localhost:7233",
     plugins=[
         OpenAIAgentsPlugin(
             model_params=ModelActivityParameters(
-                start_to_close_timeout=timedelta(seconds=30)
+                start_to_close_timeout=timedelta(seconds=60)
             ),
-            otel_exporters=[
-                OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
-            ],
-            add_temporal_spans=False,  # Optional: exclude Temporal internal spans
+            otel_exporters=[exporter],  # Enable OTEL export
+            add_temporal_spans=False,   # Optional: exclude Temporal internal spans
         ),
     ],
 )
 ```
 
-### Key Parameters
+### Exporters
 
-**`otel_exporters`**: List of OTEL span exporters
-- `OTLPSpanExporter` - OTLP protocol (most common)
-- `InMemorySpanExporter` - For testing
-- `ConsoleSpanExporter` - Debug output
-- Multiple exporters supported simultaneously
+Common OTEL exporters:
+- `OTLPSpanExporter` - For Grafana Tempo, Jaeger, and most OTEL backends
+- `ConsoleSpanExporter` - For debugging (prints to console)
+- Multiple exporters can be used simultaneously
 
-**`add_temporal_spans`**: Whether to include Temporal internal spans (default: `True`)
-- `False` - Cleaner traces focused on agent logic
-- `True` - Full visibility including Temporal internals (startWorkflow, executeActivity, etc.)
+### Environment Variables
 
-### Direct OTEL API Usage
+Optionally set the service name:
+```bash
+export OTEL_SERVICE_NAME=my-agent-service
+```
 
-**CRITICAL REQUIREMENTS** for using `opentelemetry.trace` API directly in workflows:
+## Understanding Trace Context Patterns
 
-#### 1. Wrap in `custom_span()` from Agents SDK
+The integration supports three patterns depending on your instrumentation needs:
 
-Direct OTEL calls **MUST** be wrapped in `custom_span()` to establish the bridge between Agent SDK trace context and OTEL context:
+### Pattern 1: Pure Automatic Instrumentation (Basic Example)
+No manual code - plugin creates root trace automatically:
 
+```python
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self):
+        # No trace(), no custom_span() needed
+        # Plugin automatically creates root trace and all spans
+        result = await Runner.run(agent, input=question)
+        return result
+```
+
+### Pattern 2: Logical Grouping with Custom Spans (Custom Spans Example)
+Use `trace()` in workflow + `custom_span()` for logical grouping:
+
+```python
+from agents import trace, custom_span
+
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self):
+        # trace() in workflow establishes context for custom_span()
+        with trace("My workflow"):
+            with custom_span("Multi-city check"):
+                # Group related operations
+                for city in cities:
+                    result = await Runner.run(agent, input=f"Check {city}")
+        return result
+```
+
+**IMPORTANT**: When using `custom_span()`, you must wrap it with `trace()` in the workflow. Never use `trace()` in client code - only in workflows.
+
+### Pattern 3: Direct OTEL API (Direct API Example)
+Use `trace()` + `custom_span()` wrapper + direct OpenTelemetry API for detailed instrumentation:
+
+```python
+from agents import trace, custom_span
+import opentelemetry.trace
+
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self):
+        # trace() establishes root context, custom_span() bridges to OTEL
+        with trace("My workflow"):
+            with custom_span("My workflow logic"):
+                tracer = opentelemetry.trace.get_tracer(__name__)
+
+                with tracer.start_as_current_span("Data processing") as span:
+                    span.set_attribute("my.attribute", "value")
+                    data = await self.process_data()
+
+                with tracer.start_as_current_span("Business logic") as span:
+                    result = await self.execute_business_logic(data)
+                    return result
+```
+
+**Why both are required**: When using `custom_span()`, you must wrap it with `trace()` in the workflow. The `custom_span()` then bridges to OpenTelemetry's context system for direct API calls.
+
+### Worker Configuration for Direct OTEL API
+
+When using direct OTEL API (Pattern 3), configure sandbox passthrough:
+
+```python
+from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner, SandboxRestrictions
+
+worker = Worker(
+    client,
+    task_queue="my-queue",
+    workflows=[MyWorkflow],
+    # Required ONLY for Pattern 3 (direct OTEL API usage)
+    workflow_runner=SandboxedWorkflowRunner(
+        SandboxRestrictions.default.with_passthrough_modules("opentelemetry")
+    ),
+)
+```
+
+**Note**: Patterns 1 and 2 (automatic and custom_span only) don't require sandbox configuration.
+
+## Troubleshooting
+
+### Multiple separate traces instead of one unified trace
+
+**For Custom Spans (Pattern 2)**: Ensure you wrap `custom_span()` with `trace()` in the workflow:
+```python
+from agents import trace, custom_span
+
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self):
+        # ✅ CORRECT - trace() wraps custom_span()
+        with trace("My workflow"):
+            with custom_span("My grouping"):
+                # Related operations
+                pass
+```
+
+**For Direct OTEL API (Pattern 3)**: Ensure workflow wraps all direct OTEL calls in `custom_span()`:
 ```python
 from agents import custom_span
 import opentelemetry.trace
@@ -133,105 +229,32 @@ import opentelemetry.trace
 class MyWorkflow:
     @workflow.run
     async def run(self):
-        # ✅ CORRECT - custom_span establishes OTEL context
-        with custom_span("My workflow logic"):
+        # ✅ CORRECT - All direct OTEL spans inside custom_span()
+        with custom_span("My workflow"):
             tracer = opentelemetry.trace.get_tracer(__name__)
-            with tracer.start_as_current_span("custom-instrumentation") as span:
-                span.set_attribute("business.metric", 42)
-                # This span will be properly parented
-                result = await my_business_logic()
-
-        # ❌ WRONG - becomes orphaned root span, disconnected from trace
-        tracer = opentelemetry.trace.get_tracer(__name__)
-        with tracer.start_as_current_span("orphaned-span"):
-            # No connection to the agent trace!
-            pass
+            with tracer.start_as_current_span("span1"):
+                pass
+            with tracer.start_as_current_span("span2"):
+                pass
 ```
 
-#### 2. Configure Sandbox Passthrough
-
-The `opentelemetry` module must be allowed in the workflow sandbox:
-
-```python
-from temporalio.worker import Worker
-from temporalio.worker.workflow_sandbox import (
-    SandboxedWorkflowRunner,
-    SandboxRestrictions,
-)
-
-worker = Worker(
-    client,
-    task_queue="otel-task-queue",
-    workflows=[MyWorkflow],
-    workflow_runner=SandboxedWorkflowRunner(
-        SandboxRestrictions.default.with_passthrough_modules("opentelemetry")
-    ),
-)
-```
-
-### Trace Context Propagation
-
-Traces automatically propagate through the system:
-
-```
-Client trace
-    └─> Workflow execution
-        ├─> Agent span
-        │   └─> Model activity
-        ├─> Custom span (if using direct API)
-        └─> Tool activity
-```
-
-- **Client → Workflow**: Trace context propagates when starting workflow within `trace()` block
-- **Workflow → Activity**: Context automatically propagates to activities
-- **Replay-safe**: Spans only export on actual completion, not during replay
-
-### Environment Configuration
-
-Set the OTEL service name (optional):
-```bash
-export OTEL_SERVICE_NAME=my-agent-service
-```
-
-## Common Use Cases
-
-### Basic Monitoring
-Use automatic instrumentation to:
-- Monitor agent performance
-- Debug agent behavior
-- Track model API usage
-- Identify bottlenecks
-
-### Custom Business Logic
-Use direct OTEL API to:
-- Instrument domain-specific operations
-- Add business metrics as span attributes
-- Create logical groupings of related operations
-- Integrate with existing observability stack
-
-### Production Observability
-- Export to multiple backends (e.g., Jaeger for dev, Datadog for prod)
-- Use `add_temporal_spans=False` for cleaner production traces
-- Add custom attributes for filtering/grouping in your observability tool
-
-## Troubleshooting
+**NEVER use `trace()` in client code** - this creates disconnected traces. Only use `trace()` inside workflows.
 
 ### Spans not appearing in backend
-- Verify OTLP endpoint is accessible
-- Check that backend is configured to accept OTLP
+- Verify OTLP endpoint is accessible: `http://localhost:4317`
+- Check backend is running: `docker compose ps`
 - Ensure workflow completes (spans only export on completion)
 
-### Direct OTEL spans become root spans
-- Verify you're wrapping calls in `custom_span()`
-- Check sandbox passthrough is configured
-- Ensure you're within an existing trace context
+### Direct OTEL spans are orphaned
+- **For Pattern 2 (custom_span)**: Ensure you use `trace()` wrapper in workflow
+- **For Pattern 3 (direct OTEL)**: Verify workflow wraps ALL direct OTEL calls in `custom_span()`
+- Check sandbox passthrough is configured for `opentelemetry` module (Pattern 3 only)
 
-### Duplicate spans across replays
-- This is expected behavior during development with workflow cache
-- Spans are only exported once per actual execution, not per replay
+## Dependencies
 
-## Related Examples
-
-- [grafana-tempo-openai-example](../../../../grafana-tempo-openai-example/) - End-to-end observability demo
-- [basic/](../basic/) - Simple agent examples without OTEL
-- [financial_research_agent](../financial_research_agent/) - Complex multi-agent example
+Required packages (already in `openai-agents` dependency group):
+```toml
+temporalio[openai-agents,opentelemetry]
+openinference-instrumentation-openai-agents
+opentelemetry-exporter-otlp-proto-grpc
+```

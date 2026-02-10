@@ -78,8 +78,12 @@ class HelloCallerWorkflow:
             await start_operations()
 
             # Wait for the first operation to complete
-            workflow.logger.info(f"Started {len(tasks)} operations, waiting for first to complete...")
-            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            workflow.logger.info(
+                f"Started {len(tasks)} operations, waiting for first to complete..."
+            )
+            done, pending = await asyncio.wait(
+                tasks, return_when=asyncio.FIRST_COMPLETED
+            )
 
             # Get the result from the first completed operation
             result = await done.pop()

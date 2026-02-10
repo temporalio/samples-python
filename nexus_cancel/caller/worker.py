@@ -28,7 +28,9 @@ async def main():
         workflows=[HelloCallerWorkflow],
     )
 
-    print(f"Starting caller worker on namespace '{NAMESPACE}', task queue '{TASK_QUEUE}'")
+    print(
+        f"Starting caller worker on namespace '{NAMESPACE}', task queue '{TASK_QUEUE}'"
+    )
     print("Worker is ready to execute caller workflows...")
     await worker.run()
 

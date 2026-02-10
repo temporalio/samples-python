@@ -34,7 +34,9 @@ async def main():
         nexus_services=[service_handler],
     )
 
-    print(f"Starting handler worker on namespace '{NAMESPACE}', task queue '{TASK_QUEUE}'")
+    print(
+        f"Starting handler worker on namespace '{NAMESPACE}', task queue '{TASK_QUEUE}'"
+    )
     print("Worker is ready to process Nexus operations and workflows...")
     await worker.run()
 

@@ -28,7 +28,7 @@ async def test_resource_pool_workflow(client: Client):
     # Mock out the activity to count executions
     @activity.defn(name="use_resource")
     async def use_resource_mock(input: UseResourceActivityInput) -> None:
-        workflow_id = activity.info().workflow_id
+        workflow_id = activity.info().workflow_id or ""
         resource_usage[input.resource].append((workflow_id, "start"))
         # We need a small sleep here to bait out races
         await asyncio.sleep(0.05)

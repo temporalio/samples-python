@@ -4,7 +4,7 @@ from typing import Counter
 from temporalio import activity
 from temporalio.exceptions import ApplicationError, ApplicationErrorCategory
 
-attempts = Counter[str]()
+attempts = Counter[str | None]()
 ERROR_ATTEMPTS = 5
 
 

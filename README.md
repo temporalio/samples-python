@@ -55,6 +55,8 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_search_attributes](hello/hello_search_attributes.py) - Start workflow with search attributes then change
     while running.
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
+  * [hello standalone activity](hello/hello_standalone_activity.py) - Execute an activity from outside of a workflow.
+  * [hello update](hello/hello_update.py) - Send a request to and a response from a client to a workflow execution.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.

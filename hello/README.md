@@ -44,7 +44,8 @@ Replace `hello/hello_activity.py` in the command with any other example filename
 * [hello_search_attributes](hello_search_attributes.py) - Start workflow with search attributes then change while
   running.
 * [hello_signal](hello_signal.py) - Send signals to a workflow.
-* [hello_update](hello_update.py) - Send a request to and a response from a client to a workflow execution.
+* [hello standalone activity](hello_standalone_activity.py) - Execute an activity from outside of a workflow.
+* [hello_update](hello_update.py) - **Send a request to and a response from a client to a workflow execution.**
 
 Note: To enable the workflow update, set the `frontend.enableUpdateWorkflowExecution` dynamic config value to true.
 

@@ -43,7 +43,9 @@ async def my_client_code(client: Client):
     )
     print("ListActivity results:")
     async for info in activities:
-        print(f"\tActivityID: {info.activity_id}, Type: {info.activity_type}, Status: {info.status}")
+        print(
+            f"\tActivityID: {info.activity_id}, Type: {info.activity_type}, Status: {info.status}"
+        )
 
     count_result = await client.count_activities(
         query="TaskQueue = 'hello-standalone-activity-task-queue'"

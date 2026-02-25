@@ -32,15 +32,6 @@ class HelloCallerWorkflow:
         self.nexus_client = workflow.create_nexus_client(
             service=MyNexusService,
             endpoint=NEXUS_ENDPOINT,
-            # Set the cancellation type to WAIT_REQUESTED. This means that the caller
-            # will wait for the cancellation request to be received by the handler before
-            # proceeding with the cancellation.
-            #
-            # By default, the caller would wait until the operation is completed.
-            operation_options=workflow.NexusOperationOptions(
-                schedule_to_close_timeout=timedelta(seconds=10),
-                cancellation_type=workflow.NexusOperationCancellationType.WAIT_REQUESTED,
-            ),
         )
 
     @workflow.run
@@ -58,19 +49,30 @@ class HelloCallerWorkflow:
         names = ["Nexus-1", "Nexus-2", "Nexus-3", "Nexus-4", "Nexus-5"]
 
         # Create a list to store operation tasks
-        tasks = []
+        tasks: list[asyncio.Task[MyOutput]] = []
+
+        async def await_operation_result(
+            op_handle: workflow.NexusOperationHandle[MyOutput],
+        ) -> MyOutput:
+            return await op_handle
 
         # Create our cancellation scope. Within this scope we call the nexus operation
         # asynchronously for each name.
         async def start_operations():
             for name in names:
                 # Start each operation asynchronously
+                # Set the cancellation type to WAIT_REQUESTED. This means that the
+                # caller will wait for the cancellation request to be received by the
+                # handler before proceeding with the cancellation.
+                # By default, the caller would wait until the operation is completed.
                 handle = await self.nexus_client.start_operation(
                     MyNexusService.my_workflow_run_operation,
                     MyInput(name),
+                    schedule_to_close_timeout=timedelta(seconds=10),
+                    cancellation_type=workflow.NexusOperationCancellationType.WAIT_REQUESTED,
                 )
                 # Create a task that waits for the operation result
-                tasks.append(asyncio.create_task(handle))
+                tasks.append(asyncio.create_task(await_operation_result(handle)))
 
         # Execute all nexus operations within a try block so we can cancel them
         try:

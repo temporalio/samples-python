@@ -31,7 +31,7 @@ async def main():
         task_queue=TASK_QUEUE,
         workflows=[HelloHandlerWorkflow],
         # The nexus_services parameter registers the Nexus service handler
-        nexus_services=[service_handler],
+        nexus_service_handlers=[service_handler],
     )
 
     print(

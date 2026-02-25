@@ -8,8 +8,6 @@ workflow implementation that demonstrates cancellation handling.
 
 from __future__ import annotations
 
-import uuid
-
 import nexusrpc
 from temporalio import nexus
 

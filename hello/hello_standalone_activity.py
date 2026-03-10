@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -21,7 +22,7 @@ class ComposeGreetingInput:
 # This is just a normal activity. You could invoke it from a workflow but, in this sample, we are
 # invoking it directly as a standalone activity.
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
+def compose_greeting(input: ComposeGreetingInput) -> str:
     activity.logger.info("Running activity with parameter %s" % input)
     return f"{input.greeting}, {input.name}!"
 
@@ -68,6 +69,7 @@ async def main():
         client,
         task_queue="hello-standalone-activity-task-queue",
         activities=[compose_greeting],
+        activity_executor=ThreadPoolExecutor(5),
     ):
         # While the worker is running, use the client to execute the activity.
         await my_client_code(client)

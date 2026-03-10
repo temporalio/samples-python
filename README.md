@@ -56,6 +56,7 @@ Some examples require extra dependencies. See each sample's directory for specif
     while running.
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
   * [hello standalone activity](hello/hello_standalone_activity.py) - Execute an activity from outside of a workflow.
+    * Note: Standalone activities is supported in CLI version [v1.6.2](https://github.com/temporalio/cli/releases/tag/v1.6.2-standalone-activity).
   * [hello update](hello/hello_update.py) - Send a request to and a response from a client to a workflow execution.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.

@@ -6,11 +6,13 @@ import pytest
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from hello.hello_standalone_activity import ComposeGreetingInput, compose_greeting
+from hello_standalone_activity.my_activity import ComposeGreetingInput, compose_greeting
 
 
 async def test_execute_standalone_activity(client: Client):
-    pytest.skip("Standalone Activity is not yet supported by the CLI dev server")
+    pytest.skip(
+        "Standalone Activity is not yet supported by `temporal server start-dev`"
+    )
     task_queue_name = str(uuid.uuid4())
 
     async with Worker(

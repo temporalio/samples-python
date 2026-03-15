@@ -1,5 +1,0 @@
-description: Orchestrate LangChain workflows with LangSmith tracing
-dependencies:
-  - langchain>=0.1.7,<0.2
-  - langchain-openai>=0.0.6,<0.0.7
-  - openai>=1.4.0,<2

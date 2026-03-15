@@ -1,4 +1,0 @@
-description: Amazon Bedrock AI chatbot with durable execution
-dependencies:
-  - temporalio>=1.23.0,<2
-  - boto3>=1.34.92,<2

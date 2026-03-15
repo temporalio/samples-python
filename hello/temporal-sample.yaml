@@ -1,3 +1,0 @@
-description: Basic hello world samples (activity, signal, query, etc.)
-dependencies:
-  - temporalio>=1.23.0,<2

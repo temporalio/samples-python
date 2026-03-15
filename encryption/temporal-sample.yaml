@@ -1,0 +1,5 @@
+description: End-to-end encryption codec, compatible with TypeScript and Go
+dependencies:
+  - temporalio>=1.23.0,<2
+  - cryptography>=38.0.1,<39
+  - aiohttp>=3.8.1,<4

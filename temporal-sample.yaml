@@ -72,3 +72,118 @@ samples:
     description: Schedule a Workflow Execution and control actions
     dependencies:
       - temporalio>=1.23.0,<2
+  - path: activity_worker
+    description: Cross-language sample with a Go workflow calling a Python activity
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: batch_sliding_window
+    description: Batch processing with a sliding window of parallel child workflows
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: context_propagation
+    description: Propagate contextual information through workflows and activities via interceptors
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: custom_converter
+    description: Custom payload converter for types not natively supported by Temporal
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: custom_decorator
+    description: Auto-heartbeater decorator for automatic activity heartbeating
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: custom_metric
+    description: Custom Prometheus metric with an interceptor for activity schedule-to-start latency
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: eager_wf_start
+    description: Eager Workflow Start for low-latency first-task execution
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: env_config
+    description: Configure a Temporal Client from a TOML file with profile support
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: message_passing
+    description: Introduction to Query, Signal, and Update message-passing patterns
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: patching
+    description: Safely alter workflow code using patched and deprecate_patch in stages
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: polling
+    description: Best practices for frequent, infrequent, and periodic polling patterns
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: prometheus
+    description: Expose SDK Prometheus metrics via HTTP endpoint
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: replay
+    description: Verify workflow code changes are compatible with existing histories
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: resource_pool
+    description: Long-lived workflow for resource allocation and serialized access control
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: sleep_for_days
+    description: Long-running workflow that sends periodic emails with durable timers
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: updatable_timer
+    description: Blocking sleep that can be updated at any moment via signals
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: worker_multiprocessing
+    description: Run multiple workflow worker processes using ProcessPoolExecutor
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: worker_specific_task_queues
+    description: Pin activities to a specific worker using unique task queues
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: worker_versioning
+    description: Safe worker deployments with auto-upgrading and pinned workflow versions
+    dependencies:
+      - temporalio>=1.23.0,<2
+  - path: cloud_export_to_parquet
+    description: Convert Temporal Cloud exported proto files to Parquet format
+    dependencies:
+      - temporalio>=1.23.0,<2
+      - pandas>=2.2.2,<3
+      - numpy>=1.26.0,<2
+      - boto3>=1.34.89,<2
+      - pyarrow>=19.0.1
+  - path: gevent_async
+    description: Run Temporal in a gevent-patched environment with a custom executor
+    dependencies:
+      - temporalio>=1.23.0,<2
+      - gevent>=25.4.2
+  - path: open_telemetry
+    description: Configure OpenTelemetry to capture workflow traces and SDK metrics
+    dependencies:
+      - temporalio[opentelemetry]>=1.23.0,<2
+      - opentelemetry-exporter-otlp-proto-grpc
+  - path: pydantic_converter
+    description: Use the Pydantic data converter for workflow and activity I/O
+    dependencies:
+      - temporalio>=1.23.0,<2
+      - pydantic>=2.10.6,<3
+  - path: pydantic_converter_v1
+    description: Pydantic v1 data converter (use v2 pydantic_converter instead if possible)
+    dependencies:
+      - temporalio>=1.23.0,<2
+      - pydantic>=2.10.6,<3
+  - path: sentry
+    description: Capture workflow and activity errors with Sentry SDK v2 integration
+    dependencies:
+      - temporalio>=1.23.0,<2
+      - sentry-sdk>=2.13.0
+  - path: trio_async
+    description: Use Temporal asyncio with Trio via trio-asyncio bridge
+    dependencies:
+      - temporalio>=1.23.0,<2
+      - trio>=0.28.0,<0.29
+      - trio-asyncio>=0.15.0,<0.16

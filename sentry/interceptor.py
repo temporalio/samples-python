@@ -15,8 +15,16 @@ from temporalio.worker import (
 with workflow.unsafe.imports_passed_through():
     import sentry_sdk
 
-
 logger = logging.getLogger(__name__)
+
+TEMPORAL_UI_URL = "https://cloud.temporal.io"
+
+
+def _build_temporal_workflow_url(namespace: str, workflow_id: str, run_id: str) -> str | None:
+    """Build a URL to the Temporal UI for a specific workflow execution."""
+    # URL encode the workflow_id in case it contains special characters
+    encoded_workflow_id = quote(workflow_id, safe="")
+    return f"{TEMPORAL_UI_URL}/namespaces/{namespace}/workflows/{encoded_workflow_id}/{run_id}"
 
 
 class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
@@ -35,6 +43,27 @@ class _SentryActivityInboundInterceptor(ActivityInboundInterceptor):
                 "temporal.workflow.namespace", activity_info.workflow_namespace
             )
             scope.set_tag("temporal.workflow.run_id", activity_info.workflow_run_id)
+
+            # Build workflow URL for easy navigation from Sentry
+            workflow_url = _build_temporal_workflow_url(
+                namespace=activity_info.workflow_namespace,
+                workflow_id=activity_info.workflow_id,
+                run_id=activity_info.workflow_run_id,
+            )
+
+            if workflow_url:
+                scope.set_tag("temporal.workflow.url", workflow_url)
+                scope.set_context(
+                    "Temporal Workflow",
+                    {
+                        "name": activity_info.workflow_type,
+                        "url": workflow_url,
+                        "workflow_id": activity_info.workflow_id,
+                        "run_id": activity_info.workflow_run_id,
+                        "activity": activity_info.activity_type,
+                    },
+                )
+
             try:
                 return await super().execute_activity(input)
             except Exception as e:
@@ -61,6 +90,28 @@ class _SentryWorkflowInterceptor(WorkflowInboundInterceptor):
             scope.set_tag("temporal.workflow.task_queue", workflow_info.task_queue)
             scope.set_tag("temporal.workflow.namespace", workflow_info.namespace)
             scope.set_tag("temporal.workflow.run_id", workflow_info.run_id)
+
+            # Build workflow URL for easy navigation from Sentry
+            # Note: We need to access settings inside sandbox_unrestricted for workflow context
+            with workflow.unsafe.sandbox_unrestricted():
+                workflow_url = _build_temporal_workflow_url(
+                    namespace=workflow_info.namespace,
+                    workflow_id=workflow_info.workflow_id,
+                    run_id=workflow_info.run_id,
+                )
+
+            if workflow_url:
+                scope.set_tag("temporal.workflow.url", workflow_url)
+                scope.set_context(
+                    "Temporal Workflow",
+                    {
+                        "name": workflow_info.workflow_type,
+                        "url": workflow_url,
+                        "workflow_id": workflow_info.workflow_id,
+                        "run_id": workflow_info.run_id,
+                    },
+                )
+
             try:
                 return await super().execute_workflow(input)
             except Exception as e:

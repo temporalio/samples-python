@@ -15,139 +15,267 @@ samples:
     description: Basic hello world samples (activity, signal, query, etc.)
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run hello/hello_activity.py
   - path: hello_standalone_activity
     description: Execute Activities directly from a Client, without a Workflow
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run hello_standalone_activity/worker.py
+      - cmd: uv run hello_standalone_activity/execute_activity.py
+        new_terminal: true
   - path: hello_nexus
     description: Nexus service definition, operation handlers, and workflow calls
     dependencies:
       - temporalio>=1.23.0,<2
       - nexus-rpc>=1.1.0,<2
+    commands:
+      - cmd: temporal operator namespace create --namespace hello-nexus-basic-handler-namespace
+      - cmd: temporal operator namespace create --namespace hello-nexus-basic-caller-namespace
+      - cmd: temporal operator nexus endpoint create --name hello-nexus-basic-nexus-endpoint --target-namespace hello-nexus-basic-handler-namespace --target-task-queue my-handler-task-queue --description-file hello_nexus/endpoint_description.md
+      - cmd: uv run hello_nexus/handler/worker.py
+      - cmd: uv run hello_nexus/caller/app.py
+        new_terminal: true
   - path: nexus_cancel
     description: Fan out Nexus operations, take first result, cancel the rest
     dependencies:
       - temporalio>=1.23.0,<2
       - nexus-rpc>=1.1.0,<2
+    commands:
+      - cmd: temporal operator namespace create --namespace nexus-cancel-handler-namespace
+      - cmd: temporal operator namespace create --namespace nexus-cancel-caller-namespace
+      - cmd: temporal operator nexus endpoint create --name nexus-cancel-endpoint --target-namespace nexus-cancel-handler-namespace --target-task-queue nexus-cancel-handler-task-queue
+      - cmd: uv run nexus_cancel/handler/worker.py
+      - cmd: uv run nexus_cancel/caller/app.py
+        new_terminal: true
   - path: nexus_multiple_args
     description: Map a Nexus operation to a handler workflow with multiple arguments
     dependencies:
       - temporalio>=1.23.0,<2
       - nexus-rpc>=1.1.0,<2
+    commands:
+      - cmd: temporal operator namespace create --namespace nexus-multiple-args-handler-namespace
+      - cmd: temporal operator namespace create --namespace nexus-multiple-args-caller-namespace
+      - cmd: temporal operator nexus endpoint create --name nexus-multiple-args-nexus-endpoint --target-namespace nexus-multiple-args-handler-namespace --target-task-queue nexus-multiple-args-handler-task-queue
+      - cmd: uv run nexus_multiple_args/handler/worker.py
+      - cmd: uv run nexus_multiple_args/caller/app.py
+        new_terminal: true
   - path: nexus_sync_operations
     description: Nexus service backed by a long-running workflow with updates and queries
     dependencies:
       - temporalio>=1.23.0,<2
       - nexus-rpc>=1.1.0,<2
+    commands:
+      - cmd: temporal operator namespace create --namespace nexus-sync-operations-handler-namespace
+      - cmd: temporal operator namespace create --namespace nexus-sync-operations-caller-namespace
+      - cmd: temporal operator nexus endpoint create --name nexus-sync-operations-nexus-endpoint --target-namespace nexus-sync-operations-handler-namespace --target-task-queue nexus-sync-operations-handler-task-queue --description-file nexus_sync_operations/endpoint_description.md
+      - cmd: uv run nexus_sync_operations/handler/worker.py
+      - cmd: uv run nexus_sync_operations/caller/app.py
+        new_terminal: true
   - path: openai_agents
     description: OpenAI Agents SDK with Temporal durable execution
     dependencies:
       - openai-agents[litellm]==0.3.2
       - temporalio[openai-agents]>=1.18.0
       - requests>=2.32.0,<3
+    commands:
+      - cmd: uv run openai_agents/basic/run_worker.py
+      - cmd: uv run openai_agents/basic/run_hello_world_workflow.py
+        new_terminal: true
   - path: langchain
     description: Orchestrate LangChain workflows with LangSmith tracing
     dependencies:
       - langchain>=0.1.7,<0.2
       - langchain-openai>=0.0.6,<0.0.7
       - openai>=1.4.0,<2
+    commands:
+      - cmd: uv run langchain/worker.py
+      - cmd: uv run langchain/starter.py
+        new_terminal: true
+      - cmd: curl -X POST "http://localhost:8000/translate?phrase=hello%20world&language1=Spanish&language2=French&language3=Russian"
+        new_terminal: true
   - path: bedrock
     description: Amazon Bedrock AI chatbot with durable execution
     dependencies:
       - temporalio>=1.23.0,<2
       - boto3>=1.34.92,<2
+    commands:
+      - cmd: uv run bedrock/basic/run_worker.py
+      - cmd: uv run bedrock/basic/send_message.py 'What animals are marsupials?'
+        new_terminal: true
   - path: encryption
     description: End-to-end encryption codec, compatible with TypeScript and Go
     dependencies:
       - temporalio>=1.23.0,<2
       - cryptography>=38.0.1,<39
       - aiohttp>=3.8.1,<4
+    commands:
+      - cmd: uv run encryption/worker.py
+      - cmd: uv run encryption/starter.py
+        new_terminal: true
   - path: dsl
     description: Workflow interpreter for arbitrary steps defined in YAML DSL
     dependencies:
       - temporalio>=1.23.0,<2
       - pyyaml>=6.0.1,<7
       - dacite>=1.8.1,<2
+    commands:
+      - cmd: uv run dsl/worker.py
+      - cmd: uv run dsl/starter.py dsl/workflow1.yaml
+        new_terminal: true
   - path: schedules
     description: Schedule a Workflow Execution and control actions
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run schedules/run_worker.py
+      - cmd: uv run schedules/start_schedule.py
+        new_terminal: true
   - path: activity_worker
     description: Cross-language sample with a Go workflow calling a Python activity
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run activity_worker/activity_worker.py
   - path: batch_sliding_window
     description: Batch processing with a sliding window of parallel child workflows
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run batch_sliding_window/worker.py
+      - cmd: uv run batch_sliding_window/starter.py
+        new_terminal: true
   - path: context_propagation
     description: Propagate contextual information through workflows and activities via interceptors
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run context_propagation/worker.py
+      - cmd: uv run context_propagation/starter.py
+        new_terminal: true
   - path: custom_converter
     description: Custom payload converter for types not natively supported by Temporal
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run custom_converter/worker.py
+      - cmd: uv run custom_converter/starter.py
+        new_terminal: true
   - path: custom_decorator
     description: Auto-heartbeater decorator for automatic activity heartbeating
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run custom_decorator/worker.py
+      - cmd: uv run custom_decorator/starter.py
+        new_terminal: true
   - path: custom_metric
     description: Custom Prometheus metric with an interceptor for activity schedule-to-start latency
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run custom_metric/worker.py
+      - cmd: uv run custom_metric/starter.py
+        new_terminal: true
   - path: eager_wf_start
     description: Eager Workflow Start for low-latency first-task execution
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run eager_wf_start/run.py
   - path: env_config
     description: Configure a Temporal Client from a TOML file with profile support
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run env_config/load_from_file.py
   - path: message_passing
     description: Introduction to Query, Signal, and Update message-passing patterns
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run message_passing/introduction/worker.py
+      - cmd: uv run message_passing/introduction/starter.py
+        new_terminal: true
   - path: patching
     description: Safely alter workflow code using patched and deprecate_patch in stages
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run patching/worker.py --workflow initial
+      - cmd: uv run patching/starter.py --start-workflow initial-workflow-id
+        new_terminal: true
   - path: polling
     description: Best practices for frequent, infrequent, and periodic polling patterns
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run polling/frequent/run_worker.py
+      - cmd: uv run polling/frequent/run_frequent.py
+        new_terminal: true
   - path: prometheus
     description: Expose SDK Prometheus metrics via HTTP endpoint
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run prometheus/worker.py
+      - cmd: uv run prometheus/starter.py
+        new_terminal: true
   - path: replay
     description: Verify workflow code changes are compatible with existing histories
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run replay/worker.py
+      - cmd: uv run replay/starter.py
+        new_terminal: true
   - path: resource_pool
     description: Long-lived workflow for resource allocation and serialized access control
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run resource_pool/worker.py
+      - cmd: uv run resource_pool/starter.py
+        new_terminal: true
   - path: sleep_for_days
     description: Long-running workflow that sends periodic emails with durable timers
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run sleep_for_days/worker.py
+      - cmd: uv run sleep_for_days/starter.py
+        new_terminal: true
   - path: updatable_timer
     description: Blocking sleep that can be updated at any moment via signals
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run updatable_timer/worker.py
+      - cmd: uv run updatable_timer/starter.py
+        new_terminal: true
   - path: worker_multiprocessing
     description: Run multiple workflow worker processes using ProcessPoolExecutor
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run worker_multiprocessing/worker.py
+      - cmd: uv run worker_multiprocessing/starter.py
+        new_terminal: true
   - path: worker_specific_task_queues
     description: Pin activities to a specific worker using unique task queues
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run worker_specific_task_queues/worker.py
+      - cmd: uv run worker_specific_task_queues/starter.py
+        new_terminal: true
   - path: worker_versioning
     description: Safe worker deployments with auto-upgrading and pinned workflow versions
     dependencies:
       - temporalio>=1.23.0,<2
+    commands:
+      - cmd: uv run worker_versioning/app.py
   - path: cloud_export_to_parquet
     description: Convert Temporal Cloud exported proto files to Parquet format
     dependencies:
@@ -156,34 +284,62 @@ samples:
       - numpy>=1.26.0,<2
       - boto3>=1.34.89,<2
       - pyarrow>=19.0.1
+    commands:
+      - cmd: uv run cloud_export_to_parquet/run_worker.py
+      - cmd: uv run cloud_export_to_parquet/create_schedule.py
+        new_terminal: true
   - path: gevent_async
     description: Run Temporal in a gevent-patched environment with a custom executor
     dependencies:
       - temporalio>=1.23.0,<2
       - gevent>=25.4.2
+    commands:
+      - cmd: uv run gevent_async/worker.py
+      - cmd: uv run gevent_async/starter.py
+        new_terminal: true
   - path: open_telemetry
     description: Configure OpenTelemetry to capture workflow traces and SDK metrics
     dependencies:
       - temporalio[opentelemetry]>=1.23.0,<2
       - opentelemetry-exporter-otlp-proto-grpc
+    commands:
+      - cmd: uv run open_telemetry/worker.py
+      - cmd: uv run open_telemetry/starter.py
+        new_terminal: true
   - path: pydantic_converter
     description: Use the Pydantic data converter for workflow and activity I/O
     dependencies:
       - temporalio>=1.23.0,<2
       - pydantic>=2.10.6,<3
+    commands:
+      - cmd: uv run pydantic_converter/worker.py
+      - cmd: uv run pydantic_converter/starter.py
+        new_terminal: true
   - path: pydantic_converter_v1
     description: Pydantic v1 data converter (use v2 pydantic_converter instead if possible)
     dependencies:
       - temporalio>=1.23.0,<2
       - pydantic>=2.10.6,<3
+    commands:
+      - cmd: uv run pydantic_converter_v1/worker.py
+      - cmd: uv run pydantic_converter_v1/starter.py
+        new_terminal: true
   - path: sentry
     description: Capture workflow and activity errors with Sentry SDK v2 integration
     dependencies:
       - temporalio>=1.23.0,<2
       - sentry-sdk>=2.13.0
+    commands:
+      - cmd: uv run sentry/worker.py
+      - cmd: uv run sentry/starter.py
+        new_terminal: true
   - path: trio_async
     description: Use Temporal asyncio with Trio via trio-asyncio bridge
     dependencies:
       - temporalio>=1.23.0,<2
       - trio>=0.28.0,<0.29
       - trio-asyncio>=0.15.0,<0.16
+    commands:
+      - cmd: uv run trio_async/worker.py
+      - cmd: uv run trio_async/starter.py
+        new_terminal: true

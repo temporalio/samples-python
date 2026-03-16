@@ -7,9 +7,6 @@ scaffold:
     version = "0.1.0"
     requires-python = ">=3.10"
     dependencies = [{{dependencies}}]
-    [build-system]
-    requires = ["hatchling"]
-    build-backend = "hatchling.build"
 samples:
   - path: hello
     description: Basic hello world samples (activity, signal, query, etc.)

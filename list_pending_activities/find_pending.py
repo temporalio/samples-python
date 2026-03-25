@@ -23,10 +23,10 @@ from datetime import datetime
 from temporalio.client import Client
 from temporalio.service import TLSConfig
 
-DEFAULT_NAMESPACE = "deepika-test-namespace.a2dd6" # namespace - <ns>.<account-id>
-DEFAULT_API_HOST = "us-east-1.aws.api.temporal.io:7233" # regional endpoint for your namespace
-DEFAULT_MTLS_HOST = "deepika-test-namespace.a2dd6.tmprl.cloud:7233" # namespace endpoint for your namespace
-DEFAULT_CERTS_DIR = "/Users/deepikaawasthi/temporal/temporal-certs" # certs directory
+DEFAULT_NAMESPACE = "<ns>.<account-id>" # namespace - <ns>.<account-id>
+DEFAULT_API_HOST = "<region>.<cloud-provider>.api.temporal.io:7233" # regional endpoint for your namespace
+DEFAULT_MTLS_HOST = "<ns>.<account-id>.tmprl.cloud:7233" # namespace endpoint for your namespace
+DEFAULT_CERTS_DIR = "directory path containing client.pem and client.key, keep the name as it is" # certs directory
 
 
 def resolve_api_key() -> str | None:

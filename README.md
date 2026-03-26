@@ -55,6 +55,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_search_attributes](hello/hello_search_attributes.py) - Start workflow with search attributes then change
     while running.
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
+  * [hello update](hello/hello_update.py) - Send a request to and a response from a client to a workflow execution.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
@@ -69,6 +70,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
+* [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
@@ -84,7 +86,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
-* [worker_multiprocessing](worker_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks and other CPU bound operations by running multiple workers. 
+* [worker_multiprocessing](worker_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks and other CPU bound operations by running multiple workers.
 
 ## Test
 

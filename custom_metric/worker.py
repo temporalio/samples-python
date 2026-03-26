@@ -39,7 +39,7 @@ class CustomScheduleToStartInterceptor(ActivityInboundInterceptor):
             unit="duration",
         )
         histogram.record(
-            schedule_to_start, {"workflow_type": activity.info().workflow_type}
+            schedule_to_start, {"workflow_type": activity.info().workflow_type or ""}
         )
         return await self.next.execute_activity(input)
 

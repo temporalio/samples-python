@@ -17,6 +17,7 @@ from temporalio import workflow
 with workflow.unsafe.imports_passed_through():
     from langgraph.types import Command
     from temporalio.contrib.langgraph import compile as lg_compile
+    from temporalio.contrib.langgraph import TemporalLangGraphRunner, TemporalFunctionalRunner
 
     from langgraph_plugin.graph_api.human_in_the_loop.approval_graph_interrupt.activities import (
         notify_approver,
@@ -73,7 +74,7 @@ class ApprovalWorkflow:
     def __init__(self) -> None:
         self._approval_response: dict[str, Any] | None = None
         self._interrupt_value: dict[str, Any] | None = None
-        self._app: Any = None  # Store runner for visualization queries
+        self._app: TemporalLangGraphRunner | TemporalFunctionalRunner | None = None  # Store runner for visualization queries
 
     @workflow.signal
     def provide_approval(self, response: dict[str, Any]) -> None:

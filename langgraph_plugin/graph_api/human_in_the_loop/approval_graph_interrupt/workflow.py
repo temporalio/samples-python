@@ -163,7 +163,6 @@ class ApprovalWorkflow:
     async def run(
         self,
         request: ApprovalRequest,
-        approval_timeout: timedelta | None = None,
     ) -> dict[str, Any]:
         """Run the approval workflow.
 
@@ -177,21 +176,11 @@ class ApprovalWorkflow:
         """
         self._app = lg_compile("approval_workflow")
 
-        # Handle both dataclass and dict input (Temporal deserializes to dict)
-        if isinstance(request, dict):
-            request_type = request.get("request_type", "unknown")
-            amount = request.get("amount", 0.0)
-            request_data = request.get("request_data") or {}
-        else:
-            request_type = request.request_type
-            amount = request.amount
-            request_data = request.request_data or {}
-
         # Prepare initial state
         initial_state = {
-            "request_type": request_type,
-            "amount": amount,
-            "request_data": request_data,
+            "request_type": request.request_type,
+            "amount": request.amount,
+            "request_data": request.request_data or {},
         }
 
         # First invocation - should hit interrupt at request_approval node
@@ -215,10 +204,7 @@ class ApprovalWorkflow:
 
             # Wait for approval signal (with optional timeout)
             try:
-                await workflow.wait_condition(
-                    lambda: self._approval_response is not None,
-                    timeout=approval_timeout,
-                )
+                await workflow.wait_condition(lambda: self._approval_response is not None)
             except TimeoutError:
                 # Timeout - auto-reject
                 workflow.logger.warning("Approval timeout - auto-rejecting")

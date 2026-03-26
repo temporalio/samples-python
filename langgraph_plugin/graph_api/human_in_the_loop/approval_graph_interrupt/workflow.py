@@ -74,7 +74,7 @@ class ApprovalWorkflow:
     def __init__(self) -> None:
         self._approval_response: dict[str, Any] | None = None
         self._interrupt_value: dict[str, Any] | None = None
-        self._app: TemporalLangGraphRunner | TemporalFunctionalRunner | None = None  # Store runner for visualization queries
+        self._app = lg_compile("approval_workflow") # Store runner for visualization queries
 
     @workflow.signal
     def provide_approval(self, response: dict[str, Any]) -> None:
@@ -111,8 +111,6 @@ class ApprovalWorkflow:
         Returns an ASCII diagram showing which nodes have completed,
         which is currently executing/interrupted, and which are pending.
         """
-        if self._app is None:
-            return "Graph not yet initialized"
         return self._app.get_graph_ascii()
 
     @workflow.query
@@ -126,8 +124,6 @@ class ApprovalWorkflow:
 
         Can be rendered in GitHub, Notion, or any Mermaid-compatible viewer.
         """
-        if self._app is None:
-            return "Graph not yet initialized"
         return self._app.get_graph_mermaid()
 
     @workflow.query
@@ -136,15 +132,6 @@ class ApprovalWorkflow:
 
         Returns a GraphStateResponse with typed ApprovalState values.
         """
-        if self._app is None:
-            return GraphStateResponse(
-                values=cast(ApprovalState, {}),
-                next=[],
-                step=0,
-                interrupted=False,
-                interrupt_node=None,
-                interrupt_value=None,
-            )
         snapshot = self._app.get_state()
         interrupt_task = snapshot.tasks[0] if snapshot.tasks else None
         return GraphStateResponse(
@@ -175,8 +162,6 @@ class ApprovalWorkflow:
         Returns:
             The final state containing result and executed status.
         """
-        self._app = lg_compile("approval_workflow")
-
         # Prepare initial state
         initial_state = {
             "request_type": request.request_type,

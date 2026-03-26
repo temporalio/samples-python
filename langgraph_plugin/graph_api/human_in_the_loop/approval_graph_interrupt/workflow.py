@@ -65,7 +65,7 @@ class ApprovalWorkflow:
     This demonstrates the full interrupt flow:
     1. Graph runs until interrupt() is called in request_approval node
     2. Workflow receives __interrupt__ in result with approval request details
-    3. Workflow waits for signal with human input (with optional timeout)
+    3. Workflow waits for signal with human input
     4. Workflow resumes graph with Command(resume=response)
     5. Graph completes with execute_action node
     """

@@ -108,6 +108,7 @@ class SlidingWindowWorkflow:
 
             # Start child workflow for this record
             child_id = f"{workflow_id}/{record.id}"
+            self.current_records.add(record.id)
             child_handle = await workflow.start_child_workflow(
                 RecordProcessorWorkflow.run,
                 record,
@@ -117,7 +118,6 @@ class SlidingWindowWorkflow:
             )
 
             self.children_started_by_this_run.append(child_handle)
-            self.current_records.add(record.id)
 
         return await self._continue_as_new_or_complete(input)
 

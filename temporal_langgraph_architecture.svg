@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="900" height="500">
+  <defs>
+    <linearGradient id="workflowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a365d"/>
+      <stop offset="100%" style="stop-color:#2c5282"/>
+    </linearGradient>
+    <linearGradient id="activityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#744210"/>
+      <stop offset="100%" style="stop-color:#975a16"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4a5568"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="500" fill="#f7fafc"/>
+
+  <!-- Title -->
+  <text x="450" y="40" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1a202c" text-anchor="middle">
+    Temporal + LangGraph Architecture
+  </text>
+
+  <!-- Temporal Workflow Box -->
+  <rect x="40" y="80" width="340" height="380" rx="12" fill="none" stroke="#2c5282" stroke-width="3"/>
+  <rect x="40" y="80" width="340" height="45" rx="12" fill="url(#workflowGrad)"/>
+  <rect x="40" y="113" width="340" height="12" fill="url(#workflowGrad)"/>
+  <text x="210" y="112" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+    Temporal Workflow
+  </text>
+
+  <!-- TemporalLangGraphRunner -->
+  <rect x="70" y="150" width="280" height="70" rx="8" fill="#3182ce"/>
+  <text x="210" y="190" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">
+    TemporalLangGraphRunner
+  </text>
+
+  <!-- AsyncPregelLoop -->
+  <rect x="70" y="250" width="280" height="70" rx="8" fill="#38a169"/>
+  <text x="210" y="290" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">
+    AsyncPregelLoop
+  </text>
+
+  <!-- State -->
+  <rect x="70" y="350" width="280" height="70" rx="8" fill="#4a5568"/>
+  <text x="210" y="390" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">
+    Graph State / Channels
+  </text>
+
+  <!-- Arrows inside workflow -->
+  <line x1="210" y1="220" x2="210" y2="248" stroke="#4a5568" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="210" y1="320" x2="210" y2="348" stroke="#4a5568" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Temporal Activities Box -->
+  <rect x="520" y="80" width="340" height="380" rx="12" fill="none" stroke="#975a16" stroke-width="3"/>
+  <rect x="520" y="80" width="340" height="45" rx="12" fill="url(#activityGrad)"/>
+  <rect x="520" y="113" width="340" height="12" fill="url(#activityGrad)"/>
+  <text x="690" y="112" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">
+    Temporal Activities
+  </text>
+
+  <!-- Node Activity boxes -->
+  <rect x="550" y="150" width="130" height="90" rx="8" fill="#805ad5"/>
+  <text x="615" y="185" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">
+    LLM Node
+  </text>
+  <text x="615" y="210" font-family="Arial, sans-serif" font-size="12" fill="#e9d8fd" text-anchor="middle">
+    ChatGPT, Claude
+  </text>
+  <text x="615" y="228" font-family="Arial, sans-serif" font-size="12" fill="#e9d8fd" text-anchor="middle">
+    Embeddings
+  </text>
+
+  <rect x="700" y="150" width="130" height="90" rx="8" fill="#dd6b20"/>
+  <text x="765" y="185" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">
+    Tool Node
+  </text>
+  <text x="765" y="210" font-family="Arial, sans-serif" font-size="12" fill="#feebc8" text-anchor="middle">
+    API Calls
+  </text>
+  <text x="765" y="228" font-family="Arial, sans-serif" font-size="12" fill="#feebc8" text-anchor="middle">
+    Database
+  </text>
+
+  <rect x="550" y="260" width="130" height="90" rx="8" fill="#319795"/>
+  <text x="615" y="295" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">
+    Agent Node
+  </text>
+  <text x="615" y="320" font-family="Arial, sans-serif" font-size="12" fill="#b2f5ea" text-anchor="middle">
+    ReAct Loop
+  </text>
+  <text x="615" y="338" font-family="Arial, sans-serif" font-size="12" fill="#b2f5ea" text-anchor="middle">
+    Multi-step
+  </text>
+
+  <rect x="700" y="260" width="130" height="90" rx="8" fill="#e53e3e"/>
+  <text x="765" y="295" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">
+    Human Node
+  </text>
+  <text x="765" y="320" font-family="Arial, sans-serif" font-size="12" fill="#fed7d7" text-anchor="middle">
+    interrupt()
+  </text>
+  <text x="765" y="338" font-family="Arial, sans-serif" font-size="12" fill="#fed7d7" text-anchor="middle">
+    Approval
+  </text>
+
+  <rect x="625" y="370" width="130" height="70" rx="8" fill="#4a5568"/>
+  <text x="690" y="405" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">
+    Transform Node
+  </text>
+  <text x="690" y="428" font-family="Arial, sans-serif" font-size="12" fill="#e2e8f0" text-anchor="middle">
+    Pure functions
+  </text>
+
+  <!-- Arrows between workflow and activities -->
+  <line x1="350" y1="285" x2="518" y2="285" stroke="#4a5568" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="434" y="275" font-family="Arial, sans-serif" font-size="12" fill="#718096" text-anchor="middle">
+    execute
+  </text>
+
+  <line x1="518" y1="310" x2="352" y2="310" stroke="#4a5568" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="434" y="330" font-family="Arial, sans-serif" font-size="12" fill="#718096" text-anchor="middle">
+    results
+  </text>
+</svg>

@@ -20,6 +20,7 @@ dev = [
     "mypy>=1.4.1,<2",
     "pytest>=7.1.2,<8",
     "pytest-asyncio>=0.18.3,<0.19",
+    "fakeredis>=2,<3",
     "frozenlist>=1.4.0,<2",
     "pyright>=1.1.394",
     "types-pyyaml>=6.0.12.20241230,<7",
@@ -35,6 +36,7 @@ external-storage = [
     "moto[server]>=4.0.0",
     "types_aiobotocore_s3>=2.25.2",
 ]
+external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 langsmith-tracing = [
     "openai>=1.4.0",
@@ -88,6 +90,7 @@ packages = [
     "dsl",
     "encryption",
     "external_storage",
+    "external_storage_redis",
     "gevent_async",
     "hello",
     "langgraph_plugin",

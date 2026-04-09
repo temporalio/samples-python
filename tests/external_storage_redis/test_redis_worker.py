@@ -11,7 +11,6 @@ from typing import Any
 
 import pytest
 import pytest_asyncio
-
 import temporalio.converter
 from temporalio.client import Client, WorkflowFailureError
 from temporalio.converter import ExternalStorage, JSONPlainPayloadConverter
@@ -157,8 +156,7 @@ async def test_redis_driver_workflow_output_key(
     keys = await _list_keys(redis_asyncio_client)
     assert len(keys) == 1
     assert (
-        f"{KEY_PREFIX}:v0:ns:default:wt:LargeIOWorkflow:wi:{workflow_id}:ri:"
-        in keys[0]
+        f"{KEY_PREFIX}:v0:ns:default:wt:LargeIOWorkflow:wi:{workflow_id}:ri:" in keys[0]
     )
     assert ":ri:null:" not in keys[0]
 
@@ -203,8 +201,7 @@ async def test_redis_driver_workflow_activity_output_key(
     keys = await _list_keys(redis_asyncio_client)
     assert len(keys) == 1
     assert (
-        f"{KEY_PREFIX}:v0:ns:default:wt:LargeIOWorkflow:wi:{workflow_id}:ri:"
-        in keys[0]
+        f"{KEY_PREFIX}:v0:ns:default:wt:LargeIOWorkflow:wi:{workflow_id}:ri:" in keys[0]
     )
     assert ":ri:null:" not in keys[0]
 
@@ -237,8 +234,7 @@ async def test_redis_driver_standalone_activity_input_key(
     keys = await _list_keys(redis_asyncio_client)
     assert len(keys) == 2
     assert all(
-        f"{KEY_PREFIX}:v0:ns:default:at:large_io_activity:ai:{activity_id}:ri:"
-        in key
+        f"{KEY_PREFIX}:v0:ns:default:at:large_io_activity:ai:{activity_id}:ri:" in key
         for key in keys
     )
     assert all(":wt:" not in key for key in keys)
@@ -345,9 +341,7 @@ async def test_redis_driver_update_result_key(
             task_queue=worker.task_queue,
             execution_timeout=timedelta(seconds=5),
         )
-        result = await handle.execute_update(
-            SignalQueryUpdateWorkflow.do_update, LARGE
-        )
+        result = await handle.execute_update(SignalQueryUpdateWorkflow.do_update, LARGE)
         assert result == LARGE
         await handle.signal(SignalQueryUpdateWorkflow.finish, "done")
         await handle.result()

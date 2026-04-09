@@ -12,7 +12,6 @@ from unittest.mock import MagicMock
 
 import fakeredis.aioredis
 import pytest
-
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import (
     JSONPlainPayloadConverter,
@@ -625,7 +624,10 @@ class TestRedisStorageDriverErrors:
         expected_key = f"{KEY_PREFIX}:v0:d:sha256:{expected_hash}"
         with pytest.raises(RuntimeError) as exc_info:
             await driver.store(make_store_context(), [payload])
-        assert str(exc_info.value) == f"RedisStorageDriver store failed [key={expected_key}]"
+        assert (
+            str(exc_info.value)
+            == f"RedisStorageDriver store failed [key={expected_key}]"
+        )
         assert isinstance(exc_info.value.__cause__, ConnectionError)
 
     async def test_retrieve_client_failure_raises(
@@ -667,7 +669,9 @@ class TestRedisStorageDriverConcurrency:
     ) -> None:
         num_payloads = 5
         driver = RedisStorageDriver(client=driver_client, key_prefix=KEY_PREFIX)
-        payloads = [make_payload(f"concurrent-retrieve-{i}") for i in range(num_payloads)]
+        payloads = [
+            make_payload(f"concurrent-retrieve-{i}") for i in range(num_payloads)
+        ]
         claims = await driver.store(make_store_context(), payloads)
 
         barrier = _AsyncBarrier(num_payloads)

@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING
 
 import fakeredis.aioredis
 import pytest
 import pytest_asyncio
-from redis.asyncio.client import Redis
 
 from external_storage_redis import RedisStorageDriverClient
 from external_storage_redis.redis_asyncio import new_redis_asyncio_client
+
+if TYPE_CHECKING:
+    from redis.asyncio.client import Redis
 
 KEY_PREFIX = "test:payloads"
 

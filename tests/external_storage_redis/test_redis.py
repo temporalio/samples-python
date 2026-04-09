@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import subprocess
+import sys
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
@@ -28,6 +30,24 @@ from external_storage_redis.redis_asyncio import new_redis_asyncio_client
 from tests.external_storage_redis.conftest import KEY_PREFIX
 
 _CONVERTER = JSONPlainPayloadConverter()
+
+
+def test_redis_asyncio_adapter_import_is_workflow_safe() -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "import sys; "
+                "import external_storage_redis.redis_asyncio; "
+                "print(any(name.startswith('redis.asyncio') for name in sys.modules))"
+            ),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.stdout.strip() == "False"
 
 
 def make_payload(value: str = "hello") -> Payload:

@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import math
 from datetime import timedelta
-
-from redis.asyncio.client import Redis
+from typing import TYPE_CHECKING
 
 from external_storage_redis._client import RedisStorageDriverClient
+
+if TYPE_CHECKING:
+    from redis.asyncio.client import Redis
 
 
 class _RedisAsyncioStorageDriverClient(RedisStorageDriverClient):

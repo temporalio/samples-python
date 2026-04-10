@@ -27,6 +27,9 @@ class CustomModelProvider(ModelProvider):
 
 
 async def main():
+    # Disable Agents SDK tracing — the default exporter sends traces to OpenAI's
+    # backend, which requires an OpenAI API key not available in these samples.
+    # Call here rather than in the workflow because it's a global side effect.
     set_tracing_disabled(disabled=True)
 
     # Configure logging to show workflow debug messages

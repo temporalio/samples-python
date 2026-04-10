@@ -1,6 +1,7 @@
 import asyncio
 from datetime import timedelta
 
+from agents import set_tracing_disabled
 from agents.extensions.models.litellm_provider import LitellmProvider
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
@@ -12,6 +13,8 @@ from openai_agents.model_providers.workflows.litellm_auto_workflow import (
 
 
 async def main():
+    set_tracing_disabled(disabled=True)
+
     # Create client connected to server at the given address
     client = await Client.connect(
         "localhost:7233",

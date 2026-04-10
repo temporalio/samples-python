@@ -3,7 +3,12 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
-from agents import Model, ModelProvider, OpenAIChatCompletionsModel, set_tracing_disabled
+from agents import (
+    Model,
+    ModelProvider,
+    OpenAIChatCompletionsModel,
+    set_tracing_disabled,
+)
 from openai import AsyncOpenAI
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin

@@ -39,7 +39,7 @@ class TestCallerRemoteWorkflow:
             endpoint=NEXUS_ENDPOINT,
         )
 
-        workflow_id = f"test-remote-{uuid.uuid4()}"
+        workflow_id = f"test-remote-{workflow.uuid4()}"
 
         # Start a remote workflow.
         handle = await nexus_client.start_operation(

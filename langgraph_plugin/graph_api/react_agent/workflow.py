@@ -41,8 +41,7 @@ async def agent(state: AgentState) -> dict[str, Any]:
     if len(tool_results) == 0:
         return {
             "messages": [
-                "[Agent] I need weather data. "
-                "Calling get_weather for San Francisco."
+                "[Agent] I need weather data. Calling get_weather for San Francisco."
             ]
         }
     elif len(tool_results) == 1:
@@ -56,9 +55,7 @@ async def agent(state: AgentState) -> dict[str, Any]:
         facts = "; ".join(tool_results)
         return {
             "messages": ["[Agent] I have all the information I need."],
-            "final_answer": (
-                f"Here's what I found about San Francisco: {facts}"
-            ),
+            "final_answer": (f"Here's what I found about San Francisco: {facts}"),
         }
 
 
@@ -67,15 +64,9 @@ async def tools(state: AgentState) -> dict[str, Any]:
     last_msg = state["messages"][-1]
 
     if "get_weather" in last_msg:
-        return {
-            "messages": ["[Tool] Weather in San Francisco: 72°F and sunny."]
-        }
+        return {"messages": ["[Tool] Weather in San Francisco: 72°F and sunny."]}
     elif "get_population" in last_msg:
-        return {
-            "messages": [
-                "[Tool] San Francisco population: ~870,000 residents."
-            ]
-        }
+        return {"messages": ["[Tool] San Francisco population: ~870,000 residents."]}
     else:
         return {"messages": ["[Tool] Unknown tool requested."]}
 

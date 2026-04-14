@@ -6,10 +6,10 @@ combined with Temporal signals to receive the input asynchronously.
 
 from datetime import timedelta
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
 from langgraph.types import Command, interrupt
-from langchain_core.runnables import RunnableConfig
 from temporalio import workflow
 from temporalio.contrib.langgraph import graph
 

@@ -44,8 +44,7 @@ def summarize(results: list[str]) -> str:
     urgent_count = sum(1 for r in results if r.startswith("[PRIORITY]"))
     normal_count = sum(1 for r in results if r.startswith("[STANDARD]"))
     return (
-        f"Processed {len(results)} items "
-        f"({urgent_count} urgent, {normal_count} normal)"
+        f"Processed {len(results)} items ({urgent_count} urgent, {normal_count} normal)"
     )
 
 
@@ -58,9 +57,7 @@ async def control_flow_pipeline(items: list[str]) -> dict:
     # Creating task futures without awaiting launches them in parallel.
     validation_futures = [validate_item(item) for item in items]
     valid_flags = [await f for f in validation_futures]
-    valid_items = [
-        item for item, is_valid in zip(items, valid_flags) if is_valid
-    ]
+    valid_items = [item for item, is_valid in zip(items, valid_flags) if is_valid]
 
     # SEQUENTIAL + CONDITIONAL: Process each valid item
     results = []

@@ -37,9 +37,7 @@ def agent_think(query: str, history: list[str]) -> dict:
         facts = "; ".join(tool_results)
         return {
             "action": "final",
-            "answer": (
-                f"Here's what I found about San Francisco: {facts}"
-            ),
+            "answer": (f"Here's what I found about San Francisco: {facts}"),
         }
 
 
@@ -48,9 +46,7 @@ def execute_tool(tool_name: str, tool_input: str) -> str:
     """Execute a tool by name. In production, dispatch to real implementations."""
     tool_registry = {
         "get_weather": lambda inp: f"[Tool] Weather in {inp}: 72°F and sunny.",
-        "get_population": lambda inp: (
-            f"[Tool] {inp} population: ~870,000 residents."
-        ),
+        "get_population": lambda inp: f"[Tool] {inp} population: ~870,000 residents.",
     }
     handler = tool_registry.get(tool_name)
     if handler:
@@ -69,9 +65,7 @@ async def react_agent_entrypoint(query: str) -> dict:
         if decision["action"] == "final":
             return {"answer": decision["answer"], "steps": len(history)}
 
-        result = await execute_tool(
-            decision["tool_name"], decision["tool_input"]
-        )
+        result = await execute_tool(decision["tool_name"], decision["tool_input"])
         history.append(result)
 
 

@@ -65,9 +65,9 @@ class PipelineFunctionalWorkflow:
 
     @workflow.run
     async def run(self, input_data: PipelineInput) -> dict[str, Any]:
-        result = await entrypoint(
-            "pipeline", cache=input_data.cache
-        ).ainvoke(input_data.data)
+        result = await entrypoint("pipeline", cache=input_data.cache).ainvoke(
+            input_data.data
+        )
 
         if input_data.phase < 3:
             workflow.continue_as_new(

@@ -6,11 +6,11 @@ Same pattern as the Graph API version, but using @task and @entrypoint decorator
 from datetime import timedelta
 from typing import Any
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from langgraph.types import Command, interrupt
-from langchain_core.runnables import RunnableConfig
 from temporalio import workflow
 from temporalio.contrib.langgraph import entrypoint
 

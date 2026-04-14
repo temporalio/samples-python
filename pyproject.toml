@@ -125,6 +125,14 @@ lint = [
 lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages ."
 test = "uv run --all-groups pytest"
 
+[tool.uv]
+conflicts = [
+    [
+        { group = "langchain" },
+        { group = "langgraph" },
+    ],
+]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 log_cli = true

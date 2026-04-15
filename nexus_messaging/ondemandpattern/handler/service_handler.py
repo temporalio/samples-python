@@ -9,12 +9,7 @@ import nexusrpc
 from temporalio import nexus
 from temporalio.client import WorkflowHandle
 
-from nexus_messaging.ondemandpattern.handler.workflows import (
-    ApproveInput as WorkflowApproveInput,
-    GetLanguagesInput as WorkflowGetLanguagesInput,
-    GreetingWorkflow,
-    SetLanguageInput as WorkflowSetLanguageInput,
-)
+from nexus_messaging.ondemandpattern.handler.workflows import GreetingWorkflow
 from nexus_messaging.ondemandpattern.service import (
     ApproveInput,
     ApproveOutput,
@@ -58,8 +53,7 @@ class NexusRemoteGreetingServiceHandler:
         self, ctx: nexusrpc.handler.StartOperationContext, input: GetLanguagesInput
     ) -> GetLanguagesOutput:
         return await self._get_workflow_handle(input.user_id).query(
-            GreetingWorkflow.get_languages,
-            WorkflowGetLanguagesInput(include_unsupported=input.include_unsupported),
+            GreetingWorkflow.get_languages, input
         )
 
     @nexusrpc.handler.sync_operation
@@ -77,8 +71,7 @@ class NexusRemoteGreetingServiceHandler:
         self, ctx: nexusrpc.handler.StartOperationContext, input: SetLanguageInput
     ) -> Language:
         return await self._get_workflow_handle(input.user_id).execute_update(
-            GreetingWorkflow.set_language_using_activity,
-            WorkflowSetLanguageInput(language=input.language),
+            GreetingWorkflow.set_language_using_activity, input
         )
 
     @nexusrpc.handler.sync_operation
@@ -86,7 +79,6 @@ class NexusRemoteGreetingServiceHandler:
         self, ctx: nexusrpc.handler.StartOperationContext, input: ApproveInput
     ) -> ApproveOutput:
         await self._get_workflow_handle(input.user_id).signal(
-            GreetingWorkflow.approve,
-            WorkflowApproveInput(name=input.name),
+            GreetingWorkflow.approve, input
         )
         return ApproveOutput()

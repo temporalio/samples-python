@@ -1,4 +1,4 @@
-## Entity pattern
+## Caller pattern
 
 The handler worker starts a `GreetingWorkflow` for a user ID.
 `NexusGreetingServiceHandler` holds that ID and routes every Nexus operation to it.
@@ -14,12 +14,6 @@ The caller workflow:
 2. Changes the language to Arabic (`set_language` -- backed by a `@workflow.update` that calls an activity)
 3. Confirms the change via a second query (`get_language`)
 4. Approves the workflow (`approve` -- backed by a `@workflow.signal`)
-
-### Sample directory structure
-
-- [service.py](./service.py) - shared Nexus service definition
-- [caller](./caller) - a caller workflow that executes Nexus operations, together with a starter
-- [handler](./handler) - Nexus operation handlers, together with a workflow used by the Nexus operations, and a worker that polls for workflow, activity, and Nexus tasks
 
 ### Running
 

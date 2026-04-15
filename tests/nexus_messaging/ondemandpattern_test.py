@@ -15,7 +15,6 @@ from nexus_messaging.ondemandpattern.service import (
     GetLanguageInput,
     GetLanguagesInput,
     Language,
-    NexusRemoteGreetingService,
     RunFromRemoteInput,
     SetLanguageInput,
 )

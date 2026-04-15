@@ -2,7 +2,7 @@
 
 No workflow is pre-started. The caller creates and controls workflow instances through Nexus
 operations. `NexusRemoteGreetingService` adds a `run_from_remote` operation that starts a new
-`GreetingWorkflow`, and every other operation includes a `workflow_id` so the handler knows which
+`GreetingWorkflow`, and every other operation includes a `user_id` so the handler knows which
 instance to target.
 
 The caller workflow:
@@ -12,12 +12,6 @@ The caller workflow:
 4. Confirms the changes via queries
 5. Approves both workflows
 6. Waits for each to complete and returns their results
-
-### Sample directory structure
-
-- [service.py](./service.py) - shared Nexus service definition
-- [caller](./caller) - a caller workflow that creates remote workflows and executes Nexus operations, together with a starter
-- [handler](./handler) - Nexus operation handlers, together with a workflow started on demand by the Nexus operations, and a worker that polls for workflow, activity, and Nexus tasks
 
 ### Running
 

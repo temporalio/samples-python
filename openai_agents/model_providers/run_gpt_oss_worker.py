@@ -3,7 +3,12 @@ import logging
 from datetime import timedelta
 from typing import Optional
 
-from agents import Model, ModelProvider, OpenAIChatCompletionsModel
+from agents import (
+    Model,
+    ModelProvider,
+    OpenAIChatCompletionsModel,
+    set_tracing_disabled,
+)
 from openai import AsyncOpenAI
 from temporalio.client import Client
 from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
@@ -27,6 +32,11 @@ class CustomModelProvider(ModelProvider):
 
 
 async def main():
+    # Disable Agents SDK tracing — the default exporter sends traces to OpenAI's
+    # backend, which requires an OpenAI API key not available in these samples.
+    # Call here rather than in the workflow because it's a global side effect.
+    set_tracing_disabled(disabled=True)
+
     # Configure logging to show workflow debug messages
     logging.basicConfig(level=logging.WARNING)
     logging.getLogger("temporalio.workflow").setLevel(logging.DEBUG)

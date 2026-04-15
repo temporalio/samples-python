@@ -19,6 +19,8 @@ Samples are organized by API style:
 
 ## Prerequisites
 
+> **Note:** These samples require the LangGraph plugin from [sdk-python#1448](https://github.com/temporalio/sdk-python/pull/1448), which has not been released yet. They will not be runnable until the SDK is published with the `temporalio[langgraph]` extra.
+
 1. Install dependencies:
 
    ```bash

@@ -60,7 +60,9 @@ class ChatbotWorkflow:
     @workflow.run
     async def run(self, user_message: str) -> str:
         g = graph("chatbot").compile(checkpointer=InMemorySaver())
-        config = RunnableConfig({"configurable": {"thread_id": "1"}})
+        config = RunnableConfig(
+            {"configurable": {"thread_id": workflow.info().workflow_id}}
+        )
 
         # First invocation: runs generate_draft, then pauses at interrupt()
         result = await g.ainvoke(user_message, config, version="v2")
@@ -72,4 +74,7 @@ class ChatbotWorkflow:
         await workflow.wait_condition(lambda: self._human_input is not None)
 
         # Resume the graph with the human's feedback
-        return await g.ainvoke(Command(resume=self._human_input), config)
+        resumed = await g.ainvoke(
+            Command(resume=self._human_input), config, version="v2"
+        )
+        return resumed.value

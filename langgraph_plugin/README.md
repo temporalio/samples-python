@@ -11,6 +11,7 @@ Samples are organized by API style:
 
 | Sample | Graph API | Functional API | Description |
 |--------|:---------:|:--------------:|-------------|
+| **Hello World** | [graph_api/hello_world](graph_api/hello_world) | [functional_api/hello_world](functional_api/hello_world) | Minimal sample -- single node/task that processes a query string. Start here. |
 | **Human-in-the-loop** | [graph_api/human_in_the_loop](graph_api/human_in_the_loop) | [functional_api/human_in_the_loop](functional_api/human_in_the_loop) | Chatbot that uses `interrupt()` to pause for human approval, Temporal signals to receive feedback, and queries to expose the pending draft. |
 | **Continue-as-new** | [graph_api/continue_as_new](graph_api/continue_as_new) | [functional_api/continue_as_new](functional_api/continue_as_new) | Multi-stage data pipeline that uses `continue-as-new` with task result caching so previously-completed stages are not re-executed. |
 | **ReAct Agent** | [graph_api/react_agent](graph_api/react_agent) | [functional_api/react_agent](functional_api/react_agent) | Tool-calling agent loop. Graph API uses conditional edges; Functional API uses a `while` loop. |

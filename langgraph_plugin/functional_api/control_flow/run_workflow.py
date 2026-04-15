@@ -1,6 +1,7 @@
 """Start the control flow pipeline workflow (Functional API)."""
 
 import asyncio
+import os
 
 from temporalio.client import Client
 
@@ -10,7 +11,7 @@ from langgraph_plugin.functional_api.control_flow.workflow import (
 
 
 async def main() -> None:
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
 
     items = [
         "Fix login bug",

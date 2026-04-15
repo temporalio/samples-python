@@ -1,7 +1,4 @@
-"""Worker for the ReAct agent (Functional API)."""
-
-import asyncio
-import os
+import uuid
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
@@ -15,23 +12,26 @@ from langgraph_plugin.functional_api.react_agent.workflow import (
 )
 
 
-async def main() -> None:
-    client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
+async def test_functional_react_agent(client: Client) -> None:
+    task_queue = f"functional-react-agent-test-{uuid.uuid4()}"
     plugin = LangGraphPlugin(
         entrypoints={"react-agent": react_agent_entrypoint},
         tasks=all_tasks,
         activity_options=activity_options,
     )
 
-    worker = Worker(
+    async with Worker(
         client,
-        task_queue="langgraph-react-agent-functional",
+        task_queue=task_queue,
         workflows=[ReactAgentFunctionalWorkflow],
         plugins=[plugin],
-    )
-    print("Worker started. Ctrl+C to exit.")
-    await worker.run()
+    ):
+        result = await client.execute_workflow(
+            ReactAgentFunctionalWorkflow.run,
+            "Tell me about San Francisco",
+            id=f"functional-react-agent-{uuid.uuid4()}",
+            task_queue=task_queue,
+        )
 
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    assert "San Francisco" in result["answer"]
+    assert result["steps"] == 2  # two tool calls

@@ -1,4 +1,4 @@
-"""Worker for the control flow pipeline (Functional API)."""
+"""Worker for the hello world sample (Functional API)."""
 
 import asyncio
 import os
@@ -7,26 +7,26 @@ from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
-from langgraph_plugin.functional_api.control_flow.workflow import (
-    ControlFlowWorkflow,
+from langgraph_plugin.functional_api.hello_world.workflow import (
+    HelloWorldFunctionalWorkflow,
     activity_options,
     all_tasks,
-    control_flow_pipeline,
+    hello_entrypoint,
 )
 
 
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
     plugin = LangGraphPlugin(
-        entrypoints={"control_flow": control_flow_pipeline},
+        entrypoints={"hello-world": hello_entrypoint},
         tasks=all_tasks,
         activity_options=activity_options,
     )
 
     worker = Worker(
         client,
-        task_queue="langgraph-control-flow",
-        workflows=[ControlFlowWorkflow],
+        task_queue="langgraph-hello-world-functional",
+        workflows=[HelloWorldFunctionalWorkflow],
         plugins=[plugin],
     )
     print("Worker started. Ctrl+C to exit.")

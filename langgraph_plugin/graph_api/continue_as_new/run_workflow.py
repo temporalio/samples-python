@@ -1,6 +1,7 @@
 """Start the continue-as-new pipeline workflow (Graph API)."""
 
 import asyncio
+import os
 from datetime import timedelta
 
 from temporalio.client import Client
@@ -12,7 +13,7 @@ from langgraph_plugin.graph_api.continue_as_new.workflow import (
 
 
 async def main() -> None:
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
 
     result = await client.execute_workflow(
         PipelineWorkflow.run,

@@ -48,9 +48,6 @@ openai-agents = [
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=2.13.0"]
 trio-async = ["trio>=0.28.0,<0.29", "trio-asyncio>=0.15.0,<0.16"]
-lambda-worker = [
-    "temporalio[lambda-worker-otel]",
-]
 cloud-export-to-parquet = [
     "pandas>=2.2.2,<3 ; python_version >= '3.10' and python_version < '4.0'",
     "numpy>=1.26.0,<2 ; python_version >= '3.10' and python_version < '3.13'",
@@ -63,9 +60,11 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]
+exclude = ["lambda_worker/**"]
 
 [tool.hatch.build.targets.wheel]
 include = ["./**/*.py"]
+exclude = ["lambda_worker/**"]
 packages = [
     "activity_worker",
     "bedrock",
@@ -127,10 +126,12 @@ log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(linen
 
 [tool.ruff]
 target-version = "py310"
+extend-exclude = ["lambda_worker"]
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
+exclude = ["lambda_worker/"]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

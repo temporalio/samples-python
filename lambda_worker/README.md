@@ -81,6 +81,8 @@ and uploads to AWS Lambda.
 Use the starter program to execute a Workflow on the Lambda worker, using
 the same config file the Lambda uses for connecting to the server:
 
+From inside this directory:
+
 ```bash
-TEMPORAL_CONFIG_FILE=temporal.toml uv run python lambda_worker/starter.py
+TEMPORAL_CONFIG_FILE=temporal.toml uv run python starter.py
 ```

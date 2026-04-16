@@ -3,7 +3,7 @@ import asyncio
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from lambda_worker.workflows import TASK_QUEUE, SampleWorkflow
+from workflows import TASK_QUEUE, SampleWorkflow
 
 
 async def main() -> None:

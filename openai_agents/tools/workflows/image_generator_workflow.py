@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from agents import Agent, ImageGenerationTool, Runner
+from openai.types.responses.response_output_item import ImageGenerationCall
 from temporalio import workflow
 
 
@@ -34,7 +35,7 @@ class ImageGeneratorWorkflow:
         for item in result.new_items:
             if (
                 item.type == "tool_call_item"
-                and item.raw_item.type == "image_generation_call"
+                and isinstance(item.raw_item, ImageGenerationCall)
                 and (img_result := item.raw_item.result)
             ):
                 image_data = img_result

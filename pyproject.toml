@@ -39,6 +39,11 @@ langchain = [
     "tqdm>=4.62.0,<5",
     "uvicorn[standard]>=0.31.0,<0.32.0",
 ]
+langsmith-tracing = [
+    "openai>=1.4.0,<2",
+    "langsmith>=0.7.0",
+    "temporalio[pydantic]",
+]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
     "temporalio[opentelemetry]",
@@ -80,6 +85,7 @@ packages = [
     "gevent_async",
     "hello",
     "langchain",
+    "langsmith_tracing",
     "message_passing",
     "nexus",
     "open_telemetry",
@@ -125,6 +131,14 @@ asyncio_mode = "auto"
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+
+[tool.uv]
+conflicts = [
+    [
+        { group = "langchain" },
+        { group = "langsmith-tracing" },
+    ],
+]
 
 [tool.ruff]
 target-version = "py310"

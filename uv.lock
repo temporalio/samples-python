@@ -3812,7 +3812,13 @@ trio-async = [
 [package.metadata]
 requires-dist = [
     { name = "protobuf", specifier = ">=5.29.6,<6" },
+<<<<<<< HEAD
     { name = "temporalio", specifier = ">=1.28.0,<2" },
+||||||| parent of 3c655c0 (Add SANO sample)
+    { name = "temporalio", specifier = ">=1.27.2,<2" },
+=======
+    { name = "temporalio", git = "https://github.com/temporalio/sdk-python?branch=amazzeo%2Fsano" },
+>>>>>>> 3c655c0 (Add SANO sample)
 ]
 
 [package.metadata.requires-dev]
@@ -3856,22 +3862,40 @@ langgraph = [
     { name = "langchain", specifier = ">=0.3.0" },
     { name = "langchain-anthropic", specifier = ">=0.3.0" },
     { name = "langgraph", specifier = ">=1.1.3" },
+<<<<<<< HEAD
     { name = "temporalio", extras = ["langgraph", "langsmith"], specifier = ">=1.28.0" },
+||||||| parent of 3c655c0 (Add SANO sample)
+    { name = "temporalio", extras = ["langgraph", "langsmith"], specifier = ">=1.27.0" },
+=======
+    { name = "temporalio", extras = ["langgraph", "langsmith"], git = "https://github.com/temporalio/sdk-python?branch=amazzeo%2Fsano" },
+>>>>>>> 3c655c0 (Add SANO sample)
 ]
 langsmith-tracing = [
     { name = "langsmith", specifier = ">=0.7.0" },
     { name = "openai", specifier = ">=1.4.0" },
+<<<<<<< HEAD
     { name = "temporalio", extras = ["pydantic", "langsmith"], specifier = ">=1.28.0" },
+||||||| parent of 3c655c0 (Add SANO sample)
+    { name = "temporalio", extras = ["pydantic", "langsmith"], specifier = ">=1.27.0" },
+=======
+    { name = "temporalio", extras = ["pydantic", "langsmith"], git = "https://github.com/temporalio/sdk-python?branch=amazzeo%2Fsano" },
+>>>>>>> 3c655c0 (Add SANO sample)
 ]
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "temporalio", extras = ["opentelemetry"] },
+    { name = "temporalio", extras = ["opentelemetry"], git = "https://github.com/temporalio/sdk-python?branch=amazzeo%2Fsano" },
 ]
 openai-agents = [
     { name = "openai-agents", extras = ["litellm"], specifier = ">=0.14.1" },
     { name = "requests", specifier = ">=2.32.0,<3" },
+<<<<<<< HEAD
     { name = "temporalio", extras = ["openai-agents", "opentelemetry"], specifier = ">=1.28.0" },
+||||||| parent of 3c655c0 (Add SANO sample)
+    { name = "temporalio", extras = ["openai-agents", "opentelemetry"], specifier = ">=1.27.0" },
+=======
+    { name = "temporalio", extras = ["openai-agents", "opentelemetry"], git = "https://github.com/temporalio/sdk-python?branch=amazzeo%2Fsano" },
+>>>>>>> 3c655c0 (Add SANO sample)
 ]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]
 sentry = [{ name = "sentry-sdk", specifier = ">=2.13.0" }]

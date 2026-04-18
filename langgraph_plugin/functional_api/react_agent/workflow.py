@@ -10,7 +10,6 @@ from datetime import timedelta
 from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint
 
 
 @task
@@ -81,4 +80,4 @@ activity_options = {
 class ReactAgentFunctionalWorkflow:
     @workflow.run
     async def run(self, query: str) -> dict:
-        return await entrypoint("react-agent").ainvoke(query)
+        return await react_agent_entrypoint.ainvoke(query)

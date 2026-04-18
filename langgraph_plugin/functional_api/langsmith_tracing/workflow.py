@@ -13,7 +13,6 @@ from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from langsmith import traceable
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint
 
 from langchain.chat_models import init_chat_model
 
@@ -45,4 +44,4 @@ activity_options = {
 class ChatFunctionalWorkflow:
     @workflow.run
     async def run(self, message: str) -> dict:
-        return await entrypoint("chat").ainvoke(message)
+        return await chat_entrypoint.ainvoke(message)

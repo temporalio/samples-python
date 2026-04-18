@@ -8,14 +8,12 @@ from langgraph_plugin.functional_api.control_flow.workflow import (
     ControlFlowWorkflow,
     activity_options,
     all_tasks,
-    control_flow_pipeline,
 )
 
 
 async def test_functional_control_flow(client: Client) -> None:
     task_queue = f"functional-control-flow-test-{uuid.uuid4()}"
     plugin = LangGraphPlugin(
-        entrypoints={"control_flow": control_flow_pipeline},
         tasks=all_tasks,
         activity_options=activity_options,
     )

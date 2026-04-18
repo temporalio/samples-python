@@ -11,14 +11,12 @@ from langgraph_plugin.functional_api.human_in_the_loop.workflow import (
     ChatbotFunctionalWorkflow,
     activity_options,
     all_tasks,
-    chatbot_entrypoint,
 )
 
 
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
     plugin = LangGraphPlugin(
-        entrypoints={"chatbot": chatbot_entrypoint},
         tasks=all_tasks,
         activity_options=activity_options,
     )

@@ -38,6 +38,6 @@ Traces will appear in your [LangSmith](https://smith.langchain.com/) dashboard.
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | `@traceable` chat node, `build_graph()`, and `ChatWorkflow` |
+| `workflow.py` | `@traceable` chat node, graph definition, and `ChatWorkflow` |
 | `run_worker.py` | Creates client with `LangSmithPlugin`, worker with `LangGraphPlugin` |
 | `run_workflow.py` | Creates client with `LangSmithPlugin`, executes workflow |

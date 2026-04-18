@@ -12,7 +12,6 @@ from datetime import timedelta
 from langgraph.graph import START, StateGraph
 from langsmith import traceable
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph
 
 from langchain.chat_models import init_chat_model
 
@@ -24,20 +23,17 @@ async def chat(message: str) -> str:
     return response.content
 
 
-def build_graph() -> StateGraph:
-    """Construct a single-node chat graph."""
-    g = StateGraph(str)
-    g.add_node(
-        "chat",
-        chat,
-        metadata={"start_to_close_timeout": timedelta(seconds=30)},
-    )
-    g.add_edge(START, "chat")
-    return g
+chat_graph = StateGraph(str)
+chat_graph.add_node(
+    "chat",
+    chat,
+    metadata={"start_to_close_timeout": timedelta(seconds=30)},
+)
+chat_graph.add_edge(START, "chat")
 
 
 @workflow.defn
 class ChatWorkflow:
     @workflow.run
     async def run(self, message: str) -> str:
-        return await graph("chat").compile().ainvoke(message)
+        return await chat_graph.compile().ainvoke(message)

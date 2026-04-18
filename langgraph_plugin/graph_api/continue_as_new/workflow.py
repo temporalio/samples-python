@@ -11,7 +11,7 @@ from typing import Any
 
 from langgraph.graph import START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import get_cache, graph
+from temporalio.contrib.langgraph import get_cache, set_cache
 
 
 async def extract(data: int) -> int:
@@ -29,17 +29,15 @@ async def load(data: int) -> int:
     return data * 3
 
 
-def build_graph() -> StateGraph:
-    """Construct the pipeline graph: extract -> transform -> load."""
-    timeout = {"start_to_close_timeout": timedelta(seconds=30)}
-    g = StateGraph(int)
-    g.add_node("extract", extract, metadata=timeout)
-    g.add_node("transform", transform, metadata=timeout)
-    g.add_node("load", load, metadata=timeout)
-    g.add_edge(START, "extract")
-    g.add_edge("extract", "transform")
-    g.add_edge("transform", "load")
-    return g
+timeout = {"start_to_close_timeout": timedelta(seconds=30)}
+
+pipeline_graph = StateGraph(int)
+pipeline_graph.add_node("extract", extract, metadata=timeout)
+pipeline_graph.add_node("transform", transform, metadata=timeout)
+pipeline_graph.add_node("load", load, metadata=timeout)
+pipeline_graph.add_edge(START, "extract")
+pipeline_graph.add_edge("extract", "transform")
+pipeline_graph.add_edge("transform", "load")
 
 
 @dataclass
@@ -62,8 +60,8 @@ class PipelineWorkflow:
 
     @workflow.run
     async def run(self, input_data: PipelineInput) -> int:
-        g = graph("pipeline", cache=input_data.cache).compile()
-        result = await g.ainvoke(input_data.data)
+        set_cache(input_data.cache)
+        result = await pipeline_graph.compile().ainvoke(input_data.data)
 
         if input_data.phase < 3:
             workflow.continue_as_new(

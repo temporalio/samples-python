@@ -37,6 +37,6 @@ uv run langgraph_plugin/graph_api/react_agent/run_workflow.py
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | `AgentState`, node functions, `should_continue` router, `build_graph()`, and `ReactAgentWorkflow` |
+| `workflow.py` | `AgentState`, node functions, `should_continue` router, graph definition, and `ReactAgentWorkflow` |
 | `run_worker.py` | Builds graph, registers with `LangGraphPlugin`, starts worker |
 | `run_workflow.py` | Executes the agent workflow and prints the answer |

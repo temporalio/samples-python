@@ -15,7 +15,6 @@ from langgraph_plugin.functional_api.langsmith_tracing.workflow import (
     ChatFunctionalWorkflow,
     activity_options,
     all_tasks,
-    chat_entrypoint,
 )
 
 
@@ -31,7 +30,6 @@ async def main() -> None:
         workflows=[ChatFunctionalWorkflow],
         plugins=[
             LangGraphPlugin(
-                entrypoints={"chat": chat_entrypoint},
                 tasks=all_tasks,
                 activity_options=activity_options,
             )

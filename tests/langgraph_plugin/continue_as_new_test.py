@@ -8,14 +8,14 @@ from temporalio.worker import Worker
 from langgraph_plugin.graph_api.continue_as_new.workflow import (
     PipelineInput,
     PipelineWorkflow,
-    build_graph,
+    pipeline_graph,
 )
 
 
 async def test_continue_as_new_graph_api(client: Client) -> None:
     """Input 10: 10*2=20 -> 20+50=70 -> 70*3=210."""
     task_queue = f"continue-as-new-test-{uuid.uuid4()}"
-    plugin = LangGraphPlugin(graphs={"pipeline": build_graph()})
+    plugin = LangGraphPlugin(graphs=[pipeline_graph])
 
     async with Worker(
         client,

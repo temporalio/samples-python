@@ -32,6 +32,6 @@ uv run langgraph_plugin/graph_api/continue_as_new/run_workflow.py
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | Pipeline node functions, `build_graph()`, `PipelineInput`, and `PipelineWorkflow` |
+| `workflow.py` | Pipeline node functions, graph definition, `PipelineInput`, and `PipelineWorkflow` |
 | `run_worker.py` | Builds graph, registers with `LangGraphPlugin`, starts worker |
 | `run_workflow.py` | Executes the pipeline workflow and prints the result |

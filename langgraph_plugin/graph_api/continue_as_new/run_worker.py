@@ -9,13 +9,13 @@ from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.continue_as_new.workflow import (
     PipelineWorkflow,
-    build_graph,
+    pipeline_graph,
 )
 
 
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
-    plugin = LangGraphPlugin(graphs={"pipeline": build_graph()})
+    plugin = LangGraphPlugin(graphs=[pipeline_graph])
 
     worker = Worker(
         client,

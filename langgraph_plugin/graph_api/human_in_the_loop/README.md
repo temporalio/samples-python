@@ -33,6 +33,6 @@ uv run langgraph_plugin/graph_api/human_in_the_loop/run_workflow.py
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | Graph node functions, `build_graph()`, and `ChatbotWorkflow` definition |
+| `workflow.py` | Graph node functions, graph definition, and `ChatbotWorkflow` definition |
 | `run_worker.py` | Builds graph, registers with `LangGraphPlugin`, starts worker |
 | `run_workflow.py` | Starts workflow, polls draft via query, sends approval via signal |

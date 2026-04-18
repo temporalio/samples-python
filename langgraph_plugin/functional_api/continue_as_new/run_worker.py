@@ -11,14 +11,12 @@ from langgraph_plugin.functional_api.continue_as_new.workflow import (
     PipelineFunctionalWorkflow,
     activity_options,
     all_tasks,
-    pipeline_entrypoint,
 )
 
 
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
     plugin = LangGraphPlugin(
-        entrypoints={"pipeline": pipeline_entrypoint},
         tasks=all_tasks,
         activity_options=activity_options,
     )

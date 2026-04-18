@@ -10,7 +10,7 @@ from typing import Any
 from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint, get_cache
+from temporalio.contrib.langgraph import get_cache, set_cache
 
 
 @task
@@ -65,9 +65,8 @@ class PipelineFunctionalWorkflow:
 
     @workflow.run
     async def run(self, input_data: PipelineInput) -> dict[str, Any]:
-        result = await entrypoint("pipeline", cache=input_data.cache).ainvoke(
-            input_data.data
-        )
+        set_cache(input_data.cache)
+        result = await pipeline_entrypoint.ainvoke(input_data.data)
 
         if input_data.phase < 3:
             workflow.continue_as_new(

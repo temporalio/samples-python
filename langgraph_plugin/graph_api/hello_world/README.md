@@ -24,6 +24,6 @@ uv run langgraph_plugin/graph_api/hello_world/run_workflow.py
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | `process_query` node, `build_graph()`, and `HelloWorldWorkflow` |
+| `workflow.py` | `process_query` node, graph definition and `HelloWorldWorkflow` |
 | `run_worker.py` | Registers graph with `LangGraphPlugin`, starts worker |
 | `run_workflow.py` | Executes the workflow and prints the result |

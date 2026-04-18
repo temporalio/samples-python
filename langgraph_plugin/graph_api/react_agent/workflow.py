@@ -14,7 +14,6 @@ from typing import Annotated, Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph
 
 
 class AgentState(TypedDict):
@@ -82,16 +81,14 @@ async def should_continue(state: AgentState) -> str:
     return END
 
 
-def build_graph() -> StateGraph:
-    """Construct the ReAct agent graph with conditional edges."""
-    timeout = {"start_to_close_timeout": timedelta(seconds=30)}
-    g = StateGraph(AgentState)
-    g.add_node("agent", agent, metadata=timeout)
-    g.add_node("tools", tools, metadata=timeout)
-    g.add_edge(START, "agent")
-    g.add_conditional_edges("agent", should_continue)
-    g.add_edge("tools", "agent")
-    return g
+timeout = {"start_to_close_timeout": timedelta(seconds=30)}
+
+agent_graph = StateGraph(AgentState)
+agent_graph.add_node("agent", agent, metadata=timeout)
+agent_graph.add_node("tools", tools, metadata=timeout)
+agent_graph.add_edge(START, "agent")
+agent_graph.add_conditional_edges("agent", should_continue)
+agent_graph.add_edge("tools", "agent")
 
 
 @workflow.defn
@@ -103,5 +100,5 @@ class ReactAgentWorkflow:
             "messages": [],
             "final_answer": "",
         }
-        result = await graph("react-agent").compile().ainvoke(initial_state)
+        result = await agent_graph.compile().ainvoke(initial_state)
         return result["final_answer"]

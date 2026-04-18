@@ -11,7 +11,6 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
 from langgraph.types import Command, interrupt
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph
 
 
 async def generate_draft(message: str) -> str:
@@ -30,15 +29,13 @@ async def human_review(draft: str) -> str:
     return f"[Revised] {draft} (incorporating feedback: {feedback})"
 
 
-def build_graph() -> StateGraph:
-    """Construct the chatbot graph: generate_draft -> human_review."""
-    timeout = {"start_to_close_timeout": timedelta(seconds=30)}
-    g = StateGraph(str)
-    g.add_node("generate_draft", generate_draft, metadata=timeout)
-    g.add_node("human_review", human_review, metadata=timeout)
-    g.add_edge(START, "generate_draft")
-    g.add_edge("generate_draft", "human_review")
-    return g
+timeout = {"start_to_close_timeout": timedelta(seconds=30)}
+
+chatbot_graph = StateGraph(str)
+chatbot_graph.add_node("generate_draft", generate_draft, metadata=timeout)
+chatbot_graph.add_node("human_review", human_review, metadata=timeout)
+chatbot_graph.add_edge(START, "generate_draft")
+chatbot_graph.add_edge("generate_draft", "human_review")
 
 
 @workflow.defn
@@ -59,7 +56,7 @@ class ChatbotWorkflow:
 
     @workflow.run
     async def run(self, user_message: str) -> str:
-        g = graph("chatbot").compile(checkpointer=InMemorySaver())
+        g = chatbot_graph.compile(checkpointer=InMemorySaver())
         config = RunnableConfig(
             {"configurable": {"thread_id": workflow.info().workflow_id}}
         )

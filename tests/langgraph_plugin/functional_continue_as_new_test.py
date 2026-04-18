@@ -10,7 +10,6 @@ from langgraph_plugin.functional_api.continue_as_new.workflow import (
     PipelineInput,
     activity_options,
     all_tasks,
-    pipeline_entrypoint,
 )
 
 
@@ -18,7 +17,6 @@ async def test_functional_continue_as_new(client: Client) -> None:
     """Input 10: 10*2=20 -> 20+50=70 -> 70*3=210."""
     task_queue = f"functional-continue-test-{uuid.uuid4()}"
     plugin = LangGraphPlugin(
-        entrypoints={"pipeline": pipeline_entrypoint},
         tasks=all_tasks,
         activity_options=activity_options,
     )

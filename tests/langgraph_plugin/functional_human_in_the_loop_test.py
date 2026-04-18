@@ -9,14 +9,12 @@ from langgraph_plugin.functional_api.human_in_the_loop.workflow import (
     ChatbotFunctionalWorkflow,
     activity_options,
     all_tasks,
-    chatbot_entrypoint,
 )
 
 
 async def test_functional_human_in_the_loop_approve(client: Client) -> None:
     task_queue = f"functional-hitl-test-{uuid.uuid4()}"
     plugin = LangGraphPlugin(
-        entrypoints={"chatbot": chatbot_entrypoint},
         tasks=all_tasks,
         activity_options=activity_options,
     )

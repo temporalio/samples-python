@@ -11,14 +11,12 @@ from langgraph_plugin.functional_api.react_agent.workflow import (
     ReactAgentFunctionalWorkflow,
     activity_options,
     all_tasks,
-    react_agent_entrypoint,
 )
 
 
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
     plugin = LangGraphPlugin(
-        entrypoints={"react-agent": react_agent_entrypoint},
         tasks=all_tasks,
         activity_options=activity_options,
     )

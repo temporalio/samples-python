@@ -8,14 +8,12 @@ from langgraph_plugin.functional_api.react_agent.workflow import (
     ReactAgentFunctionalWorkflow,
     activity_options,
     all_tasks,
-    react_agent_entrypoint,
 )
 
 
 async def test_functional_react_agent(client: Client) -> None:
     task_queue = f"functional-react-agent-test-{uuid.uuid4()}"
     plugin = LangGraphPlugin(
-        entrypoints={"react-agent": react_agent_entrypoint},
         tasks=all_tasks,
         activity_options=activity_options,
     )

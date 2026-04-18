@@ -9,13 +9,13 @@ from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.react_agent.workflow import (
     ReactAgentWorkflow,
-    build_graph,
+    agent_graph,
 )
 
 
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
-    plugin = LangGraphPlugin(graphs={"react-agent": build_graph()})
+    plugin = LangGraphPlugin(graphs=[agent_graph])
 
     worker = Worker(
         client,

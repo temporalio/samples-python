@@ -11,7 +11,6 @@ from datetime import timedelta
 from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint
 
 
 @task
@@ -93,4 +92,4 @@ activity_options = {
 class ControlFlowWorkflow:
     @workflow.run
     async def run(self, items: list[str]) -> dict:
-        return await entrypoint("control_flow").ainvoke(items)
+        return await control_flow_pipeline.ainvoke(items)

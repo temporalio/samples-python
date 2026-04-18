@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Sequence
 
-from agents import RunConfig, Runner, RunResult, custom_span, trace
+from agents import RunConfig, Runner, RunResult, RunResultStreaming, custom_span, trace
 from temporalio import workflow
 
 from openai_agents.financial_research_agent.agents.financials_agent import (
@@ -26,7 +26,7 @@ from openai_agents.financial_research_agent.agents.writer_agent import (
 )
 
 
-async def _summary_extractor(run_result: RunResult) -> str:
+async def _summary_extractor(run_result: RunResult | RunResultStreaming) -> str:
     """Custom output extractor for sub-agents that return an AnalysisSummary."""
     # The financial/risk analyst agents emit an AnalysisSummary with a `summary` field.
     # We want the tool call to return just that summary text so the writer can drop it inline.

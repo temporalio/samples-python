@@ -1,6 +1,6 @@
 """Chatbot activities with LangSmith tracing."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from langsmith import traceable
 from langsmith.wrappers import wrap_openai
@@ -13,12 +13,17 @@ from temporalio import activity
 class OpenAIRequest:
     model: str
     input: str | list
-    instructions: str = "You are a helpful assistant with note-taking abilities. Use save_note to remember things and read_note to recall them."
+    instructions: str = (
+        "You are a helpful assistant with note-taking abilities. "
+        "Use save_note to remember things and read_note to recall them."
+    )
     tools: list | None = None
     previous_response_id: str | None = None
 
 
-@traceable(name="Call OpenAI")
+# wrap_openai automatically traces LLM calls in LangSmith — capturing
+# model parameters, token usage, and latency without extra code.
+@traceable(name="Call OpenAI", run_type="llm")
 @activity.defn
 async def call_openai(request: OpenAIRequest) -> Response:
     """Call OpenAI Responses API. Retries handled by Temporal."""
@@ -36,6 +41,8 @@ async def call_openai(request: OpenAIRequest) -> Response:
     return await client.responses.create(**kwargs)
 
 
+# run_type="tool" tells LangSmith this is a tool execution, which renders
+# distinctly in the trace UI alongside LLM calls and chains.
 @traceable(name="Save Note", run_type="tool")
 @activity.defn
 async def save_note(name: str, content: str) -> str:

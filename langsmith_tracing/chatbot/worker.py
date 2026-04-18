@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import sys
 
 from temporalio.client import Client
 from temporalio.contrib.langsmith import LangSmithPlugin
@@ -18,6 +19,8 @@ interrupt_event = asyncio.Event()
 async def main():
     logging.basicConfig(level=logging.INFO)
 
+    add_temporal_runs = "--temporal-runs" in sys.argv
+
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
 
@@ -26,7 +29,10 @@ async def main():
         data_converter=pydantic_data_converter,
     )
 
-    plugin = LangSmithPlugin(project_name="langsmith-chatbot")
+    plugin = LangSmithPlugin(
+        project_name="langsmith-chatbot",
+        add_temporal_runs=add_temporal_runs,
+    )
 
     async with Worker(
         client,
@@ -36,7 +42,8 @@ async def main():
         plugins=[plugin],
         max_cached_workflows=0,
     ):
-        print("Worker started, ctrl+c to exit")
+        label = "with" if add_temporal_runs else "without"
+        print(f"Worker started ({label} Temporal runs in traces), ctrl+c to exit")
         await interrupt_event.wait()
         print("Shutting down")
 

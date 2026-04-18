@@ -1,5 +1,6 @@
 import uuid
 
+import pytest
 from openai.types.responses import Response
 from openai.types.responses.response_output_message import ResponseOutputMessage
 from openai.types.responses.response_output_text import ResponseOutputText
@@ -8,8 +9,20 @@ from temporalio.client import Client
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
-from langsmith_tracing.basic.activities import OpenAIRequest, call_openai
+try:
+    from temporalio.contrib.langsmith import LangSmithPlugin
+except ImportError:
+    LangSmithPlugin = None  # type: ignore[assignment,misc]
+
+from langsmith_tracing.basic.activities import OpenAIRequest
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
+
+# The workflow uses @traceable which requires the LangSmithPlugin's
+# aio_to_thread patch to work inside the workflow sandbox.
+pytestmark = pytest.mark.skipif(
+    LangSmithPlugin is None,
+    reason="temporalio.contrib.langsmith not available",
+)
 
 
 def _make_text_response(text: str) -> Response:
@@ -53,6 +66,7 @@ async def test_basic_workflow(client: Client, env: WorkflowEnvironment):
         task_queue="test-langsmith-basic",
         workflows=[BasicLLMWorkflow],
         activities=[mock_call_openai],
+        plugins=[LangSmithPlugin()],
     ):
         result = await client.execute_workflow(
             BasicLLMWorkflow.run,

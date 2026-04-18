@@ -1,4 +1,4 @@
-"""Conversational chatbot workflow with tool loop."""
+"""Conversational chatbot workflow with tool loop and LangSmith tracing."""
 
 import json
 from datetime import timedelta
@@ -79,10 +79,14 @@ class ChatbotWorkflow:
 
     @workflow.run
     async def run(self) -> str:
+        # Dynamic trace name — each session gets a unique, timestamped span
+        # in LangSmith so you can distinguish between sessions.
         now = workflow.now().strftime("%b %d %H:%M")
         return await traceable(
             name=f"Session {now}",
             run_type="chain",
+            metadata={"workflow_id": workflow.info().workflow_id},
+            tags=["chatbot-session"],
         )(self._session)()
 
     async def _session(self) -> str:
@@ -99,7 +103,20 @@ class ChatbotWorkflow:
         return "Session ended."
 
     async def _query_openai(self, message: str | None) -> str:
-        @traceable(name=f"Request: {(message or '')[:60]}", run_type="chain")
+        # Each user message gets its own named span. In LangSmith you'll see:
+        #   Session Apr 17 10:30
+        #   ├── Request: What's the capital of France?
+        #   │   └── Call OpenAI (activity)
+        #   ├── Request: Save that as a note called "paris"
+        #   │   ├── Call OpenAI (activity) → function_call: save_note
+        #   │   ├── Save Note (activity)
+        #   │   └── Call OpenAI (activity) → text response
+        #   └── ...
+        @traceable(
+            name=f"Request: {(message or '')[:60]}",
+            run_type="chain",
+            tags=["user-message"],
+        )
         async def _traced():
             input_for_next: str | list = message or ""
             while True:
@@ -137,6 +154,8 @@ class ChatbotWorkflow:
                             }
                         )
                     elif item.name == "read_note":
+                        # read_note is a pure workflow state lookup — no
+                        # activity needed, no I/O, just a dict.get().
                         content = self._notes.get(args["name"], "Note not found.")
                         tool_results.append(
                             {

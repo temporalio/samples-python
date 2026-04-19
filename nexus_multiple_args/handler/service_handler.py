@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import uuid
-
 import nexusrpc
 from temporalio import nexus
 
@@ -32,7 +30,7 @@ class MyNexusServiceHandler:
                 input.name,  # First argument: name
                 input.language,  # Second argument: language
             ],
-            id=str(uuid.uuid4()),
+            id=f"hello-{input.name}-in-{input.language}",
         )
 
 

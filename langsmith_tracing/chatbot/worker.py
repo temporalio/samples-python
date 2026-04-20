@@ -10,7 +10,7 @@ from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from langsmith_tracing.chatbot.activities import call_openai, save_note
+from langsmith_tracing.chatbot.activities import call_openai, read_note, save_note
 from langsmith_tracing.chatbot.workflows import ChatbotWorkflow
 
 interrupt_event = asyncio.Event()
@@ -38,7 +38,7 @@ async def main():
         client,
         task_queue="langsmith-chatbot-task-queue",
         workflows=[ChatbotWorkflow],
-        activities=[call_openai, save_note],
+        activities=[call_openai, save_note, read_note],
         plugins=[plugin],
         max_cached_workflows=0,
     ):

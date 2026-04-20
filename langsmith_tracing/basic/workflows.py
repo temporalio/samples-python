@@ -15,11 +15,11 @@ RETRY = RetryPolicy(initial_interval=timedelta(seconds=2), maximum_attempts=3)
 
 @workflow.defn
 class BasicLLMWorkflow:
+    # Do not put @traceable directly on the @workflow.run method — it would
+    # violate replay safety. Instead, wrap an inner function so that
+    # Temporal's replay mechanism can invoke `run()` without side effects.
     @workflow.run
     async def run(self, prompt: str) -> str:
-        # @traceable creates a named span in LangSmith. Inside a workflow,
-        # it nests under the workflow's trace (when add_temporal_runs=True)
-        # or stands alone as a root span (when add_temporal_runs=False).
         @traceable(
             name=f"Ask: {prompt[:60]}",
             run_type="chain",

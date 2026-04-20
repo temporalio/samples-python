@@ -16,7 +16,9 @@ class OpenAIRequest:
     instructions: str = "You are a helpful assistant."
 
 
-@traceable(name="Call OpenAI")
+# @traceable creates a named span in LangSmith. wrap_openai further enriches
+# the trace with model parameters, token counts, and latency automatically.
+@traceable(name="Call OpenAI", run_type="llm")
 @activity.defn
 async def call_openai(request: OpenAIRequest) -> Response:
     """Call OpenAI Responses API. Retries handled by Temporal."""

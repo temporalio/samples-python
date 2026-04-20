@@ -10,8 +10,10 @@ with workflow.unsafe.imports_passed_through():
     from langsmith import traceable
 
     from langsmith_tracing.chatbot.activities import (
+        NoteRequest,
         OpenAIRequest,
         call_openai,
+        read_note,
         save_note,
     )
 
@@ -77,10 +79,10 @@ class ChatbotWorkflow:
     def notes(self) -> dict[str, str]:
         return dict(self._notes)
 
+    # Do not put @traceable directly on the @workflow.run method — it would
+    # violate replay safety. Instead, wrap an inner function.
     @workflow.run
     async def run(self) -> str:
-        # Dynamic trace name — each session gets a unique, timestamped span
-        # in LangSmith so you can distinguish between sessions.
         now = workflow.now().strftime("%b %d %H:%M")
         return await traceable(
             name=f"Session {now}",
@@ -103,15 +105,6 @@ class ChatbotWorkflow:
         return "Session ended."
 
     async def _query_openai(self, message: str | None) -> str:
-        # Each user message gets its own named span. In LangSmith you'll see:
-        #   Session Apr 17 10:30
-        #   ├── Request: What's the capital of France?
-        #   │   └── Call OpenAI (activity)
-        #   ├── Request: Save that as a note called "paris"
-        #   │   ├── Call OpenAI (activity) → function_call: save_note
-        #   │   ├── Save Note (activity)
-        #   │   └── Call OpenAI (activity) → text response
-        #   └── ...
         @traceable(
             name=f"Request: {(message or '')[:60]}",
             run_type="chain",
@@ -142,7 +135,7 @@ class ChatbotWorkflow:
                         self._notes[args["name"]] = args["content"]
                         result = await workflow.execute_activity(
                             save_note,
-                            args=[args["name"], args["content"]],
+                            NoteRequest(name=args["name"], content=args["content"]),
                             start_to_close_timeout=timedelta(seconds=10),
                             retry_policy=RETRY,
                         )
@@ -154,14 +147,18 @@ class ChatbotWorkflow:
                             }
                         )
                     elif item.name == "read_note":
-                        # read_note is a pure workflow state lookup — no
-                        # activity needed, no I/O, just a dict.get().
                         content = self._notes.get(args["name"], "Note not found.")
+                        result = await workflow.execute_activity(
+                            read_note,
+                            NoteRequest(name=args["name"], content=content),
+                            start_to_close_timeout=timedelta(seconds=10),
+                            retry_policy=RETRY,
+                        )
                         tool_results.append(
                             {
                                 "type": "function_call_output",
                                 "call_id": item.call_id,
-                                "output": content,
+                                "output": result,
                             }
                         )
 

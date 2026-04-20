@@ -39,7 +39,7 @@ This sample shows three complementary ways LangSmith captures trace data:
 
 By default, `LangSmithPlugin(add_temporal_runs=False)` only propagates LangSmith context so that `@traceable` and `wrap_openai` calls nest correctly.
 
-Set `add_temporal_runs=True` to also create LangSmith runs for Temporal operations (workflow executions, activity executions, signals, etc.), giving full visibility into the orchestration layer. Both examples support a `--temporal-runs` CLI flag to toggle this.
+Set `add_temporal_runs=True` to also create LangSmith runs for Temporal operations (workflow executions, activity executions, signals, etc.), giving full visibility into the orchestration layer. Both examples support a `--add-temporal-runs` CLI flag to toggle this.
 
 ## Further Reading
 

@@ -37,8 +37,6 @@ Chatbot Session a1b2c3d4              (@traceable, client-side)
 └── Turn: What did I save about pa..  (@traceable, client-side per-turn)
 ```
 
-<!-- TODO: Add screenshot of client-side LangSmith trace showing session with nested turns -->
-
 ### Worker-side traces (`add_temporal_runs=False`)
 
 ```
@@ -60,11 +58,9 @@ Session Apr 17 10:30                          (@traceable, workflow)
         └── openai.responses.create           → text response
 ```
 
-<!-- TODO: Add screenshot of worker-side trace showing the tool call loop with save_note and read_note -->
-
 ### Worker-side traces (`add_temporal_runs=True`)
 
-With `--temporal-runs`, Temporal operation spans wrap each `@traceable` span:
+With `--add-temporal-runs`, Temporal operation spans wrap each `@traceable` span:
 
 ```
 RunWorkflow:ChatbotWorkflow                       (automatic, Temporal plugin)
@@ -78,5 +74,3 @@ RunWorkflow:ChatbotWorkflow                       (automatic, Temporal plugin)
             └── Call OpenAI                       (@traceable, activity)
                 └── openai.responses.create       (automatic via wrap_openai)
 ```
-
-<!-- TODO: Add screenshot of worker-side trace with add_temporal_runs=True showing Temporal spans wrapping the tool loop -->

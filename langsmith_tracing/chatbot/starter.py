@@ -16,7 +16,7 @@ from langsmith_tracing.chatbot.workflows import ChatbotWorkflow
 
 
 async def main():
-    add_temporal_runs = "--temporal-runs" in sys.argv
+    add_temporal_runs = "--add-temporal-runs" in sys.argv
 
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")

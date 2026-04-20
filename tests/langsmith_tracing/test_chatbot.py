@@ -21,7 +21,7 @@ pytestmark = pytest.mark.skipif(
     reason="temporalio.contrib.langsmith not available",
 )
 
-from langsmith_tracing.chatbot.activities import NoteRequest, OpenAIRequest
+from langsmith_tracing.chatbot.activities import OpenAIRequest
 from langsmith_tracing.chatbot.workflows import ChatbotWorkflow
 from tests.langsmith_tracing.helpers import make_text_response, poll_last_response
 
@@ -51,6 +51,7 @@ def _make_function_call_response(
 
 
 async def test_chatbot_save_note(client: Client, env: WorkflowEnvironment):
+    """Test save_note tool call loop — save_note runs as a workflow method."""
     call_count = 0
 
     @activity.defn(name="call_openai")
@@ -64,19 +65,11 @@ async def test_chatbot_save_note(client: Client, env: WorkflowEnvironment):
             )
         return make_text_response("Note saved successfully!")
 
-    @activity.defn(name="save_note")
-    async def mock_save_note(request: NoteRequest) -> str:
-        return f"Saved note '{request.name}'."
-
-    @activity.defn(name="read_note")
-    async def mock_read_note(request: NoteRequest) -> str:
-        return request.content
-
     async with Worker(
         client,
         task_queue="test-langsmith-chatbot",
         workflows=[ChatbotWorkflow],
-        activities=[mock_call_openai, mock_save_note, mock_read_note],
+        activities=[mock_call_openai],
         plugins=[LangSmithPlugin()],
     ):
         wf_handle = await client.start_workflow(
@@ -98,7 +91,7 @@ async def test_chatbot_save_note(client: Client, env: WorkflowEnvironment):
 
 
 async def test_chatbot_read_note(client: Client, env: WorkflowEnvironment):
-    """Test that read_note calls an activity with content from workflow state."""
+    """Test read_note tool call loop — read_note runs as a workflow method."""
     call_count = 0
 
     @activity.defn(name="call_openai")
@@ -121,19 +114,11 @@ async def test_chatbot_read_note(client: Client, env: WorkflowEnvironment):
             )
         return make_text_response("Your todo says: Buy milk")
 
-    @activity.defn(name="save_note")
-    async def mock_save_note(request: NoteRequest) -> str:
-        return f"Saved note '{request.name}'."
-
-    @activity.defn(name="read_note")
-    async def mock_read_note(request: NoteRequest) -> str:
-        return request.content
-
     async with Worker(
         client,
         task_queue="test-langsmith-chatbot-read",
         workflows=[ChatbotWorkflow],
-        activities=[mock_call_openai, mock_save_note, mock_read_note],
+        activities=[mock_call_openai],
         plugins=[LangSmithPlugin()],
     ):
         wf_handle = await client.start_workflow(

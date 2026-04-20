@@ -16,8 +16,6 @@ from langsmith_tracing.basic.activities import OpenAIRequest
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
 from tests.langsmith_tracing.helpers import make_text_response
 
-# The workflow uses @traceable which requires the LangSmithPlugin's
-# aio_to_thread patch to work inside the workflow sandbox.
 pytestmark = pytest.mark.skipif(
     LangSmithPlugin is None,
     reason="temporalio.contrib.langsmith not available",

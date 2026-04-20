@@ -23,19 +23,12 @@ class OpenAIRequest:
     previous_response_id: str | None = None
 
 
-@dataclass
-class NoteRequest:
-    name: str
-    content: str
-
-
-# @traceable creates a named span in LangSmith. run_type="llm" tells
-# LangSmith this span represents an LLM call (vs. "chain" or "tool").
-# wrap_openai further enriches the trace with model params and token counts.
 @traceable(name="Call OpenAI", run_type="llm")
 @activity.defn
 async def call_openai(request: OpenAIRequest) -> Response:
     """Call OpenAI Responses API. Retries handled by Temporal, not the OpenAI client."""
+    # wrap_openai patches the client so each API call (e.g. responses.create)
+    # creates its own child span with model parameters and token usage.
     client = wrap_openai(AsyncOpenAI(max_retries=0))
     kwargs: dict[str, Any] = {
         "model": request.model,
@@ -48,22 +41,3 @@ async def call_openai(request: OpenAIRequest) -> Response:
     if request.previous_response_id:
         kwargs["previous_response_id"] = request.previous_response_id
     return await client.responses.create(**kwargs)
-
-
-# run_type="tool" renders distinctly in the LangSmith trace UI,
-# making it easy to spot tool executions alongside LLM calls.
-@traceable(name="Save Note", run_type="tool")
-@activity.defn
-async def save_note(request: NoteRequest) -> str:
-    """Save a note. Durable side effect — survives worker crashes."""
-    activity.logger.info(f"Saving note '{request.name}': {request.content[:80]}")
-    return f"Saved note '{request.name}'."
-
-
-@traceable(name="Read Note", run_type="tool")
-@activity.defn
-async def read_note(request: NoteRequest) -> str:
-    """Read a note. Content is passed from workflow state; the activity
-    exists so the read appears as a traced span in LangSmith."""
-    activity.logger.info(f"Reading note '{request.name}'")
-    return request.content

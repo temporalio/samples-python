@@ -9,13 +9,7 @@ from temporalio.common import RetryPolicy
 with workflow.unsafe.imports_passed_through():
     from langsmith import traceable
 
-    from langsmith_tracing.chatbot.activities import (
-        NoteRequest,
-        OpenAIRequest,
-        call_openai,
-        read_note,
-        save_note,
-    )
+    from langsmith_tracing.chatbot.activities import OpenAIRequest, call_openai
 
 RETRY = RetryPolicy(initial_interval=timedelta(seconds=2), maximum_attempts=3)
 
@@ -105,6 +99,18 @@ class ChatbotWorkflow:
 
         return "Session ended."
 
+    # Unlike @workflow.run, other workflow methods can be decorated with
+    # @traceable directly — they run inside the plugin-managed context
+    # where trace I/O is handled safely during replay.
+    @traceable(name="Save Note", run_type="tool")
+    def _save_note(self, name: str, content: str) -> str:
+        self._notes[name] = content
+        return f"Saved note '{name}'."
+
+    @traceable(name="Read Note", run_type="tool")
+    def _read_note(self, name: str) -> str:
+        return self._notes.get(name, "Note not found.")
+
     async def _query_openai(self, message: str | None) -> str:
         @traceable(
             name=f"Request: {(message or '')[:60]}",
@@ -133,13 +139,7 @@ class ChatbotWorkflow:
                         continue
                     args = json.loads(item.arguments)
                     if item.name == "save_note":
-                        self._notes[args["name"]] = args["content"]
-                        result = await workflow.execute_activity(
-                            save_note,
-                            NoteRequest(name=args["name"], content=args["content"]),
-                            start_to_close_timeout=timedelta(seconds=10),
-                            retry_policy=RETRY,
-                        )
+                        result = self._save_note(args["name"], args["content"])
                         tool_results.append(
                             {
                                 "type": "function_call_output",
@@ -148,13 +148,7 @@ class ChatbotWorkflow:
                             }
                         )
                     elif item.name == "read_note":
-                        content = self._notes.get(args["name"], "Note not found.")
-                        result = await workflow.execute_activity(
-                            read_note,
-                            NoteRequest(name=args["name"], content=content),
-                            start_to_close_timeout=timedelta(seconds=10),
-                            retry_policy=RETRY,
-                        )
+                        result = self._read_note(args["name"])
                         tool_results.append(
                             {
                                 "type": "function_call_output",

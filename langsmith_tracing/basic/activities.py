@@ -16,12 +16,12 @@ class OpenAIRequest:
     instructions: str = "You are a helpful assistant."
 
 
-# @traceable creates a named span in LangSmith. wrap_openai further enriches
-# the trace with model parameters, token counts, and latency automatically.
 @traceable(name="Call OpenAI", run_type="llm")
 @activity.defn
 async def call_openai(request: OpenAIRequest) -> Response:
     """Call OpenAI Responses API. Retries handled by Temporal, not the OpenAI client."""
+    # wrap_openai patches the client so each API call (e.g. responses.create)
+    # creates its own child span with model parameters and token usage.
     client = wrap_openai(AsyncOpenAI(max_retries=0))
     return await client.responses.create(
         model=request.model,

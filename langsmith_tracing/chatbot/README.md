@@ -21,10 +21,10 @@ Commands in the CLI:
 
 ## Tools
 
-The model has two tools:
+The model has two tools, both implemented as `@traceable` methods on the workflow class:
 
-- **`save_note(name, content)`** — Saves a note durably via a Temporal activity. The workflow stores the note in its state dict and calls the activity, which creates a visible trace span in LangSmith.
-- **`read_note(name)`** — Reads a note via a Temporal activity. The workflow looks up the note from its state dict and passes it to the activity for tracing visibility.
+- **`save_note(name, content)`** — Stores a note in the workflow's in-memory dict. The note is durable because workflow state survives crashes and restarts via Temporal's event history.
+- **`read_note(name)`** — Reads a note from the workflow's in-memory dict.
 
 ## Trace Structure
 
@@ -49,13 +49,13 @@ Session Apr 17 10:30                          (@traceable, workflow)
 ├── Request: Save that as a note called paris (@traceable, per-message)
 │   ├── Call OpenAI                           (@traceable, activity)
 │   │   └── openai.responses.create           → function_call: save_note
-│   ├── Save Note                             (@traceable, activity)
+│   ├── Save Note                             (@traceable, workflow method)
 │   └── Call OpenAI                           (@traceable, activity)
 │       └── openai.responses.create           → text response
 └── Request: What did I save about paris?     (@traceable, per-message)
     ├── Call OpenAI                           (@traceable, activity)
     │   └── openai.responses.create           → function_call: read_note
-    ├── Read Note                             (@traceable, activity)
+    ├── Read Note                             (@traceable, workflow method)
     └── Call OpenAI                           (@traceable, activity)
         └── openai.responses.create           → text response
 ```
@@ -73,8 +73,7 @@ RunWorkflow:ChatbotWorkflow                       (automatic, Temporal plugin)
         ├── ExecuteActivity:call_openai           (automatic, Temporal plugin)
         │   └── Call OpenAI                       (@traceable, activity)
         │       └── openai.responses.create       (automatic via wrap_openai)
-        ├── ExecuteActivity:save_note             (automatic, Temporal plugin)
-        │   └── Save Note                         (@traceable, activity)
+        ├── Save Note                             (@traceable, workflow method)
         └── ExecuteActivity:call_openai           (automatic, Temporal plugin)
             └── Call OpenAI                       (@traceable, activity)
                 └── openai.responses.create       (automatic via wrap_openai)

@@ -29,7 +29,7 @@ A local Temporal server must be running (`temporal server start-dev`).
 
 This sample shows three complementary ways LangSmith captures trace data:
 
-1. **Automatic (`wrap_openai`)** — Wrapping the OpenAI client with `wrap_openai()` automatically captures model parameters, token usage, and latency for every LLM call. No extra code needed.
+1. **Automatic (`wrap_openai`)** — Wrapping the OpenAI client with `wrap_openai()` automatically creates a child span for every LLM call, capturing model parameters, token usage, and latency. No extra code needed.
 
 2. **Explicit (`@traceable`)** — Decorating functions with `@traceable` creates named spans for your business logic. You control the name, tags, metadata, and `run_type` (chain, llm, tool, retriever). This is how you structure traces to tell a story about what your application is doing.
 

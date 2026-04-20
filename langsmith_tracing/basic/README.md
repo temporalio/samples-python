@@ -18,6 +18,8 @@ python -m langsmith_tracing.basic.starter
 
 ### `add_temporal_runs=False` (default)
 
+Only `@traceable` and `wrap_openai` spans appear. The client-side `@traceable` is the root, and all workflow/activity traces nest under it via context propagation:
+
 ```
 Basic LLM Request                    (@traceable, client-side)
 └── Ask: What is Temporal?           (@traceable, workflow)
@@ -34,12 +36,15 @@ python -m langsmith_tracing.basic.worker --add-temporal-runs
 python -m langsmith_tracing.basic.starter --add-temporal-runs
 ```
 
+Temporal operation spans are added. `StartWorkflow` and `RunWorkflow` are siblings under the client root; `StartActivity` and `RunActivity` are siblings under the workflow:
+
 ```
-Basic LLM Request                         (@traceable, client-side)
-└── StartWorkflow:BasicLLMWorkflow        (automatic, Temporal plugin)
-    └── RunWorkflow:BasicLLMWorkflow      (automatic, Temporal plugin)
-        └── Ask: What is Temporal?        (@traceable, workflow)
-            └── ExecuteActivity:call_openai  (automatic, Temporal plugin)
-                └── Call OpenAI           (@traceable, activity)
-                    └── openai.responses.create  (automatic via wrap_openai)
+Basic LLM Request                       (@traceable, client-side)
+├── StartWorkflow:BasicLLMWorkflow      (automatic, Temporal plugin)
+└── RunWorkflow:BasicLLMWorkflow        (automatic, Temporal plugin)
+    └── Ask: What is Temporal?          (@traceable, workflow)
+        ├── StartActivity:call_openai   (automatic, Temporal plugin)
+        └── RunActivity:call_openai     (automatic, Temporal plugin)
+            └── Call OpenAI             (@traceable, activity)
+                └── openai.responses.create  (automatic via wrap_openai)
 ```

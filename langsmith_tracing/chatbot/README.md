@@ -29,50 +29,54 @@ The model has two tools, both implemented as `@traceable` methods on the workflo
 
 ### `add_temporal_runs=False` (default)
 
-The chatbot produces two traces: one from the client (starter) and one from the worker. They appear as separate root traces in LangSmith.
+Only `@traceable` and `wrap_openai` spans appear. The client-side `@traceable` wraps `start_workflow`, so the workflow's traces nest under it via context propagation. Signals and queries produce no traces in this mode.
 
 ```
 Chatbot Session a1b2c3d4                      (@traceable, client-side)
-├── Turn: What's the capital of Fr..          (@traceable, client-side per-turn)
-├── Turn: Save that as a note call..          (@traceable, client-side per-turn)
-└── Turn: What did I save about pa..          (@traceable, client-side per-turn)
-
-Session Apr 17 10:30                          (@traceable, workflow)
-├── Request: What's the capital of France?    (@traceable, per-message)
-│   └── Call OpenAI                           (@traceable, activity)
-│       └── openai.responses.create           (automatic via wrap_openai)
-├── Request: Save that as a note called paris (@traceable, per-message)
-│   ├── Call OpenAI                           (@traceable, activity)
-│   │   └── openai.responses.create           → function_call: save_note
-│   ├── Save Note                             (@traceable, workflow method)
-│   └── Call OpenAI                           (@traceable, activity)
-│       └── openai.responses.create           → text response
-└── Request: What did I save about paris?     (@traceable, per-message)
-    ├── Call OpenAI                           (@traceable, activity)
-    │   └── openai.responses.create           → function_call: read_note
-    ├── Read Note                             (@traceable, workflow method)
-    └── Call OpenAI                           (@traceable, activity)
-        └── openai.responses.create           → text response
+├── Turn: What's the capital of Fr..          (@traceable, client-side)
+├── Turn: Save that as a note call..          (@traceable, client-side)
+├── Turn: What did I save about pa..          (@traceable, client-side)
+└── Session Apr 17 10:30                      (@traceable, workflow)
+    ├── Request: What's the capital of France?    (@traceable, per-message)
+    │   └── Call OpenAI                           (@traceable, activity)
+    │       └── openai.responses.create           (automatic via wrap_openai)
+    ├── Request: Save that as a note called paris (@traceable, per-message)
+    │   ├── Call OpenAI                           (@traceable, activity)
+    │   │   └── openai.responses.create           → function_call: save_note
+    │   ├── Save Note                             (@traceable, workflow method)
+    │   └── Call OpenAI                           (@traceable, activity)
+    │       └── openai.responses.create           → text response
+    └── Request: What did I save about paris?     (@traceable, per-message)
+        ├── Call OpenAI                           (@traceable, activity)
+        │   └── openai.responses.create           → function_call: read_note
+        ├── Read Note                             (@traceable, workflow method)
+        └── Call OpenAI                           (@traceable, activity)
+            └── openai.responses.create           → text response
 ```
 
 ### `add_temporal_runs=True`
 
-With `--add-temporal-runs`, Temporal operation spans wrap each `@traceable` span:
+With `--add-temporal-runs`, Temporal operation spans are added. `StartWorkflow` and `RunWorkflow` are siblings under the client root (context propagated via headers at `start_workflow` time). Signals and queries each get their own trace.
 
 ```
 Chatbot Session a1b2c3d4                          (@traceable, client-side)
-├── Turn: Save that as a note call..              (@traceable, client-side per-turn)
-│   └── HandleSignal:user_message                 (automatic, Temporal plugin)
+├── StartWorkflow:ChatbotWorkflow                 (automatic, Temporal plugin)
+├── RunWorkflow:ChatbotWorkflow                   (automatic, Temporal plugin)
+│   └── Session Apr 17 10:30                      (@traceable, workflow)
+│       └── Request: Save that as a note called.. (@traceable, per-message)
+│           ├── StartActivity:call_openai         (automatic, Temporal plugin)
+│           ├── RunActivity:call_openai           (automatic, Temporal plugin)
+│           │   └── Call OpenAI                   (@traceable, activity)
+│           │       └── openai.responses.create   (automatic via wrap_openai)
+│           ├── Save Note                         (@traceable, workflow method)
+│           ├── StartActivity:call_openai         (automatic, Temporal plugin)
+│           └── RunActivity:call_openai           (automatic, Temporal plugin)
+│               └── Call OpenAI                   (@traceable, activity)
+│                   └── openai.responses.create   (automatic via wrap_openai)
+├── Turn: Save that as a note call..              (@traceable, client-side)
+│   ├── SignalWorkflow:user_message               (automatic, Temporal plugin)
+│   │   └── HandleSignal:user_message             (automatic, Temporal plugin)
+│   └── QueryWorkflow:last_response               (automatic, Temporal plugin)
+│       └── HandleQuery:last_response             (automatic, Temporal plugin)
 └── ...
-
-RunWorkflow:ChatbotWorkflow                       (automatic, Temporal plugin)
-└── Session Apr 17 10:30                          (@traceable, workflow)
-    └── Request: Save that as a note called paris (@traceable, per-message)
-        ├── ExecuteActivity:call_openai           (automatic, Temporal plugin)
-        │   └── Call OpenAI                       (@traceable, activity)
-        │       └── openai.responses.create       (automatic via wrap_openai)
-        ├── Save Note                             (@traceable, workflow method)
-        └── ExecuteActivity:call_openai           (automatic, Temporal plugin)
-            └── Call OpenAI                       (@traceable, activity)
-                └── openai.responses.create       (automatic via wrap_openai)
 ```

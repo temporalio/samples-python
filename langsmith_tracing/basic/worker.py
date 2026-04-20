@@ -42,7 +42,6 @@ async def main():
         workflows=[BasicLLMWorkflow],
         activities=[call_openai],
         plugins=[plugin],
-        max_cached_workflows=0,
     ):
         label = "with" if add_temporal_runs else "without"
         print(f"Worker started ({label} Temporal runs in traces), ctrl+c to exit")

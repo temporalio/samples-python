@@ -15,9 +15,9 @@ RETRY = RetryPolicy(initial_interval=timedelta(seconds=2), maximum_attempts=3)
 
 @workflow.defn
 class BasicLLMWorkflow:
-    # Do not put @traceable directly on the @workflow.run method — it would
-    # violate replay safety. Instead, wrap an inner function so that
-    # Temporal's replay mechanism can invoke `run()` without side effects.
+    # Do not put @traceable directly on the @workflow.run method —
+    # @traceable performs I/O (trace submission) that would fire on every
+    # replay, violating replay safety. Instead, wrap an inner function.
     @workflow.run
     async def run(self, prompt: str) -> str:
         @traceable(

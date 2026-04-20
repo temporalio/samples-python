@@ -1,6 +1,6 @@
 # Basic LLM Workflow
 
-A one-shot workflow that sends a prompt to OpenAI and returns the response. This is the simplest possible example of LangSmith tracing with Temporal.
+A one-shot workflow that sends a prompt to OpenAI and returns the response. A very simple example of LangSmith tracing with Temporal.
 
 See the [parent README](../README.md) for prerequisites.
 

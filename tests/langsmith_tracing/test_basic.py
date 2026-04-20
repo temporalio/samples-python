@@ -2,8 +2,6 @@ import uuid
 
 import pytest
 from openai.types.responses import Response
-from openai.types.responses.response_output_message import ResponseOutputMessage
-from openai.types.responses.response_output_text import ResponseOutputText
 from temporalio import activity
 from temporalio.client import Client
 from temporalio.testing import WorkflowEnvironment
@@ -16,6 +14,7 @@ except ImportError:
 
 from langsmith_tracing.basic.activities import OpenAIRequest
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
+from tests.langsmith_tracing.helpers import make_text_response
 
 # The workflow uses @traceable which requires the LangSmithPlugin's
 # aio_to_thread patch to work inside the workflow sandbox.
@@ -25,37 +24,9 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-def _make_text_response(text: str) -> Response:
-    """Build a minimal Response with a text output."""
-    return Response.model_construct(
-        id="resp_mock",
-        created_at=0.0,
-        model="gpt-4o-mini",
-        object="response",
-        output=[
-            ResponseOutputMessage.model_construct(
-                id="msg_mock",
-                type="message",
-                role="assistant",
-                status="completed",
-                content=[
-                    ResponseOutputText.model_construct(
-                        type="output_text",
-                        text=text,
-                        annotations=[],
-                    )
-                ],
-            )
-        ],
-        parallel_tool_calls=False,
-        tool_choice="auto",
-        tools=[],
-    )
-
-
 async def test_basic_workflow(client: Client, env: WorkflowEnvironment):
     expected_text = "Temporal is a durable execution platform."
-    mock_response = _make_text_response(expected_text)
+    mock_response = make_text_response(expected_text)
 
     @activity.defn(name="call_openai")
     async def mock_call_openai(request: OpenAIRequest) -> Response:

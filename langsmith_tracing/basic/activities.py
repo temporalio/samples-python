@@ -21,7 +21,7 @@ class OpenAIRequest:
 @traceable(name="Call OpenAI", run_type="llm")
 @activity.defn
 async def call_openai(request: OpenAIRequest) -> Response:
-    """Call OpenAI Responses API. Retries handled by Temporal."""
+    """Call OpenAI Responses API. Retries handled by Temporal, not the OpenAI client."""
     client = wrap_openai(AsyncOpenAI(max_retries=0))
     return await client.responses.create(
         model=request.model,

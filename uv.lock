@@ -2,10 +2,10 @@ version = 1
 revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
-    "python_full_version >= '3.13' and extra != 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing'",
-    "python_full_version == '3.12.*' and extra != 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing'",
-    "python_full_version == '3.11.*' and extra != 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing'",
-    "python_full_version < '3.11' and extra != 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version >= '3.13' and extra != 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing' and extra != 'group-18-temporalio-samples-openai-agents'",
+    "python_full_version == '3.12.*' and extra != 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing' and extra != 'group-18-temporalio-samples-openai-agents'",
+    "python_full_version == '3.11.*' and extra != 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing' and extra != 'group-18-temporalio-samples-openai-agents'",
+    "python_full_version < '3.11' and extra != 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing' and extra != 'group-18-temporalio-samples-openai-agents'",
     "python_full_version >= '3.13' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
     "python_full_version >= '3.12.4' and python_full_version < '3.13' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
     "python_full_version >= '3.12' and python_full_version < '3.12.4' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
@@ -19,6 +19,9 @@ resolution-markers = [
 conflicts = [[
     { package = "temporalio-samples", group = "langchain" },
     { package = "temporalio-samples", group = "langsmith-tracing" },
+], [
+    { package = "temporalio-samples", group = "langsmith-tracing" },
+    { package = "temporalio-samples", group = "openai-agents" },
 ]]
 
 [[package]]
@@ -37,7 +40,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohappyeyeballs" },
     { name = "aiosignal" },
-    { name = "async-timeout", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "async-timeout", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "attrs" },
     { name = "frozenlist" },
     { name = "multidict" },
@@ -122,7 +125,7 @@ version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "frozenlist" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/61/62/06741b579156360248d1ec624842ad0edf697050bbaf7c3e46394e106ad1/aiosignal-1.4.0.tar.gz", hash = "sha256:f47eecd9468083c2029cc99945502cb7708b082c232f9aca65da147157b251c7", size = 25007, upload-time = "2025-07-03T22:54:43.528Z" }
 wheels = [
@@ -143,10 +146,10 @@ name = "anyio"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
     { name = "idna" },
     { name = "sniffio" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/95/7d/4c1bd541d4dffa1b52bd83fb8527089e097a106fc90b467a7313b105f840/anyio-4.9.0.tar.gz", hash = "sha256:673c0c244e15788651a4ff38710fea9675823028a6f08a5eda409e0c9840a028", size = 190949, upload-time = "2025-03-17T00:02:54.77Z" }
 wheels = [
@@ -331,7 +334,7 @@ name = "click"
 version = "8.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/60/6c/8ca2efa64cf75a977a0d7fac081354553ebe483345c734fb6b6515d96bbc/click-8.2.1.tar.gz", hash = "sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202", size = 286342, upload-time = "2025-05-20T23:19:49.832Z" }
 wheels = [
@@ -406,7 +409,7 @@ name = "exceptiongroup"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0b/9f/a65090624ecf468cdca03533906e7c69ed7588582240cfe7cc9e770b50eb/exceptiongroup-1.3.0.tar.gz", hash = "sha256:b241f5885f560bc56a59ee63ca4c6a8bfa46ae4ad651af316d4e81817bb9fd88", size = 29749, upload-time = "2025-05-10T17:42:51.123Z" }
 wheels = [
@@ -544,8 +547,8 @@ name = "gevent"
 version = "25.9.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "(platform_python_implementation == 'CPython' and sys_platform == 'win32') or (platform_python_implementation != 'CPython' and extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (sys_platform != 'win32' and extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
-    { name = "greenlet", marker = "platform_python_implementation == 'CPython' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "cffi", marker = "(platform_python_implementation == 'CPython' and sys_platform == 'win32') or (platform_python_implementation != 'CPython' and extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (platform_python_implementation != 'CPython' and extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents') or (sys_platform != 'win32' and extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (sys_platform != 'win32' and extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "greenlet", marker = "platform_python_implementation == 'CPython' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "zope-event" },
     { name = "zope-interface" },
 ]
@@ -831,7 +834,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "filelock" },
     { name = "fsspec" },
-    { name = "hf-xet", marker = "platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "hf-xet", marker = "platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'arm64' or platform_machine == 'x86_64'" },
     { name = "packaging" },
     { name = "pyyaml" },
     { name = "requests" },
@@ -1267,10 +1270,10 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-multipart" },
-    { name = "pywin32", marker = "sys_platform == 'win32' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
     { name = "sse-starlette" },
     { name = "starlette" },
-    { name = "uvicorn", marker = "sys_platform != 'emscripten' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "uvicorn", marker = "sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3a/f5/9506eb5578d5bbe9819ee8ba3198d0ad0e2fbe3bab8b257e4131ceb7dfb6/mcp-1.11.0.tar.gz", hash = "sha256:49a213df56bb9472ff83b3132a4825f5c8f5b120a90246f08b0dac6bedac44c8", size = 406907, upload-time = "2025-07-10T16:41:09.388Z" }
 wheels = [
@@ -1291,7 +1294,7 @@ name = "multidict"
 version = "6.6.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3d/2c/5dad12e82fbdf7470f29bff2171484bf07cb3b16ada60a6589af8f376440/multidict-6.6.3.tar.gz", hash = "sha256:798a9eb12dab0a6c2e29c1de6f3468af5cb2da6053a20dfa3344907eed0937cc", size = 101006, upload-time = "2025-06-30T15:53:46.929Z" }
 wheels = [
@@ -1395,7 +1398,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mypy-extensions" },
     { name = "pathspec" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/81/69/92c7fa98112e4d9eb075a239caa4ef4649ad7d441545ccffbd5e34607cbb/mypy-1.16.1.tar.gz", hash = "sha256:6bd00a0a2094841c5e47e7374bb42b83d64c527a502e3334e1173a0c24437bab", size = 3324747, upload-time = "2025-06-16T16:51:35.145Z" }
@@ -1440,12 +1443,41 @@ wheels = [
 name = "nexus-rpc"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version >= '3.12.4' and python_full_version < '3.13' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version >= '3.12' and python_full_version < '3.12.4' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version == '3.11.*' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version < '3.11' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version >= '3.13' and extra != 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version == '3.12.*' and extra != 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version == '3.11.*' and extra != 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version < '3.11' and extra != 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+]
 dependencies = [
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2e/f2/d54f5c03d8f4672ccc0875787a385f53dcb61f98a8ae594b5620e85b9cb3/nexus_rpc-1.3.0.tar.gz", hash = "sha256:e56d3b57b60d707ce7a72f83f23f106b86eca1043aa658e44582ab5ff30ab9ad", size = 75650, upload-time = "2025-12-08T22:59:13.002Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d6/74/0afd841de3199c148146c1d43b4bfb5605b2f1dc4c9a9087fe395091ea5a/nexus_rpc-1.3.0-py3-none-any.whl", hash = "sha256:aee0707b4861b22d8124ecb3f27d62dafbe8777dc50c66c91e49c006f971b92d", size = 28873, upload-time = "2025-12-08T22:59:12.024Z" },
+]
+
+[[package]]
+name = "nexus-rpc"
+version = "1.4.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version < '3.11'",
+]
+dependencies = [
+    { name = "typing-extensions", marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/35/d5/cd1ffb202b76ebc1b33c1332a3416e55a39929006982adc2b1eb069aaa9b/nexus_rpc-1.4.0.tar.gz", hash = "sha256:3b8b373d4865671789cc43623e3dc0bcbf192562e40e13727e17f1c149050fba", size = 82367, upload-time = "2026-02-25T22:01:34.053Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/11/52/6327a5f4fda01207205038a106a99848a41c83e933cd23ea2cab3d2ebc6c/nexus_rpc-1.4.0-py3-none-any.whl", hash = "sha256:14c953d3519113f8ccec533a9efdb6b10c28afef75d11cdd6d422640c40b3a49", size = 29645, upload-time = "2026-02-25T22:01:33.122Z" },
 ]
 
 [[package]]
@@ -1797,7 +1829,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pastel" },
     { name = "pyyaml" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/cf/ac/311c8a492dc887f0b7a54d0ec3324cb2f9538b7b78ea06e5f7ae1f167e52/poethepoet-0.36.0.tar.gz", hash = "sha256:2217b49cb4e4c64af0b42ff8c4814b17f02e107d38bc461542517348ede25663", size = 66854, upload-time = "2025-06-29T19:54:50.444Z" }
 wheels = [
@@ -2147,12 +2179,12 @@ name = "pytest"
 version = "7.4.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/80/1f/9d8e98e4133ffb16c90f3b405c43e38d3abb715bb5d7a63a5a684f7e46a3/pytest-7.4.4.tar.gz", hash = "sha256:2cf0005922c6ace4a3e2ec8b4080eb0d9753fdc93107415332f50ce9e7994280", size = 1357116, upload-time = "2023-12-31T12:00:18.035Z" }
 wheels = [
@@ -2297,7 +2329,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
     { name = "rpds-py" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2f/db/98b5c277be99dd18bfd91dd04e1b759cad18d1a338188c936e92f921c7e2/referencing-0.36.2.tar.gz", hash = "sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa", size = 74744, upload-time = "2025-01-25T08:48:16.138Z" }
 wheels = [
@@ -2407,7 +2439,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "markdown-it-py" },
     { name = "pygments" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a1/53/830aa4c3066a8ab0ae9a9955976fb770fe9c6102117c8ec4ab3ea62d89e8/rich-14.0.0.tar.gz", hash = "sha256:82f1bc23a6a21ebca4ae0c45af9bdbc492ed20231dcb63f297d6d1021a9d5725", size = 224078, upload-time = "2025-03-30T14:15:14.23Z" }
 wheels = [
@@ -2689,7 +2721,7 @@ version = "0.47.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/0a/69/662169fdb92fb96ec3eaee218cf540a629d629c86d7993d9651226a6789b/starlette-0.47.1.tar.gz", hash = "sha256:aef012dd2b6be325ffa16698f9dc533614fb1cebd593a906b90dc1025529a79b", size = 2583072, upload-time = "2025-06-21T04:03:17.337Z" }
 wheels = [
@@ -2700,10 +2732,21 @@ wheels = [
 name = "temporalio"
 version = "1.23.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version >= '3.12.4' and python_full_version < '3.13' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version >= '3.12' and python_full_version < '3.12.4' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version == '3.11.*' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version < '3.11' and extra == 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version >= '3.13' and extra != 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version == '3.12.*' and extra != 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version == '3.11.*' and extra != 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+    "python_full_version < '3.11' and extra != 'group-18-temporalio-samples-langchain' and extra != 'group-18-temporalio-samples-langsmith-tracing'",
+]
 dependencies = [
-    { name = "nexus-rpc" },
+    { name = "nexus-rpc", version = "1.3.0", source = { registry = "https://pypi.org/simple" } },
     { name = "protobuf" },
-    { name = "python-dateutil", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "python-dateutil", marker = "(python_full_version < '3.11' and extra == 'group-18-temporalio-samples-langchain') or (python_full_version < '3.11' and extra != 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "types-protobuf" },
     { name = "typing-extensions" },
 ]
@@ -2722,8 +2765,43 @@ openai-agents = [
     { name = "openai-agents" },
 ]
 opentelemetry = [
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-sdk" },
+    { name = "opentelemetry-api", marker = "extra == 'group-18-temporalio-samples-langchain' or extra != 'group-18-temporalio-samples-langsmith-tracing' or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "opentelemetry-sdk", marker = "extra == 'group-18-temporalio-samples-langchain' or extra != 'group-18-temporalio-samples-langsmith-tracing' or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+]
+
+[[package]]
+name = "temporalio"
+version = "1.26.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version == '3.12.*'",
+    "python_full_version == '3.11.*'",
+    "python_full_version < '3.11'",
+]
+dependencies = [
+    { name = "nexus-rpc", version = "1.4.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
+    { name = "protobuf", marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
+    { name = "python-dateutil", marker = "(python_full_version < '3.11' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "types-protobuf", marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
+    { name = "typing-extensions", marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ae/d4/fa21150a225393f87732ed6fef3cc9735d9e751edc6be415fe6e375105c6/temporalio-1.26.0.tar.gz", hash = "sha256:f4bfb35125e6f5e8c7f7ed1277c7354d812c6fac7ed5f8dbd50536cf289aaaa7", size = 2388994, upload-time = "2026-04-15T23:43:00.911Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1e/27/8c421c622d18cc8e034247d5d72b89e6456937344b5bec1de40abef3c085/temporalio-1.26.0-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:5489040c0cf621edeb36984199dd9e4fbd2b3a07d61a4f2a8da1f2cb9820ef26", size = 14221070, upload-time = "2026-04-15T23:42:26.21Z" },
+    { url = "https://files.pythonhosted.org/packages/49/7c/d2b691d16ec5db87198c2e08dbfba58e286c096faee15753613a581abdce/temporalio-1.26.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:b18dd85771509c19ef059a31908bcd4e6130d1f67037c4db519702f3f2ad6d4a", size = 13583991, upload-time = "2026-04-15T23:42:34.357Z" },
+    { url = "https://files.pythonhosted.org/packages/05/ca/b8728451320ca9d8bb6e1680b9bd23767118f86d5b8644edf2304d533f1b/temporalio-1.26.0-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:46187d5f82ca2ae81f35ea5916a76db0e2f067210dc6b1852c3749475721946e", size = 13808036, upload-time = "2026-04-15T23:42:42.757Z" },
+    { url = "https://files.pythonhosted.org/packages/cb/54/3113f5e0ac58655790abac64656373e06191b351d74bfb94692e81bd6784/temporalio-1.26.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:03300c3e5237443367ac61bb20bd726c656b3daa50310bdd436599d5bdc7cf97", size = 14336604, upload-time = "2026-04-15T23:42:49.851Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/9b/c50840a26af3587c0c8d9af04d9976743e22496996dc1a377efc75dcd316/temporalio-1.26.0-cp310-abi3-win_amd64.whl", hash = "sha256:1c4a0d82f0a3796cbf78864c799f8dca0b94cdaec68e7b8b224c859005686ec4", size = 14525849, upload-time = "2026-04-15T23:42:57.589Z" },
+]
+
+[package.optional-dependencies]
+langsmith = [
+    { name = "langsmith", version = "0.7.32", source = { registry = "https://pypi.org/simple" } },
+]
+opentelemetry = [
+    { name = "opentelemetry-api", marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
+    { name = "opentelemetry-sdk", marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
 ]
 pydantic = [
     { name = "pydantic" },
@@ -2734,7 +2812,8 @@ name = "temporalio-samples"
 version = "0.1a1"
 source = { editable = "." }
 dependencies = [
-    { name = "temporalio" },
+    { name = "temporalio", version = "1.23.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-temporalio-samples-langchain' or extra != 'group-18-temporalio-samples-langsmith-tracing' or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "temporalio", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
 ]
 
 [package.dev-dependencies]
@@ -2743,8 +2822,8 @@ bedrock = [
 ]
 cloud-export-to-parquet = [
     { name = "boto3" },
-    { name = "numpy", marker = "python_full_version < '3.13' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
-    { name = "pandas", marker = "python_full_version < '4' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "numpy", marker = "python_full_version < '3.13' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "pandas", marker = "python_full_version < '4' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "pyarrow" },
 ]
 dev = [
@@ -2777,24 +2856,26 @@ langchain = [
     { name = "langsmith", version = "0.1.147", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '4'" },
     { name = "openai" },
     { name = "tqdm" },
-    { name = "uvicorn", extra = ["standard"], marker = "extra == 'group-18-temporalio-samples-langchain'" },
+    { name = "uvicorn", extra = ["standard"], marker = "extra == 'group-18-temporalio-samples-langchain' or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
 ]
 langsmith-tracing = [
     { name = "langsmith", version = "0.7.32", source = { registry = "https://pypi.org/simple" } },
     { name = "openai" },
-    { name = "temporalio", extra = ["pydantic"], marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
+    { name = "temporalio", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, extra = ["langsmith", "pydantic"], marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
 ]
 nexus = [
-    { name = "nexus-rpc" },
+    { name = "nexus-rpc", version = "1.3.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-temporalio-samples-langchain' or extra != 'group-18-temporalio-samples-langsmith-tracing' or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "nexus-rpc", version = "1.4.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
 ]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "temporalio", extra = ["opentelemetry"] },
+    { name = "temporalio", version = "1.23.0", source = { registry = "https://pypi.org/simple" }, extra = ["opentelemetry"], marker = "extra == 'group-18-temporalio-samples-langchain' or extra != 'group-18-temporalio-samples-langsmith-tracing' or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "temporalio", version = "1.26.0", source = { registry = "https://pypi.org/simple" }, extra = ["opentelemetry"], marker = "extra == 'group-18-temporalio-samples-langsmith-tracing'" },
 ]
 openai-agents = [
-    { name = "openai-agents", extra = ["litellm"] },
+    { name = "openai-agents", extra = ["litellm"], marker = "extra == 'group-18-temporalio-samples-langchain' or extra != 'group-18-temporalio-samples-langsmith-tracing' or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "requests" },
-    { name = "temporalio", extra = ["openai-agents"] },
+    { name = "temporalio", version = "1.23.0", source = { registry = "https://pypi.org/simple" }, extra = ["openai-agents"], marker = "extra == 'group-18-temporalio-samples-langchain' or extra != 'group-18-temporalio-samples-langsmith-tracing' or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
 ]
 pydantic-converter = [
     { name = "pydantic" },
@@ -2851,7 +2932,7 @@ langchain = [
 langsmith-tracing = [
     { name = "langsmith", specifier = ">=0.7.0" },
     { name = "openai", specifier = ">=1.4.0,<2" },
-    { name = "temporalio", extras = ["pydantic"] },
+    { name = "temporalio", extras = ["pydantic", "langsmith"], specifier = ">=1.26.0" },
 ]
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
@@ -3009,7 +3090,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737, upload-time = "2024-11-24T20:12:22.481Z" }
 wheels = [
@@ -3022,8 +3103,8 @@ version = "0.28.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
-    { name = "cffi", marker = "(implementation_name != 'pypy' and os_name == 'nt') or (implementation_name == 'pypy' and extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (os_name != 'nt' and extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "cffi", marker = "(implementation_name != 'pypy' and os_name == 'nt') or (implementation_name == 'pypy' and extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (implementation_name == 'pypy' and extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents') or (os_name != 'nt' and extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (os_name != 'nt' and extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "idna" },
     { name = "outcome" },
     { name = "sniffio" },
@@ -3039,7 +3120,7 @@ name = "trio-asyncio"
 version = "0.15.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing') or (extra == 'group-18-temporalio-samples-langsmith-tracing' and extra == 'group-18-temporalio-samples-openai-agents')" },
     { name = "greenlet" },
     { name = "outcome" },
     { name = "sniffio" },
@@ -3168,7 +3249,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "h11" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-18-temporalio-samples-langchain' and extra == 'group-18-temporalio-samples-langsmith-tracing')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e5/84/d43ce8fe6b31a316ef0ed04ea0d58cab981bdf7f17f8423491fa8b4f50b6/uvicorn-0.24.0.post1.tar.gz", hash = "sha256:09c8e5a79dc466bdf28dead50093957db184de356fcdc48697bad3bde4c2588e", size = 40102, upload-time = "2023-11-06T06:37:42.283Z" }
 wheels = [

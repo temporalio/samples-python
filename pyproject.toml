@@ -138,6 +138,10 @@ conflicts = [
         { group = "langchain" },
         { group = "langsmith-tracing" },
     ],
+    [
+        { group = "openai-agents" },
+        { group = "langsmith-tracing" },
+    ],
 ]
 
 [tool.ruff]

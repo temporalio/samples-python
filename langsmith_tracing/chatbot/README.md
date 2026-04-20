@@ -8,10 +8,10 @@ See the [parent README](../README.md) for prerequisites.
 
 ```bash
 # Terminal 1 — start the worker
-python -m langsmith_tracing.chatbot.worker
+uv run --group langsmith-tracing python -m langsmith_tracing.chatbot.worker
 
 # Terminal 2 — interactive CLI
-python -m langsmith_tracing.chatbot.starter
+uv run --group langsmith-tracing python -m langsmith_tracing.chatbot.starter
 ```
 
 Commands in the CLI:

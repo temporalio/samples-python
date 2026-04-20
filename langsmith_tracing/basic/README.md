@@ -8,10 +8,10 @@ See the [parent README](../README.md) for prerequisites.
 
 ```bash
 # Terminal 1 — start the worker
-python -m langsmith_tracing.basic.worker
+uv run --group langsmith-tracing python -m langsmith_tracing.basic.worker
 
 # Terminal 2 — run the workflow
-python -m langsmith_tracing.basic.starter
+uv run --group langsmith-tracing python -m langsmith_tracing.basic.starter
 ```
 
 ## Trace Structure
@@ -32,8 +32,8 @@ Basic LLM Request                    (@traceable, client-side)
 Pass `--add-temporal-runs` to both the worker and starter:
 
 ```bash
-python -m langsmith_tracing.basic.worker --add-temporal-runs
-python -m langsmith_tracing.basic.starter --add-temporal-runs
+uv run --group langsmith-tracing python -m langsmith_tracing.basic.worker --add-temporal-runs
+uv run --group langsmith-tracing python -m langsmith_tracing.basic.starter --add-temporal-runs
 ```
 
 Temporal operation spans are added. `StartWorkflow` and `RunWorkflow` are siblings under the client root; `StartActivity` and `RunActivity` are siblings under the workflow:

@@ -48,10 +48,10 @@ async def main():
             task_queue="langsmith-chatbot-task-queue",
         )
         print(f"Started workflow: {wf_handle.id}")
-        print('Type a message, "notes" to see saved notes, or "exit" to quit.\n')
+        print('Type a message or "exit" to quit.\n')
 
         while True:
-            user_input = input("You: ").strip()
+            user_input = input("> ").strip()
             if not user_input:
                 continue
 
@@ -60,15 +60,6 @@ async def main():
                 result = await wf_handle.result()
                 print(f"\nWorkflow finished: {result}")
                 return
-
-            if user_input.lower() == "notes":
-                notes = await wf_handle.query(ChatbotWorkflow.notes)
-                if notes:
-                    for name, content in notes.items():
-                        print(f"  [{name}]: {content}")
-                else:
-                    print("  (no notes yet)")
-                continue
 
             # Each turn gets its own trace span
             @traceable(

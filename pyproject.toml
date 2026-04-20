@@ -42,7 +42,7 @@ langchain = [
 langsmith-tracing = [
     "openai>=1.4.0,<2",
     "langsmith>=0.7.0",
-    "temporalio[pydantic]",
+    "temporalio[pydantic,langsmith]>=1.26.0",
 ]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [

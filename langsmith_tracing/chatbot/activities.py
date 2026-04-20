@@ -30,14 +30,14 @@ async def call_openai(request: OpenAIRequest) -> Response:
     # wrap_openai patches the client so each API call (e.g. responses.create)
     # creates its own child span with model parameters and token usage.
     client = wrap_openai(AsyncOpenAI(max_retries=0))
-    kwargs: dict[str, Any] = {
+    response_args: dict[str, Any] = {
         "model": request.model,
         "instructions": request.instructions,
         "input": request.input,
         "timeout": 30,
     }
     if request.tools:
-        kwargs["tools"] = request.tools
+        response_args["tools"] = request.tools
     if request.previous_response_id:
-        kwargs["previous_response_id"] = request.previous_response_id
-    return await client.responses.create(**kwargs)
+        response_args["previous_response_id"] = request.previous_response_id
+    return await client.responses.create(**response_args)

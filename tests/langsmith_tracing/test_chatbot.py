@@ -1,25 +1,15 @@
 import json
 import uuid
 
-import pytest
 from openai.types.responses import Response
 from openai.types.responses.response_function_tool_call import (
     ResponseFunctionToolCall,
 )
 from temporalio import activity
 from temporalio.client import Client
+from temporalio.contrib.langsmith import LangSmithPlugin
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
-
-try:
-    from temporalio.contrib.langsmith import LangSmithPlugin
-except ImportError:
-    LangSmithPlugin = None  # type: ignore[assignment,misc]
-
-pytestmark = pytest.mark.skipif(
-    LangSmithPlugin is None,
-    reason="temporalio.contrib.langsmith not available",
-)
 
 from langsmith_tracing.chatbot.activities import OpenAIRequest
 from langsmith_tracing.chatbot.workflows import ChatbotWorkflow

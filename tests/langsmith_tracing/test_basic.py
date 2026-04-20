@@ -1,25 +1,15 @@
 import uuid
 
-import pytest
 from openai.types.responses import Response
 from temporalio import activity
 from temporalio.client import Client
+from temporalio.contrib.langsmith import LangSmithPlugin
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
-
-try:
-    from temporalio.contrib.langsmith import LangSmithPlugin
-except ImportError:
-    LangSmithPlugin = None  # type: ignore[assignment,misc]
 
 from langsmith_tracing.basic.activities import OpenAIRequest
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
 from tests.langsmith_tracing.helpers import make_text_response
-
-pytestmark = pytest.mark.skipif(
-    LangSmithPlugin is None,
-    reason="temporalio.contrib.langsmith not available",
-)
 
 
 async def test_basic_workflow(client: Client, env: WorkflowEnvironment):

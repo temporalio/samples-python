@@ -10,16 +10,14 @@ from datetime import timedelta
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-with workflow.unsafe.imports_passed_through():
-    from nexus_messaging.callerpattern.handler.activities import call_greeting_service
-    from nexus_messaging.callerpattern.service import (
-        ApproveInput,
-        GetLanguagesInput,
-        GetLanguagesOutput,
-        Language,
-        SetLanguageInput,
-    )
-
+from nexus_messaging.callerpattern.handler.activities import call_greeting_service
+from nexus_messaging.callerpattern.service import (
+    ApproveInput,
+    GetLanguagesInput,
+    GetLanguagesOutput,
+    Language,
+    SetLanguageInput,
+)
 
 @workflow.defn
 class GreetingWorkflow:

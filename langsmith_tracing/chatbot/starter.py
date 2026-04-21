@@ -5,7 +5,6 @@ import readline  # noqa: F401 — enables input() line editing
 import sys
 import uuid
 
-import langsmith as ls
 from langsmith import traceable
 from temporalio.client import Client
 from temporalio.contrib.langsmith import LangSmithPlugin
@@ -13,6 +12,8 @@ from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.envconfig import ClientConfig
 
 from langsmith_tracing.chatbot.workflows import ChatbotWorkflow
+
+PROJECT_NAME = "langsmith-chatbot"
 
 
 async def main():
@@ -22,7 +23,7 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
 
     plugin = LangSmithPlugin(
-        project_name="langsmith-chatbot",
+        project_name=PROJECT_NAME,
         add_temporal_runs=add_temporal_runs,
     )
 
@@ -34,11 +35,13 @@ async def main():
 
     wf_id = f"langsmith-chatbot-{uuid.uuid4().hex[:8]}"
 
-    # Client-side trace wraps the full interactive session. Each turn
-    # (signal + query poll) nests under this root span in LangSmith.
     @traceable(
         name=f"Chatbot Session {wf_id[-8:]}",
         run_type="chain",
+        # CRITICAL: Client-side @traceable runs outside the LangSmithPlugin's scope.
+        # Make sure client-side traces use the same project_name as what is given to
+        # # the plugin.
+        project_name=PROJECT_NAME,
         tags=["client-side", "chatbot"],
     )
     async def run_session():
@@ -83,10 +86,7 @@ async def main():
             else:
                 print("(timed out waiting for response)")
 
-    try:
-        await run_session()
-    finally:
-        ls.flush()
+    await run_session()
 
 
 if __name__ == "__main__":

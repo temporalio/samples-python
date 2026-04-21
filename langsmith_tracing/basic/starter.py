@@ -11,6 +11,8 @@ from temporalio.envconfig import ClientConfig
 
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
 
+PROJECT_NAME = "langsmith-basic"
+
 
 async def main():
     add_temporal_runs = "--add-temporal-runs" in sys.argv
@@ -19,7 +21,7 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
 
     plugin = LangSmithPlugin(
-        project_name="langsmith-basic",
+        project_name=PROJECT_NAME,
         add_temporal_runs=add_temporal_runs,
     )
 
@@ -29,9 +31,15 @@ async def main():
         plugins=[plugin],
     )
 
-    # Client-side @traceable wraps the entire workflow call, creating a
-    # root span in LangSmith that the workflow and activity traces nest under.
-    @traceable(name="Basic LLM Request", run_type="chain", tags=["client-side"])
+    @traceable(
+        name="Basic LLM Request",
+        run_type="chain",
+        # CRITICAL: Client-side @traceable runs outside the LangSmithPlugin's scope.
+        # Make sure client-side traces use the same project_name as what is given to
+        # # the plugin.
+        project_name=PROJECT_NAME,
+        tags=["client-side"],
+    )
     async def run_workflow(prompt: str) -> str:
         return await client.execute_workflow(
             BasicLLMWorkflow.run,

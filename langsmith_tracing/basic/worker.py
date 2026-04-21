@@ -26,14 +26,15 @@ async def main():
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
 
-    client = await Client.connect(
-        **config,
-        data_converter=pydantic_data_converter,
-    )
-
     plugin = LangSmithPlugin(
         project_name="langsmith-basic",
         add_temporal_runs=add_temporal_runs,
+    )
+
+    client = await Client.connect(
+        **config,
+        data_converter=pydantic_data_converter,
+        plugins=[plugin],
     )
 
     async with Worker(
@@ -41,7 +42,6 @@ async def main():
         task_queue="langsmith-basic-task-queue",
         workflows=[BasicLLMWorkflow],
         activities=[call_openai],
-        plugins=[plugin],
     ):
         label = "with" if add_temporal_runs else "without"
         print(f"Worker started ({label} Temporal runs in traces), ctrl+c to exit")

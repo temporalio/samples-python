@@ -13,8 +13,6 @@ from temporalio.worker import Worker
 from langsmith_tracing.chatbot.activities import call_openai
 from langsmith_tracing.chatbot.workflows import ChatbotWorkflow
 
-interrupt_event = asyncio.Event()
-
 
 async def main():
     logging.basicConfig(level=logging.INFO)
@@ -27,30 +25,25 @@ async def main():
     client = await Client.connect(
         **config,
         data_converter=pydantic_data_converter,
+        plugins=[
+            LangSmithPlugin(
+                project_name="langsmith-chatbot",
+                add_temporal_runs=add_temporal_runs,
+            )
+        ],
     )
 
-    plugin = LangSmithPlugin(
-        project_name="langsmith-chatbot",
-        add_temporal_runs=add_temporal_runs,
-    )
-
-    async with Worker(
+    worker = Worker(
         client,
         task_queue="langsmith-chatbot-task-queue",
         workflows=[ChatbotWorkflow],
         activities=[call_openai],
-        plugins=[plugin],
-    ):
-        label = "with" if add_temporal_runs else "without"
-        print(f"Worker started ({label} Temporal runs in traces), ctrl+c to exit")
-        await interrupt_event.wait()
-        print("Shutting down")
+    )
+
+    label = "with" if add_temporal_runs else "without"
+    print(f"Worker started ({label} Temporal runs in traces), ctrl+c to exit")
+    await worker.run()
 
 
 if __name__ == "__main__":
-    loop = asyncio.new_event_loop()
-    try:
-        loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        interrupt_event.set()
-        loop.run_until_complete(loop.shutdown_asyncgens())
+    asyncio.run(main())

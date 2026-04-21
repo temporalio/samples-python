@@ -6,15 +6,14 @@ about how these operations are implemented by the Nexus service.
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-with workflow.unsafe.imports_passed_through():
-    from nexus_messaging.callerpattern.service import (
-        ApproveInput,
-        GetLanguageInput,
-        GetLanguagesInput,
-        Language,
-        NexusGreetingService,
-        SetLanguageInput,
-    )
+from nexus_messaging.callerpattern.service import (
+    ApproveInput,
+    GetLanguageInput,
+    GetLanguagesInput,
+    Language,
+    NexusGreetingService,
+    SetLanguageInput,
+)
 
 NEXUS_ENDPOINT = "nexus-messaging-nexus-endpoint"
 

@@ -13,6 +13,6 @@ def configure(config: LambdaWorkerConfig) -> None:
 
 
 lambda_handler = run_worker(
-    WorkerDeploymentVersion(deployment_name="my-app", build_id="build-1"),
+    WorkerDeploymentVersion(deployment_name="demo-order", build_id="v1"),
     configure,
 )

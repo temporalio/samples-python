@@ -53,7 +53,7 @@ async def main():
     # Run a worker for the workflow
     async with Worker(
         client,
-        task_queue="hello-activity-task-queue",
+        task_queue="tq-demo-order",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
         # Non-async activities require an executor;
@@ -68,7 +68,7 @@ async def main():
             GreetingWorkflow.run,
             "World",
             id="hello-activity-workflow-id",
-            task_queue="hello-activity-task-queue",
+            task_queue="tq-demo-order",
         )
         print(f"Result: {result}")
 

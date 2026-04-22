@@ -22,7 +22,7 @@ PROJECT_NAME = "langsmith-basic"
     project_name=PROJECT_NAME,
     tags=["client-side"],
 )
-async def main():
+async def main() -> str:
     add_temporal_runs = "--add-temporal-runs" in sys.argv
 
     config = ClientConfig.load_client_connect_config()
@@ -45,6 +45,7 @@ async def main():
         task_queue="langsmith-basic-task-queue",
     )
     print(f"Workflow result: {result}")
+    return result
 
 
 if __name__ == "__main__":

@@ -29,6 +29,8 @@ async def call_openai(request: OpenAIRequest) -> Response:
     """Call OpenAI Responses API. Retries handled by Temporal, not the OpenAI client."""
     # wrap_openai patches the client so each API call (e.g. responses.create)
     # creates its own child span with model parameters and token usage.
+    # max_retries=0 disables OpenAI's built-in retries — Temporal's activity
+    # retry policy handles retries instead, with full visibility in the UI.
     client = wrap_openai(AsyncOpenAI(max_retries=0))
     response_args: dict[str, Any] = {
         "model": request.model,

@@ -13,7 +13,7 @@ from temporalio.worker import Worker
 
 from langsmith_tracing.chatbot.activities import OpenAIRequest
 from langsmith_tracing.chatbot.workflows import ChatbotWorkflow
-from tests.langsmith_tracing.helpers import make_text_response, poll_last_response
+from tests.langsmith_tracing.helpers import make_text_response
 
 
 def _make_function_call_response(
@@ -68,8 +68,9 @@ async def test_chatbot_save_note(client: Client, env: WorkflowEnvironment):
             task_queue="test-langsmith-chatbot",
         )
 
-        await wf_handle.signal(ChatbotWorkflow.user_message, "Save a note")
-        response = await poll_last_response(wf_handle, ChatbotWorkflow.last_response)
+        response = await wf_handle.execute_update(
+            ChatbotWorkflow.message_from_user, "Save a note"
+        )
         assert response == "Note saved successfully!"
 
         notes = await wf_handle.query(ChatbotWorkflow.notes)
@@ -117,15 +118,15 @@ async def test_chatbot_read_note(client: Client, env: WorkflowEnvironment):
             task_queue="test-langsmith-chatbot-read",
         )
 
-        await wf_handle.signal(ChatbotWorkflow.user_message, "Save my todo")
-        response = await poll_last_response(wf_handle, ChatbotWorkflow.last_response)
+        response = await wf_handle.execute_update(
+            ChatbotWorkflow.message_from_user, "Save my todo"
+        )
         assert response == "Saved your todo!"
 
-        await wf_handle.signal(ChatbotWorkflow.user_message, "Read my todo")
-        new_response = await poll_last_response(
-            wf_handle, ChatbotWorkflow.last_response, prev_response=response
+        response = await wf_handle.execute_update(
+            ChatbotWorkflow.message_from_user, "Read my todo"
         )
-        assert new_response == "Your todo says: Buy milk"
+        assert response == "Your todo says: Buy milk"
 
         await wf_handle.signal(ChatbotWorkflow.exit)
         await wf_handle.result()

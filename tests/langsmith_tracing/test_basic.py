@@ -1,6 +1,5 @@
 import uuid
 
-from openai.types.responses import Response
 from temporalio import activity
 from temporalio.client import Client
 from temporalio.contrib.langsmith import LangSmithPlugin
@@ -9,16 +8,14 @@ from temporalio.worker import Worker
 
 from langsmith_tracing.basic.activities import OpenAIRequest
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
-from tests.langsmith_tracing.helpers import make_text_response
 
 
 async def test_basic_workflow(client: Client, env: WorkflowEnvironment):
     expected_text = "Temporal is a durable execution platform."
-    mock_response = make_text_response(expected_text)
 
     @activity.defn(name="call_openai")
-    async def mock_call_openai(request: OpenAIRequest) -> Response:
-        return mock_response
+    async def mock_call_openai(request: OpenAIRequest) -> str:
+        return expected_text
 
     async with Worker(
         client,

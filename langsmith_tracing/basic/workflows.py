@@ -24,11 +24,10 @@ class BasicLLMWorkflow:
             tags=["basic-llm"],
         )
         async def _run() -> str:
-            response = await workflow.execute_activity(
+            return await workflow.execute_activity(
                 call_openai,
                 OpenAIRequest(model="gpt-4o-mini", input=prompt),
                 start_to_close_timeout=timedelta(seconds=60),
             )
-            return response.output_text
 
         return await _run()

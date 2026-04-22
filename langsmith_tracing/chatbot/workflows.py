@@ -11,8 +11,6 @@ with workflow.unsafe.imports_passed_through():
 
     from langsmith_tracing.chatbot.activities import OpenAIRequest, call_openai
 
-RETRY = RetryPolicy(initial_interval=timedelta(seconds=2), maximum_attempts=3)
-
 TOOLS = [
     {
         "type": "function",
@@ -58,44 +56,57 @@ class ChatbotWorkflow:
         self._done = False
 
     @workflow.signal
-    async def user_message(self, message: str) -> None:
-        self._pending_message = message
-
-    @workflow.signal
     async def exit(self) -> None:
         self._done = True
-
-    @workflow.query
-    def last_response(self) -> str:
-        return self._last_response
 
     @workflow.query
     def notes(self) -> dict[str, str]:
         return dict(self._notes)
 
+    @workflow.update
+    async def message_from_user(self, message: str) -> str:
+        """Hand the message to the main loop and wait for its response."""
+
+        # Inner @traceable captures the message as input and response as output.
+        @traceable(name=f"Update: {message[:60]}", run_type="chain")
+        async def _traced(msg: str) -> str:
+            # Wait until any previous message has finished processing
+            await workflow.wait_condition(lambda: self._pending_message is None)
+            self._pending_message = msg
+            # Main loop sets _last_response, then clears _pending_message to signal done
+            await workflow.wait_condition(lambda: self._pending_message is None)
+            return self._last_response
+
+        return await _traced(message)
+
     # Do not decorate @workflow.run with @traceable — it would violate
     # replay safety and produce duplicate or orphaned traces. Instead,
-    # wrap an inner function.
+    # wrap an inner function, eg. self._run_inner() in this case.
     @workflow.run
     async def run(self) -> str:
+        # Alternative to @traceable decorator: call traceable() as a function
+        # for dynamic trace names that depend on runtime values.
         now = workflow.now().strftime("%b %d %H:%M")
         return await traceable(
             name=f"Session {now}",
             run_type="chain",
             metadata={"workflow_id": workflow.info().workflow_id},
             tags=["chatbot-session"],
-        )(self._session)()
+        )(self._run_inner)()
 
-    async def _session(self) -> str:
+    async def _run_inner(self) -> str:
         while not self._done:
             await workflow.wait_condition(
                 lambda: self._pending_message is not None or self._done
             )
             if self._done:
                 break
+            assert self._pending_message is not None
             message = self._pending_message
-            self._pending_message = None
             self._last_response = await self._query_openai(message)
+            # Clear pending_message AFTER setting the response so the update
+            # handler reads the correct response when its wait_condition fires.
+            self._pending_message = None
 
         return "Session ended."
 
@@ -111,14 +122,14 @@ class ChatbotWorkflow:
     def _read_note(self, name: str) -> str:
         return self._notes.get(name, "Note not found.")
 
-    async def _query_openai(self, message: str | None) -> str:
+    async def _query_openai(self, message: str) -> str:
         @traceable(
-            name=f"Request: {(message or '')[:60]}",
+            name=f"Request: {message[:60]}",
             run_type="chain",
             tags=["user-message"],
         )
         async def _traced():
-            input_for_next: str | list = message or ""
+            input_for_next: str | list = message
             while True:
                 response = await workflow.execute_activity(
                     call_openai,
@@ -129,7 +140,9 @@ class ChatbotWorkflow:
                         previous_response_id=self._previous_response_id,
                     ),
                     start_to_close_timeout=timedelta(seconds=60),
-                    retry_policy=RETRY,
+                    retry_policy=RetryPolicy(
+                        initial_interval=timedelta(seconds=2), maximum_attempts=3
+                    ),
                 )
                 self._previous_response_id = response.id
 

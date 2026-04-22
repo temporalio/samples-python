@@ -5,7 +5,7 @@ This sample demonstrates [LangSmith](https://smith.langchain.com/) tracing integ
 Two examples are included:
 
 - **[basic/](basic/)** — A one-shot LLM workflow that sends a prompt to OpenAI and returns the response.
-- **[chatbot/](chatbot/)** — A long-running conversational workflow with tool calls (save/read notes), signals, and queries.
+- **[chatbot/](chatbot/)** — A long-running conversational workflow with tool calls (save/read notes) and update handlers.
 
 ## Prerequisites
 

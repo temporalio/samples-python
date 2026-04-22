@@ -6,7 +6,6 @@ import sys
 from langsmith import traceable
 from temporalio.client import Client
 from temporalio.contrib.langsmith import LangSmithPlugin
-from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.envconfig import ClientConfig
 
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
@@ -27,7 +26,6 @@ async def main():
 
     client = await Client.connect(
         **config,
-        data_converter=pydantic_data_converter,
         plugins=[plugin],
     )
 

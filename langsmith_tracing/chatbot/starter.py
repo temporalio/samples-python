@@ -40,7 +40,7 @@ async def main():
         run_type="chain",
         # CRITICAL: Client-side @traceable runs outside the LangSmithPlugin's scope.
         # Make sure client-side traces use the same project_name as what is given to
-        # # the plugin.
+        # the plugin.
         project_name=PROJECT_NAME,
         tags=["client-side", "chatbot"],
     )
@@ -64,27 +64,10 @@ async def main():
                 print(f"\nWorkflow finished: {result}")
                 return
 
-            # Each turn gets its own trace span
-            @traceable(
-                name=f"Turn: {user_input[:40]}",
-                run_type="chain",
-                tags=["client-turn"],
+            response = await wf_handle.execute_update(
+                ChatbotWorkflow.message_from_user, user_input
             )
-            async def send_and_wait(msg: str):
-                prev_response = await wf_handle.query(ChatbotWorkflow.last_response)
-                await wf_handle.signal(ChatbotWorkflow.user_message, msg)
-                for _ in range(60):
-                    await asyncio.sleep(0.5)
-                    response = await wf_handle.query(ChatbotWorkflow.last_response)
-                    if response != prev_response:
-                        return response
-                return None
-
-            response = await send_and_wait(user_input)
-            if response:
-                print(f"Bot: {response}\n")
-            else:
-                print("(timed out waiting for response)")
+            print(f"Bot: {response}\n")
 
     await run_session()
 

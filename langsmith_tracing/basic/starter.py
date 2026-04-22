@@ -13,6 +13,15 @@ from langsmith_tracing.basic.workflows import BasicLLMWorkflow
 PROJECT_NAME = "langsmith-basic"
 
 
+@traceable(
+    name="Basic LLM Request",
+    run_type="chain",
+    # CRITICAL: Client-side @traceable runs outside the LangSmithPlugin's scope.
+    # Make sure client-side traces use the same project_name as what is given to
+    # the plugin.
+    project_name=PROJECT_NAME,
+    tags=["client-side"],
+)
 async def main():
     add_temporal_runs = "--add-temporal-runs" in sys.argv
 
@@ -29,24 +38,12 @@ async def main():
         plugins=[plugin],
     )
 
-    @traceable(
-        name="Basic LLM Request",
-        run_type="chain",
-        # CRITICAL: Client-side @traceable runs outside the LangSmithPlugin's scope.
-        # Make sure client-side traces use the same project_name as what is given to
-        # # the plugin.
-        project_name=PROJECT_NAME,
-        tags=["client-side"],
+    result = await client.execute_workflow(
+        BasicLLMWorkflow.run,
+        "What is Temporal?",
+        id="langsmith-basic-workflow-id",
+        task_queue="langsmith-basic-task-queue",
     )
-    async def run_workflow(prompt: str) -> str:
-        return await client.execute_workflow(
-            BasicLLMWorkflow.run,
-            prompt,
-            id="langsmith-basic-workflow-id",
-            task_queue="langsmith-basic-task-queue",
-        )
-
-    result = await run_workflow("What is Temporal?")
     print(f"Workflow result: {result}")
 
 

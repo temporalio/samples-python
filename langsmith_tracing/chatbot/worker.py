@@ -22,15 +22,14 @@ async def main():
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
 
+    plugin = LangSmithPlugin(
+        project_name="langsmith-chatbot",
+        add_temporal_runs=add_temporal_runs,
+    )
+
     client = await Client.connect(
         **config,
         data_converter=pydantic_data_converter,
-        plugins=[
-            LangSmithPlugin(
-                project_name="langsmith-chatbot",
-                add_temporal_runs=add_temporal_runs,
-            )
-        ],
     )
 
     worker = Worker(
@@ -38,6 +37,7 @@ async def main():
         task_queue="langsmith-chatbot-task-queue",
         workflows=[ChatbotWorkflow],
         activities=[call_openai],
+        plugins=[plugin],
     )
 
     label = "with" if add_temporal_runs else "without"

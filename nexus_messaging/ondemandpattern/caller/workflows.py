@@ -6,16 +6,16 @@ on demand via the run_from_remote operation.
 
 from temporalio import workflow
 
-with workflow.unsafe.imports_passed_through():
-    from nexus_messaging.ondemandpattern.service import (
-        ApproveInput,
-        GetLanguageInput,
-        GetLanguagesInput,
-        Language,
-        NexusRemoteGreetingService,
-        RunFromRemoteInput,
-        SetLanguageInput,
-    )
+
+from nexus_messaging.ondemandpattern.service import (
+    ApproveInput,
+    GetLanguageInput,
+    GetLanguagesInput,
+    Language,
+    NexusRemoteGreetingService,
+    RunFromRemoteInput,
+    SetLanguageInput,
+)
 
 NEXUS_ENDPOINT = "nexus-messaging-nexus-endpoint"
 

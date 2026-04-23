@@ -28,16 +28,14 @@ async def main():
         add_temporal_runs=add_temporal_runs,
     )
 
-    client = await Client.connect(
-        **config,
-        plugins=[plugin],
-    )
+    client = await Client.connect(**config)
 
     worker = Worker(
         client,
         task_queue="langsmith-basic-task-queue",
         workflows=[BasicLLMWorkflow],
         activities=[call_openai],
+        plugins=[plugin],
     )
 
     label = "with" if add_temporal_runs else "without"

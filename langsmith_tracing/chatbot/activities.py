@@ -6,8 +6,20 @@ from typing import Any
 from langsmith import traceable
 from langsmith.wrappers import wrap_openai
 from openai import AsyncOpenAI
-from openai.types.responses import Response
+from pydantic import BaseModel, Field
 from temporalio import activity
+
+
+class ToolCall(BaseModel):
+    call_id: str
+    name: str
+    arguments: str
+
+
+class ChatResponse(BaseModel):
+    id: str
+    output_text: str = ""
+    tool_calls: list[ToolCall] = Field(default_factory=list)
 
 
 @dataclass
@@ -25,7 +37,7 @@ class OpenAIRequest:
 
 @traceable(name="Call OpenAI", run_type="llm")
 @activity.defn
-async def call_openai(request: OpenAIRequest) -> Response:
+async def call_openai(request: OpenAIRequest) -> ChatResponse:
     """Call OpenAI Responses API. Retries handled by Temporal, not the OpenAI client."""
     # wrap_openai patches the client so each API call (e.g. responses.create)
     # creates its own child span with model parameters and token usage.
@@ -42,4 +54,13 @@ async def call_openai(request: OpenAIRequest) -> Response:
         response_args["tools"] = request.tools
     if request.previous_response_id:
         response_args["previous_response_id"] = request.previous_response_id
-    return await client.responses.create(**response_args)
+    response = await client.responses.create(**response_args)
+    return ChatResponse(
+        id=response.id,
+        output_text=response.output_text or "",
+        tool_calls=[
+            ToolCall(call_id=item.call_id, name=item.name, arguments=item.arguments)
+            for item in response.output
+            if item.type == "function_call"
+        ],
+    )

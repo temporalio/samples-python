@@ -147,25 +147,23 @@ class ChatbotWorkflow:
                 self._previous_response_id = response.id
 
                 tool_results = []
-                for item in response.output:
-                    if item.type != "function_call":
-                        continue
-                    args = json.loads(item.arguments)
-                    if item.name == "save_note":
+                for tc in response.tool_calls:
+                    args = json.loads(tc.arguments)
+                    if tc.name == "save_note":
                         result = self._save_note(args["name"], args["content"])
                         tool_results.append(
                             {
                                 "type": "function_call_output",
-                                "call_id": item.call_id,
+                                "call_id": tc.call_id,
                                 "output": result,
                             }
                         )
-                    elif item.name == "read_note":
+                    elif tc.name == "read_note":
                         result = self._read_note(args["name"])
                         tool_results.append(
                             {
                                 "type": "function_call_output",
-                                "call_id": item.call_id,
+                                "call_id": tc.call_id,
                                 "output": result,
                             }
                         )

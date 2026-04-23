@@ -1,42 +1,29 @@
 import json
 import uuid
 
-from openai.types.responses import Response
-from openai.types.responses.response_function_tool_call import (
-    ResponseFunctionToolCall,
-)
 from temporalio import activity
 from temporalio.client import Client
 from temporalio.contrib.langsmith import LangSmithPlugin
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
-from langsmith_tracing.chatbot.activities import OpenAIRequest
+from langsmith_tracing.chatbot.activities import ChatResponse, OpenAIRequest, ToolCall
 from langsmith_tracing.chatbot.workflows import ChatbotWorkflow
 from tests.langsmith_tracing.helpers import make_text_response
 
 
 def _make_function_call_response(
     name: str, arguments: dict, call_id: str = "call_123"
-) -> Response:
-    return Response.model_construct(
+) -> ChatResponse:
+    return ChatResponse(
         id="resp_tool",
-        created_at=0.0,
-        model="gpt-4o-mini",
-        object="response",
-        output=[
-            ResponseFunctionToolCall.model_construct(
-                id="fc_mock",
-                type="function_call",
+        tool_calls=[
+            ToolCall(
+                call_id=call_id,
                 name=name,
                 arguments=json.dumps(arguments),
-                call_id=call_id,
-                status="completed",
             )
         ],
-        parallel_tool_calls=False,
-        tool_choice="auto",
-        tools=[],
     )
 
 
@@ -45,7 +32,7 @@ async def test_chatbot_save_note(client: Client, env: WorkflowEnvironment):
     call_count = 0
 
     @activity.defn(name="call_openai")
-    async def mock_call_openai(request: OpenAIRequest) -> Response:
+    async def mock_call_openai(request: OpenAIRequest) -> ChatResponse:
         nonlocal call_count
         call_count += 1
         if call_count == 1:
@@ -86,7 +73,7 @@ async def test_chatbot_read_note(client: Client, env: WorkflowEnvironment):
     call_count = 0
 
     @activity.defn(name="call_openai")
-    async def mock_call_openai(request: OpenAIRequest) -> Response:
+    async def mock_call_openai(request: OpenAIRequest) -> ChatResponse:
         nonlocal call_count
         call_count += 1
         if call_count == 1:

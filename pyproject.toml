@@ -136,3 +136,6 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "opentelemetry.*"
 ignore_errors = true
+
+[tool.uv.sources]
+temporalio = { git = "https://github.com/temporalio/sdk-python", branch = "amazzeo/sano" }

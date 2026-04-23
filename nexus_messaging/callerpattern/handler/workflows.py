@@ -19,6 +19,7 @@ from nexus_messaging.callerpattern.service import (
     SetLanguageInput,
 )
 
+
 @workflow.defn
 class GreetingWorkflow:
     def __init__(self) -> None:

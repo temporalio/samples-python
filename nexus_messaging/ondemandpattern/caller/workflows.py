@@ -6,7 +6,6 @@ on demand via the run_from_remote operation.
 
 from temporalio import workflow
 
-
 from nexus_messaging.ondemandpattern.service import (
     ApproveInput,
     GetLanguageInput,

@@ -14,11 +14,10 @@ from nexus_messaging.callerpattern.service import (
     GetLanguageInput,
     GetLanguagesInput,
     Language,
+    NexusGreetingService,
     SetLanguageInput,
 )
 from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
-
-from nexus_messaging.callerpattern.service import NexusGreetingService
 
 NEXUS_ENDPOINT = "nexus-messaging-nexus-endpoint"
 

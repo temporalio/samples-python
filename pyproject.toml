@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.27.0,<2"]
+dependencies = ["temporalio>=1.26.0,<2"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -33,7 +33,7 @@ gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 langsmith-tracing = [
     "openai>=1.4.0",
     "langsmith>=0.7.0",
-    "temporalio[pydantic,langsmith]>=1.27.0",
+    "temporalio[pydantic,langsmith]>=1.26.0",
 ]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
@@ -42,13 +42,12 @@ open-telemetry = [
 ]
 openai-agents = [
     "openai-agents[litellm] >= 0.14.1",
-    "temporalio[openai-agents,opentelemetry] >= 1.27.0",
+    "temporalio[openai-agents,opentelemetry] >= 1.26.0",
     "requests>=2.32.0,<3",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=2.13.0"]
 trio-async = ["trio>=0.28.0,<0.29", "trio-asyncio>=0.15.0,<0.16"]
-llm-stream = ["openai>=1.0"]
 cloud-export-to-parquet = [
     "pandas>=2.3.3,<3 ; python_version >= '3.10' and python_version < '4.0'",
     "numpy>=1.26.0,<2 ; python_version >= '3.10' and python_version < '3.13'",
@@ -95,7 +94,6 @@ packages = [
     "updatable_timer",
     "worker_specific_task_queues",
     "worker_versioning",
-    "workflow_streams",
 ]
 
 [tool.hatch.build.targets.wheel.sources]

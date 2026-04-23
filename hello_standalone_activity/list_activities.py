@@ -15,7 +15,7 @@ async def my_application():
 
     async for info in activities:
         print(
-            f"ActivityID: {info.activity_id}, Type: {info.activity_type}, Status: {info.status}"
+            f"ActivityID: {info.activity_id}, Type: {info.activity_type}, Status: {info.status.name}"
         )
 
 

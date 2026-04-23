@@ -19,10 +19,7 @@ from nexus_messaging.ondemandpattern.service import (
     SetLanguageInput,
 )
 from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
-
-with workflow.unsafe.imports_passed_through():
-    from nexus_messaging.ondemandpattern.service import NexusRemoteGreetingService
-
+from nexus_messaging.ondemandpattern.service import NexusRemoteGreetingService
 
 NEXUS_ENDPOINT = "nexus-messaging-nexus-endpoint"
 

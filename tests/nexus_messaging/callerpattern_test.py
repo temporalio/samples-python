@@ -18,9 +18,7 @@ from nexus_messaging.callerpattern.service import (
 )
 from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
 
-with workflow.unsafe.imports_passed_through():
-    from nexus_messaging.callerpattern.service import NexusGreetingService
-
+from nexus_messaging.callerpattern.service import NexusGreetingService
 
 NEXUS_ENDPOINT = "nexus-messaging-nexus-endpoint"
 

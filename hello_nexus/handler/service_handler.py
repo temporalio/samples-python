@@ -33,7 +33,7 @@ class MyNexusServiceHandler:
         return await ctx.start_workflow(
             WorkflowStartedByNexusOperation.run,
             input,
-            id=str(uuid.uuid4()),
+            id=f"hello-nexus-workflow-{input.name}-{uuid.uuid4()}",
         )
 
     # This is a Nexus operation that responds synchronously to all requests. That means

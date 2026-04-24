@@ -1,0 +1,6 @@
+[profile.default]
+address = "replay-ma-01.a2dd6.tmprl.cloud:7233"
+namespace = "replay-ma-01.a2dd6"
+#[profile.default.tls]
+#client_cert_path = "client.pem"
+#client_key_path = "client.key"

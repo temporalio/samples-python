@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Replay 2026 Survey</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0b18;
+      --surface: #14142a;
+      --fg: #e8e8f0;
+      --muted: #8a8aa3;
+      --border: #2a2a44;
+      --violet: #8b5cf6;
+      --violet-soft: #c4b5fd;
+      --magenta: #ec4899;
+      --teal: #14b8a6;
+      --amber: #facc15;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    html, body { background: var(--bg); color: var(--fg); }
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-weight: 400;
+      margin: 0;
+      padding: 2.5rem 2rem;
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.25rem;
+      background: linear-gradient(90deg, #8b5cf6 0%, #ec4899 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .subtitle { color: var(--muted); margin: 0; font-size: 0.95rem; }
+    .stats {
+      display: flex;
+      gap: 2rem;
+      margin: 1.75rem 0 1.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat {
+      display: flex;
+      flex-direction: column;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      min-width: 12rem;
+    }
+    .stat .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat .value { font-size: 1.6rem; font-weight: 600; color: var(--fg); margin-top: 0.15rem; }
+    #chart-wrap {
+      position: relative;
+      height: 340px;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .actions { margin-top: 1.5rem; display: flex; gap: 0.75rem; }
+    button.reset {
+      background: transparent;
+      border: 1px solid var(--violet);
+      color: var(--violet-soft);
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
+    }
+    button.reset:hover:not(:disabled) {
+      background: var(--violet);
+      color: white;
+      box-shadow: 0 0 18px rgba(139, 92, 246, 0.5);
+    }
+    button.reset:disabled { opacity: 0.5; cursor: not-allowed; }
+    footer { margin-top: 2.5rem; font-size: 0.8rem; color: var(--muted); }
+    footer code {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1rem 0.35rem;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Are you attending Replay 2026?</h1>
+  <p class="subtitle">Live survey results. Refreshes every half second.</p>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="label">Total responses</span>
+      <span class="value" id="total">—</span>
+    </div>
+    <div class="stat">
+      <span class="label">Last updated</span>
+      <span class="value" id="last-updated">—</span>
+    </div>
+  </div>
+
+  <div id="chart-wrap"><canvas id="chart"></canvas></div>
+
+  <div class="actions">
+    <button type="button" class="reset" id="reset-btn">Reset Results</button>
+  </div>
+
+  <footer>
+    Source of truth: <code>PollAggregatorWorkflow</code> via Temporal Query.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    const LABELS = ["yes", "maybe", "no"];
+    // Replay palette: violet / teal / magenta for YES / MAYBE / NO.
+    const COLORS = ["#8b5cf6", "#14b8a6", "#ec4899"];
+    const GRID = "#2a2a44";
+    const TICK = "#8a8aa3";
+    const ctx = document.getElementById("chart").getContext("2d");
+
+    const chart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: LABELS.map(l => l.toUpperCase()),
+        datasets: [{
+          label: "Responses",
+          data: [0, 0, 0],
+          backgroundColor: COLORS,
+          borderRadius: 10,
+          borderSkipped: false,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { color: GRID, drawBorder: false },
+            ticks: { color: TICK, font: { family: "Inter", weight: "600" } },
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: TICK, precision: 0, font: { family: "Inter" } },
+            grid: { color: GRID, drawBorder: false },
+          },
+        },
+      },
+    });
+
+    async function refresh() {
+      try {
+        const res = await fetch("/tally", { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        chart.data.datasets[0].data = LABELS.map(l => (data.counts && data.counts[l]) || 0);
+        chart.update();
+        document.getElementById("total").textContent = data.total ?? 0;
+        const lastUpdatedEl = document.getElementById("last-updated");
+        lastUpdatedEl.textContent =
+          data.last_updated ? new Date(data.last_updated).toLocaleTimeString() : "—";
+        if (data.stale) {
+          lastUpdatedEl.title = `Cache is stale: ${data.error || "unknown"}`;
+          lastUpdatedEl.style.color = "#facc15";
+        } else {
+          lastUpdatedEl.title = "";
+          lastUpdatedEl.style.color = "";
+        }
+      } catch (err) {
+        console.error("refresh failed", err);
+      }
+    }
+
+    const resetBtn = document.getElementById("reset-btn");
+    resetBtn.addEventListener("click", async () => {
+      const ok = confirm("Reset all survey results? This clears the live tally. The S3 audit log is preserved.");
+      if (!ok) return;
+      resetBtn.disabled = true;
+      try {
+        const res = await fetch("/reset", { method: "POST" });
+        if (!res.ok) {
+          const body = await res.text();
+          alert(`Reset failed: HTTP ${res.status}\n${body}`);
+        } else {
+          await refresh();
+        }
+      } catch (err) {
+        alert(`Reset failed: ${err}`);
+      } finally {
+        resetBtn.disabled = false;
+      }
+    });
+
+    refresh();
+    setInterval(refresh, 500);
+  </script>
+</body>
+</html>

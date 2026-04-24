@@ -1,0 +1,11 @@
+{                                                                                                                   
+    "Version": "2012-10-17",
+    "Statement": [                                                                                                    
+      {                                                  
+        "Sid": "SurveyPollWriteResponses",
+        "Effect": "Allow",                                                                                            
+        "Action": "s3:PutObject",
+        "Resource": "arn:aws:s3:::survey-polls-internal/survey-replay2026/responses/*"                                
+      }                                                                                                               
+    ]
+}

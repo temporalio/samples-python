@@ -32,7 +32,7 @@ class MyNexusServiceHandler:
                 input.name,  # First argument: name
                 input.language,  # Second argument: language
             ],
-            id=str(uuid.uuid4()),
+            id=f"hello-multi-args-{input.name}-{input.language}-{uuid.uuid4()}",
         )
 
 

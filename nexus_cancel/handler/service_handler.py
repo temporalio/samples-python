@@ -1,11 +1,14 @@
 """
 Nexus service handler for the cancellation sample.
 
-The hello operation is backed by a workflow, using the Nexus request ID as the
-workflow ID for idempotency across retries.
+The hello operation is backed by a workflow whose ID is derived from the
+operation input (name + language), giving each fan-out branch a distinct,
+meaningful business ID.
 """
 
 from __future__ import annotations
+
+import uuid
 
 import nexusrpc
 from temporalio import nexus
@@ -23,5 +26,5 @@ class NexusServiceHandler:
         return await ctx.start_workflow(
             HelloHandlerWorkflow.run,
             input,
-            id=ctx.request_id,
+            id=f"hello-handler-{input.name}-{input.language.name}-{uuid.uuid4()}",
         )

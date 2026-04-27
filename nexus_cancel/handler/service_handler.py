@@ -8,8 +8,6 @@ meaningful business ID.
 
 from __future__ import annotations
 
-import uuid
-
 import nexusrpc
 from temporalio import nexus
 
@@ -26,5 +24,5 @@ class NexusServiceHandler:
         return await ctx.start_workflow(
             HelloHandlerWorkflow.run,
             input,
-            id=f"hello-handler-{input.name}-{input.language.name}-{uuid.uuid4()}",
+            id=f"hello-handler-{input.name}-{input.language.name}",
         )

@@ -35,13 +35,30 @@ any Workflow/Activity definitions.
 
 ## Setup
 
-### 1. Configure Temporal connection
+The instructions here are a slimmed down version of the more complete getting started guide which
+you can find [here](https://docs.temporal.io/production-deployment/worker-deployments/serverless-workers/aws-lambda).
+
+### 1. Create a lambda function for your Python worker
+
+Use either the AWS web UI or CLI to create a Python runtime Lambda function. Ex:
+
+```bash
+aws lambda create-function \
+  --function-name my-temporal-worker \
+  --runtime python3.13 \
+  --handler lambda_function.lambda_handler \
+  --role arn:aws:iam::<YOUR_ACCOUNT_ID>:role/my-temporal-worker-execution \
+  --timeout 600 \
+  --memory-size 256
+```
+
+### 2. Configure Temporal connection
 
 Edit `temporal.toml` with your Temporal Cloud namespace address and credentials. In production,
 we'd recommend reading your credentials from a secret store, but to keep this example simple
 the toml file defaults to reading them from keys bundled along with the Lambda code.
 
-### 2. Create the IAM role
+### 3. Create the IAM role
 
 This creates the IAM role that Temporal Cloud assumes to invoke your Lambda function:
 
@@ -52,7 +69,7 @@ This creates the IAM role that Temporal Cloud assumes to invoke your Lambda func
 The External ID is provided by Temporal Cloud in your namespace's serverless worker
 configuration.
 
-### 3. (Optional) Enable OpenTelemetry
+### 4. (Optional) Enable OpenTelemetry
 
 If you want traces, metrics, and logs, you'll have to attach the ADOT layet to your Lambda function.
 You will need to add the appropriate layer for your runtime and region. See [this page
@@ -67,7 +84,7 @@ Then run the extra setup to grant the Lambda role the necessary permissions:
 
 Update `otel-collector-config.yaml` with your function name and region as needed.
 
-### 4. Deploy the Lambda function
+### 5. Deploy the Lambda function
 
 ```bash
 ./deploy-lambda.sh <function-name>
@@ -76,7 +93,11 @@ Update `otel-collector-config.yaml` with your function name and region as needed
 This installs Python dependencies, bundles them with your code and configuration files,
 and uploads to AWS Lambda.
 
-### 5. Start a Workflow
+### 6. Configure Temporal to be able to invoke your lambda function
+
+Refer to the docs [here](https://docs.temporal.io/production-deployment/worker-deployments/serverless-workers/aws-lambda#create-worker-deployment-version).
+
+### 7. Start a Workflow
 
 Use the starter program to execute a Workflow on the Lambda worker, using
 the same config file the Lambda uses for connecting to the server:

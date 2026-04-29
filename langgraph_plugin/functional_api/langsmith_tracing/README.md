@@ -1,33 +1,30 @@
 # LangSmith Tracing (Functional API)
 
-Same pattern as the Graph API version, using `@task` and `@entrypoint` decorators.
+Demonstrates combining `LangGraphPlugin` (durable task execution) with Temporal's `LangSmithPlugin` (observability) for full tracing of LLM calls through Temporal workflows, using LangGraph's `@task` and `@entrypoint` decorators.
 
 ## What This Sample Demonstrates
 
-- Combining `LangSmithPlugin` (observability) with `LangGraphPlugin` (durability)
-- `@traceable` decorator on a `@task` for LangSmith tracing of LLM calls
-- Both plugins working together in the Functional API style
+- Using `LangSmithPlugin` on the Temporal client for automatic trace propagation
+- Using `LangGraphPlugin` on the Worker for durable LangGraph execution
+- `@traceable` in three places: on the `@task` (Activity) itself, on a helper called from inside the `@task`, and on a helper called from inside the `@entrypoint` (Workflow)
+- Both plugins working together: durability + observability
 
 ## How It Works
 
 1. The Temporal client is created with `LangSmithPlugin(add_temporal_runs=True)`.
-2. The worker registers the `chat` task with `LangGraphPlugin`.
-3. When the workflow runs, the `chat` task executes as a Temporal activity.
-4. The `@traceable` decorator sends trace data to LangSmith.
+2. A Worker registers the `chat` task with `LangGraphPlugin`.
+3. When the Workflow runs, the `chat` task executes as a Temporal Activity.
+4. `@traceable` decorators emit trace data to LangSmith for the task, an in-task helper, and an in-entrypoint helper.
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group langgraph` and a running Temporal dev server.
+Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
 export ANTHROPIC_API_KEY='your-key'
 export LANGCHAIN_API_KEY='your-key'
 
-# Terminal 1
-uv run langgraph_plugin/functional_api/langsmith_tracing/run_worker.py
-
-# Terminal 2
-uv run langgraph_plugin/functional_api/langsmith_tracing/run_workflow.py
+uv run langgraph_plugin/functional_api/langsmith_tracing/main.py
 ```
 
 Traces will appear in your [LangSmith](https://smith.langchain.com/) dashboard.
@@ -36,6 +33,5 @@ Traces will appear in your [LangSmith](https://smith.langchain.com/) dashboard.
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | `@traceable` chat task, `@entrypoint`, and `ChatFunctionalWorkflow` |
-| `run_worker.py` | Creates client with `LangSmithPlugin`, worker with `LangGraphPlugin` |
-| `run_workflow.py` | Creates client with `LangSmithPlugin`, executes workflow |
+| `workflow.py` | `@traceable` chat task + helpers, `@entrypoint`, and `ChatFunctionalWorkflow` |
+| `main.py` | Starts a Worker and executes the Workflow in a single process |

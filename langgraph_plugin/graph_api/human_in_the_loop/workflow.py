@@ -11,7 +11,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
 from langgraph.types import Command, interrupt
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph
+from temporalio.contrib.langgraph import graph as temporal_graph
 from typing_extensions import TypedDict
 
 
@@ -68,7 +68,7 @@ class ChatbotWorkflow:
 
     @workflow.run
     async def run(self, user_message: str) -> str:
-        app = graph("chatbot").compile(checkpointer=InMemorySaver())
+        app = temporal_graph("chatbot").compile(checkpointer=InMemorySaver())
         config = RunnableConfig(
             {"configurable": {"thread_id": workflow.info().workflow_id}}
         )

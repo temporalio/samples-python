@@ -34,13 +34,13 @@ Samples are organized by API style:
 
 ## Running a Sample
 
-Each sample has two scripts -- start the worker first, then the workflow starter in a separate terminal.
+Most samples have two scripts -- start the Worker first, then the Workflow starter in a separate terminal.
 
 ```bash
-# Terminal 1: start the worker
+# Terminal 1: start the Worker
 uv run langgraph_plugin/<api>/<sample>/run_worker.py
 
-# Terminal 2: start the workflow
+# Terminal 2: start the Workflow
 uv run langgraph_plugin/<api>/<sample>/run_workflow.py
 ```
 
@@ -54,11 +54,17 @@ uv run langgraph_plugin/graph_api/human_in_the_loop/run_worker.py
 uv run langgraph_plugin/graph_api/human_in_the_loop/run_workflow.py
 ```
 
+The LangSmith Tracing samples bundle the Worker and Workflow execution into a single `main.py`:
+
+```bash
+uv run langgraph_plugin/<api>/langsmith_tracing/main.py
+```
+
 ## Key Features Demonstrated
 
 - **Durable execution** -- Every graph node / `@task` runs as a Temporal activity with configurable timeouts and retry policies.
 - **Human-in-the-loop** -- LangGraph's `interrupt()` pauses the graph; Temporal signals deliver human input; queries expose pending state to UIs.
-- **Continue-as-new with caching** -- `get_cache()` captures completed task results; passing the cache to the next execution avoids re-running them.
+- **Continue-as-new with caching** -- `cache()` captures completed task results; passing the cache to the next execution avoids re-running them.
 - **Conditional routing** -- Graph API's `add_conditional_edges` and Functional API's native `if/else`/`while` for agent loops.
 - **Parallel execution** -- Functional API launches multiple tasks concurrently by creating futures before awaiting them.
 

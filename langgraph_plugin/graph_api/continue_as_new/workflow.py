@@ -11,7 +11,8 @@ from typing import Any
 
 from langgraph.graph import START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import cache, graph
+from temporalio.contrib.langgraph import cache
+from temporalio.contrib.langgraph import graph as temporal_graph
 from typing_extensions import TypedDict
 
 
@@ -19,18 +20,18 @@ class State(TypedDict):
     value: int
 
 
-async def extract(state: State) -> dict[str, int]:
-    """Stage 1: Extract -- simulate data extraction by doubling the input."""
+async def double(state: State) -> dict[str, int]:
+    """Stage 1: double the input."""
     return {"value": state["value"] * 2}
 
 
-async def transform(state: State) -> dict[str, int]:
-    """Stage 2: Transform -- simulate transformation by adding 50."""
+async def add_50(state: State) -> dict[str, int]:
+    """Stage 2: add 50."""
     return {"value": state["value"] + 50}
 
 
-async def load(state: State) -> dict[str, int]:
-    """Stage 3: Load -- simulate loading by tripling the result."""
+async def triple(state: State) -> dict[str, int]:
+    """Stage 3: triple the result."""
     return {"value": state["value"] * 3}
 
 
@@ -40,12 +41,12 @@ def make_pipeline_graph() -> StateGraph:
         "start_to_close_timeout": timedelta(seconds=30),
     }
     g = StateGraph(State)
-    g.add_node("extract", extract, metadata=node_metadata)
-    g.add_node("transform", transform, metadata=node_metadata)
-    g.add_node("load", load, metadata=node_metadata)
-    g.add_edge(START, "extract")
-    g.add_edge("extract", "transform")
-    g.add_edge("transform", "load")
+    g.add_node("double", double, metadata=node_metadata)
+    g.add_node("add_50", add_50, metadata=node_metadata)
+    g.add_node("triple", triple, metadata=node_metadata)
+    g.add_edge(START, "double")
+    g.add_edge("double", "add_50")
+    g.add_edge("add_50", "triple")
     return g
 
 
@@ -69,7 +70,7 @@ class PipelineWorkflow:
 
     @workflow.run
     async def run(self, input_data: PipelineInput) -> int:
-        app = graph("pipeline", cache=input_data.cache).compile()
+        app = temporal_graph("pipeline", cache=input_data.cache).compile()
         result = await app.ainvoke({"value": input_data.data})
 
         if input_data.phase < 3:

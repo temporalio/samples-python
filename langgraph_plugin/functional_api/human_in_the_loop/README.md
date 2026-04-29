@@ -1,6 +1,6 @@
 # Human-in-the-Loop Chatbot (Functional API)
 
-Same pattern as the Graph API version, but using `@task` and `@entrypoint` decorators for an imperative programming style.
+Demonstrates using LangGraph's `interrupt()` to pause an entrypoint for human review, combined with Temporal signals and queries for asynchronous feedback, using the imperative `@task`/`@entrypoint` style.
 
 ## What This Sample Demonstrates
 
@@ -18,7 +18,7 @@ Same pattern as the Graph API version, but using `@task` and `@entrypoint` decor
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group langgraph` and a running Temporal dev server.
+Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
 # Terminal 1

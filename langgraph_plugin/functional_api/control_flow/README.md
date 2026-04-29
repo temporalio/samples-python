@@ -18,7 +18,7 @@ Demonstrates the Functional API's strength for complex control flow: parallel ex
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group langgraph` and a running Temporal dev server.
+Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
 # Terminal 1

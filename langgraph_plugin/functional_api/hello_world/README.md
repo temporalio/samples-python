@@ -10,7 +10,7 @@ The simplest possible LangGraph Functional API + Temporal sample: a single `@tas
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group langgraph` and a running Temporal dev server.
+Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
 # Terminal 1

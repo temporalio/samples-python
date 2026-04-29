@@ -5,31 +5,27 @@ Demonstrates combining the LangGraph plugin (durable execution) with Temporal's 
 ## What This Sample Demonstrates
 
 - Using `LangSmithPlugin` on the Temporal client for automatic trace propagation
-- Using `LangGraphPlugin` on the worker for durable LangGraph execution
-- `@traceable` decorators for fine-grained LangSmith tracing within activities
+- Using `LangGraphPlugin` on the Worker for durable LangGraph execution
+- `@traceable` in three places: on the Activity itself, on a helper called from inside the Activity, and on a helper called from inside the Workflow
 - Both plugins working together: durability + observability
 
 ## How It Works
 
 1. The Temporal client is created with `LangSmithPlugin(add_temporal_runs=True)`.
-2. The worker is created with `LangGraphPlugin` wrapping the chat graph.
-3. When the workflow runs, the `chat` node executes as a Temporal activity.
-4. The `@traceable` decorator on the activity sends trace data to LangSmith.
+2. A Worker is created with `LangGraphPlugin` wrapping the chat graph.
+3. When the Workflow runs, the `chat` node executes as a Temporal Activity.
+4. `@traceable` decorators emit trace data to LangSmith for the Activity, an in-Activity helper, and an in-Workflow helper.
 5. The `LangSmithPlugin` adds Temporal-specific metadata to the traces.
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group langgraph` and a running Temporal dev server.
+Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
 export ANTHROPIC_API_KEY='your-key'
 export LANGCHAIN_API_KEY='your-key'
 
-# Terminal 1
-uv run langgraph_plugin/graph_api/langsmith_tracing/run_worker.py
-
-# Terminal 2
-uv run langgraph_plugin/graph_api/langsmith_tracing/run_workflow.py
+uv run langgraph_plugin/graph_api/langsmith_tracing/main.py
 ```
 
 Traces will appear in your [LangSmith](https://smith.langchain.com/) dashboard.
@@ -38,6 +34,5 @@ Traces will appear in your [LangSmith](https://smith.langchain.com/) dashboard.
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | `@traceable` chat node, graph definition, and `ChatWorkflow` |
-| `run_worker.py` | Creates client with `LangSmithPlugin`, worker with `LangGraphPlugin` |
-| `run_workflow.py` | Creates client with `LangSmithPlugin`, executes workflow |
+| `workflow.py` | `@traceable` chat node + helpers, graph definition, and `ChatWorkflow` |
+| `main.py` | Starts a Worker and executes the Workflow in a single process |

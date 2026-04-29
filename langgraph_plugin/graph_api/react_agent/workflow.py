@@ -14,7 +14,7 @@ from typing import Annotated, Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph
+from temporalio.contrib.langgraph import graph as temporal_graph
 
 
 class AgentState(TypedDict):
@@ -105,5 +105,5 @@ class ReactAgentWorkflow:
             "messages": [],
             "final_answer": "",
         }
-        result = await graph("react-agent").compile().ainvoke(initial_state)
+        result = await temporal_graph("react-agent").compile().ainvoke(initial_state)
         return result["final_answer"]

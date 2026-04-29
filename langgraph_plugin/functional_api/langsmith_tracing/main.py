@@ -1,6 +1,7 @@
-"""Worker for the LangSmith tracing sample (Functional API).
+"""Run the LangSmith tracing chat sample (Functional API).
 
-Requires ANTHROPIC_API_KEY and LANGCHAIN_API_KEY environment variables.
+Single-process driver: starts a Worker, executes the Workflow once, prints
+the result, then shuts down. Requires ANTHROPIC_API_KEY and LANGCHAIN_API_KEY.
 """
 
 import asyncio
@@ -25,7 +26,7 @@ async def main() -> None:
         plugins=[LangSmithPlugin(add_temporal_runs=True)],
     )
 
-    worker = Worker(
+    async with Worker(
         client,
         task_queue="langgraph-langsmith-functional",
         workflows=[ChatFunctionalWorkflow],
@@ -36,9 +37,14 @@ async def main() -> None:
                 activity_options=activity_options,
             )
         ],
-    )
-    print("Worker started. Ctrl+C to exit.")
-    await worker.run()
+    ):
+        result = await client.execute_workflow(
+            ChatFunctionalWorkflow.run,
+            "What is the meaning of life?",
+            id="langsmith-chat-functional-workflow",
+            task_queue="langgraph-langsmith-functional",
+        )
+        print(f"Response: {result}")
 
 
 if __name__ == "__main__":

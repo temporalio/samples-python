@@ -1,46 +1,47 @@
 """Continue-as-new with caching using the LangGraph Functional API with Temporal.
 
-Same pattern as the Graph API version, but using @task and @entrypoint decorators.
+Demonstrates Temporal's continue-as-new with LangGraph's task result caching
+to avoid re-executing completed @task functions across workflow boundaries.
 """
 
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from langgraph.func import entrypoint as lg_entrypoint
-from langgraph.func import task
+from langgraph.func import entrypoint, task
 from temporalio import workflow
-from temporalio.contrib.langgraph import cache, entrypoint
+from temporalio.contrib.langgraph import cache
+from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
 
 
 @task
-def extract(data: int) -> int:
-    """Stage 1: Extract -- simulate data extraction by doubling the input."""
+def double(data: int) -> int:
+    """Stage 1: double the input."""
     return data * 2
 
 
 @task
-def transform(data: int) -> int:
-    """Stage 2: Transform -- simulate transformation by adding 50."""
+def add_50(data: int) -> int:
+    """Stage 2: add 50."""
     return data + 50
 
 
 @task
-def load(data: int) -> int:
-    """Stage 3: Load -- simulate loading by tripling the result."""
+def triple(data: int) -> int:
+    """Stage 3: triple the result."""
     return data * 3
 
 
-@lg_entrypoint()
+@entrypoint()
 async def pipeline_entrypoint(data: int) -> dict:
-    """Run the 3-stage pipeline: extract -> transform -> load."""
-    extracted = await extract(data)
-    transformed = await transform(extracted)
-    loaded = await load(transformed)
-    return {"result": loaded}
+    """Run the 3-stage pipeline: double -> add_50 -> triple."""
+    doubled = await double(data)
+    plus_50 = await add_50(doubled)
+    tripled = await triple(plus_50)
+    return {"result": tripled}
 
 
-all_tasks: list[Any] = [extract, transform, load]
+all_tasks: list[Any] = [double, add_50, triple]
 
 activity_options = {
     t.func.__name__: {
@@ -68,7 +69,7 @@ class PipelineFunctionalWorkflow:
 
     @workflow.run
     async def run(self, input_data: PipelineInput) -> dict[str, Any]:
-        app = entrypoint("pipeline", cache=input_data.cache)
+        app = temporal_entrypoint("pipeline", cache=input_data.cache)
         result = await app.ainvoke(input_data.data)
 
         if input_data.phase < 3:

@@ -4,12 +4,10 @@ The simplest possible sample: a single task called from an entrypoint.
 """
 
 from datetime import timedelta
-from typing import Any
 
-from langgraph.func import entrypoint as lg_entrypoint
-from langgraph.func import task
+from langgraph.func import entrypoint, task
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint
+from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
 
 
 @task
@@ -18,21 +16,20 @@ def process_query(query: str) -> str:
     return f"Processed: {query}"
 
 
-@lg_entrypoint()
+@entrypoint()
 async def hello_entrypoint(query: str) -> dict:
     """Process the query and return it in a result dict."""
     result = await process_query(query)
     return {"result": result}
 
 
-all_tasks: list[Any] = [process_query]
+all_tasks = [process_query]
 
 activity_options = {
-    t.func.__name__: {
+    "process_query": {
         "execute_in": "activity",
         "start_to_close_timeout": timedelta(seconds=10),
-    }
-    for t in all_tasks
+    },
 }
 
 
@@ -40,4 +37,4 @@ activity_options = {
 class HelloWorldFunctionalWorkflow:
     @workflow.run
     async def run(self, query: str) -> dict:
-        return await entrypoint("hello-world").ainvoke(query)
+        return await temporal_entrypoint("hello-world").ainvoke(query)

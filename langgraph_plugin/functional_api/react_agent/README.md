@@ -1,6 +1,6 @@
 # ReAct Agent (Functional API)
 
-Same agent pattern as the Graph API version, but using a `while` loop instead of conditional edges — making the control flow explicit.
+Demonstrates the ReAct agent pattern (think -> act -> observe -> repeat) as a natural `while` loop using LangGraph's `@task` and `@entrypoint` decorators.
 
 ## What This Sample Demonstrates
 
@@ -25,7 +25,7 @@ while True:
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group langgraph` and a running Temporal dev server.
+Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
 # Terminal 1

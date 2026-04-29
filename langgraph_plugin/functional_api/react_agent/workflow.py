@@ -8,10 +8,9 @@ making the control flow explicit and easy to extend.
 from datetime import timedelta
 from typing import Any
 
-from langgraph.func import entrypoint as lg_entrypoint
-from langgraph.func import task
+from langgraph.func import entrypoint, task
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint
+from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
 
 
 @task
@@ -55,7 +54,7 @@ def execute_tool(tool_name: str, tool_input: str) -> str:
     return f"[Tool] Unknown tool: {tool_name}"
 
 
-@lg_entrypoint()
+@entrypoint()
 async def react_agent_entrypoint(query: str) -> dict:
     """ReAct agent loop: think -> act -> observe -> repeat."""
     history: list[str] = []
@@ -85,4 +84,4 @@ activity_options = {
 class ReactAgentFunctionalWorkflow:
     @workflow.run
     async def run(self, query: str) -> dict:
-        return await entrypoint("react-agent").ainvoke(query)
+        return await temporal_entrypoint("react-agent").ainvoke(query)

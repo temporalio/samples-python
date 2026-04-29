@@ -19,7 +19,7 @@ Demonstrates using LangGraph's `interrupt()` to pause a workflow for human revie
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group langgraph` and a running Temporal dev server.
+Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
 # Terminal 1: start the worker

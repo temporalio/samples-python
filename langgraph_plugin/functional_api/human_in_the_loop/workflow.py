@@ -8,11 +8,10 @@ from typing import Any
 
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.func import entrypoint as lg_entrypoint
-from langgraph.func import task
+from langgraph.func import entrypoint, task
 from langgraph.types import Command, interrupt
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint
+from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
 
 
 @task
@@ -33,7 +32,7 @@ def request_human_review(draft: str) -> str:
     return f"[Revised] {draft} (incorporating feedback: {feedback})"
 
 
-@lg_entrypoint()
+@entrypoint()
 async def chatbot_entrypoint(user_message: str) -> dict:
     """Chatbot entrypoint: generate a draft, get human review, return result."""
     draft = await generate_draft(user_message)
@@ -70,7 +69,7 @@ class ChatbotFunctionalWorkflow:
 
     @workflow.run
     async def run(self, user_message: str) -> dict[str, Any]:
-        app = entrypoint("chatbot")
+        app = temporal_entrypoint("chatbot")
         app.checkpointer = InMemorySaver()
         config = RunnableConfig(
             {"configurable": {"thread_id": workflow.info().workflow_id}}

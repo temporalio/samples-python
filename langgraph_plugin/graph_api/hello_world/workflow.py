@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from langgraph.graph import START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph
+from temporalio.contrib.langgraph import graph as temporal_graph
 from typing_extensions import TypedDict
 
 
@@ -38,5 +38,5 @@ def make_hello_graph() -> StateGraph:
 class HelloWorldWorkflow:
     @workflow.run
     async def run(self, query: str) -> str:
-        result = await graph("hello-world").compile().ainvoke({"value": query})
+        result = await temporal_graph("hello-world").compile().ainvoke({"value": query})
         return result["value"]

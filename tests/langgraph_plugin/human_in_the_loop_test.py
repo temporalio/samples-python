@@ -1,6 +1,8 @@
 import asyncio
+import sys
 import uuid
 
+import pytest
 from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
@@ -8,6 +10,11 @@ from temporalio.worker import Worker
 from langgraph_plugin.graph_api.human_in_the_loop.workflow import (
     ChatbotWorkflow,
     make_chatbot_graph,
+)
+
+pytestmark = pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="langgraph.types.interrupt() requires Python >= 3.11 for async context propagation",
 )
 
 

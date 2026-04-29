@@ -1,5 +1,7 @@
+import sys
 import uuid
 
+import pytest
 from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
@@ -9,6 +11,11 @@ from langgraph_plugin.functional_api.react_agent.workflow import (
     activity_options,
     all_tasks,
     react_agent_entrypoint,
+)
+
+pytestmark = pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="LangGraph Functional API requires Python >= 3.11 for async context propagation",
 )
 
 

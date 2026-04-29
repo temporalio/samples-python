@@ -1,6 +1,8 @@
 import asyncio
+import sys
 import uuid
 
+import pytest
 from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
@@ -10,6 +12,11 @@ from langgraph_plugin.functional_api.human_in_the_loop.workflow import (
     activity_options,
     all_tasks,
     chatbot_entrypoint,
+)
+
+pytestmark = pytest.mark.skipif(
+    sys.version_info < (3, 11),
+    reason="LangGraph Functional API and interrupt() require Python >= 3.11 for async context propagation",
 )
 
 

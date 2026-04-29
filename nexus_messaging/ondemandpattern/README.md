@@ -1,16 +1,16 @@
 ## On-demand pattern
 
-No workflow is pre-started. The caller creates and controls workflow instances through Nexus
+No Workflow is pre-started. The caller creates and controls Workflow instances through Nexus
 operations. `NexusRemoteGreetingService` adds a `run_from_remote` operation that starts a new
 `GreetingWorkflow`, and every other operation includes a `user_id` so the handler knows which
 instance to target.
 
-The caller workflow:
+The caller Workflow:
 1. Starts two remote `GreetingWorkflow` instances via `run_from_remote` (backed by `workflow_run_operation`)
 2. Queries each for supported languages
 3. Changes the language on each (Arabic and Hindi)
 4. Confirms the changes via queries
-5. Approves both workflows
+5. Approves both Workflows
 6. Waits for each to complete and returns their results
 
 ### Running
@@ -39,7 +39,7 @@ In one terminal, start the handler worker:
 uv run python -m nexus_messaging.ondemandpattern.handler.worker
 ```
 
-In another terminal, run the caller workflow:
+In another terminal, run the following command to start the example:
 
 ```bash
 uv run python -m nexus_messaging.ondemandpattern.caller.app

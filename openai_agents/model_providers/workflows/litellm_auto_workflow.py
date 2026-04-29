@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agents import Agent, Runner, function_tool, set_tracing_disabled
+from agents import Agent, Runner, function_tool
 from temporalio import workflow
 
 
@@ -8,8 +8,6 @@ from temporalio import workflow
 class LitellmAutoWorkflow:
     @workflow.run
     async def run(self, prompt: str) -> str:
-        set_tracing_disabled(disabled=True)
-
         @function_tool
         def get_weather(city: str):
             return f"The weather in {city} is sunny."

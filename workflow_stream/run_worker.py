@@ -11,6 +11,7 @@ from workflow_stream.shared import TASK_QUEUE
 from workflow_stream.workflows.hub_workflow import HubWorkflow
 from workflow_stream.workflows.order_workflow import OrderWorkflow
 from workflow_stream.workflows.pipeline_workflow import PipelineWorkflow
+from workflow_stream.workflows.ticker_workflow import TickerWorkflow
 
 
 async def main() -> None:
@@ -19,7 +20,7 @@ async def main() -> None:
     worker = Worker(
         client,
         task_queue=TASK_QUEUE,
-        workflows=[HubWorkflow, OrderWorkflow, PipelineWorkflow],
+        workflows=[HubWorkflow, OrderWorkflow, PipelineWorkflow, TickerWorkflow],
         activities=[charge_card],
     )
     await worker.run()

@@ -54,7 +54,20 @@ This directory has two scenarios sharing one Worker.
   backend service or scheduled job pushing events into a workflow it
   didn't itself start.
 
-`run_worker.py` registers all three workflows and the activity.
+**Scenario 4 — bounded log via `truncate()`:**
+
+* `workflows/ticker_workflow.py` — a long-running workflow that
+  publishes events at a fixed cadence and calls
+  `self.stream.truncate(...)` periodically to bound log growth, keeping
+  only the most recent N entries.
+* `run_truncating_ticker.py` — runs a fast subscriber and a slow
+  subscriber side by side. The fast one keeps up and sees every offset
+  in order; the slow one sleeps between iterations, falls behind a
+  truncation, and silently jumps forward to the new base offset. The
+  output makes the trade visible: bounded log size in exchange for
+  intermediate events being invisible to slow consumers.
+
+`run_worker.py` registers all four workflows and the activity.
 
 ## Run it
 
@@ -68,6 +81,8 @@ uv run workflow_stream/run_publisher.py
 uv run workflow_stream/run_reconnecting_subscriber.py
 # or
 uv run workflow_stream/run_external_publisher.py
+# or
+uv run workflow_stream/run_truncating_ticker.py
 ```
 
 Expected output on the basic publisher side:

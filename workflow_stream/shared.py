@@ -14,6 +14,7 @@ TASK_QUEUE = "workflow-stream-sample-task-queue"
 TOPIC_STATUS = "status"
 TOPIC_PROGRESS = "progress"
 TOPIC_NEWS = "news"
+TOPIC_TICK = "tick"
 
 
 @dataclass
@@ -56,6 +57,21 @@ class HubInput:
 @dataclass
 class NewsEvent:
     headline: str
+
+
+@dataclass
+class TickerInput:
+    count: int = 20
+    keep_last: int = 3
+    truncate_every: int = 5
+    interval_ms: int = 400
+    # Carries stream state across continue-as-new. None on a fresh start.
+    stream_state: WorkflowStreamState | None = None
+
+
+@dataclass
+class TickEvent:
+    n: int
 
 
 T = TypeVar("T")

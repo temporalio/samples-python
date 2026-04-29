@@ -6,10 +6,12 @@ making the control flow explicit and easy to extend.
 """
 
 from datetime import timedelta
+from typing import Any
 
 from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from temporalio import workflow
+from temporalio.contrib.langgraph import entrypoint
 
 
 @task
@@ -68,10 +70,13 @@ async def react_agent_entrypoint(query: str) -> dict:
         history.append(result)
 
 
-all_tasks = [agent_think, execute_tool]
+all_tasks: list[Any] = [agent_think, execute_tool]
 
 activity_options = {
-    t.func.__name__: {"start_to_close_timeout": timedelta(seconds=30)}
+    t.func.__name__: {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    }
     for t in all_tasks
 }
 
@@ -80,4 +85,4 @@ activity_options = {
 class ReactAgentFunctionalWorkflow:
     @workflow.run
     async def run(self, query: str) -> dict:
-        return await react_agent_entrypoint.ainvoke(query)
+        return await entrypoint("react-agent").ainvoke(query)

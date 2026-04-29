@@ -10,7 +10,7 @@ from typing import Any
 from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from temporalio import workflow
-from temporalio.contrib.langgraph import get_cache, set_cache
+from temporalio.contrib.langgraph import cache, entrypoint
 
 
 @task
@@ -40,10 +40,13 @@ async def pipeline_entrypoint(data: int) -> dict:
     return {"result": loaded}
 
 
-all_tasks = [extract, transform, load]
+all_tasks: list[Any] = [extract, transform, load]
 
 activity_options = {
-    t.func.__name__: {"start_to_close_timeout": timedelta(seconds=30)}
+    t.func.__name__: {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    }
     for t in all_tasks
 }
 
@@ -65,14 +68,14 @@ class PipelineFunctionalWorkflow:
 
     @workflow.run
     async def run(self, input_data: PipelineInput) -> dict[str, Any]:
-        set_cache(input_data.cache)
-        result = await pipeline_entrypoint.ainvoke(input_data.data)
+        app = entrypoint("pipeline", cache=input_data.cache)
+        result = await app.ainvoke(input_data.data)
 
         if input_data.phase < 3:
             workflow.continue_as_new(
                 PipelineInput(
                     data=input_data.data,
-                    cache=get_cache(),
+                    cache=cache(),
                     phase=input_data.phase + 1,
                 )
             )

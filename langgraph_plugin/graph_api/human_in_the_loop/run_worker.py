@@ -9,13 +9,13 @@ from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.human_in_the_loop.workflow import (
     ChatbotWorkflow,
-    chatbot_graph,
+    make_chatbot_graph,
 )
 
 
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
-    plugin = LangGraphPlugin(graphs=[chatbot_graph])
+    plugin = LangGraphPlugin(graphs={"chatbot": make_chatbot_graph()})
 
     worker = Worker(
         client,

@@ -6,13 +6,13 @@ from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.react_agent.workflow import (
     ReactAgentWorkflow,
-    agent_graph,
+    make_agent_graph,
 )
 
 
 async def test_react_agent_graph_api(client: Client) -> None:
     task_queue = f"react-agent-test-{uuid.uuid4()}"
-    plugin = LangGraphPlugin(graphs=[agent_graph])
+    plugin = LangGraphPlugin(graphs={"react-agent": make_agent_graph()})
 
     async with Worker(
         client,

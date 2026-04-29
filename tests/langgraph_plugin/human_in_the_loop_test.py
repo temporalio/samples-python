@@ -7,13 +7,13 @@ from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.human_in_the_loop.workflow import (
     ChatbotWorkflow,
-    chatbot_graph,
+    make_chatbot_graph,
 )
 
 
 async def test_human_in_the_loop_approve(client: Client) -> None:
     task_queue = f"hitl-test-{uuid.uuid4()}"
-    plugin = LangGraphPlugin(graphs=[chatbot_graph])
+    plugin = LangGraphPlugin(graphs={"chatbot": make_chatbot_graph()})
 
     async with Worker(
         client,
@@ -47,7 +47,7 @@ async def test_human_in_the_loop_approve(client: Client) -> None:
 
 async def test_human_in_the_loop_revise(client: Client) -> None:
     task_queue = f"hitl-revise-test-{uuid.uuid4()}"
-    plugin = LangGraphPlugin(graphs=[chatbot_graph])
+    plugin = LangGraphPlugin(graphs={"chatbot": make_chatbot_graph()})
 
     async with Worker(
         client,

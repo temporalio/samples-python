@@ -11,33 +11,42 @@ from typing import Any
 
 from langgraph.graph import START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import get_cache, set_cache
+from temporalio.contrib.langgraph import cache, graph
+from typing_extensions import TypedDict
 
 
-async def extract(data: int) -> int:
+class State(TypedDict):
+    value: int
+
+
+async def extract(state: State) -> dict[str, int]:
     """Stage 1: Extract -- simulate data extraction by doubling the input."""
-    return data * 2
+    return {"value": state["value"] * 2}
 
 
-async def transform(data: int) -> int:
+async def transform(state: State) -> dict[str, int]:
     """Stage 2: Transform -- simulate transformation by adding 50."""
-    return data + 50
+    return {"value": state["value"] + 50}
 
 
-async def load(data: int) -> int:
+async def load(state: State) -> dict[str, int]:
     """Stage 3: Load -- simulate loading by tripling the result."""
-    return data * 3
+    return {"value": state["value"] * 3}
 
 
-timeout = {"start_to_close_timeout": timedelta(seconds=30)}
-
-pipeline_graph = StateGraph(int)
-pipeline_graph.add_node("extract", extract, metadata=timeout)
-pipeline_graph.add_node("transform", transform, metadata=timeout)
-pipeline_graph.add_node("load", load, metadata=timeout)
-pipeline_graph.add_edge(START, "extract")
-pipeline_graph.add_edge("extract", "transform")
-pipeline_graph.add_edge("transform", "load")
+def make_pipeline_graph() -> StateGraph:
+    node_metadata = {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    }
+    g = StateGraph(State)
+    g.add_node("extract", extract, metadata=node_metadata)
+    g.add_node("transform", transform, metadata=node_metadata)
+    g.add_node("load", load, metadata=node_metadata)
+    g.add_edge(START, "extract")
+    g.add_edge("extract", "transform")
+    g.add_edge("transform", "load")
+    return g
 
 
 @dataclass
@@ -60,16 +69,16 @@ class PipelineWorkflow:
 
     @workflow.run
     async def run(self, input_data: PipelineInput) -> int:
-        set_cache(input_data.cache)
-        result = await pipeline_graph.compile().ainvoke(input_data.data)
+        app = graph("pipeline", cache=input_data.cache).compile()
+        result = await app.ainvoke({"value": input_data.data})
 
         if input_data.phase < 3:
             workflow.continue_as_new(
                 PipelineInput(
                     data=input_data.data,
-                    cache=get_cache(),
+                    cache=cache(),
                     phase=input_data.phase + 1,
                 )
             )
 
-        return result
+        return result["value"]

@@ -1,5 +1,4 @@
 import uuid
-from datetime import timedelta
 
 from temporalio.client import Client
 from temporalio.contrib.langgraph import LangGraphPlugin
@@ -7,13 +6,13 @@ from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.hello_world.workflow import (
     HelloWorldWorkflow,
-    hello_graph,
+    make_hello_graph,
 )
 
 
 async def test_hello_world_graph_api(client: Client) -> None:
     task_queue = f"hello-world-test-{uuid.uuid4()}"
-    plugin = LangGraphPlugin(graphs=[hello_graph])
+    plugin = LangGraphPlugin(graphs={"hello-world": make_hello_graph()})
 
     async with Worker(
         client,
@@ -33,7 +32,7 @@ async def test_hello_world_graph_api(client: Client) -> None:
 
 async def test_hello_world_empty_string(client: Client) -> None:
     task_queue = f"hello-world-empty-test-{uuid.uuid4()}"
-    plugin = LangGraphPlugin(graphs=[hello_graph])
+    plugin = LangGraphPlugin(graphs={"hello-world": make_hello_graph()})
 
     async with Worker(
         client,

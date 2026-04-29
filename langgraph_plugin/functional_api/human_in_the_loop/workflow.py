@@ -12,6 +12,7 @@ from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from langgraph.types import Command, interrupt
 from temporalio import workflow
+from temporalio.contrib.langgraph import entrypoint
 
 
 @task
@@ -40,10 +41,13 @@ async def chatbot_entrypoint(user_message: str) -> dict:
     return {"response": final_response}
 
 
-all_tasks = [generate_draft, request_human_review]
+all_tasks: list[Any] = [generate_draft, request_human_review]
 
 activity_options = {
-    t.func.__name__: {"start_to_close_timeout": timedelta(seconds=30)}
+    t.func.__name__: {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    }
     for t in all_tasks
 }
 
@@ -66,13 +70,14 @@ class ChatbotFunctionalWorkflow:
 
     @workflow.run
     async def run(self, user_message: str) -> dict[str, Any]:
-        chatbot_entrypoint.checkpointer = InMemorySaver()
+        app = entrypoint("chatbot")
+        app.checkpointer = InMemorySaver()
         config = RunnableConfig(
             {"configurable": {"thread_id": workflow.info().workflow_id}}
         )
 
         # First invocation: runs until interrupt() pauses for human review
-        result = await chatbot_entrypoint.ainvoke(user_message, config, version="v2")
+        result = await app.ainvoke(user_message, config, version="v2")
 
         self._draft = result.interrupts[0].value
 
@@ -80,7 +85,7 @@ class ChatbotFunctionalWorkflow:
         await workflow.wait_condition(lambda: self._human_input is not None)
 
         # Resume with the human's feedback
-        resumed = await chatbot_entrypoint.ainvoke(
+        resumed = await app.ainvoke(
             Command(resume=self._human_input), config, version="v2"
         )
         return resumed.value

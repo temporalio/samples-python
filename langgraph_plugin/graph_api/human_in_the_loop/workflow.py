@@ -11,31 +11,43 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
 from langgraph.types import Command, interrupt
 from temporalio import workflow
+from temporalio.contrib.langgraph import graph
+from typing_extensions import TypedDict
 
 
-async def generate_draft(message: str) -> str:
+class State(TypedDict):
+    value: str
+
+
+async def generate_draft(state: State) -> dict[str, str]:
     """Generate a draft response. Replace with an LLM call in production."""
-    return (
-        f"Here's my response to '{message}': "
-        "The answer is 42. Let me know if this helps!"
-    )
+    return {
+        "value": (
+            f"Here's my response to '{state['value']}': "
+            "The answer is 42. Let me know if this helps!"
+        )
+    }
 
 
-async def human_review(draft: str) -> str:
+async def human_review(state: State) -> dict[str, str]:
     """Present draft to human for review via interrupt."""
-    feedback = interrupt(draft)
+    feedback = interrupt(state["value"])
     if feedback == "approve":
-        return draft
-    return f"[Revised] {draft} (incorporating feedback: {feedback})"
+        return {"value": state["value"]}
+    return {"value": f"[Revised] {state['value']} (incorporating feedback: {feedback})"}
 
 
-timeout = {"start_to_close_timeout": timedelta(seconds=30)}
-
-chatbot_graph = StateGraph(str)
-chatbot_graph.add_node("generate_draft", generate_draft, metadata=timeout)
-chatbot_graph.add_node("human_review", human_review, metadata=timeout)
-chatbot_graph.add_edge(START, "generate_draft")
-chatbot_graph.add_edge("generate_draft", "human_review")
+def make_chatbot_graph() -> StateGraph:
+    node_metadata = {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    }
+    g = StateGraph(State)
+    g.add_node("generate_draft", generate_draft, metadata=node_metadata)
+    g.add_node("human_review", human_review, metadata=node_metadata)
+    g.add_edge(START, "generate_draft")
+    g.add_edge("generate_draft", "human_review")
+    return g
 
 
 @workflow.defn
@@ -56,13 +68,13 @@ class ChatbotWorkflow:
 
     @workflow.run
     async def run(self, user_message: str) -> str:
-        g = chatbot_graph.compile(checkpointer=InMemorySaver())
+        app = graph("chatbot").compile(checkpointer=InMemorySaver())
         config = RunnableConfig(
             {"configurable": {"thread_id": workflow.info().workflow_id}}
         )
 
         # First invocation: runs generate_draft, then pauses at interrupt()
-        result = await g.ainvoke(user_message, config, version="v2")
+        result = await app.ainvoke({"value": user_message}, config, version="v2")
 
         # Store the draft from the interrupt for the query handler
         self._draft = result.interrupts[0].value
@@ -71,7 +83,7 @@ class ChatbotWorkflow:
         await workflow.wait_condition(lambda: self._human_input is not None)
 
         # Resume the graph with the human's feedback
-        resumed = await g.ainvoke(
+        resumed = await app.ainvoke(
             Command(resume=self._human_input), config, version="v2"
         )
-        return resumed.value
+        return resumed.value["value"]

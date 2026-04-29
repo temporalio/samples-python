@@ -13,7 +13,7 @@ from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.langsmith_tracing.workflow import (
     ChatWorkflow,
-    chat_graph,
+    make_chat_graph,
 )
 
 
@@ -27,7 +27,7 @@ async def main() -> None:
         client,
         task_queue="langgraph-langsmith",
         workflows=[ChatWorkflow],
-        plugins=[LangGraphPlugin(graphs=[chat_graph])],
+        plugins=[LangGraphPlugin(graphs={"chat": make_chat_graph()})],
     )
     print("Worker started. Ctrl+C to exit.")
     await worker.run()

@@ -9,13 +9,13 @@ from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.hello_world.workflow import (
     HelloWorldWorkflow,
-    hello_graph,
+    make_hello_graph,
 )
 
 
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
-    plugin = LangGraphPlugin(graphs=[hello_graph])
+    plugin = LangGraphPlugin(graphs={"hello-world": make_hello_graph()})
 
     worker = Worker(
         client,

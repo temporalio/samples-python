@@ -7,24 +7,36 @@ from datetime import timedelta
 
 from langgraph.graph import START, StateGraph
 from temporalio import workflow
+from temporalio.contrib.langgraph import graph
+from typing_extensions import TypedDict
 
 
-async def process_query(query: str) -> str:
+class State(TypedDict):
+    value: str
+
+
+async def process_query(state: State) -> dict[str, str]:
     """Process a query and return a response."""
-    return f"Processed: {query}"
+    return {"value": f"Processed: {state['value']}"}
 
 
-hello_graph = StateGraph(str)
-hello_graph.add_node(
-    "process_query",
-    process_query,
-    metadata={"start_to_close_timeout": timedelta(seconds=10)},
-)
-hello_graph.add_edge(START, "process_query")
+def make_hello_graph() -> StateGraph:
+    g = StateGraph(State)
+    g.add_node(
+        "process_query",
+        process_query,
+        metadata={
+            "execute_in": "activity",
+            "start_to_close_timeout": timedelta(seconds=10),
+        },
+    )
+    g.add_edge(START, "process_query")
+    return g
 
 
 @workflow.defn
 class HelloWorldWorkflow:
     @workflow.run
     async def run(self, query: str) -> str:
-        return await hello_graph.compile().ainvoke(query)
+        result = await graph("hello-world").compile().ainvoke({"value": query})
+        return result["value"]

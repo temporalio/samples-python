@@ -7,10 +7,12 @@ Demonstrates the Functional API's advantage for complex control flow:
 """
 
 from datetime import timedelta
+from typing import Any
 
 from langgraph.func import entrypoint as lg_entrypoint
 from langgraph.func import task
 from temporalio import workflow
+from temporalio.contrib.langgraph import entrypoint
 
 
 @task
@@ -74,7 +76,7 @@ async def control_flow_pipeline(items: list[str]) -> dict:
     return {"results": results, "summary": summary_text, "total": len(results)}
 
 
-all_tasks = [
+all_tasks: list[Any] = [
     validate_item,
     classify_item,
     process_urgent,
@@ -83,7 +85,10 @@ all_tasks = [
 ]
 
 activity_options = {
-    t.func.__name__: {"start_to_close_timeout": timedelta(seconds=30)}
+    t.func.__name__: {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    }
     for t in all_tasks
 }
 
@@ -92,4 +97,4 @@ activity_options = {
 class ControlFlowWorkflow:
     @workflow.run
     async def run(self, items: list[str]) -> dict:
-        return await control_flow_pipeline.ainvoke(items)
+        return await entrypoint("control-flow").ainvoke(items)

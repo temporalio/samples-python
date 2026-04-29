@@ -16,16 +16,31 @@ signals and subscribe via long-poll updates. This packages the
 boilerplate — batching, offset tracking, topic filtering, continue-as-new
 hand-off — into a reusable stream.
 
-This directory has a minimal end-to-end example:
+This directory has two scenarios sharing one Worker.
+
+**Scenario 1 — basic publish/subscribe with heterogeneous topics:**
 
 * `workflows/order_workflow.py` — a workflow that hosts a
   `WorkflowStream` and publishes status events as it processes an order.
 * `activities/payment_activity.py` — an activity that publishes
   intermediate progress to the stream via
   `WorkflowStreamClient.from_activity()`.
-* `run_worker.py` — registers the workflow and activity.
-* `run_publisher.py` — starts the workflow, then prints subscribed
-  events as they arrive.
+* `run_publisher.py` — starts the workflow, subscribes to both topics,
+  decodes each by `item.topic`, and prints events as they arrive.
+
+**Scenario 2 — reconnecting subscriber:**
+
+* `workflows/pipeline_workflow.py` — a multi-stage pipeline that
+  publishes stage transitions over ~10 seconds, leaving room for a
+  consumer to disconnect and reconnect mid-run.
+* `run_reconnecting_subscriber.py` — connects, reads a couple of
+  events, persists `item.offset + 1` to disk, "disconnects," then
+  reopens a fresh client and resumes via `subscribe(from_offset=...)`.
+  This is the central Workflow Streams use case: a consumer can
+  disappear (page refresh, server restart, laptop closed) and resume
+  later without missing events or seeing duplicates.
+
+`run_worker.py` registers both workflows and the activity.
 
 ## Run it
 
@@ -33,12 +48,13 @@ This directory has a minimal end-to-end example:
 # Terminal 1: worker
 uv run workflow_stream/run_worker.py
 
-# Terminal 2: starter + subscriber
+# Terminal 2: pick a scenario
 uv run workflow_stream/run_publisher.py
+# or
+uv run workflow_stream/run_reconnecting_subscriber.py
 ```
 
-Expected output on the publisher side, with events streaming in as the
-workflow progresses:
+Expected output on the basic publisher side:
 
 ```
 [status] received: order=order-1
@@ -48,4 +64,22 @@ workflow progresses:
 [progress] charge id: charge-order-1
 [status] complete: order=order-1
 workflow result: charge-order-1
+```
+
+Expected output on the reconnecting subscriber side (note the offsets
+are continuous across the disconnect — no events lost, none duplicated):
+
+```
+[phase 1] connecting and reading first few events
+  offset= 0  stage=validating
+  offset= 1  stage=loading data
+[phase 1] persisted resume offset=2 -> /tmp/...; disconnecting
+
+[phase 2] reconnecting and resuming from persisted offset
+  offset= 2  stage=transforming
+  offset= 3  stage=writing output
+  offset= 4  stage=verifying
+  offset= 5  stage=complete
+
+workflow result: pipeline workflow-stream-pipeline-... done
 ```

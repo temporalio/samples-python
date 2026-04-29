@@ -33,6 +33,18 @@ class ProgressEvent:
     message: str
 
 
+@dataclass
+class PipelineInput:
+    pipeline_id: str
+    # Carries stream state across continue-as-new. None on a fresh start.
+    stream_state: WorkflowStreamState | None = None
+
+
+@dataclass
+class StageEvent:
+    stage: str
+
+
 T = TypeVar("T")
 
 

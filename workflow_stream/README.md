@@ -40,7 +40,21 @@ This directory has two scenarios sharing one Worker.
   disappear (page refresh, server restart, laptop closed) and resume
   later without missing events or seeing duplicates.
 
-`run_worker.py` registers both workflows and the activity.
+**Scenario 3 — external (non-Activity) publisher:**
+
+* `workflows/hub_workflow.py` — a passive workflow that does no work
+  of its own; it exists only to host a `WorkflowStream` and shut down
+  when signaled.
+* `run_external_publisher.py` — starts the hub, then publishes events
+  into it from a plain Python coroutine using
+  `WorkflowStreamClient.create(client, workflow_id)`. A subscriber
+  task runs alongside; when the publisher is done it signals
+  `HubWorkflow.close`, the workflow's run finishes, and the
+  subscriber's iterator exits normally. This is the shape that fits a
+  backend service or scheduled job pushing events into a workflow it
+  didn't itself start.
+
+`run_worker.py` registers all three workflows and the activity.
 
 ## Run it
 
@@ -52,6 +66,8 @@ uv run workflow_stream/run_worker.py
 uv run workflow_stream/run_publisher.py
 # or
 uv run workflow_stream/run_reconnecting_subscriber.py
+# or
+uv run workflow_stream/run_external_publisher.py
 ```
 
 Expected output on the basic publisher side:

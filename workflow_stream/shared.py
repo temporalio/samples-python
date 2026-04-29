@@ -13,6 +13,7 @@ TASK_QUEUE = "workflow-stream-sample-task-queue"
 # Topics published by the workflow / activity.
 TOPIC_STATUS = "status"
 TOPIC_PROGRESS = "progress"
+TOPIC_NEWS = "news"
 
 
 @dataclass
@@ -43,6 +44,18 @@ class PipelineInput:
 @dataclass
 class StageEvent:
     stage: str
+
+
+@dataclass
+class HubInput:
+    hub_id: str
+    # Carries stream state across continue-as-new. None on a fresh start.
+    stream_state: WorkflowStreamState | None = None
+
+
+@dataclass
+class NewsEvent:
+    headline: str
 
 
 T = TypeVar("T")

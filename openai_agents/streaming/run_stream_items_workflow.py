@@ -62,8 +62,9 @@ async def main() -> None:
                         f"{ItemHelpers.text_message_output(event.item)}"
                     )
 
-    await race_with_workflow(render(), handle)
+    result = await race_with_workflow(render(), handle)
     print("=== Run complete ===")
+    print(result)
 
 
 if __name__ == "__main__":

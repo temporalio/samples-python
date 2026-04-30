@@ -30,7 +30,4 @@ class HubWorkflow:
 
     @workflow.signal
     def close(self) -> None:
-        # Custom signal handler that does not read stream state, so the
-        # synchronous-handler race documented in the README does not
-        # apply.
         self._closed = True

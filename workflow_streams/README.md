@@ -16,7 +16,7 @@ signals and subscribe via long-poll updates. This packages the
 boilerplate — batching, offset tracking, topic filtering, continue-as-new
 hand-off — into a reusable stream.
 
-This directory has two scenarios sharing one Worker.
+This directory has four scenarios sharing one Worker.
 
 **Scenario 1 — basic publish/subscribe with heterogeneous topics:**
 
@@ -114,3 +114,20 @@ are continuous across the disconnect — no events lost, none duplicated):
 
 workflow result: pipeline workflow-stream-pipeline-... done
 ```
+
+## Notes
+
+* **Subscriber start position.** `subscribe(...)` without `from_offset`
+  starts at the stream's current base offset and follows live — older
+  events that have been truncated, or that arrived before the
+  subscribe call, are not replayed. Pass `from_offset=N` to resume
+  from a known position (see `run_reconnecting_subscriber.py`); the
+  iterator skips forward to the current base if `N` has been
+  truncated.
+* **Continue-as-new.** Every `*Input` dataclass carries
+  `stream_state: WorkflowStreamState | None = None`. To survive
+  continue-as-new without losing buffered items, capture the workflow's
+  stream state and pass it to the next run via
+  `WorkflowStream(prior_state=...)` in `@workflow.init`. The samples
+  declare the field for completeness; none of them actually trigger
+  continue-as-new.

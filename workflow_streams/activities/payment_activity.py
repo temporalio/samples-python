@@ -16,16 +16,6 @@ async def charge_card(order_id: str) -> str:
     `WorkflowStreamClient.from_within_activity()` reads the parent
     workflow id and the Temporal client from the activity context, so
     this activity can push events back without any wiring.
-
-    Caveat: each call to ``from_within_activity()`` creates a fresh
-    client with a random ``publisher_id``, so dedup does not protect
-    against an activity retry republishing the same events. For
-    activities that must be exactly-once on the stream side, derive a
-    stable ``publisher_id`` from ``activity.info().activity_id`` (this
-    is invariant across attempts of the same scheduled activity). The
-    current ``WorkflowStreamClient`` API does not yet expose
-    ``publisher_id`` on its constructors; this sample accepts
-    at-most-once-per-attempt semantics.
     """
     client = WorkflowStreamClient.from_within_activity(
         batch_interval=timedelta(milliseconds=200)

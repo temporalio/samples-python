@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.contrib.workflow_stream import WorkflowStream
+from temporalio.contrib.workflow_streams import WorkflowStream
 
-from workflow_stream.shared import (
+from workflow_streams.shared import (
     TOPIC_TICK,
     TickEvent,
     TickerInput,
@@ -38,6 +38,7 @@ class TickerWorkflow:
     @workflow.init
     def __init__(self, input: TickerInput) -> None:
         self.stream = WorkflowStream(prior_state=input.stream_state)
+        self.tick = self.stream.topic(TOPIC_TICK, type=TickEvent)
         # Running count of events published by THIS run. To compute a
         # global offset, add the prior_state's base_offset (omitted
         # here — this sample doesn't continue-as-new).
@@ -46,7 +47,7 @@ class TickerWorkflow:
     @workflow.run
     async def run(self, input: TickerInput) -> str:
         for n in range(input.count):
-            self.stream.publish(TOPIC_TICK, TickEvent(n=n))
+            self.tick.publish(TickEvent(n=n))
             self._published += 1
             await workflow.sleep(timedelta(milliseconds=input.interval_ms))
             if (

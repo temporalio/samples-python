@@ -18,9 +18,9 @@ For long-running workflows pushing high event volumes this is usually
 the right trade — pair with set-semantic events where each event
 carries enough state to make missing the prior ones recoverable.
 
-Run the worker first (``uv run workflow_stream/run_worker.py``), then::
+Run the worker first (``uv run workflow_streams/run_worker.py``), then::
 
-    uv run workflow_stream/run_truncating_ticker.py
+    uv run workflow_streams/run_truncating_ticker.py
 """
 
 from __future__ import annotations
@@ -29,15 +29,15 @@ import asyncio
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.workflow_stream import WorkflowStreamClient
+from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
-from workflow_stream.shared import (
+from workflow_streams.shared import (
     TASK_QUEUE,
     TOPIC_TICK,
     TickerInput,
     TickEvent,
 )
-from workflow_stream.workflows.ticker_workflow import TickerWorkflow
+from workflow_streams.workflows.ticker_workflow import TickerWorkflow
 
 
 SLOW_SUBSCRIBER_DELAY_S = 1.5

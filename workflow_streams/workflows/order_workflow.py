@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.contrib.workflow_stream import WorkflowStream
+from temporalio.contrib.workflow_streams import WorkflowStream
 
-from workflow_stream.shared import (
+from workflow_streams.shared import (
     TOPIC_PROGRESS,
     TOPIC_STATUS,
     OrderInput,
@@ -14,7 +14,7 @@ from workflow_stream.shared import (
 )
 
 with workflow.unsafe.imports_passed_through():
-    from workflow_stream.activities.payment_activity import charge_card
+    from workflow_streams.activities.payment_activity import charge_card
 
 
 @workflow.defn
@@ -34,12 +34,12 @@ class OrderWorkflow:
         # messages. Threading prior_state lets the workflow survive
         # continue-as-new without losing buffered items.
         self.stream = WorkflowStream(prior_state=input.stream_state)
+        self.status = self.stream.topic(TOPIC_STATUS, type=StatusEvent)
+        self.progress = self.stream.topic(TOPIC_PROGRESS, type=ProgressEvent)
 
     @workflow.run
     async def run(self, input: OrderInput) -> str:
-        self.stream.publish(
-            TOPIC_STATUS, StatusEvent(kind="received", order_id=input.order_id)
-        )
+        self.status.publish(StatusEvent(kind="received", order_id=input.order_id))
 
         charge_id = await workflow.execute_activity(
             charge_card,
@@ -47,14 +47,7 @@ class OrderWorkflow:
             start_to_close_timeout=timedelta(seconds=30),
         )
 
-        self.stream.publish(
-            TOPIC_STATUS, StatusEvent(kind="shipped", order_id=input.order_id)
-        )
-        self.stream.publish(
-            TOPIC_PROGRESS,
-            ProgressEvent(message=f"charge id: {charge_id}"),
-        )
-        self.stream.publish(
-            TOPIC_STATUS, StatusEvent(kind="complete", order_id=input.order_id)
-        )
+        self.status.publish(StatusEvent(kind="shipped", order_id=input.order_id))
+        self.progress.publish(ProgressEvent(message=f"charge id: {charge_id}"))
+        self.status.publish(StatusEvent(kind="complete", order_id=input.order_id))
         return charge_id

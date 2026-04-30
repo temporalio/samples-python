@@ -1,7 +1,7 @@
 # Workflow Streams
 
 > **Experimental.** These samples target the
-> `temporalio.contrib.workflow_stream` module on the
+> `temporalio.contrib.workflow_streams` module on the
 > [`contrib/pubsub` branch of sdk-python][branch], which is not yet
 > released. To run them locally, install sdk-python from that branch
 > (e.g. `uv pip install -e <path-to-sdk-python>` after checking out the
@@ -9,7 +9,7 @@
 
 [branch]: https://github.com/temporalio/sdk-python/tree/contrib/pubsub
 
-`temporalio.contrib.workflow_stream` lets a workflow host a durable,
+`temporalio.contrib.workflow_streams` lets a workflow host a durable,
 offset-addressed event channel. The workflow holds an append-only log;
 external clients (activities, starters, BFFs) publish to topics via
 signals and subscribe via long-poll updates. This packages the
@@ -24,7 +24,7 @@ This directory has two scenarios sharing one Worker.
   `WorkflowStream` and publishes status events as it processes an order.
 * `activities/payment_activity.py` — an activity that publishes
   intermediate progress to the stream via
-  `WorkflowStreamClient.from_activity()`.
+  `WorkflowStreamClient.from_within_activity()`.
 * `run_publisher.py` — starts the workflow, subscribes to both topics,
   decodes each by `item.topic`, and prints events as they arrive.
 
@@ -73,16 +73,16 @@ This directory has two scenarios sharing one Worker.
 
 ```bash
 # Terminal 1: worker
-uv run workflow_stream/run_worker.py
+uv run workflow_streams/run_worker.py
 
 # Terminal 2: pick a scenario
-uv run workflow_stream/run_publisher.py
+uv run workflow_streams/run_publisher.py
 # or
-uv run workflow_stream/run_reconnecting_subscriber.py
+uv run workflow_streams/run_reconnecting_subscriber.py
 # or
-uv run workflow_stream/run_external_publisher.py
+uv run workflow_streams/run_external_publisher.py
 # or
-uv run workflow_stream/run_truncating_ticker.py
+uv run workflow_streams/run_truncating_ticker.py
 ```
 
 Expected output on the basic publisher side:

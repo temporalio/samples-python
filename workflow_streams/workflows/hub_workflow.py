@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from temporalio import workflow
-from temporalio.contrib.workflow_stream import WorkflowStream
+from temporalio.contrib.workflow_streams import WorkflowStream
 
-from workflow_stream.shared import HubInput
+from workflow_streams.shared import HubInput
 
 
 @workflow.defn

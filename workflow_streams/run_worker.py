@@ -6,12 +6,12 @@ import logging
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from workflow_stream.activities.payment_activity import charge_card
-from workflow_stream.shared import TASK_QUEUE
-from workflow_stream.workflows.hub_workflow import HubWorkflow
-from workflow_stream.workflows.order_workflow import OrderWorkflow
-from workflow_stream.workflows.pipeline_workflow import PipelineWorkflow
-from workflow_stream.workflows.ticker_workflow import TickerWorkflow
+from workflow_streams.activities.payment_activity import charge_card
+from workflow_streams.shared import TASK_QUEUE
+from workflow_streams.workflows.hub_workflow import HubWorkflow
+from workflow_streams.workflows.order_workflow import OrderWorkflow
+from workflow_streams.workflows.pipeline_workflow import PipelineWorkflow
+from workflow_streams.workflows.ticker_workflow import TickerWorkflow
 
 
 async def main() -> None:

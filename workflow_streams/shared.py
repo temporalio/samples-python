@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, TypeVar
 
 from temporalio.client import WorkflowHandle
-from temporalio.contrib.workflow_stream import WorkflowStreamState
+from temporalio.contrib.workflow_streams import WorkflowStreamState
 
 TASK_QUEUE = "workflow-stream-sample-task-queue"
 

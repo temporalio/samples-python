@@ -70,6 +70,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
+* [google_adk](google_adk) - Orchestrate durable AI agent workflows with Google ADK (Gemini) including tools, multi-agent orchestration, and human-in-the-loop approval.
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.

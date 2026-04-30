@@ -40,6 +40,11 @@ open-telemetry = [
     "temporalio[opentelemetry]",
     "opentelemetry-exporter-otlp-proto-grpc",
 ]
+google-adk = [
+    "google-adk>=1.31.0,<2",
+    "google-genai>=1.14.0,<2",
+    "temporalio[google-adk]>=1.26.0,<2",
+]
 openai-agents = [
     "openai-agents[litellm] >= 0.14.1",
     "temporalio[openai-agents,opentelemetry] >= 1.26.0",
@@ -66,6 +71,7 @@ include = ["./**/*.py"]
 packages = [
     "activity_worker",
     "bedrock",
+    "google_adk",
     "cloud_export_to_parquet",
     "context_propagation",
     "custom_converter",

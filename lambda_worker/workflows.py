@@ -8,7 +8,7 @@ with workflow.unsafe.imports_passed_through():
     from activities import hello_activity
 
 
-@workflow.defn(versioning_behavior=common.VersioningBehavior.AUTO_UPGRADE)
+@workflow.defn(versioning_behavior=common.VersioningBehavior.PINNED)
 class SampleWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:

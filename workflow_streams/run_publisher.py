@@ -3,8 +3,8 @@ from __future__ import annotations
 import asyncio
 import uuid
 
-from temporalio.api.common.v1 import Payload
 from temporalio.client import Client
+from temporalio.common import RawValue
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
 from workflow_streams.shared import (
@@ -35,17 +35,19 @@ async def main() -> None:
 
     async def consume() -> None:
         # Single iterator over both topics — avoids a cancellation race
-        # between two concurrent subscribers. result_type is left unset
-        # so we can dispatch heterogeneous events on item.topic.
-        async for item in stream.subscribe([TOPIC_STATUS, TOPIC_PROGRESS]):
-            assert isinstance(item.data, Payload)
+        # between two concurrent subscribers. result_type=RawValue
+        # delivers the underlying Payload so we can dispatch
+        # heterogeneous events on item.topic.
+        async for item in stream.subscribe(
+            [TOPIC_STATUS, TOPIC_PROGRESS], result_type=RawValue
+        ):
             if item.topic == TOPIC_STATUS:
-                evt = converter.from_payload(item.data, StatusEvent)
+                evt = converter.from_payload(item.data.payload, StatusEvent)
                 print(f"[status] {evt.kind}: order={evt.order_id}")
                 if evt.kind == "complete":
                     return
             elif item.topic == TOPIC_PROGRESS:
-                progress = converter.from_payload(item.data, ProgressEvent)
+                progress = converter.from_payload(item.data.payload, ProgressEvent)
                 print(f"[progress] {progress.message}")
 
     result = await race_with_workflow(consume(), handle)

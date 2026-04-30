@@ -41,6 +41,7 @@ from workflow_streams.workflows.ticker_workflow import TickerWorkflow
 
 
 SLOW_SUBSCRIBER_DELAY_S = 1.5
+TICKER_COUNT = 20
 
 
 async def main() -> None:
@@ -50,7 +51,7 @@ async def main() -> None:
     handle = await client.start_workflow(
         TickerWorkflow.run,
         TickerInput(
-            count=20,
+            count=TICKER_COUNT,
             keep_last=3,
             truncate_every=5,
             interval_ms=400,
@@ -60,19 +61,24 @@ async def main() -> None:
     )
 
     stream = WorkflowStreamClient.create(client, workflow_id)
+    last_n = TICKER_COUNT - 1
 
+    # Both subscribers break on the final tick (n == last_n). ``keep_last``
+    # ensures that offset survives the last truncation so even the slow
+    # consumer reaches it.
     async def fast_subscriber() -> None:
         async for item in stream.subscribe([TOPIC_TICK], result_type=TickEvent):
             print(f"[fast]  offset={item.offset:3d}  n={item.data.n}")
+            if item.data.n == last_n:
+                return
 
     async def slow_subscriber() -> None:
         async for item in stream.subscribe([TOPIC_TICK], result_type=TickEvent):
             print(f"[SLOW]  offset={item.offset:3d}  n={item.data.n}")
+            if item.data.n == last_n:
+                return
             await asyncio.sleep(SLOW_SUBSCRIBER_DELAY_S)
 
-    # Both iterators exit normally when the workflow completes. No
-    # terminal sentinel is needed — see the doc's "When the Workflow
-    # run completes" note.
     await asyncio.gather(fast_subscriber(), slow_subscriber())
 
     result = await handle.result()

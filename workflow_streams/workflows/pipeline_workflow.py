@@ -41,4 +41,8 @@ class PipelineWorkflow:
             self.status.publish(StageEvent(stage=stage))
             if stage != "complete":
                 await workflow.sleep(timedelta(seconds=2))
+        # The "complete" stage above is the in-band terminator
+        # subscribers break on. Hold the run open briefly so the final
+        # poll delivers it.
+        await workflow.sleep(timedelta(milliseconds=500))
         return f"pipeline {input.pipeline_id} done"

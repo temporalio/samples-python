@@ -44,6 +44,13 @@ HEADLINES = [
     "regulator opens probe",
 ]
 
+# In-band terminator the publisher emits before signaling close. The
+# subscriber recognizes this value and stops polling — without an
+# explicit terminator the consumer would have to rely on the workflow
+# returning to break the iterator, which means racing the last item
+# delivery against workflow completion.
+DONE_HEADLINE = "__done__"
+
 
 async def main() -> None:
     client = await Client.connect("localhost:7233")
@@ -69,9 +76,10 @@ async def main() -> None:
                 news.publish(NewsEvent(headline=headline))
                 print(f"[publisher] sent: {headline}")
                 await asyncio.sleep(0.5)
+            news.publish(NewsEvent(headline=DONE_HEADLINE), force_flush=True)
             await producer.flush()
-        # Tell the hub it can stop. The workflow's run() returns, and
-        # any in-flight subscribers see their async-for loop exit.
+        # Tell the hub it can stop. The subscriber has already broken
+        # out of its async-for loop on the sentinel above.
         await handle.signal(HubWorkflow.close)
         print("[publisher] signaled close")
 
@@ -80,6 +88,8 @@ async def main() -> None:
         async for item in consumer.subscribe(
             [TOPIC_NEWS], result_type=NewsEvent
         ):
+            if item.data.headline == DONE_HEADLINE:
+                return
             print(f"[subscriber] offset={item.offset}: {item.data.headline}")
 
     await asyncio.gather(publish_news(), consume_news())

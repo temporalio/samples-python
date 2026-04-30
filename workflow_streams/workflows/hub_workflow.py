@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from temporalio import workflow
 from temporalio.contrib.workflow_streams import WorkflowStream
 
@@ -26,6 +28,11 @@ class HubWorkflow:
     @workflow.run
     async def run(self, input: HubInput) -> str:
         await workflow.wait_condition(lambda: self._closed)
+        # The publisher publishes its own terminator into the stream
+        # before signaling close (see run_external_publisher.py).
+        # Hold the run open briefly so subscribers' final poll
+        # delivers any items still in the log.
+        await workflow.sleep(timedelta(milliseconds=500))
         return f"hub {input.hub_id} closed"
 
     @workflow.signal

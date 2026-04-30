@@ -57,4 +57,10 @@ class TickerWorkflow:
                 # Drop everything except the last `keep_last` entries.
                 truncate_to = self._published - input.keep_last
                 self.stream.truncate(truncate_to)
+        # The final tick (n == count - 1) is the in-band terminator
+        # subscribers break on. ``keep_last`` guarantees that final
+        # offset survives the last truncation so even slow consumers
+        # eventually see it. Hold the run open briefly so the final
+        # poll delivers it.
+        await workflow.sleep(timedelta(milliseconds=500))
         return f"ticker emitted {self._published} events"

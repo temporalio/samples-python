@@ -50,4 +50,9 @@ class OrderWorkflow:
         self.status.publish(StatusEvent(kind="shipped", order_id=input.order_id))
         self.progress.publish(ProgressEvent(message=f"charge id: {charge_id}"))
         self.status.publish(StatusEvent(kind="complete", order_id=input.order_id))
+        # The "complete" status event above is the in-band terminator
+        # subscribers break on (see run_publisher.py). Hold the run
+        # open briefly so subscribers' next poll delivers it before
+        # this task returns and the in-memory log is gone.
+        await workflow.sleep(timedelta(milliseconds=500))
         return charge_id

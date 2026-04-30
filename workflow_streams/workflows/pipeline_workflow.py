@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.contrib.workflow_stream import WorkflowStream
+from temporalio.contrib.workflow_streams import WorkflowStream
 
-from workflow_stream.shared import (
+from workflow_streams.shared import (
     TOPIC_STATUS,
     PipelineInput,
     StageEvent,
@@ -25,6 +25,7 @@ class PipelineWorkflow:
     @workflow.init
     def __init__(self, input: PipelineInput) -> None:
         self.stream = WorkflowStream(prior_state=input.stream_state)
+        self.status = self.stream.topic(TOPIC_STATUS, type=StageEvent)
 
     @workflow.run
     async def run(self, input: PipelineInput) -> str:
@@ -37,7 +38,7 @@ class PipelineWorkflow:
             "complete",
         ]
         for stage in stages:
-            self.stream.publish(TOPIC_STATUS, StageEvent(stage=stage))
+            self.status.publish(StageEvent(stage=stage))
             if stage != "complete":
                 await workflow.sleep(timedelta(seconds=2))
         return f"pipeline {input.pipeline_id} done"

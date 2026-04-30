@@ -10,9 +10,9 @@ The script runs the pattern in two phases inside one process to keep
 the demo short. The same code shape works across actual process
 restarts because the resume offset is persisted to disk between phases.
 
-Run the worker first (``uv run workflow_stream/run_worker.py``), then::
+Run the worker first (``uv run workflow_streams/run_worker.py``), then::
 
-    uv run workflow_stream/run_reconnecting_subscriber.py
+    uv run workflow_streams/run_reconnecting_subscriber.py
 """
 
 from __future__ import annotations
@@ -23,15 +23,15 @@ import uuid
 from pathlib import Path
 
 from temporalio.client import Client
-from temporalio.contrib.workflow_stream import WorkflowStreamClient
+from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
-from workflow_stream.shared import (
+from workflow_streams.shared import (
     TASK_QUEUE,
     TOPIC_STATUS,
     PipelineInput,
     StageEvent,
 )
-from workflow_stream.workflows.pipeline_workflow import PipelineWorkflow
+from workflow_streams.workflows.pipeline_workflow import PipelineWorkflow
 
 # Number of events read in phase 1 before simulating a disconnect.
 # Picked small enough that the workflow is still running after.

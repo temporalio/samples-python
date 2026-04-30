@@ -5,9 +5,9 @@ import uuid
 
 from temporalio.api.common.v1 import Payload
 from temporalio.client import Client
-from temporalio.contrib.workflow_stream import WorkflowStreamClient
+from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
-from workflow_stream.shared import (
+from workflow_streams.shared import (
     TASK_QUEUE,
     TOPIC_PROGRESS,
     TOPIC_STATUS,
@@ -16,7 +16,7 @@ from workflow_stream.shared import (
     StatusEvent,
     race_with_workflow,
 )
-from workflow_stream.workflows.order_workflow import OrderWorkflow
+from workflow_streams.workflows.order_workflow import OrderWorkflow
 
 
 async def main() -> None:

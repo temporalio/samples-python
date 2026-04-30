@@ -14,9 +14,9 @@ subscriber concurrently. When the publisher is done it signals
 ``HubWorkflow.close``, the workflow's run finishes, and the
 subscriber's iterator exits normally.
 
-Run the worker first (``uv run workflow_stream/run_worker.py``), then::
+Run the worker first (``uv run workflow_streams/run_worker.py``), then::
 
-    uv run workflow_stream/run_external_publisher.py
+    uv run workflow_streams/run_external_publisher.py
 """
 
 from __future__ import annotations
@@ -25,15 +25,15 @@ import asyncio
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.workflow_stream import WorkflowStreamClient
+from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
-from workflow_stream.shared import (
+from workflow_streams.shared import (
     TASK_QUEUE,
     TOPIC_NEWS,
     HubInput,
     NewsEvent,
 )
-from workflow_stream.workflows.hub_workflow import HubWorkflow
+from workflow_streams.workflows.hub_workflow import HubWorkflow
 
 
 HEADLINES = [
@@ -64,8 +64,9 @@ async def main() -> None:
         # we know the events landed before the workflow shuts down.
         producer = WorkflowStreamClient.create(client, workflow_id)
         async with producer:
+            news = producer.topic(TOPIC_NEWS, type=NewsEvent)
             for headline in HEADLINES:
-                producer.publish(TOPIC_NEWS, NewsEvent(headline=headline))
+                news.publish(NewsEvent(headline=headline))
                 print(f"[publisher] sent: {headline}")
                 await asyncio.sleep(0.5)
             await producer.flush()

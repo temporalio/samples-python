@@ -48,11 +48,12 @@ This directory has four scenarios sharing one Worker.
 * `run_external_publisher.py` — starts the hub, then publishes events
   into it from a plain Python coroutine using
   `WorkflowStreamClient.create(client, workflow_id)`. A subscriber
-  task runs alongside; when the publisher is done it signals
-  `HubWorkflow.close`, the workflow's run finishes, and the
-  subscriber's iterator exits normally. This is the shape that fits a
-  backend service or scheduled job pushing events into a workflow it
-  didn't itself start.
+  task runs alongside; when the publisher is done it emits an in-band
+  sentinel headline (`__done__`) into the stream, then signals
+  `HubWorkflow.close`. The subscriber breaks on the sentinel and
+  exits its `async for`. This is the shape that fits a backend
+  service or scheduled job pushing events into a workflow it didn't
+  itself start.
 
 **Scenario 4 — bounded log via `truncate()`:**
 
@@ -68,6 +69,42 @@ This directory has four scenarios sharing one Worker.
   intermediate events being invisible to slow consumers.
 
 `run_worker.py` registers all four workflows and the activity.
+
+## Ending the stream
+
+`WorkflowStreamClient.subscribe()` is a long-poll loop — it does not
+exit on its own when the host workflow completes. Two things have to
+happen at the end of a streamed workflow for clean shutdown:
+
+1. **An in-band terminator that subscribers recognize.** Each scenario
+   here sends one before the workflow exits:
+   - `OrderWorkflow` and `PipelineWorkflow` publish a "complete"
+     status / stage event; consumers break on it.
+   - `run_external_publisher.py` publishes a sentinel
+     `NewsEvent(headline="__done__")` immediately before signaling
+     `HubWorkflow.close`; the consumer breaks on the sentinel.
+   - `TickerWorkflow`'s final tick (`n == count - 1`) is the
+     terminator; subscribers break when they see it. `keep_last`
+     guarantees that final offset survives the last truncation, so
+     even slow consumers reach it.
+
+2. **A short hold-open in the workflow before returning** so that the
+   final publish gets fetched. Items published in the same workflow
+   task that returns from `@workflow.run` are abandoned: the
+   in-memory log dies with the workflow, and the next subscriber
+   poll lands on a completed workflow. Each workflow here ends with
+
+   ```python
+   await workflow.sleep(timedelta(milliseconds=500))
+   return ...
+   ```
+
+   which gives subscribers in their `poll_cooldown` interval time to
+   issue one more poll. With both pieces in place, subscribers
+   receive the terminator, break out of their `async for`, and stop
+   polling — by the time the workflow exits there are no in-flight
+   poll handlers, so the SDK does not warn about unfinished
+   handlers.
 
 ## Run it
 

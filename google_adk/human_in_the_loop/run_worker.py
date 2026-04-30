@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.google_adk_agents import GoogleAdkPlugin, ModelActivityParameters
+from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
 from temporalio.worker import Worker
 
 from google_adk.human_in_the_loop.activities.sensitive_actions import (
@@ -19,13 +18,7 @@ from google_adk.human_in_the_loop.workflows.hitl_workflow import (
 async def main():
     client = await Client.connect(
         "localhost:7233",
-        plugins=[
-            GoogleAdkPlugin(
-                model_params=ModelActivityParameters(
-                    start_to_close_timeout=timedelta(seconds=30)
-                )
-            ),
-        ],
+        plugins=[GoogleAdkPlugin()],
     )
 
     worker = Worker(

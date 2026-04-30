@@ -52,7 +52,7 @@ async def main():
 
     # Show pending approval and approve it
     for call in pending:
-        print(f"\nPending approval:")
+        print("\nPending approval:")
         print(f"  Tool: {call.tool_name}")
         print(f"  Arguments: {call.arguments}")
         print(f"  Approving call {call.call_id}...")

@@ -81,9 +81,10 @@ class HumanInTheLoopWorkflow:
             )
 
             # Pause until approval signal arrives
-            await workflow.wait_condition(
-                lambda cid=call_id: cid in wf_self._approval_results
-            )
+            def _is_approved(cid: str = call_id) -> bool:
+                return cid in wf_self._approval_results
+
+            await workflow.wait_condition(_is_approved)
 
             # Process approval
             approval = wf_self._approval_results.pop(call_id)

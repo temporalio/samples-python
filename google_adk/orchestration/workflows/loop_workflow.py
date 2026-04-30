@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from contextlib import aclosing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from temporalio import workflow
 from temporalio.contrib.google_adk_agents import TemporalModel
@@ -35,13 +35,9 @@ class LoopInput:
 class OrchestrationOutput:
     """Output from an orchestration workflow."""
 
-    responses: list[str] | None = None
+    responses: list[str] = field(default_factory=list)
     final_response: str = ""
     iterations: int = 0
-
-    def __post_init__(self):
-        if self.responses is None:
-            self.responses = []
 
 
 @workflow.defn

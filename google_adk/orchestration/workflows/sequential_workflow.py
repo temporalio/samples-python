@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from contextlib import aclosing
 from dataclasses import dataclass, field
-from typing import Any
 
 from temporalio import workflow
 from temporalio.contrib.google_adk_agents import TemporalModel

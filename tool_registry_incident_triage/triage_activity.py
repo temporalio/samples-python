@@ -26,6 +26,7 @@ from typing import Any, Awaitable, Callable
 import httpx
 from temporalio import activity
 from temporalio.client import Client
+from temporalio.common import WorkflowIDConflictPolicy
 from temporalio.contrib.tool_registry import (
     ToolRegistry,
     agentic_session,
@@ -361,5 +362,9 @@ async def _real_request_human_approval(
         task_queue=task_queue,
         start_signal="approval-request",
         start_signal_args=[request],
+        # If the activity retries while the approval workflow is still running,
+        # attach to the existing one rather than starting a new approval. The
+        # operator should not get a second prompt for the same incident.
+        id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
     )
     return await handle.result()

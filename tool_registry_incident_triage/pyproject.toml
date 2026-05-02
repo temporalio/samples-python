@@ -1,0 +1,31 @@
+[project]
+name = "triage-python"
+version = "0.0.1"
+description = "Python triage worker for the temporal-incident-triage-gke showcase"
+requires-python = ">=3.11"
+dependencies = [
+  # Pin the Temporal Python SDK from the unmerged feat/tool-registry branch.
+  # Once the SDK publishes, swap to: temporalio[tool-registry]>=X.Y.Z
+  "temporalio[tool-registry] @ file:///Users/alex/Documents/checkouts/temporal/sdk-python",
+  "anthropic>=0.40.0",
+  "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.24.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# Top-level Python files in this directory (no proper package layout — they're
+# imported as flat modules from worker.py / client.py / tests/).
+py-modules = ["triage_workflow", "approval_workflow", "triage_activity", "worker", "client", "triage_types"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

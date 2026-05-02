@@ -367,4 +367,19 @@ async def _real_request_human_approval(
         # operator should not get a second prompt for the same incident.
         id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
     )
-    return await handle.result()
+
+    # Heartbeat every 30 seconds while waiting on the approval workflow.
+    # AgenticSession only heartbeats between LLM turns, so a multi-hour
+    # operator wait inside this handler would otherwise trigger heartbeat
+    # timeout in 120s and kill the activity. The ticker keeps the activity
+    # alive until the operator decides.
+    async def _ticker() -> None:
+        while True:
+            await asyncio.sleep(30)
+            activity.heartbeat()
+
+    ticker_task = asyncio.create_task(_ticker())
+    try:
+        return await handle.result()
+    finally:
+        ticker_task.cancel()

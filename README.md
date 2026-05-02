@@ -82,6 +82,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
+* [tool_registry_incident_triage](tool_registry_incident_triage) - LLM-driven incident triage activity using `temporalio.contrib.tool_registry`. Demonstrates `AgenticSession`, MCP HTTP integration, human-in-the-loop, and a testable activity refactor.
 * [trio_async](trio_async) - Use asyncio Temporal in Trio-based environments.
 * [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.

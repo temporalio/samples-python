@@ -155,25 +155,3 @@ proc= 5  avail= 5  pend= 0     │   offset= 4  stage=verifying
 proc= 6  avail= 6  pend= 0     │   offset= 5  stage=complete
 proc= 6  avail= 6  pend= 0     │ workflow result: pipeline ... done
 ```
-
-## Notes
-
-* **Subscriber start position.** `subscribe(...)` without
-  `from_offset` starts at the stream's current base offset and
-  follows live — older events that have been truncated, or that
-  arrived before the subscribe call, are not replayed. Pass
-  `from_offset=N` to resume from a known position (see
-  `run_reconnecting_subscriber.py`); the iterator skips forward to
-  the current base if `N` has been truncated.
-* **Continue-as-new.** Every `*Input` dataclass carries
-  `stream_state: WorkflowStreamState | None = None`. To survive
-  continue-as-new without losing buffered items, capture the
-  workflow's stream state and pass it to the next run via
-  `WorkflowStream(prior_state=...)` in `@workflow.init`. The
-  samples declare the field for completeness; none of them
-  actually trigger continue-as-new.
-* **Closing the stream.** Each scenario uses an in-band terminator
-  plus a short `workflow.sleep` hold-open so subscribers receive
-  the final event before the workflow exits. See
-  [Closing the stream](https://docs.temporal.io/develop/python/libraries/workflow-streams#closing-the-stream)
-  in the docs for the full pattern.

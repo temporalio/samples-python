@@ -1,13 +1,9 @@
 # Workflow Streams
 
-> **Experimental.** These samples target the
-> `temporalio.contrib.workflow_streams` module on the
-> [`contrib/pubsub` branch of sdk-python][branch], which is not yet
-> released. To run them locally, install sdk-python from that branch
-> (e.g. `uv pip install -e <path-to-sdk-python>` after checking out the
-> branch).
-
-[branch]: https://github.com/temporalio/sdk-python/tree/contrib/pubsub
+> **Experimental.** These samples use
+> `temporalio.contrib.workflow_streams`, which ships in
+> `temporalio>=1.27.0`. The module is considered experimental and its
+> API may change in future versions.
 
 `temporalio.contrib.workflow_streams` lets a workflow host a durable,
 offset-addressed event channel. The workflow holds an append-only log;

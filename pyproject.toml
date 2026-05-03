@@ -94,6 +94,7 @@ packages = [
     "updatable_timer",
     "worker_specific_task_queues",
     "worker_versioning",
+    "workflow_streams",
 ]
 
 [tool.hatch.build.targets.wheel.sources]

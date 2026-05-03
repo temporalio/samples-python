@@ -44,7 +44,6 @@ from workflow_streams.llm_shared import (
     TextComplete,
     TextDelta,
 )
-from workflow_streams.shared import race_with_workflow
 from workflow_streams.workflows.llm_workflow import LLMWorkflow
 
 # Long enough that you can comfortably kill the worker mid-stream and
@@ -94,39 +93,38 @@ async def main() -> None:
 
     stream = WorkflowStreamClient.create(client, workflow_id)
 
-    async def consume() -> None:
-        # Subscribe to all three topics on a single iterator.
-        # result_type=RawValue lets us dispatch on item.topic and
-        # decode against the right dataclass per topic.
-        async for item in stream.subscribe(
-            [TOPIC_DELTA, TOPIC_RETRY, TOPIC_COMPLETE],
-            result_type=RawValue,
-        ):
-            if item.topic == TOPIC_RETRY:
-                evt = converter.from_payload(item.data.payload, RetryEvent)
-                sys.stdout.write(ANSI_RESTORE_AND_CLEAR)
-                sys.stdout.flush()
-                print(f"[retry attempt {evt.attempt}] resetting output")
-                print()
-                sys.stdout.write(ANSI_SAVE)
-                sys.stdout.flush()
-            elif item.topic == TOPIC_DELTA:
-                delta = converter.from_payload(item.data.payload, TextDelta)
-                sys.stdout.write(delta.text)
-                sys.stdout.flush()
-            elif item.topic == TOPIC_COMPLETE:
-                # The full text is also in the payload (and returned
-                # by the workflow), but the consumer has already
-                # rendered it incrementally. Just terminate the line.
-                converter.from_payload(item.data.payload, TextComplete)
-                print()
-                return
+    # result_type=RawValue lets us dispatch on item.topic and decode
+    # against the right dataclass per topic. The loop ends either on
+    # the `complete` terminator (break) or because the iterator
+    # naturally exhausts when the workflow reaches a terminal state
+    # without one (activity exhausted retries, etc.). Either way the
+    # handle.result() below either returns the full text or raises
+    # the workflow's failure.
+    async for item in stream.subscribe(
+        [TOPIC_DELTA, TOPIC_RETRY, TOPIC_COMPLETE],
+        result_type=RawValue,
+    ):
+        if item.topic == TOPIC_RETRY:
+            evt = converter.from_payload(item.data.payload, RetryEvent)
+            sys.stdout.write(ANSI_RESTORE_AND_CLEAR)
+            sys.stdout.flush()
+            print(f"[retry attempt {evt.attempt}] resetting output")
+            print()
+            sys.stdout.write(ANSI_SAVE)
+            sys.stdout.flush()
+        elif item.topic == TOPIC_DELTA:
+            delta = converter.from_payload(item.data.payload, TextDelta)
+            sys.stdout.write(delta.text)
+            sys.stdout.flush()
+        elif item.topic == TOPIC_COMPLETE:
+            # The full text is also in the payload (and returned by
+            # the workflow), but the consumer has already rendered it
+            # incrementally. Just terminate the line.
+            converter.from_payload(item.data.payload, TextComplete)
+            print()
+            break
 
-    # Race the subscriber against the workflow result so that if the
-    # activity exhausts its retries the workflow's failure surfaces
-    # here rather than leaving the subscriber blocked on a `complete`
-    # that will never arrive.
-    result = await race_with_workflow(consume(), handle)
+    result = await handle.result()
     print(f"\n[workflow result: {len(result)} chars]")
 
 

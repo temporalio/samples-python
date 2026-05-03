@@ -14,7 +14,6 @@ from workflow_streams.shared import (
     OrderInput,
     ProgressEvent,
     StatusEvent,
-    race_with_workflow,
 )
 from workflow_streams.workflows.order_workflow import OrderWorkflow
 
@@ -33,24 +32,27 @@ async def main() -> None:
     stream = WorkflowStreamClient.create(client, workflow_id)
     converter = client.data_converter.payload_converter
 
-    async def consume() -> None:
-        # Single iterator over both topics — avoids a cancellation race
-        # between two concurrent subscribers. result_type=RawValue
-        # delivers the underlying Payload so we can dispatch
-        # heterogeneous events on item.topic.
-        async for item in stream.subscribe(
-            [TOPIC_STATUS, TOPIC_PROGRESS], result_type=RawValue
-        ):
-            if item.topic == TOPIC_STATUS:
-                evt = converter.from_payload(item.data.payload, StatusEvent)
-                print(f"[status] {evt.kind}: order={evt.order_id}")
-                if evt.kind == "complete":
-                    return
-            elif item.topic == TOPIC_PROGRESS:
-                progress = converter.from_payload(item.data.payload, ProgressEvent)
-                print(f"[progress] {progress.message}")
+    # Single iterator over both topics — avoids a cancellation race
+    # between two concurrent subscribers. result_type=RawValue
+    # delivers the underlying Payload so we can dispatch heterogeneous
+    # events on item.topic. The loop ends either on the in-band
+    # `complete` terminator (break) or because the iterator exhausts
+    # when the workflow reaches a terminal state without one (e.g. on
+    # failure). Either way we then await handle.result(), which raises
+    # if the workflow failed.
+    async for item in stream.subscribe(
+        [TOPIC_STATUS, TOPIC_PROGRESS], result_type=RawValue
+    ):
+        if item.topic == TOPIC_STATUS:
+            evt = converter.from_payload(item.data.payload, StatusEvent)
+            print(f"[status] {evt.kind}: order={evt.order_id}")
+            if evt.kind == "complete":
+                break
+        elif item.topic == TOPIC_PROGRESS:
+            progress = converter.from_payload(item.data.payload, ProgressEvent)
+            print(f"[progress] {progress.message}")
 
-    result = await race_with_workflow(consume(), handle)
+    result = await handle.result()
     print(f"workflow result: {result}")
 
 

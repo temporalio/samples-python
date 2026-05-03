@@ -7,7 +7,7 @@
 
 `temporalio.contrib.workflow_streams` lets a workflow host a durable,
 offset-addressed event channel. The workflow holds an append-only log;
-external clients (activities, starters, BFFs) publish to topics via
+external clients (activities, starters, web backends) publish to topics via
 signals and subscribe via long-poll updates. This packages the
 boilerplate — batching, offset tracking, topic filtering,
 continue-as-new hand-off — into a reusable stream.
@@ -118,40 +118,3 @@ To exercise scenario 5's retry path, kill `run_llm_worker.py`
 activity's next attempt sends a `RetryEvent` first; the consumer
 clears its on-screen output via ANSI escapes and re-renders from
 scratch.
-
-## Expected output
-
-Scenario 1 (basic publisher):
-
-```
-[status] received: order=order-1
-[progress] charging card...
-[progress] card charged
-[status] shipped: order=order-1
-[progress] charge id: charge-order-1
-[status] complete: order=order-1
-workflow result: charge-order-1
-```
-
-Scenario 2 (reconnecting subscriber). Each line carries a stats
-column on the left (`proc`, `avail`, `pend`) and a phase / event
-message on the right; a background poller emits a `·` heartbeat
-once a second. Offsets are continuous across the disconnect — no
-events lost, none duplicated:
-
-```
-proc= 0  avail= 0  pend= 0     │ started workflow-stream-pipeline-...
-proc= 0  avail= 1  pend= 1     │ [phase 1] connecting
-proc= 1  avail= 1  pend= 0     │   offset= 0  stage=validating
-proc= 2  avail= 2  pend= 0     │   offset= 1  stage=loading data
-proc= 2  avail= 2  pend= 0     │ [phase 1] disconnecting
-proc= 2  avail= 3  pend= 1     │ ·
-proc= 2  avail= 3  pend= 1     │ ·
-proc= 2  avail= 4  pend= 2     │ ·
-proc= 2  avail= 4  pend= 2     │ [phase 2] reconnecting
-proc= 3  avail= 4  pend= 1     │   offset= 2  stage=transforming
-proc= 4  avail= 4  pend= 0     │   offset= 3  stage=writing output
-proc= 5  avail= 5  pend= 0     │   offset= 4  stage=verifying
-proc= 6  avail= 6  pend= 0     │   offset= 5  stage=complete
-proc= 6  avail= 6  pend= 0     │ workflow result: pipeline ... done
-```

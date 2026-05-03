@@ -86,9 +86,10 @@ async def main() -> None:
         task_queue=TASK_QUEUE,
     )
 
-    # In a real BFF the resume offset lives in durable storage keyed by
-    # (user_id, run_id) — a database row, a Redis key, etc. For an
-    # in-process demo a State.processed attribute works the same way.
+    # In a production web backend the resume offset would live in
+    # durable storage keyed by (user_id, run_id) — a database row, a
+    # Redis key, etc. For an in-process demo a State.processed
+    # attribute works the same way.
     state = State()
     stream = WorkflowStreamClient.create(client, workflow_id)
     emit(state, f"started {workflow_id}")

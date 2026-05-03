@@ -6,11 +6,11 @@ from openai import AsyncOpenAI
 from temporalio import activity
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
-from workflow_streams.chat_shared import (
+from workflow_streams.llm_shared import (
     TOPIC_COMPLETE,
     TOPIC_DELTA,
     TOPIC_RETRY,
-    ChatInput,
+    LLMInput,
     RetryEvent,
     TextComplete,
     TextDelta,
@@ -18,8 +18,8 @@ from workflow_streams.chat_shared import (
 
 
 @activity.defn
-async def stream_completion(input: ChatInput) -> str:
-    """Stream a chat completion to the parent workflow's stream.
+async def stream_completion(input: LLMInput) -> str:
+    """Stream an LLM completion to the parent workflow's stream.
 
     Activity-as-publisher: each delta from the OpenAI streaming API is
     pushed to the workflow's stream as a ``TextDelta`` event on the

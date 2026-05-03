@@ -6,14 +6,14 @@ from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.contrib.workflow_streams import WorkflowStream
 
-from workflow_streams.chat_shared import ChatInput
+from workflow_streams.llm_shared import LLMInput
 
 with workflow.unsafe.imports_passed_through():
-    from workflow_streams.activities.chat_activity import stream_completion
+    from workflow_streams.activities.llm_activity import stream_completion
 
 
 @workflow.defn
-class ChatWorkflow:
+class LLMWorkflow:
     """Wrapper for an LLM-streaming activity.
 
     The workflow does no streaming of its own; it hosts the
@@ -26,18 +26,18 @@ class ChatWorkflow:
     retries it (up to ``max_attempts``); the retried attempt
     re-publishes from the start, so the consumer must reset on the
     activity's ``RETRY`` event. See
-    `activities/chat_activity.py` and `run_chat.py`.
+    `activities/llm_activity.py` and `run_llm.py`.
     """
 
     @workflow.init
-    def __init__(self, input: ChatInput) -> None:
+    def __init__(self, input: LLMInput) -> None:
         # Construct the stream from `@workflow.init` so the
         # publish-Signal handler is registered before any external
         # publisher (the activity, here) tries to publish.
         self.stream = WorkflowStream(prior_state=input.stream_state)
 
     @workflow.run
-    async def run(self, input: ChatInput) -> str:
+    async def run(self, input: LLMInput) -> str:
         result = await workflow.execute_activity(
             stream_completion,
             input,

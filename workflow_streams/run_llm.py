@@ -1,24 +1,24 @@
 """Stream LLM output to the terminal, handling retries.
 
-Starts a ``ChatWorkflow``, subscribes to its delta / complete / retry
+Starts an ``LLMWorkflow``, subscribes to its delta / complete / retry
 topics, and renders the model's output to stdout as it arrives. On a
 ``RETRY`` event (the activity is on attempt > 1), the consumer rewinds
 its rendered output with ANSI escapes and starts fresh — so a killed
 worker doesn't leave a half-finished response stuck on screen
 followed by the retried attempt's full output.
 
-Requires ``OPENAI_API_KEY`` in the environment and the ``chat-stream``
+Requires ``OPENAI_API_KEY`` in the environment and the ``llm-stream``
 extra::
 
-    uv sync --group chat-stream
+    uv sync --group llm-stream
     export OPENAI_API_KEY=...
 
-Run the chat worker first (``uv run workflow_streams/run_chat_worker.py``),
+Run the LLM worker first (``uv run workflow_streams/run_llm_worker.py``),
 then::
 
-    uv run workflow_streams/run_chat.py
+    uv run workflow_streams/run_llm.py
 
-To see retry handling in action, kill the chat worker mid-stream
+To see retry handling in action, kill the LLM worker mid-stream
 (Ctrl-C in its terminal) and start it again. The consumer will clear
 its accumulated output on the ``RETRY`` event and re-render the
 retried attempt's output from scratch.
@@ -34,17 +34,17 @@ from temporalio.client import Client
 from temporalio.common import RawValue
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
-from workflow_streams.chat_shared import (
-    CHAT_TASK_QUEUE,
+from workflow_streams.llm_shared import (
+    LLM_TASK_QUEUE,
     TOPIC_COMPLETE,
     TOPIC_DELTA,
     TOPIC_RETRY,
-    ChatInput,
+    LLMInput,
     RetryEvent,
     TextComplete,
     TextDelta,
 )
-from workflow_streams.workflows.chat_workflow import ChatWorkflow
+from workflow_streams.workflows.llm_workflow import LLMWorkflow
 
 # Long enough that you can comfortably kill the worker mid-stream and
 # watch the retry render. Adjust to taste.
@@ -71,20 +71,20 @@ async def main() -> None:
     client = await Client.connect("localhost:7233")
     converter = client.data_converter.payload_converter
 
-    workflow_id = f"workflow-stream-chat-{uuid.uuid4().hex[:8]}"
-    chat_input = ChatInput(prompt=DEFAULT_PROMPT)
+    workflow_id = f"workflow-stream-llm-{uuid.uuid4().hex[:8]}"
+    llm_input = LLMInput(prompt=DEFAULT_PROMPT)
     handle = await client.start_workflow(
-        ChatWorkflow.run,
-        chat_input,
+        LLMWorkflow.run,
+        llm_input,
         id=workflow_id,
-        task_queue=CHAT_TASK_QUEUE,
+        task_queue=LLM_TASK_QUEUE,
     )
 
     # Print a header so the user sees something immediately. The
     # response will start streaming below it once the first delta
     # arrives — until then this is the only line on screen.
     print(
-        f"[chat {workflow_id}] streaming response from {chat_input.model}, "
+        f"[llm {workflow_id}] streaming response from {llm_input.model}, "
         f"awaiting first token..."
     )
     print()

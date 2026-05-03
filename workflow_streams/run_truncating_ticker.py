@@ -110,8 +110,7 @@ async def main() -> None:
             if last_offset >= 0 and item.offset > last_offset + 1:
                 gap = item.offset - last_offset - 1
                 emit_slow(
-                    f"↪ jumped offset={last_offset} → {item.offset} "
-                    f"({gap} dropped)"
+                    f"↪ jumped offset={last_offset} → {item.offset} ({gap} dropped)"
                 )
             emit_slow(f"offset={item.offset:>3}  n={item.data.n}")
             last_offset = item.offset

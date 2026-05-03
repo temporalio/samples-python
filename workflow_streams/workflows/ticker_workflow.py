@@ -7,8 +7,8 @@ from temporalio.contrib.workflow_streams import WorkflowStream
 
 from workflow_streams.shared import (
     TOPIC_TICK,
-    TickEvent,
     TickerInput,
+    TickEvent,
 )
 
 

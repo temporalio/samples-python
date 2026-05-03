@@ -35,7 +35,6 @@ from workflow_streams.shared import (
 )
 from workflow_streams.workflows.hub_workflow import HubWorkflow
 
-
 HEADLINES = [
     "rates held",
     "merger announced",
@@ -85,9 +84,7 @@ async def main() -> None:
 
     async def consume_news() -> None:
         consumer = WorkflowStreamClient.create(client, workflow_id)
-        async for item in consumer.subscribe(
-            [TOPIC_NEWS], result_type=NewsEvent
-        ):
+        async for item in consumer.subscribe([TOPIC_NEWS], result_type=NewsEvent):
             if item.data.headline == DONE_HEADLINE:
                 return
             print(f"[subscriber] offset={item.offset}: {item.data.headline}")

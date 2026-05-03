@@ -109,9 +109,7 @@ async def main() -> None:
                 emit(state, "·")
                 last_emit = now
             try:
-                await asyncio.wait_for(
-                    stop.wait(), timeout=POLL_INTERVAL_SECONDS
-                )
+                await asyncio.wait_for(stop.wait(), timeout=POLL_INTERVAL_SECONDS)
             except asyncio.TimeoutError:
                 pass
 
@@ -120,9 +118,7 @@ async def main() -> None:
         # ---- Phase 1: connect, read a couple of events, "disconnect".
         emit(state, "[phase 1] connecting")
         seen = 0
-        async for item in stream.subscribe(
-            [TOPIC_STATUS], result_type=StageEvent
-        ):
+        async for item in stream.subscribe([TOPIC_STATUS], result_type=StageEvent):
             # Remember *one past* the offset just consumed: on resume we
             # want the next unseen event, not the one we already showed.
             state.processed = item.offset + 1

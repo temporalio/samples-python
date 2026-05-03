@@ -130,22 +130,27 @@ Expected output on the basic publisher side:
 workflow result: charge-order-1
 ```
 
-Expected output on the reconnecting subscriber side (note the offsets
-are continuous across the disconnect — no events lost, none duplicated):
+Expected output on the reconnecting subscriber side. Each line carries
+a stats column on the left (`proc`, `avail`, `pend`) and a phase /
+event message on the right; a background poller emits a `·` heartbeat
+once a second. Offsets are continuous across the disconnect — no
+events lost, none duplicated:
 
 ```
-[phase 1] connecting and reading first few events
-  offset= 0  stage=validating
-  offset= 1  stage=loading data
-[phase 1] persisted resume offset=2 -> /tmp/...; disconnecting
-
-[phase 2] reconnecting and resuming from persisted offset
-  offset= 2  stage=transforming
-  offset= 3  stage=writing output
-  offset= 4  stage=verifying
-  offset= 5  stage=complete
-
-workflow result: pipeline workflow-stream-pipeline-... done
+proc= 0  avail= 0  pend= 0     │ started workflow-stream-pipeline-...
+proc= 0  avail= 1  pend= 1     │ [phase 1] connecting
+proc= 1  avail= 1  pend= 0     │   offset= 0  stage=validating
+proc= 2  avail= 2  pend= 0     │   offset= 1  stage=loading data
+proc= 2  avail= 2  pend= 0     │ [phase 1] disconnecting
+proc= 2  avail= 3  pend= 1     │ ·
+proc= 2  avail= 3  pend= 1     │ ·
+proc= 2  avail= 4  pend= 2     │ ·
+proc= 2  avail= 4  pend= 2     │ [phase 2] reconnecting
+proc= 3  avail= 4  pend= 1     │   offset= 2  stage=transforming
+proc= 4  avail= 4  pend= 0     │   offset= 3  stage=writing output
+proc= 5  avail= 5  pend= 0     │   offset= 4  stage=verifying
+proc= 6  avail= 6  pend= 0     │   offset= 5  stage=complete
+proc= 6  avail= 6  pend= 0     │ workflow result: pipeline ... done
 ```
 
 ## Notes

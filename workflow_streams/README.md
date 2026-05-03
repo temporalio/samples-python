@@ -9,13 +9,12 @@
 offset-addressed event channel. The workflow holds an append-only log;
 external clients (activities, starters, BFFs) publish to topics via
 signals and subscribe via long-poll updates. This packages the
-boilerplate — batching, offset tracking, topic filtering, continue-as-new
-hand-off — into a reusable stream.
+boilerplate — batching, offset tracking, topic filtering,
+continue-as-new hand-off — into a reusable stream.
 
-This directory has four scenarios sharing one Worker, plus a fifth
-LLM-streaming scenario on its own Worker (see
-[Scenario 5 — LLM streaming](#scenario-5--llm-streaming) below for why
-it's separate).
+This directory has five scenarios. The first four share one worker;
+the fifth has its own worker because it needs the `openai` package
+and an `OPENAI_API_KEY`.
 
 **Scenario 1 — basic publish/subscribe with heterogeneous topics:**
 
@@ -33,11 +32,11 @@ it's separate).
   publishes stage transitions over ~10 seconds, leaving room for a
   consumer to disconnect and reconnect mid-run.
 * `run_reconnecting_subscriber.py` — connects, reads a couple of
-  events, persists `item.offset + 1` to disk, "disconnects," then
-  reopens a fresh client and resumes via `subscribe(from_offset=...)`.
-  This is the central Workflow Streams use case: a consumer can
-  disappear (page refresh, server restart, laptop closed) and resume
-  later without missing events or seeing duplicates.
+  events, "disconnects," then reopens a fresh client and resumes via
+  `subscribe(from_offset=...)`. This is the central Workflow Streams
+  use case: a consumer can disappear (page refresh, server restart,
+  laptop closed) and resume later without missing events or seeing
+  duplicates.
 
 **Scenario 3 — external (non-Activity) publisher:**
 
@@ -47,131 +46,82 @@ it's separate).
 * `run_external_publisher.py` — starts the hub, then publishes events
   into it from a plain Python coroutine using
   `WorkflowStreamClient.create(client, workflow_id)`. A subscriber
-  task runs alongside; when the publisher is done it emits an in-band
-  sentinel headline (`__done__`) into the stream, then signals
-  `HubWorkflow.close`. The subscriber breaks on the sentinel and
-  exits its `async for`. This is the shape that fits a backend
-  service or scheduled job pushing events into a workflow it didn't
-  itself start.
+  task runs alongside; when the publisher is done it emits a sentinel
+  event and signals `HubWorkflow.close`. The shape that fits a
+  backend service or scheduled job pushing events into a workflow it
+  didn't itself start.
 
 **Scenario 4 — bounded log via `truncate()`:**
 
 * `workflows/ticker_workflow.py` — a long-running workflow that
   publishes events at a fixed cadence and calls
-  `self.stream.truncate(...)` periodically to bound log growth, keeping
-  only the most recent N entries.
+  `self.stream.truncate(...)` periodically to bound log growth,
+  keeping only the most recent N entries.
 * `run_truncating_ticker.py` — runs a fast subscriber and a slow
-  subscriber side by side. The fast one keeps up and sees every offset
-  in order; the slow one sleeps between iterations, falls behind a
-  truncation, and silently jumps forward to the new base offset. The
-  output makes the trade visible: bounded log size in exchange for
-  intermediate events being invisible to slow consumers.
+  subscriber side by side. The fast one keeps up and sees every
+  offset in order; the slow one falls behind a truncation and
+  silently jumps forward to the new base offset. The output makes
+  the trade visible: bounded log size in exchange for intermediate
+  events being invisible to slow consumers.
 
-`run_worker.py` registers all four workflows and the activity.
+**Scenario 5 — LLM streaming:**
 
-## Scenario 5 — LLM streaming
-
-* `workflows/llm_workflow.py` — a workflow that hosts a
-  `WorkflowStream` and runs `stream_completion` as a single activity.
-  The workflow itself does no streaming; the activity owns the
-  non-deterministic OpenAI call.
+* `workflows/llm_workflow.py` — hosts a `WorkflowStream` and runs
+  `stream_completion` as a single activity. The workflow itself
+  does no streaming; the activity owns the non-deterministic OpenAI
+  call.
 * `activities/llm_activity.py` — calls
   `openai.AsyncOpenAI().chat.completions.create(stream=True)`,
-  publishes each token chunk as a `TextDelta` on the `delta` topic,
-  the final accumulated text on the `complete` topic, and a
-  `RetryEvent` on the `retry` topic when running on attempt > 1.
+  publishes each token chunk on the `delta` topic, the final
+  accumulated text on `complete`, and a `RetryEvent` on `retry`
+  when running on attempt > 1.
 * `run_llm.py` — subscribes to all three topics, renders deltas to
   the terminal as they arrive, and on a `retry` event uses ANSI
   escapes to rewind the printed output before the retried attempt
-  starts re-publishing.
-* `run_llm_worker.py` — separate worker on its own task queue
-  (`workflow-stream-llm-task-queue`), registering only `LLMWorkflow`
-  and `stream_completion`. This isolates the `openai` dependency and
-  the `OPENAI_API_KEY` requirement to this one scenario.
+  re-publishes.
 
-This scenario is split out for two reasons. First, it needs an extra
-dependency (`openai`) and a secret (`OPENAI_API_KEY`) — putting it on
-the main worker would force every other scenario to set up an OpenAI
-key. Second, killing the LLM worker mid-stream is the easiest way to
-demonstrate retry handling, and you don't want the same `Ctrl-C` to
-interrupt the other four scenarios' worker.
+Scenario 5 runs on its own worker (`run_llm_worker.py`, on
+`workflow-stream-llm-task-queue`) because it needs the `openai`
+dependency and an `OPENAI_API_KEY`, and because killing this worker
+mid-stream is the easiest way to demonstrate retry handling without
+disrupting the other four scenarios.
 
-Setup:
+## Run it
+
+For scenarios 1–4, start the shared worker:
+
+```bash
+uv run workflow_streams/run_worker.py
+```
+
+For scenario 5, install the extra, export the key, and start the
+LLM worker:
 
 ```bash
 uv sync --group llm-stream
 export OPENAI_API_KEY=...
+uv run workflow_streams/run_llm_worker.py
 ```
 
-Run:
+Then in another terminal, pick a scenario:
 
 ```bash
-# Terminal 1: LLM worker (its own task queue)
-uv run workflow_streams/run_llm_worker.py
-
-# Terminal 2:
-uv run workflow_streams/run_llm.py
+uv run workflow_streams/run_publisher.py              # scenario 1
+uv run workflow_streams/run_reconnecting_subscriber.py  # scenario 2
+uv run workflow_streams/run_external_publisher.py     # scenario 3
+uv run workflow_streams/run_truncating_ticker.py      # scenario 4
+uv run workflow_streams/run_llm.py                    # scenario 5
 ```
 
-To trigger the retry path, kill the LLM worker in Terminal 1
-(`Ctrl-C`) while output is streaming, then start it again. The
+To exercise scenario 5's retry path, kill `run_llm_worker.py`
+(`Ctrl-C`) while output is streaming and start it again. The
 activity's next attempt sends a `RetryEvent` first; the consumer
 clears its on-screen output via ANSI escapes and re-renders from
 scratch.
 
-## Ending the stream
+## Expected output
 
-`WorkflowStreamClient.subscribe()` is a long-poll loop — it does not
-exit on its own when the host workflow completes. Two things have to
-happen at the end of a streamed workflow for clean shutdown:
-
-1. **An in-band terminator that subscribers recognize.** Each scenario
-   here sends one before the workflow exits:
-   - `OrderWorkflow` and `PipelineWorkflow` publish a "complete"
-     status / stage event; consumers break on it.
-   - `run_external_publisher.py` publishes a sentinel
-     `NewsEvent(headline="__done__")` immediately before signaling
-     `HubWorkflow.close`; the consumer breaks on the sentinel.
-   - `TickerWorkflow`'s final tick (`n == count - 1`) is the
-     terminator; subscribers break when they see it. `keep_last`
-     guarantees that final offset survives the last truncation, so
-     even slow consumers reach it.
-
-2. **A short hold-open in the workflow before returning** so that the
-   final publish gets fetched. Items published in the same workflow
-   task that returns from `@workflow.run` are abandoned: the
-   in-memory log dies with the workflow, and the next subscriber
-   poll lands on a completed workflow. Each workflow here ends with
-
-   ```python
-   await workflow.sleep(timedelta(milliseconds=500))
-   return ...
-   ```
-
-   which gives subscribers in their `poll_cooldown` interval time to
-   issue one more poll. With both pieces in place, subscribers
-   receive the terminator, break out of their `async for`, and stop
-   polling — by the time the workflow exits there are no in-flight
-   poll handlers, so the SDK does not warn about unfinished
-   handlers.
-
-## Run it
-
-```bash
-# Terminal 1: worker
-uv run workflow_streams/run_worker.py
-
-# Terminal 2: pick a scenario
-uv run workflow_streams/run_publisher.py
-# or
-uv run workflow_streams/run_reconnecting_subscriber.py
-# or
-uv run workflow_streams/run_external_publisher.py
-# or
-uv run workflow_streams/run_truncating_ticker.py
-```
-
-Expected output on the basic publisher side:
+Scenario 1 (basic publisher):
 
 ```
 [status] received: order=order-1
@@ -183,9 +133,9 @@ Expected output on the basic publisher side:
 workflow result: charge-order-1
 ```
 
-Expected output on the reconnecting subscriber side. Each line carries
-a stats column on the left (`proc`, `avail`, `pend`) and a phase /
-event message on the right; a background poller emits a `·` heartbeat
+Scenario 2 (reconnecting subscriber). Each line carries a stats
+column on the left (`proc`, `avail`, `pend`) and a phase / event
+message on the right; a background poller emits a `·` heartbeat
 once a second. Offsets are continuous across the disconnect — no
 events lost, none duplicated:
 
@@ -208,17 +158,22 @@ proc= 6  avail= 6  pend= 0     │ workflow result: pipeline ... done
 
 ## Notes
 
-* **Subscriber start position.** `subscribe(...)` without `from_offset`
-  starts at the stream's current base offset and follows live — older
-  events that have been truncated, or that arrived before the
-  subscribe call, are not replayed. Pass `from_offset=N` to resume
-  from a known position (see `run_reconnecting_subscriber.py`); the
-  iterator skips forward to the current base if `N` has been
-  truncated.
+* **Subscriber start position.** `subscribe(...)` without
+  `from_offset` starts at the stream's current base offset and
+  follows live — older events that have been truncated, or that
+  arrived before the subscribe call, are not replayed. Pass
+  `from_offset=N` to resume from a known position (see
+  `run_reconnecting_subscriber.py`); the iterator skips forward to
+  the current base if `N` has been truncated.
 * **Continue-as-new.** Every `*Input` dataclass carries
   `stream_state: WorkflowStreamState | None = None`. To survive
-  continue-as-new without losing buffered items, capture the workflow's
-  stream state and pass it to the next run via
-  `WorkflowStream(prior_state=...)` in `@workflow.init`. The samples
-  declare the field for completeness; none of them actually trigger
-  continue-as-new.
+  continue-as-new without losing buffered items, capture the
+  workflow's stream state and pass it to the next run via
+  `WorkflowStream(prior_state=...)` in `@workflow.init`. The
+  samples declare the field for completeness; none of them
+  actually trigger continue-as-new.
+* **Closing the stream.** Each scenario uses an in-band terminator
+  plus a short `workflow.sleep` hold-open so subscribers receive
+  the final event before the workflow exits. See
+  [Closing the stream](https://docs.temporal.io/develop/python/libraries/workflow-streams#closing-the-stream)
+  in the docs for the full pattern.

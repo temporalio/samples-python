@@ -12,7 +12,10 @@ signals and subscribe via long-poll updates. This packages the
 boilerplate — batching, offset tracking, topic filtering, continue-as-new
 hand-off — into a reusable stream.
 
-This directory has four scenarios sharing one Worker.
+This directory has four scenarios sharing one Worker, plus a fifth
+LLM-streaming scenario on its own Worker (see
+[Scenario 5 — LLM streaming](#scenario-5--llm-streaming) below for why
+it's separate).
 
 **Scenario 1 — basic publish/subscribe with heterogeneous topics:**
 
@@ -65,6 +68,56 @@ This directory has four scenarios sharing one Worker.
   intermediate events being invisible to slow consumers.
 
 `run_worker.py` registers all four workflows and the activity.
+
+## Scenario 5 — LLM streaming
+
+* `workflows/chat_workflow.py` — a workflow that hosts a
+  `WorkflowStream` and runs `stream_completion` as a single activity.
+  The workflow itself does no streaming; the activity owns the
+  non-deterministic OpenAI call.
+* `activities/chat_activity.py` — calls
+  `openai.AsyncOpenAI().chat.completions.create(stream=True)`,
+  publishes each token chunk as a `TextDelta` on the `delta` topic,
+  the final accumulated text on the `complete` topic, and a
+  `RetryEvent` on the `retry` topic when running on attempt > 1.
+* `run_chat.py` — subscribes to all three topics, renders deltas to
+  the terminal as they arrive, and on a `retry` event uses ANSI
+  escapes to rewind the printed output before the retried attempt
+  starts re-publishing.
+* `run_chat_worker.py` — separate worker on its own task queue
+  (`workflow-stream-chat-task-queue`), registering only `ChatWorkflow`
+  and `stream_completion`. This isolates the `openai` dependency and
+  the `OPENAI_API_KEY` requirement to this one scenario.
+
+This scenario is split out for two reasons. First, it needs an extra
+dependency (`openai`) and a secret (`OPENAI_API_KEY`) — putting it on
+the main worker would force every other scenario to set up an OpenAI
+key. Second, killing the chat worker mid-stream is the easiest way to
+demonstrate retry handling, and you don't want the same `Ctrl-C` to
+interrupt the other four scenarios' worker.
+
+Setup:
+
+```bash
+uv sync --group chat-stream
+export OPENAI_API_KEY=...
+```
+
+Run:
+
+```bash
+# Terminal 1: chat worker (its own task queue)
+uv run workflow_streams/run_chat_worker.py
+
+# Terminal 2:
+uv run workflow_streams/run_chat.py
+```
+
+To trigger the retry path, kill the chat worker in Terminal 1
+(`Ctrl-C`) while output is streaming, then start it again. The
+activity's next attempt sends a `RetryEvent` first; the consumer
+clears its on-screen output via ANSI escapes and re-renders from
+scratch.
 
 ## Ending the stream
 

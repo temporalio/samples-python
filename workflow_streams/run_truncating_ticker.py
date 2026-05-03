@@ -3,20 +3,26 @@
 The ``TickerWorkflow`` publishes ``count`` events at a fixed interval,
 calling ``self.stream.truncate(...)`` periodically to bound log
 growth. This script subscribes twice — once fast, once slow — and
-prints both side-by-side so the trade is visible:
+prints them in two lanes so the trade is visible at a glance:
 
-* The fast subscriber keeps up and sees every published offset in
-  order.
-* The slow subscriber sleeps between iterations. When a truncation
-  runs past its position, the iterator silently jumps forward to the
-  new base offset — the slow subscriber's offsets jump too, and
-  intermediate events are not visible to it.
+* **Fast lane** (left). Keeps up. Sees every published offset.
+* **Slow lane** (right). Sleeps between iterations. When a truncation
+  has dropped its position by the time it polls again, the iterator
+  silently jumps forward to the new base offset; the slow lane prints
+  a ``↪ jumped N → M (K dropped)`` marker for each gap and resumes
+  at the new offset.
 
-This is the bounded-log model: log size is capped, slow consumers may
-miss intermediate events, but they always see the most recent state.
-For long-running workflows pushing high event volumes this is usually
-the right trade — pair with set-semantic events where each event
-carries enough state to make missing the prior ones recoverable.
+``truncate()`` is unilateral: the workflow does not know who is
+subscribed and does not wait for them. The implicit alternative —
+never truncating — keeps every event around forever, lets slow
+consumers eventually catch up without losses, and pays for it in
+unbounded workflow history. The truncation model is the opposite
+trade: bounded log, at-best-effort delivery to slow consumers, no
+backpressure on the publisher. Pair it with set-semantic events where
+each event carries enough state to make missing the prior ones
+recoverable. (If you actually need lossless delivery to slow
+consumers, the workflow has to coordinate acknowledgements
+explicitly — that is a different sample.)
 
 Run the worker first (``uv run workflow_streams/run_worker.py``), then::
 
@@ -39,9 +45,37 @@ from workflow_streams.shared import (
 )
 from workflow_streams.workflows.ticker_workflow import TickerWorkflow
 
-
+# Aggressive truncation so the log stays at most KEEP_LAST entries
+# right after each truncation, which keeps the slow subscriber's
+# per-poll batch tiny. Small batches + a slow per-event sleep mean the
+# slow subscriber re-polls often, and most of those polls land after a
+# truncation that has passed its position — so it sees several jumps
+# during the run rather than one batched at the end.
+TICKER_COUNT = 30
+INTERVAL_MS = 200
+TRUNCATE_EVERY = 2
+KEEP_LAST = 1
 SLOW_SUBSCRIBER_DELAY_S = 1.5
-TICKER_COUNT = 20
+
+LANE_WIDTH = 32
+SEP = "│"
+
+
+def emit_fast(message: str) -> None:
+    print(f"{message:<{LANE_WIDTH}} {SEP}", flush=True)
+
+
+def emit_slow(message: str) -> None:
+    print(f"{' ' * LANE_WIDTH} {SEP} {message}", flush=True)
+
+
+def emit_header() -> None:
+    rule = "─" * LANE_WIDTH
+    print(
+        f"{'fast (every event)':<{LANE_WIDTH}} {SEP} "
+        f"slow (sleeps {SLOW_SUBSCRIBER_DELAY_S}s between events)"
+    )
+    print(f"{rule} {SEP} {rule}")
 
 
 async def main() -> None:
@@ -52,29 +86,35 @@ async def main() -> None:
         TickerWorkflow.run,
         TickerInput(
             count=TICKER_COUNT,
-            keep_last=3,
-            truncate_every=5,
-            interval_ms=400,
+            keep_last=KEEP_LAST,
+            truncate_every=TRUNCATE_EVERY,
+            interval_ms=INTERVAL_MS,
         ),
         id=workflow_id,
         task_queue=TASK_QUEUE,
     )
-
     stream = WorkflowStreamClient.create(client, workflow_id)
     last_n = TICKER_COUNT - 1
 
-    # Both subscribers break on the final tick (n == last_n). ``keep_last``
-    # ensures that offset survives the last truncation so even the slow
-    # consumer reaches it.
+    emit_header()
+
     async def fast_subscriber() -> None:
         async for item in stream.subscribe([TOPIC_TICK], result_type=TickEvent):
-            print(f"[fast]  offset={item.offset:3d}  n={item.data.n}")
+            emit_fast(f"offset={item.offset:>3}  n={item.data.n}")
             if item.data.n == last_n:
                 return
 
     async def slow_subscriber() -> None:
+        last_offset = -1
         async for item in stream.subscribe([TOPIC_TICK], result_type=TickEvent):
-            print(f"[SLOW]  offset={item.offset:3d}  n={item.data.n}")
+            if last_offset >= 0 and item.offset > last_offset + 1:
+                gap = item.offset - last_offset - 1
+                emit_slow(
+                    f"↪ jumped offset={last_offset} → {item.offset} "
+                    f"({gap} dropped)"
+                )
+            emit_slow(f"offset={item.offset:>3}  n={item.data.n}")
+            last_offset = item.offset
             if item.data.n == last_n:
                 return
             await asyncio.sleep(SLOW_SUBSCRIBER_DELAY_S)
@@ -82,7 +122,8 @@ async def main() -> None:
     await asyncio.gather(fast_subscriber(), slow_subscriber())
 
     result = await handle.result()
-    print(f"\nworkflow result: {result}")
+    print()
+    print(f"workflow result: {result}")
 
 
 if __name__ == "__main__":

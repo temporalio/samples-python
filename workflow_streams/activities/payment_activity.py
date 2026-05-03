@@ -26,6 +26,5 @@ async def charge_card(order_id: str) -> str:
         await asyncio.sleep(1.0)
         progress.publish(
             ProgressEvent(message="card charged"),
-            force_flush=True,
         )
     return f"charge-{order_id}"

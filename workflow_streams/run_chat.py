@@ -46,29 +46,25 @@ from workflow_streams.chat_shared import (
 )
 from workflow_streams.workflows.chat_workflow import ChatWorkflow
 
-# A prompt long enough that you can comfortably kill the worker
-# mid-stream and watch the retry render. Adjust to taste.
+# Long enough that you can comfortably kill the worker mid-stream and
+# watch the retry render. Adjust to taste.
 DEFAULT_PROMPT = (
-    "Write a 250-word friendly explainer for a new engineer about why "
-    "durable execution matters in distributed systems. Use short "
-    "paragraphs and a couple of concrete examples."
+    "Write a 500-word comparison of Paxos, Raft, and Viewstamped "
+    "Replication for a new distributed-systems engineer. Cover the "
+    "core ideas, leader election, normal-case operation, "
+    "reconfiguration, and the practical tradeoffs that show up when "
+    "implementing each. Use short paragraphs."
 )
 
 
-def _ansi_clear(line_count: int) -> None:
-    """Move the cursor up `line_count` lines and clear to end of screen.
-
-    Used on RETRY to throw away the failed attempt's rendered output
-    before the retried attempt starts. Counts logical newlines in the
-    rendered text; a long line that wraps in the terminal won't be
-    fully cleared by this — accept the rough edges, ``rich`` would do
-    it cleanly but we are deliberately stdlib-only here.
-    """
-    sys.stdout.write("\r")
-    if line_count > 0:
-        sys.stdout.write(f"\033[{line_count}A")
-    sys.stdout.write("\033[J")
-    sys.stdout.flush()
+# ANSI cursor save / restore. ``\033[s`` saves the current cursor
+# position, ``\033[u`` restores it, ``\033[J`` clears from the cursor
+# to the end of the screen. Save once before the first delta, and on
+# RETRY restore + clear-to-end so the failed attempt's rendered output
+# disappears regardless of how it was wrapped by the terminal. Save
+# again afterwards so a second retry can rewind to the same point.
+ANSI_SAVE = "\033[s"
+ANSI_RESTORE_AND_CLEAR = "\033[u\033[J"
 
 
 async def main() -> None:
@@ -76,39 +72,50 @@ async def main() -> None:
     converter = client.data_converter.payload_converter
 
     workflow_id = f"workflow-stream-chat-{uuid.uuid4().hex[:8]}"
+    chat_input = ChatInput(prompt=DEFAULT_PROMPT)
     handle = await client.start_workflow(
         ChatWorkflow.run,
-        ChatInput(prompt=DEFAULT_PROMPT),
+        chat_input,
         id=workflow_id,
         task_queue=CHAT_TASK_QUEUE,
     )
 
+    # Print a header so the user sees something immediately. The
+    # response will start streaming below it once the first delta
+    # arrives — until then this is the only line on screen.
+    print(
+        f"[chat {workflow_id}] streaming response from {chat_input.model}, "
+        f"awaiting first token..."
+    )
+    print()
+    sys.stdout.write(ANSI_SAVE)
+    sys.stdout.flush()
+
     stream = WorkflowStreamClient.create(client, workflow_id)
 
-    # Subscribe to all three topics on a single iterator. result_type=
-    # RawValue lets us dispatch on item.topic and decode against the
-    # right dataclass per topic.
-    accumulated: list[str] = []
+    # Subscribe to all three topics on a single iterator.
+    # result_type=RawValue lets us dispatch on item.topic and decode
+    # against the right dataclass per topic.
     async for item in stream.subscribe(
         [TOPIC_DELTA, TOPIC_RETRY, TOPIC_COMPLETE],
         result_type=RawValue,
     ):
         if item.topic == TOPIC_RETRY:
             evt = converter.from_payload(item.data.payload, RetryEvent)
-            line_count = "".join(accumulated).count("\n")
-            _ansi_clear(line_count)
-            print(f"[retry attempt {evt.attempt}] resetting output\n")
-            accumulated.clear()
+            sys.stdout.write(ANSI_RESTORE_AND_CLEAR)
+            sys.stdout.flush()
+            print(f"[retry attempt {evt.attempt}] resetting output")
+            print()
+            sys.stdout.write(ANSI_SAVE)
+            sys.stdout.flush()
         elif item.topic == TOPIC_DELTA:
             delta = converter.from_payload(item.data.payload, TextDelta)
-            accumulated.append(delta.text)
             sys.stdout.write(delta.text)
             sys.stdout.flush()
         elif item.topic == TOPIC_COMPLETE:
-            # Newline so the prompt isn't on the same line as the
-            # last delta. The TextComplete payload is the full text
-            # (also returned by the workflow), but the consumer has
-            # already rendered it incrementally so we don't reprint.
+            # The full text is also in the payload (and returned by
+            # the workflow), but the consumer has already rendered it
+            # incrementally. Just terminate the line.
             converter.from_payload(item.data.payload, TextComplete)
             print()
             break

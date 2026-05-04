@@ -6,15 +6,13 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from nexus_sync_operations.caller.workflows import CallerWorkflow
+from nexus_messaging.callerpattern.caller.workflows import CallerWorkflow
 
-NAMESPACE = "nexus-sync-operations-caller-namespace"
-TASK_QUEUE = "nexus-sync-operations-caller-task-queue"
+NAMESPACE = "nexus-messaging-caller-namespace"
+TASK_QUEUE = "nexus-messaging-caller-task-queue"
 
 
-async def execute_caller_workflow(
-    client: Optional[Client] = None,
-) -> None:
+async def execute_caller_workflow(client: Optional[Client] = None) -> None:
     if client is None:
         config = ClientConfig.load_client_connect_config()
         config.setdefault("target_host", "localhost:7233")
@@ -28,7 +26,8 @@ async def execute_caller_workflow(
     ):
         log = await client.execute_workflow(
             CallerWorkflow.run,
-            id=str(uuid.uuid4()),
+            arg="user-1",
+            id=f"nexus-messaging-caller-{uuid.uuid4()}",
             task_queue=TASK_QUEUE,
         )
         for line in log:

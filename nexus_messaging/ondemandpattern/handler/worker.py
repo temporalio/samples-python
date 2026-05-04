@@ -6,14 +6,16 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from message_passing.introduction.activities import call_greeting_service
-from message_passing.introduction.workflows import GreetingWorkflow
-from nexus_sync_operations.handler.service_handler import GreetingServiceHandler
+from nexus_messaging.ondemandpattern.handler.activities import call_greeting_service
+from nexus_messaging.ondemandpattern.handler.service_handler import (
+    NexusRemoteGreetingServiceHandler,
+)
+from nexus_messaging.ondemandpattern.handler.workflows import GreetingWorkflow
 
 interrupt_event = asyncio.Event()
 
-NAMESPACE = "nexus-sync-operations-handler-namespace"
-TASK_QUEUE = "nexus-sync-operations-handler-task-queue"
+NAMESPACE = "nexus-messaging-handler-namespace"
+TASK_QUEUE = "nexus-messaging-handler-task-queue"
 
 
 async def main(client: Optional[Client] = None):
@@ -25,20 +27,14 @@ async def main(client: Optional[Client] = None):
         config.setdefault("namespace", NAMESPACE)
         client = await Client.connect(**config)
 
-    # Create the nexus service handler instance, starting the long-running entity workflow that
-    # backs the Nexus service
-    greeting_service_handler = await GreetingServiceHandler.create(
-        "nexus-sync-operations-greeting-workflow", client, TASK_QUEUE
-    )
-
     async with Worker(
         client,
         task_queue=TASK_QUEUE,
         workflows=[GreetingWorkflow],
         activities=[call_greeting_service],
-        nexus_service_handlers=[greeting_service_handler],
+        nexus_service_handlers=[NexusRemoteGreetingServiceHandler()],
     ):
-        logging.info("Worker started, ctrl+c to exit")
+        logging.info("Handler worker started, ctrl+c to exit")
         await interrupt_event.wait()
         logging.info("Shutting down")
 

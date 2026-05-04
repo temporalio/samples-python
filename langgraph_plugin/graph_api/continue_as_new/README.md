@@ -1,11 +1,11 @@
 # Continue-as-New with Caching (Graph API)
 
-Demonstrates Temporal's continue-as-new with LangGraph's task result caching to avoid re-executing completed graph nodes across workflow boundaries.
+Demonstrates combining Temporal's continue-as-new with the LangGraph plugin's task result cache to avoid re-executing completed graph nodes across workflow boundaries.
 
 ## What This Sample Demonstrates
 
 - Using `workflow.continue_as_new()` to reset event history for long-running pipelines
-- Capturing task results with `cache()` before continuing
+- Capturing node results with `cache()` before continuing
 - Restoring cached results with `temporal_graph(name, cache=...)` so completed nodes are skipped
 - Each node executes exactly once despite multiple workflow invocations
 

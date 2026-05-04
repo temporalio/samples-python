@@ -1,6 +1,6 @@
 # LangSmith Tracing (Functional API)
 
-Demonstrates combining `LangGraphPlugin` (durable task execution) with Temporal's `LangSmithPlugin` (observability) for full tracing of LLM calls through Temporal workflows, using LangGraph's `@task` and `@entrypoint` decorators.
+Demonstrates combining `LangGraphPlugin` (durable task execution) with Temporal's `LangSmithPlugin` for full tracing of LLM calls through Temporal workflows, using LangGraph's `@task` and `@entrypoint` decorators.
 
 ## What This Sample Demonstrates
 

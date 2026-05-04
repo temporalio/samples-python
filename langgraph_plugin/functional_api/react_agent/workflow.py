@@ -1,12 +1,10 @@
 """ReAct agent using the LangGraph Functional API with Temporal.
 
-Same pattern as the Graph API version, but using @task and @entrypoint.
-The Functional API naturally expresses the ReAct loop as a while loop,
-making the control flow explicit and easy to extend.
+The Functional API expresses the ReAct loop as a plain `while` loop, making
+the control flow explicit and easy to extend.
 """
 
 from datetime import timedelta
-from typing import Any
 
 from langgraph.func import entrypoint, task
 from temporalio import workflow
@@ -69,14 +67,17 @@ async def react_agent_entrypoint(query: str) -> dict:
         history.append(result)
 
 
-all_tasks: list[Any] = [agent_think, execute_tool]
+all_tasks = [agent_think, execute_tool]
 
 activity_options = {
-    t.func.__name__: {
+    "agent_think": {
         "execute_in": "activity",
         "start_to_close_timeout": timedelta(seconds=30),
-    }
-    for t in all_tasks
+    },
+    "execute_tool": {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    },
 }
 
 

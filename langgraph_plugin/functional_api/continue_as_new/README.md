@@ -1,6 +1,6 @@
 # Continue-as-New with Caching (Functional API)
 
-Demonstrates combining Temporal's continue-as-new with LangGraph's task result caching to avoid re-executing completed `@task` functions across workflow boundaries.
+Demonstrates combining Temporal's continue-as-new with the LangGraph plugin's task result cache to avoid re-executing completed `@task` functions across workflow boundaries.
 
 ## What This Sample Demonstrates
 

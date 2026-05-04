@@ -1,6 +1,8 @@
 """Human-in-the-loop chatbot using the LangGraph Functional API with Temporal.
 
-Same pattern as the Graph API version, but using @task and @entrypoint decorators.
+The @entrypoint pauses at interrupt(); the Workflow waits indefinitely with
+workflow.wait_condition() until a Temporal signal delivers human feedback,
+then resumes the entrypoint with Command(resume=...).
 """
 
 from datetime import timedelta
@@ -40,14 +42,17 @@ async def chatbot_entrypoint(user_message: str) -> dict:
     return {"response": final_response}
 
 
-all_tasks: list[Any] = [generate_draft, request_human_review]
+all_tasks = [generate_draft, request_human_review]
 
 activity_options = {
-    t.func.__name__: {
+    "generate_draft": {
         "execute_in": "activity",
         "start_to_close_timeout": timedelta(seconds=30),
-    }
-    for t in all_tasks
+    },
+    "request_human_review": {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    },
 }
 
 

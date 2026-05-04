@@ -1,11 +1,12 @@
 # Human-in-the-Loop Chatbot (Functional API)
 
-Demonstrates using LangGraph's `interrupt()` to pause an entrypoint for human review, combined with Temporal signals and queries for asynchronous feedback, using the imperative `@task`/`@entrypoint` style.
+Demonstrates pausing an entrypoint with LangGraph's `interrupt()` and waiting indefinitely for human review with Temporal's `workflow.wait_condition()`. A Temporal signal delivers the human's feedback; a Temporal query exposes the pending draft to UIs.
 
 ## What This Sample Demonstrates
 
-- Using `interrupt()` inside a `@task` to pause for human input
-- Temporal signals and queries for asynchronous human feedback
+- `workflow.wait_condition()` to block the Workflow until human input arrives — for as long as it takes, with no polling and no timeout
+- `interrupt()` inside a `@task` to pause the entrypoint at the review point
+- Temporal **signals** to deliver human feedback and **queries** to expose the pending draft
 - Resuming with `Command(resume=...)` via the v2 API
 - Setting a checkpointer on the entrypoint for interrupt/resume support
 
@@ -13,8 +14,8 @@ Demonstrates using LangGraph's `interrupt()` to pause an entrypoint for human re
 
 1. The `generate_draft` task produces a draft response.
 2. The `request_human_review` task calls `interrupt(draft)`, pausing the entrypoint.
-3. The workflow stores the draft and waits for a signal.
-4. After receiving feedback, the entrypoint resumes and returns the result.
+3. The Workflow stores the draft (visible via the query) and calls `workflow.wait_condition()` — blocking durably until the signal sets `_human_input`. This can wait indefinitely; Temporal persists the state.
+4. After the signal arrives, the entrypoint resumes with `Command(resume=...)` and returns the final response.
 
 ## Running the Sample
 

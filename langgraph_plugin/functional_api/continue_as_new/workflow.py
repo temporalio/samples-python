@@ -1,7 +1,8 @@
 """Continue-as-new with caching using the LangGraph Functional API with Temporal.
 
-Demonstrates Temporal's continue-as-new with LangGraph's task result caching
-to avoid re-executing completed @task functions across workflow boundaries.
+Demonstrates Temporal's continue-as-new with the LangGraph plugin's task
+result cache to avoid re-executing completed @task functions across
+workflow boundaries.
 """
 
 from dataclasses import dataclass
@@ -41,14 +42,21 @@ async def pipeline_entrypoint(data: int) -> dict:
     return {"result": tripled}
 
 
-all_tasks: list[Any] = [double, add_50, triple]
+all_tasks = [double, add_50, triple]
 
 activity_options = {
-    t.func.__name__: {
+    "double": {
         "execute_in": "activity",
         "start_to_close_timeout": timedelta(seconds=30),
-    }
-    for t in all_tasks
+    },
+    "add_50": {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    },
+    "triple": {
+        "execute_in": "activity",
+        "start_to_close_timeout": timedelta(seconds=30),
+    },
 }
 
 

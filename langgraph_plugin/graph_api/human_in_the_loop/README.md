@@ -1,19 +1,19 @@
 # Human-in-the-Loop Chatbot (Graph API)
 
-Demonstrates using LangGraph's `interrupt()` to pause a workflow for human review, combined with Temporal signals and queries for asynchronous feedback.
+Demonstrates pausing a graph with LangGraph's `interrupt()` and waiting indefinitely for human review with Temporal's `workflow.wait_condition()`. A Temporal signal delivers the human's feedback; a Temporal query exposes the pending draft to UIs.
 
 ## What This Sample Demonstrates
 
-- Pausing a graph mid-execution with `interrupt()` to wait for human input
-- Using Temporal **signals** to deliver human feedback to a running workflow
-- Using Temporal **queries** to expose pending review state to external UIs
-- Resuming the graph with `Command(resume=...)` after receiving input
+- `workflow.wait_condition()` to block the Workflow until human input arrives — for as long as it takes, with no polling and no timeout
+- Pausing a graph mid-execution with `interrupt()` at the review point
+- Temporal **signals** to deliver human feedback and **queries** to expose the pending draft
+- Resuming the graph with `Command(resume=...)` after the signal arrives
 
 ## How It Works
 
-1. The workflow starts and the `generate_draft` node produces a response.
+1. The Workflow starts and the `generate_draft` node produces a response.
 2. The `human_review` node calls `interrupt(draft)`, pausing execution.
-3. The workflow exposes the draft via a query and waits for a signal.
+3. The Workflow stores the draft (visible via the query) and calls `workflow.wait_condition()` — blocking durably until the signal sets `_human_input`. This can wait indefinitely; Temporal persists the state.
 4. An external process (UI, CLI, etc.) queries the draft and sends approval via signal.
 5. The graph resumes — `interrupt()` returns the signal value and the node completes.
 

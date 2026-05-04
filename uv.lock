@@ -2589,6 +2589,9 @@ langsmith-tracing = [
     { name = "openai" },
     { name = "temporalio", extra = ["langsmith", "pydantic"] },
 ]
+llm-stream = [
+    { name = "openai" },
+]
 nexus = [
     { name = "nexus-rpc" },
 ]
@@ -2649,6 +2652,7 @@ langsmith-tracing = [
     { name = "openai", specifier = ">=1.4.0" },
     { name = "temporalio", extras = ["pydantic", "langsmith"], specifier = ">=1.27.0" },
 ]
+llm-stream = [{ name = "openai", specifier = ">=1.0" }]
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },

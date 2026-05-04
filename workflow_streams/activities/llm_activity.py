@@ -33,10 +33,7 @@ async def stream_completion(input: LLMInput) -> str:
 
     No ``force_flush=True``: the 200ms ``batch_interval`` is fast
     enough for an interactive feel, and the WorkflowStreamClient's
-    ``__aexit__`` cancels a sleeping flusher cleanly. (The doc example
-    uses ``force_flush=True`` on the first delta; that path currently
-    wedges the activity's exit on a cancel-mid-flight bug — fix is
-    pending in ``temporalio.contrib.workflow_streams``.)
+    ``__aexit__`` cancels a sleeping flusher cleanly.
     """
     stream_client = WorkflowStreamClient.from_within_activity(
         batch_interval=timedelta(milliseconds=200),

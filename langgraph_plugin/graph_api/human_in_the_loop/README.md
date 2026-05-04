@@ -1,0 +1,38 @@
+# Human-in-the-Loop Chatbot (Graph API)
+
+Demonstrates pausing a graph with LangGraph's `interrupt()` and waiting indefinitely for human review with Temporal's `workflow.wait_condition()`. A Temporal signal delivers the human's feedback; a Temporal query exposes the pending draft to UIs.
+
+## What This Sample Demonstrates
+
+- `workflow.wait_condition()` to block the Workflow until human input arrives — for as long as it takes, with no polling and no timeout
+- Pausing a graph mid-execution with `interrupt()` at the review point
+- Temporal **signals** to deliver human feedback and **queries** to expose the pending draft
+- Resuming the graph with `Command(resume=...)` after the signal arrives
+
+## How It Works
+
+1. The Workflow starts and the `generate_draft` node produces a response.
+2. The `human_review` node calls `interrupt(draft)`, pausing execution.
+3. The Workflow stores the draft (visible via the query) and calls `workflow.wait_condition()` — blocking durably until the signal sets `_human_input`. This can wait indefinitely; Temporal persists the state.
+4. An external process (UI, CLI, etc.) queries the draft and sends approval via signal.
+5. The graph resumes — `interrupt()` returns the signal value and the node completes.
+
+## Running the Sample
+
+Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
+
+```bash
+# Terminal 1: start the worker
+uv run langgraph_plugin/graph_api/human_in_the_loop/run_worker.py
+
+# Terminal 2: start the workflow (polls for draft, then auto-approves)
+uv run langgraph_plugin/graph_api/human_in_the_loop/run_workflow.py
+```
+
+## Files
+
+| File | Description |
+|------|-------------|
+| `workflow.py` | Graph node functions, graph definition, and `ChatbotWorkflow` definition |
+| `run_worker.py` | Builds graph, registers with `LangGraphPlugin`, starts worker |
+| `run_workflow.py` | Starts workflow, polls draft via query, sends approval via signal |

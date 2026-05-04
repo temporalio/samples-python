@@ -76,10 +76,14 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.
+* [Nexus Messaging](nexus_messaging): Demonstrates how send signal, update and query messages through Nexus.
+  This contains two samples, one sending messages to an existing workflow and a second that creates a workflow through Nexus
+  and sends messages to it.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
+* [workflow_streams](workflow_streams) - Workflow-hosted durable event stream via `temporalio.contrib.workflow_streams`. **Experimental**
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.

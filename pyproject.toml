@@ -66,9 +66,11 @@ allow-direct-references = true
 
 [tool.hatch.build.targets.sdist]
 include = ["./**/*.py"]
+exclude = ["lambda_worker/**"]
 
 [tool.hatch.build.targets.wheel]
 include = ["./**/*.py"]
+exclude = ["lambda_worker/**"]
 packages = [
     "activity_worker",
     "bedrock",
@@ -131,10 +133,12 @@ log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(linen
 
 [tool.ruff]
 target-version = "py310"
+extend-exclude = ["lambda_worker"]
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
+exclude = ["lambda_worker/"]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

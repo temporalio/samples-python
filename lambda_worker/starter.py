@@ -13,7 +13,7 @@ async def main() -> None:
 
     result = await client.execute_workflow(
         SampleWorkflow.run,
-        "Serverless Lambda Worker!",
+        "worker-007",
         id="serverless-workflow-id-1",
         task_queue=TASK_QUEUE,
     )

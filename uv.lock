@@ -2743,7 +2743,7 @@ wheels = [
 
 [[package]]
 name = "temporalio"
-version = "1.27.1"
+version = "1.27.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nexus-rpc" },
@@ -2752,13 +2752,13 @@ dependencies = [
     { name = "types-protobuf" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fd/60/7e9df1bc4c93deab4b47a90fb39da82cd73df19b48c2b4b8f6b4c19062d4/temporalio-1.27.1.tar.gz", hash = "sha256:3ce9667a8c7d811d2b5094dbd42a843d8f821f334a4472bcacda34e7656bd59d", size = 2503076, upload-time = "2026-05-13T16:20:42.36Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/62/2bc1a9ad29382a3a99f088907ef2024a94420cfef340be1b33026c632828/temporalio-1.27.2.tar.gz", hash = "sha256:633bf2379492f3db1e887d1e64fdac00d9c2ddc3e9382b831d5af68256912e92", size = 2503041, upload-time = "2026-05-14T02:17:57.565Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/db/16/ad4b5c159a98403afca5088847d105c458b885091b3b60ef7d4c079ec519/temporalio-1.27.1-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:7ea4ed1e6c0b627f6f80579cc5f0918103b83b3a6867caa9df404bd8f852ace7", size = 14600501, upload-time = "2026-05-13T16:20:29.386Z" },
-    { url = "https://files.pythonhosted.org/packages/cd/1d/37b15cd063bd1a7f263f1306678bc6aa20d21e7e2102e2a5c07646b43538/temporalio-1.27.1-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:f7ab3ce01b9fc94df484594e95ab0ea9b80f23caef90358b264432e34bf1ac22", size = 13999213, upload-time = "2026-05-13T16:20:38.712Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/0c/319cb6b02b8081052c02aace86dbae58699725f968cd9f9669dcd6a59368/temporalio-1.27.1-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4b97f80e96f817dd48a7d325b0865e9960f290fe13c1df69bb8493bf69a5cceb", size = 14251284, upload-time = "2026-05-13T16:21:00.102Z" },
-    { url = "https://files.pythonhosted.org/packages/bd/cf/98e9cbd239689a674e589fbcca518345fe8511b24ad684d51e4ca443be45/temporalio-1.27.1-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:09ef5420099842d7a89ee592418b01133cfce80fa8bb36593a6320c0cb6c815b", size = 14780480, upload-time = "2026-05-13T16:21:09.029Z" },
-    { url = "https://files.pythonhosted.org/packages/20/e6/a147fad980d0f92b7b070d4fe439310b91375592c26d8cb6dc5d1a1c0ae4/temporalio-1.27.1-cp310-abi3-win_amd64.whl", hash = "sha256:a3afaed09643cfb24ac04837144ff37a02a0eac7eeeb1876065066806aeda512", size = 14979491, upload-time = "2026-05-13T16:20:50.622Z" },
+    { url = "https://files.pythonhosted.org/packages/64/85/9da14f9fbdfae95435d29353bb1c55891581ad6b23c86ca56e72d83035ed/temporalio-1.27.2-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:860f706380faafec8f183f9194d0883c8033a4211c5d19c2c962c45b06cf99e9", size = 14602829, upload-time = "2026-05-14T02:17:45.624Z" },
+    { url = "https://files.pythonhosted.org/packages/24/51/b7437991e71eea082dc53222da11f064974917cd59063ba57e13e5895fbc/temporalio-1.27.2-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:a8dc0c680e351f3132809861888d8326dbd5030dd4e570663597e7d4768d9502", size = 13997680, upload-time = "2026-05-14T02:17:53.968Z" },
+    { url = "https://files.pythonhosted.org/packages/8c/5d/358065040e6f0cedbf669acd333622999eec737ff868ca7829d727b77746/temporalio-1.27.2-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:805f3de4d193dec52e040e41dbfc9ab44be0206d2e81142ceefaf7b7208058d1", size = 14252199, upload-time = "2026-05-14T02:17:36.972Z" },
+    { url = "https://files.pythonhosted.org/packages/72/8a/85d2eab07c3e23fc1124203e76857c69ab9b22d8ccebad0835e294edb754/temporalio-1.27.2-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5bc996cb501b8a918f50037ccee6facb05bb70984acada4c2a3e01f5e7957a38", size = 14779945, upload-time = "2026-05-14T02:18:05.513Z" },
+    { url = "https://files.pythonhosted.org/packages/67/81/c9b08609e2a92ecf62c97c59cabfa0608337c8d5cc9941eed5d9a7778840/temporalio-1.27.2-cp310-abi3-win_amd64.whl", hash = "sha256:62a84ae9a60c17932971e4ca3b0f3cd6f32f173b8183e759989376503fb95af6", size = 14981897, upload-time = "2026-05-14T02:17:27.333Z" },
 ]
 
 [package.optional-dependencies]
@@ -2856,7 +2856,7 @@ trio-async = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "temporalio", specifier = ">=1.27.1,<2" }]
+requires-dist = [{ name = "temporalio", specifier = ">=1.27.2,<2" }]
 
 [package.metadata.requires-dev]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]

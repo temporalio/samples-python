@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.27.2,<2"]
+dependencies = ["temporalio>=1.27.2,<2", "protobuf>=5.29.6,<6"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -28,7 +28,13 @@ dev = [
 ]
 bedrock = ["boto3>=1.34.92,<2"]
 dsl = ["pyyaml>=6.0.1,<7", "types-pyyaml>=6.0.12,<7", "dacite>=1.8.1,<2"]
-encryption = ["cryptography>=38.0.1,<39", "aiohttp>=3.8.1,<4"]
+encryption = ["cryptography>=38.0.1,<39", "aiohttp>=3.13.3,<4"]
+external-storage = [
+    "aioboto3>=15.1.0,<15.2",
+    "aiohttp>=3.13.3,<4",
+    "moto[server]>=4.0.0",
+    "types_aiobotocore_s3>=2.25.2",
+]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 langsmith-tracing = [
     "openai>=1.4.0",
@@ -81,6 +87,7 @@ packages = [
     "custom_metric",
     "dsl",
     "encryption",
+    "external_storage",
     "gevent_async",
     "hello",
     "langgraph_plugin",

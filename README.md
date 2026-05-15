@@ -69,6 +69,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [eager_wf_start](eager_wf_start) - Run a workflow using Eager Workflow Start
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
+* [external_storage](external_storage) - Offload large payloads to S3-compatible object storage, plus a codec server for the Web UI and CLI.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [langchain](langchain) - Orchestrate workflows for LangChain.

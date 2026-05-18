@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 14
+
+  - package-ecosystem: "uv"
+    directory: "/lambda_worker"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 14
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 14

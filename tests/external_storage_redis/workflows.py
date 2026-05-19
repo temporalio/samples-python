@@ -1,4 +1,4 @@
-"""Workflows and activities used by the Redis external storage sample tests."""
+"""Workflows and activities used by the Redis external storage tests."""
 
 from __future__ import annotations
 

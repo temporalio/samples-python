@@ -21,7 +21,7 @@ from temporalio.worker import Worker
 
 from external_storage_redis import RedisStorageDriver, RedisStorageDriverClient
 from external_storage_redis.redis_asyncio import new_redis_asyncio_client
-from external_storage_redis.workflows import (
+from tests.external_storage_redis.workflows import (
     LARGE,
     LARGE_2,
     ChildWorkflow,

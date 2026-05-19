@@ -69,6 +69,9 @@ cloud-export-to-parquet = [
     "pyarrow>=19.0.1",
 ]
 
+[tool.uv]
+constraint-dependencies = ["yarl!=1.24.0"]
+
 [tool.hatch.metadata]
 allow-direct-references = true
 

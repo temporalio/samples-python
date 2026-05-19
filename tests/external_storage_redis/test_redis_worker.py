@@ -21,6 +21,7 @@ from temporalio.worker import Worker
 
 from external_storage_redis import RedisStorageDriver, RedisStorageDriverClient
 from external_storage_redis.redis_asyncio import new_redis_asyncio_client
+from tests.external_storage_redis.conftest import KEY_PREFIX
 from tests.external_storage_redis.workflows import (
     LARGE,
     LARGE_2,
@@ -39,7 +40,6 @@ from tests.external_storage_redis.workflows import (
     large_io_activity,
     large_output_activity,
 )
-from tests.external_storage_redis.conftest import KEY_PREFIX
 
 _THRESHOLD = 256
 

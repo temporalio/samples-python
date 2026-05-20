@@ -27,11 +27,10 @@ _APPROVED: set[str] = set()
 @activity.defn
 async def delete_thing(name: str) -> str:
     if name not in _APPROVED:
-        # First attempt: register that approval is needed and stop the agent.
-        # In production, this branch would check a real authorization service
-        # and only raise when the resource is protected; here, marking the
-        # name as approved on the way out simulates the human flipping the
-        # flag during the interrupt pause.
+        # First attempt: mark the name as approved on the way out (simulating
+        # the human flipping a flag during the interrupt pause) and stop the
+        # agent. In production this branch would check a real authorization
+        # service and only raise when the resource is protected.
         _APPROVED.add(name)
         raise InterruptException(
             Interrupt(
@@ -40,7 +39,6 @@ async def delete_thing(name: str) -> str:
                 reason=f"approve delete of protected resource '{name}'?",
             )
         )
-    _APPROVED.discard(name)
     return f"deleted {name}"
 
 

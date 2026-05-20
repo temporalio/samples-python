@@ -88,6 +88,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
+* [strands_plugin](strands_plugin) - Run Strands Agents as durable Temporal workflows (model calls, tools, MCP, HITL).
 * [trio_async](trio_async) - Use asyncio Temporal in Trio-based environments.
 * [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.

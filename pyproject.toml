@@ -59,6 +59,13 @@ openai-agents = [
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=2.13.0"]
+strands = [
+    "strands-agents>=1.39.0",
+    "strands-agents-tools>=0.5.2",
+    "mcp>=1.0.0",
+    "boto3>=1.34.92,<2",
+    "temporalio[strands,pydantic]>=1.27.0",
+]
 trio-async = ["trio>=0.28.0,<0.29", "trio-asyncio>=0.15.0,<0.16"]
 cloud-export-to-parquet = [
     "pandas>=2.3.3,<3 ; python_version >= '3.10' and python_version < '4.0'",
@@ -66,6 +73,12 @@ cloud-export-to-parquet = [
     "boto3>=1.34.89,<2",
     "pyarrow>=19.0.1",
 ]
+
+# Temporary: the strands extra of temporalio is shipping in an upcoming release.
+# Point at the strands branch of sdk-python until it's published.
+# Remove this section once `temporalio[strands]` is on PyPI.
+[tool.uv.sources]
+temporalio = { git = "https://github.com/temporalio/sdk-python.git", branch = "strands" }
 
 [tool.hatch.metadata]
 allow-direct-references = true
@@ -105,6 +118,7 @@ packages = [
     "schedules",
     "sentry",
     "sleep_for_days",
+    "strands_plugin",
     "tests",
     "trio_async",
     "updatable_timer",

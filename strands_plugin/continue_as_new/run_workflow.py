@@ -22,15 +22,13 @@ async def main() -> None:
         task_queue="strands-chat",
     )
 
-    await handle.signal(ChatWorkflow.user_says, "Hi! What is durable execution?")
-    await asyncio.sleep(2)
-    await handle.signal(ChatWorkflow.user_says, "Give me a one-sentence summary.")
-    await asyncio.sleep(2)
-
-    messages = await handle.query(ChatWorkflow.messages)
-    print(f"Conversation so far ({len(messages)} messages):")
-    for message in messages:
-        print(f"  {message['role']}: {message['content']}")
+    for prompt in [
+        "Hi! What is durable execution?",
+        "Give me a one-sentence summary.",
+    ]:
+        reply = await handle.execute_update(ChatWorkflow.turn, prompt)
+        print(f"user: {prompt}")
+        print(f"assistant: {reply}\n")
 
     await handle.signal(ChatWorkflow.end_chat)
     await handle.result()

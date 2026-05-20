@@ -33,13 +33,13 @@ async def test_continue_as_new_chat(
             id=f"strands-chat-{uuid.uuid4()}",
             task_queue=task_queue,
         )
-        await handle.signal(ChatWorkflow.user_says, "Hello")
-        await handle.signal(ChatWorkflow.user_says, "How are you?")
+        reply1 = await handle.execute_update(ChatWorkflow.turn, "Hello")
+        reply2 = await handle.execute_update(ChatWorkflow.turn, "How are you?")
 
-        messages: list = []
-        while len(messages) < 4:
-            messages = await handle.query(ChatWorkflow.messages)
+        assert reply1 == "First reply."
+        assert reply2 == "Second reply."
 
+        messages = await handle.query(ChatWorkflow.messages)
         await handle.signal(ChatWorkflow.end_chat)
         await handle.result()
 

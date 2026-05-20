@@ -11,10 +11,9 @@ import json
 from collections.abc import AsyncIterable
 from typing import Any
 
+import temporalio.contrib.strands._plugin as _plugin_module
 from strands.models import Model
 from strands.types.streaming import StreamEvent
-
-import temporalio.contrib.strands._plugin as _plugin_module
 
 
 class MockModel(Model):

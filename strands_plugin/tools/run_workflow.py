@@ -17,7 +17,7 @@ async def main() -> None:
             "Please do three things:\n"
             "1. Count the letter R's in 'strawberry'.\n"
             "2. Fetch the weather in San Francisco.\n"
-            "3. Run `echo hi` in a shell."
+            "3. Validate that the PATH environment variable exists."
         ),
         id="strands-tools",
         task_queue="strands-tools",

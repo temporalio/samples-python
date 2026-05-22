@@ -9,8 +9,8 @@ from temporalio.worker import Worker
 
 from strands_plugin.tools.workflow import (
     ToolsWorkflow,
+    environment_activity,
     fetch_weather,
-    shell_activity,
 )
 
 
@@ -25,7 +25,7 @@ async def main() -> None:
         client,
         task_queue="strands-tools",
         workflows=[ToolsWorkflow],
-        activities=[fetch_weather, shell_activity],
+        activities=[fetch_weather, environment_activity],
     )
     print("Worker started. Ctrl+C to exit.")
     await worker.run()

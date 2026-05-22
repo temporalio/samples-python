@@ -5,7 +5,11 @@ from temporalio.client import Client
 from temporalio.contrib.strands import StrandsPlugin
 from temporalio.worker import Worker
 
-from strands_plugin.tools.workflow import ToolsWorkflow, fetch_weather, shell_activity
+from strands_plugin.tools.workflow import (
+    ToolsWorkflow,
+    environment_activity,
+    fetch_weather,
+)
 from tests.strands_plugin._mock_model import patch_bedrock
 
 
@@ -18,7 +22,7 @@ async def test_tools(client: Client, monkeypatch: pytest.MonkeyPatch) -> None:
                 "input": {"word": "strawberry", "letter": "R"},
             },
             {"name": "fetch_weather", "input": {"city": "San Francisco"}},
-            {"name": "shell", "input": {"command": "echo hi"}},
+            {"name": "environment", "input": {"action": "validate", "name": "PATH"}},
             "Done!",
         ],
     )
@@ -34,7 +38,7 @@ async def test_tools(client: Client, monkeypatch: pytest.MonkeyPatch) -> None:
         client,
         task_queue=task_queue,
         workflows=[ToolsWorkflow],
-        activities=[fetch_weather, shell_activity],
+        activities=[fetch_weather, environment_activity],
         max_cached_workflows=0,
     ):
         result = await client.execute_workflow(

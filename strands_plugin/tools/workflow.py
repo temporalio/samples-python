@@ -4,14 +4,16 @@
    workflow context.
 2. ``@activity.defn fetch_weather`` — custom Temporal activity wrapped with
    ``activity_as_tool``; suitable for I/O and non-deterministic work.
-3. ``shell`` (from ``strands_tools``) — third-party Strands tool wrapped in a
-   thin ``@activity.defn`` so its subprocess execution runs in an activity.
+3. ``environment`` (from ``strands_tools``) — third-party Strands tool wrapped
+   in a thin ``@activity.defn`` so its runtime host access runs in an activity.
 """
 
 from datetime import timedelta
+from typing import Any, cast
 
 from strands import tool
-from strands_tools import shell  # type: ignore[import-untyped]
+from strands.types.tools import ToolUse
+from strands_tools import environment  # type: ignore[import-untyped]
 from temporalio import activity, workflow
 from temporalio.contrib.strands import TemporalAgent
 from temporalio.contrib.strands.workflow import activity_as_tool
@@ -33,14 +35,38 @@ async def fetch_weather(city: str) -> dict:
     }
 
 
-@activity.defn(name="shell")
-async def shell_activity(command: str) -> dict:
-    """Run ``strands_tools.shell`` inside an activity.
+@activity.defn(name="environment")
+async def environment_activity(
+    action: str,
+    name: str | None = None,
+    value: str | None = None,
+    prefix: str | None = None,
+    masked: bool | None = None,
+) -> dict:
+    """Run ``strands_tools.environment`` inside an activity.
 
-    ``strands_tools`` ships sync tools that shell out and read files; wrapping
-    them in an activity keeps the workflow itself deterministic.
+    Environment variables are runtime host state. Wrapping this tool in an
+    activity keeps that non-deterministic access out of workflow replay.
     """
-    return shell.shell(command=command, non_interactive=True)
+    tool_input: dict[str, Any] = {"action": action}
+    if name is not None:
+        tool_input["name"] = name
+    if value is not None:
+        tool_input["value"] = value
+    if prefix is not None:
+        tool_input["prefix"] = prefix
+    if masked is not None:
+        tool_input["masked"] = masked
+
+    tool_use = cast(
+        ToolUse,
+        {
+            "toolUseId": "environment",
+            "name": "environment",
+            "input": tool_input,
+        },
+    )
+    return environment.environment(tool_use)
 
 
 @workflow.defn
@@ -55,7 +81,7 @@ class ToolsWorkflow:
                     start_to_close_timeout=timedelta(seconds=30),
                 ),
                 activity_as_tool(
-                    shell_activity,
+                    environment_activity,
                     start_to_close_timeout=timedelta(seconds=30),
                 ),
             ],

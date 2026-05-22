@@ -3983,9 +3983,6 @@ opentelemetry = [
 pydantic = [
     { name = "pydantic" },
 ]
-strands = [
-    { name = "strands-agents" },
-]
 
 [[package]]
 name = "temporalio-samples"
@@ -4068,12 +4065,12 @@ pydantic-converter = [
 sentry = [
     { name = "sentry-sdk" },
 ]
-strands = [
+strands-agents = [
     { name = "boto3" },
     { name = "mcp" },
     { name = "strands-agents" },
     { name = "strands-agents-tools" },
-    { name = "temporalio", extra = ["pydantic", "strands"] },
+    { name = "temporalio", extra = ["pydantic"] },
 ]
 trio-async = [
     { name = "trio" },
@@ -4146,12 +4143,12 @@ openai-agents = [
 ]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]
 sentry = [{ name = "sentry-sdk", specifier = ">=2.13.0" }]
-strands = [
+strands-agents = [
     { name = "boto3", specifier = ">=1.34.92,<2" },
     { name = "mcp", specifier = ">=1.0.0" },
     { name = "strands-agents", specifier = ">=1.39.0" },
     { name = "strands-agents-tools", specifier = ">=0.5.2" },
-    { name = "temporalio", extras = ["strands", "pydantic"], git = "https://github.com/temporalio/sdk-python.git?branch=strands" },
+    { name = "temporalio", extras = ["strands-agents", "pydantic"], git = "https://github.com/temporalio/sdk-python.git?branch=strands" },
 ]
 trio-async = [
     { name = "trio", specifier = ">=0.28.0,<0.29" },

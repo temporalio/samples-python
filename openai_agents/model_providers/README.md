@@ -30,6 +30,32 @@ The example uses Anthropic Claude by default but can be modified to use other Li
 
 Find more LiteLLM providers at: https://docs.litellm.ai/docs/providers
 
+#### Tuning Engines
+Uses a custom `ModelProvider` to route OpenAI Agents SDK model calls through the Tuning Engines OpenAI-compatible gateway.
+
+Set your Tuning Engines inference key and, optionally, the tenant model alias to use:
+
+```bash
+export TUNING_ENGINES_API_KEY="sk-te-..."
+export TUNING_ENGINES_MODEL="your-model-alias"
+# Optional, defaults to https://api.tuningengines.com/v1
+export TUNING_ENGINES_BASE_URL="https://api.tuningengines.com/v1"
+```
+
+Start the Tuning Engines provider worker:
+
+```bash
+uv run openai_agents/model_providers/run_tuning_engines_worker.py
+```
+
+Then run the example in a separate terminal:
+
+```bash
+uv run openai_agents/model_providers/run_tuning_engines_workflow.py
+```
+
+Use a model alias that is available to the configured Tuning Engines inference key.
+
 ### Extra
 
 #### GPT-OSS with Ollama
@@ -63,5 +89,4 @@ uv run openai_agents/model_providers/run_gpt_oss_workflow.py
 
 - **Custom Example Agent** - Custom OpenAI client integration
 - **Custom Example Global** - Global default client configuration  
-- **Custom Example Provider** - Custom ModelProvider pattern
 - **LiteLLM Provider** - Interactive model/API key input

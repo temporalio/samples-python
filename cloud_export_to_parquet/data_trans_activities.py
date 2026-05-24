@@ -6,7 +6,7 @@ from typing import List
 import boto3
 import pandas as pd
 import temporalio.api.export.v1 as export
-from google.protobuf.json_format import MessageToJson
+from google.protobuf.json_format import MessageToDict
 from temporalio import activity
 
 
@@ -70,41 +70,28 @@ def get_data_from_object_key(
     v.ParseFromString(data)
     return v
 
-
 def convert_proto_to_parquet_flatten(wfs: export.WorkflowExecutions) -> pd.DataFrame:
-    """Function that convert flatten proto data to parquet."""
-    dfs = []
+    """Function that converts flatten proto data to parquet and streams to s3."""
+    rows = []
     for wf in wfs.items:
-        start_attributes = wf.history.events[
-            0
-        ].workflow_execution_started_event_attributes
-        histories = wf.history
-        json_str = MessageToJson(histories)
-        row = {
-            "WorkflowID": start_attributes.workflow_id,
-            "RunID": start_attributes.original_execution_run_id,
-            "Histories": json.loads(json_str),
-        }
-        dfs.append(pd.DataFrame([row]))
-    df = pd.concat(dfs, ignore_index=True)
-    rows_flatten = []
-    for _, row in df.iterrows():
-        wf_histories_raw = row["Histories"]["events"]
-        worfkow_id = row["WorkflowID"]
-        run_id = row["RunID"]
-        for history_event in wf_histories_raw:
-            row_flatten = pd.json_normalize(history_event, sep="_")
-            skip_name = ["payloads", "."]
-            columns_to_drop = [
-                col for col in row_flatten.columns for skip in skip_name if skip in col
-            ]
-            row_flatten.drop(columns_to_drop, axis=1, inplace=True)
-            row_flatten.insert(0, "WorkflowId", worfkow_id)
-            row_flatten.insert(1, "RunId", run_id)
-            rows_flatten.append(row_flatten)
-    df_flatten = pd.concat(rows_flatten, ignore_index=True)
-    return df_flatten
-
+        start_attrs = wf.history.events[0].workflow_execution_started_event_attributes
+        workflow_id = start_attrs.workflow_id
+        run_id = start_attrs.original_execution_run_id
+        for ev in wf.history.events:
+            d = MessageToDict(ev, preserving_proto_field_name=False)
+            d["WorkflowId"] = workflow_id
+            d["RunId"] = run_id
+            rows.append(d)
+    if rows:
+        df = pd.json_normalize(rows, sep="_")
+    else:
+        df = pd.DataFrame()
+    if not df.empty:
+        skip_tokens = ("payloads", ".")
+        drop_cols = [c for c in df.columns if any(tok in c for tok in skip_tokens)]
+        if drop_cols:
+            df = df.drop(columns=drop_cols, errors="ignore")
+    return df 
 
 def save_to_sink(data: pd.DataFrame, s3_bucket: str, write_path: str) -> str:
     """Function that save object to s3 bucket."""

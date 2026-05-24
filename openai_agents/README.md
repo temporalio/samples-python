@@ -36,3 +36,6 @@ Each directory contains a complete example with its own README for detailed inst
 - **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 - **[Reasoning Content](./reasoning_content/README.md)** - Example of how to retrieve the thought process of reasoning models.
 - **[Financial Research Agent](./financial_research_agent/README.md)** - Multi-agent financial research system with planner, search, analyst, writer, and verifier agents collaborating.
+- **[Streaming](./streaming/README.md)** - Buffered token streaming (events coalesced into batches over a configurable flush interval, default 100ms) via `temporalio.contrib.workflow_streams`. **Experimental — requires the [`contrib/pubsub` branch][workflow-streams-branch] of sdk-python.**
+
+[workflow-streams-branch]: https://github.com/temporalio/sdk-python/tree/contrib/pubsub

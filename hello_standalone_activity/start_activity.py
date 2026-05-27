@@ -1,6 +1,7 @@
 import asyncio
 from datetime import timedelta
 
+from temporalio.api.workflowservice.v1 import DescribeActivityExecutionRequest
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
@@ -21,6 +22,20 @@ async def my_application():
         start_to_close_timeout=timedelta(seconds=10),
     )
     print(f"Started activity: {activity_handle.id}")
+
+    describe_response = await client.workflow_service.describe_activity_execution(
+        DescribeActivityExecutionRequest(
+            namespace=client.namespace,
+            activity_id=activity_handle.id,
+            include_input=True,
+        )
+    )
+    # Use the same data conversion as the usual high-level SDK APIs
+    decoded_inputs = await client.data_converter.decode(
+        describe_response.input.payloads,
+        type_hints=[ComposeGreetingInput],
+    )
+    print(f"Input was: {decoded_inputs}")
 
     # Wait for the result
     activity_result = await activity_handle.result()

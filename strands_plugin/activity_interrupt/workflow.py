@@ -1,4 +1,4 @@
-"""Tool-body interrupt: ``InterruptException`` raised from a Temporal activity.
+"""Activity interrupt: ``InterruptException`` raised from a Temporal activity.
 
 The plugin's failure converter preserves the ``Interrupt`` payload across the
 activity boundary, so a Temporal activity can pause the agent for human input
@@ -43,7 +43,7 @@ async def delete_thing(name: str) -> str:
 
 
 @workflow.defn
-class InterruptWorkflow:
+class ActivityInterruptWorkflow:
     def __init__(self) -> None:
         self.agent = TemporalAgent(
             start_to_close_timeout=timedelta(seconds=60),

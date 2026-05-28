@@ -1,4 +1,4 @@
-# Interrupt
+# Activity Interrupt
 
 A `@activity.defn`-wrapped tool raises `InterruptException(Interrupt(...))` directly. The plugin's failure converter preserves the `Interrupt` payload across the activity boundary, so the agent stops with `stop_reason == "interrupt"` just like in the hook-based [human_in_the_loop](../human_in_the_loop) sample.
 
@@ -17,10 +17,10 @@ When to reach for this style instead of a hook:
 
 ```bash
 # Terminal 1
-uv run strands_plugin/interrupt/run_worker.py
+uv run strands_plugin/activity_interrupt/run_worker.py
 
 # Terminal 2
-uv run strands_plugin/interrupt/run_workflow.py
+uv run strands_plugin/activity_interrupt/run_workflow.py
 ```
 
 The starter requests deletion of a "protected" resource. The `delete_thing` activity raises an interrupt for protected names; the starter signals `"approve"` to release it.

@@ -1,4 +1,4 @@
-"""Start the tool-body interrupt workflow."""
+"""Start the activity interrupt workflow."""
 
 import asyncio
 import os
@@ -6,7 +6,7 @@ import os
 from temporalio.client import Client
 from temporalio.contrib.strands import StrandsPlugin
 
-from strands_plugin.interrupt.workflow import InterruptWorkflow
+from strands_plugin.activity_interrupt.workflow import ActivityInterruptWorkflow
 
 
 async def main() -> None:
@@ -18,19 +18,19 @@ async def main() -> None:
     )
 
     handle = await client.start_workflow(
-        InterruptWorkflow.run,
+        ActivityInterruptWorkflow.run,
         "Please delete the 'system' user.",
-        id="strands-interrupt",
-        task_queue="strands-interrupt",
+        id="strands-activity-interrupt",
+        task_queue="strands-activity-interrupt",
     )
 
     reason = None
     while reason is None:
         await asyncio.sleep(0.5)
-        reason = await handle.query(InterruptWorkflow.pending_approval)
+        reason = await handle.query(ActivityInterruptWorkflow.pending_approval)
     print(f"Approval requested: {reason}")
 
-    await handle.signal(InterruptWorkflow.approve, "approve")
+    await handle.signal(ActivityInterruptWorkflow.approve, "approve")
 
     result = await handle.result()
     print(f"Result: {result}")

@@ -9,7 +9,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
 | [hello_world](hello_world) | Minimal `TemporalAgent` invocation. Start here. |
 | [tools](tools) | Three tool patterns side by side: in-workflow `@tool`, custom `@activity.defn` wrapped via `activity_as_tool`, and a `strands_tools` tool wrapped as a Temporal activity. |
 | [human_in_the_loop](human_in_the_loop) | Pause a tool call on `BeforeToolCallEvent.interrupt()`, resume via Temporal signal. The canonical Strands HITL pattern. |
-| [tool_interrupt](tool_interrupt) | Raise `InterruptException` from a Temporal activity to surface a HITL prompt across the activity boundary. Plugin-specific feature. |
+| [activity_interrupt](activity_interrupt) | Raise `InterruptException` from a Temporal activity to surface a HITL prompt across the activity boundary. Plugin-specific feature. |
 | [hooks](hooks) | `HookProvider` with both an in-workflow callback and an `activity_as_hook` callback for I/O. |
 | [mcp](mcp) | Connect to an MCP server (`FastMCP` echo) via `TemporalMCPClient`. |
 | [structured_output](structured_output) | Pydantic-typed agent output via `structured_output_model`. |

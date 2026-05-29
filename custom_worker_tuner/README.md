@@ -5,7 +5,7 @@ This sample gates on a fake DB pool: the worker only polls for a new
 activity when the pool has a free connection.
 
 ## What this sample is
-downstream.py - A static-capacity counter. Pretends to be a DB pool. Two methods: increment() (claim a slot, returns False if full), decrement() (release)
+db_pool.py - A static-capacity counter. Pretends to be a DB pool. Two methods: increment() (claim a slot, returns False if full), decrement() (release)
 supplier.py - The custom slot supplier. On reserve_slot it polls downstream.increment() until it succeeds. On release_slot it calls downstream.decrement()
 shared.py - A RunBatch workflow that runs N do_work activities in parallel. The activity just sleeps
 worker.py - Wires Downstream + DownstreamAwareSupplier into a WorkerTuner

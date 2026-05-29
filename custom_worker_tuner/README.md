@@ -34,27 +34,43 @@ uv run custom_worker_tuner/starter.py           # terminal 3
 The worker prints one line per slot lifecycle event:
 
 ```
-
-TIME          EVENT     SLOT     COUNT   DETAIL
-────────────────────────────────────────────────────────────
-10:31:49.842  reserve   #1      1/10  ready to poll
-10:31:49.842  reserve   #2      2/10  ready to poll
-10:31:49.843  reserve   #3      3/10  ready to poll
-10:31:49.843  reserve   #4      4/10  ready to poll
-10:31:49.843  reserve   #5      5/10  ready to poll
-10:31:49.843  reserve   #6      6/10  ready to poll
-10:31:56.763  reserve   #7      7/10  eager dispatch
-10:31:56.763  reserve   #8      8/10  eager dispatch
-10:31:56.764  reserve   #9      9/10  eager dispatch
-10:31:56.766  reserve   #10    10/10  eager dispatch
-10:31:56.767  release   #7      9/10  no task arrived
-10:31:56.768  release   #8      8/10  no task arrived
-10:31:56.768  release   #9      7/10  no task arrived
-10:31:56.768  reserve   #11     8/10  eager dispatch
-10:31:56.768  reserve   #12     9/10  eager dispatch
-10:31:56.768  reserve   #13    10/10  eager dispatch
-10:31:56.771  used      #1     10/10  activity running
-10:31:56.771  release   #10     9/10  no task arrived
+TIME          EVENT     COUNT     QUEUE  DETAIL
+(COUNT shows before→after / capacity; QUEUE = tasks parked waiting)
+─────────────────────────────────────────────────────────────────
+12:30:32.591  reserve    0→ 1/10      0  ready to poll
+12:30:32.591  reserve    1→ 2/10      0  ready to poll
+12:30:32.592  reserve    2→ 3/10      0  ready to poll
+12:30:32.592  reserve    3→ 4/10      0  ready to poll
+12:30:32.592  reserve    4→ 5/10      0  ready to poll
+12:30:32.592  reserve    5→ 6/10      0  ready to poll
+12:30:40.501  reserve    6→ 7/10      0  eager dispatch
+12:30:40.502  reserve    7→ 8/10      0  eager dispatch
+12:30:40.502  reserve    8→ 9/10      0  eager dispatch
+12:30:40.505  release    9→ 8/10      0  no task arrived
+12:30:40.506  release    8→ 7/10      0  no task arrived
+12:30:40.506  release    7→ 6/10      0  no task arrived
+12:30:40.510  used       6→ 6/10      0  activity running
+12:30:40.510  reserve    6→ 7/10      0  eager dispatch
+12:30:40.511  reserve    7→ 8/10      0  eager dispatch
+12:30:40.511  reserve    8→ 9/10      0  eager dispatch
+12:30:40.514  reserve    9→10/10      0  ready to poll
+12:30:40.520  release   10→ 9/10      0  no task arrived
+12:30:40.520  release    9→ 8/10      0  no task arrived
+12:30:40.520  release    8→ 7/10      0  no task arrived
+12:30:40.520  used       7→ 7/10      0  activity running
+12:30:40.520  reserve    7→ 8/10      0  eager dispatch
+12:30:40.520  reserve    8→ 9/10      0  eager dispatch
+12:30:40.520  reserve    9→10/10      0  eager dispatch
+12:30:40.525  release   10→10/10      0  no task arrived
+12:30:40.525  release   10→ 9/10      0  no task arrived
+12:30:40.525  release    9→ 8/10      0  no task arrived
+12:30:40.528  reserve    7→ 8/10      0  ready to poll
+12:30:40.530  used       8→ 8/10      0  activity running
+12:30:40.535  reserve    8→ 9/10      0  eager dispatch
+12:30:40.537  reserve    9→10/10      0  eager dispatch
+12:30:40.539  used      10→10/10      1  activity running
+12:30:40.540  used      10→10/10      1  activity running
+12:30:40.541  used      10→10/10      1  activity running
 ```
 
 Under load, with more activities than capacity, COUNT pins at

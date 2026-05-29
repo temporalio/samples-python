@@ -44,8 +44,9 @@ async def main() -> None:
     )
 
     print(f"\nworker started — capacity={CAPACITY}\n")
-    print("TIME          EVENT     COUNT   DETAIL")
-    print("─" * 60)
+    print("TIME          EVENT     COUNT     QUEUE  DETAIL")
+    print("(COUNT shows before→after / capacity; QUEUE = tasks parked waiting)")
+    print("─" * 65)
     await worker.run()
 
 

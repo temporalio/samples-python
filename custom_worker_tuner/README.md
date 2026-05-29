@@ -4,17 +4,19 @@ A `CustomSlotSupplier` is a sample that lets you gate slot grants on whatever yo
 This sample gates on a fake DB pool: the worker only polls for a new
 activity when the pool has a free connection.
 
+**Note:** This sample is illustrative only. It shouldn't be used for production grade use-cases.
+
 ## What this sample is
-db_pool.py - A static-capacity counter. Pretends to be a DB pool. Two methods: increment() (claim a slot, returns False if full), decrement() (release)
-supplier.py - The custom slot supplier. On reserve_slot it polls downstream.increment() until it succeeds. On release_slot it calls downstream.decrement()
+db_pool.py - A fixed-capacity fake pool backed by a `BoundedSemaphore`. Two methods: `acquire(blocking=True)` (claim a slot, returns False if full when non-blocking), `release()` (return a slot)
+supplier.py - The custom slot supplier. `reserve_slot` blocks on `connection_pool.acquire()` until a slot is free; `try_reserve_slot` does the same non-blocking. `release_slot` calls `connection_pool.release()`
 shared.py - A RunBatch workflow that runs N do_work activities in parallel. The activity just sleeps
-worker.py - Wires Downstream + DownstreamAwareSupplier into a WorkerTuner
+worker.py - Wires `FakeDatabaseConnectionPool` + `PoolSlotSupplier` into a WorkerTuner
 starter.py - Drives load
 
 The flow:
 
-When the downstream is at capacity, `reserve_slot` blocks until a
-slot frees up. The excess work piles up on the Temporal server, not
+When the pool is at capacity, `reserve_slot` blocks until a
+connection frees up. The excess work piles up on the Temporal server, not
 inside the worker.
 
 ## Run
@@ -63,8 +65,7 @@ we chose 10 because default there are 5 pollers for python sdk
 
 worker.py:
 
-CAPACITY — downstream capacity (the gate)
-POLL_INTERVAL_MS — how often the supplier rechecks when full
+CAPACITY — pool capacity (the gate)
 
 starter.py:
 

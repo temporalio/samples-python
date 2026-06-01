@@ -10,7 +10,7 @@ The simplest Strands + Temporal sample: one `TemporalAgent` invoked once. Every 
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group strands`, AWS credentials with Bedrock access, and a running Temporal dev server (`temporal server start-dev`).
+Prerequisites: `uv sync --group strands-agents`, AWS credentials with Bedrock access, and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
 # Terminal 1

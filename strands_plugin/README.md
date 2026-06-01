@@ -21,7 +21,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
 1. Install dependencies:
 
    ```bash
-   uv sync --group strands
+   uv sync --group strands-agents
    ```
 
    > The `strands` extra of `temporalio` is shipping in an upcoming release. Until then, install the SDK from the strands branch:

@@ -25,6 +25,7 @@ def letter_counter(word: str, letter: str) -> int:
     return word.lower().count(letter.lower())
 
 
+# @@@SNIPSTART python-strands-tools-activity
 @activity.defn
 async def fetch_weather(city: str) -> dict:
     """Stub weather lookup — replace with a real HTTP call in production."""
@@ -33,6 +34,7 @@ async def fetch_weather(city: str) -> dict:
         "temperature_f": 72,
         "conditions": "sunny",
     }
+# @@@SNIPEND
 
 
 @activity.defn(name="environment")
@@ -69,6 +71,7 @@ async def environment_activity(
     return environment.environment(tool_use)
 
 
+# @@@SNIPSTART python-strands-tools-workflow
 @workflow.defn
 class ToolsWorkflow:
     def __init__(self) -> None:
@@ -91,3 +94,4 @@ class ToolsWorkflow:
     async def run(self, prompt: str) -> str:
         result = await self.agent.invoke_async(prompt)
         return str(result)
+# @@@SNIPEND

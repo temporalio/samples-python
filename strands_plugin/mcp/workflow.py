@@ -6,6 +6,7 @@ pure handle that references the server by name and carries the activity
 options for each tool call.
 """
 
+# @@@SNIPSTART python-strands-mcp-workflow
 from datetime import timedelta
 
 from temporalio import workflow
@@ -28,3 +29,4 @@ class MCPWorkflow:
     async def run(self, prompt: str) -> str:
         result = await self.agent.invoke_async(prompt)
         return str(result)
+# @@@SNIPEND

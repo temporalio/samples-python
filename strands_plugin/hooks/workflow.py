@@ -19,10 +19,12 @@ from temporalio.contrib.strands import TemporalAgent
 from temporalio.contrib.strands.workflow import activity_as_hook
 
 
+# @@@SNIPSTART python-strands-hooks-activity
 @activity.defn
 async def persist_tool_call(tool_name: str) -> None:
     # In production, write to a database / S3 / your audit pipeline.
     activity.logger.info(f"audit: tool {tool_name} completed")
+# @@@SNIPEND
 
 
 @tool
@@ -30,6 +32,7 @@ def echo(text: str) -> str:
     return text
 
 
+# @@@SNIPSTART python-strands-hooks-provider
 class AuditHook(HookProvider):
     def __init__(self) -> None:
         self.fired: list[str] = []
@@ -47,6 +50,7 @@ class AuditHook(HookProvider):
 
     def _record(self, event: AfterToolCallEvent) -> None:
         self.fired.append(event.tool_use["name"])
+# @@@SNIPEND
 
 
 @workflow.defn

@@ -21,6 +21,7 @@ def delete_file(path: str) -> str:
     return f"deleted {path}"
 
 
+# @@@SNIPSTART python-strands-human-in-the-loop-hook
 class ApprovalHook(HookProvider):
     def register_hooks(self, registry: HookRegistry, **kwargs: object) -> None:
         registry.add_callback(BeforeToolCallEvent, self._gate)
@@ -34,8 +35,10 @@ class ApprovalHook(HookProvider):
         )
         if approval != "approve":
             event.cancel_tool = "denied"
+# @@@SNIPEND
 
 
+# @@@SNIPSTART python-strands-human-in-the-loop-workflow
 @workflow.defn
 class HumanInTheLoopWorkflow:
     def __init__(self) -> None:
@@ -71,3 +74,4 @@ class HumanInTheLoopWorkflow:
             ]
             result = await self.agent.invoke_async(responses)
         return str(result)
+# @@@SNIPEND

@@ -6,6 +6,7 @@ model's final response into an instance of ``PersonInfo``. The plugin installs
 the activity/workflow boundary without extra wiring.
 """
 
+# @@@SNIPSTART python-strands-structured-output-workflow
 from datetime import timedelta
 
 from pydantic import BaseModel, Field
@@ -32,3 +33,4 @@ class StructuredOutputWorkflow:
         result = await self.agent.invoke_async(prompt)
         assert isinstance(result.structured_output, PersonInfo)
         return result.structured_output
+# @@@SNIPEND

@@ -1,5 +1,6 @@
 """Start the streaming workflow and consume model events live."""
 
+# @@@SNIPSTART python-strands-streaming-client
 import asyncio
 import os
 from datetime import timedelta
@@ -47,3 +48,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

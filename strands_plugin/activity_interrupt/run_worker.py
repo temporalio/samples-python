@@ -1,5 +1,6 @@
 """Worker for the activity interrupt sample."""
 
+# @@@SNIPSTART python-strands-activity-interrupt-worker
 import asyncio
 import os
 
@@ -16,8 +17,6 @@ from strands_plugin.activity_interrupt.workflow import (
 async def main() -> None:
     plugin = StrandsPlugin()
     # The plugin MUST be on the client so its failure converter is installed.
-    # Without it, the activity's InterruptException cannot survive serialization
-    # across the activity boundary as an Interrupt.
     client = await Client.connect(
         os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"),
         plugins=[plugin],
@@ -35,3 +34,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

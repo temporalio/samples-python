@@ -5,6 +5,7 @@ startup. The plugin opens a stdio MCP session, enumerates tools once, and
 caches the schema for the worker's lifetime.
 """
 
+# @@@SNIPSTART python-strands-mcp-worker
 import asyncio
 import os
 import sys
@@ -50,3 +51,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

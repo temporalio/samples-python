@@ -1,5 +1,6 @@
 """Minimal Temporal + Strands workflow: one agent, one prompt."""
 
+# @@@SNIPSTART python-strands-hello-world-workflow
 from datetime import timedelta
 
 from temporalio import workflow
@@ -15,3 +16,4 @@ class HelloWorldWorkflow:
     async def run(self, prompt: str) -> str:
         result = await self.agent.invoke_async(prompt)
         return str(result)
+# @@@SNIPEND

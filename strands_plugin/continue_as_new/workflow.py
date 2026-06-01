@@ -6,6 +6,7 @@ continue-as-new, the workflow drains any in-flight update handlers and hands
 ``agent.messages`` off to a fresh run.
 """
 
+# @@@SNIPSTART python-strands-continue-as-new-workflow
 import asyncio
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -29,9 +30,7 @@ class ChatWorkflow:
 
     @workflow.update
     async def turn(self, prompt: str) -> str:
-        # Updates can arrive before ``run`` has constructed the agent.
         await workflow.wait_condition(lambda: self._agent is not None)
-        # Serialize turns so concurrent updates can't interleave on ``agent.messages``.
         async with self._lock:
             assert self._agent is not None
             result = await self._agent.invoke_async(prompt)
@@ -56,8 +55,8 @@ class ChatWorkflow:
             lambda: self._done or workflow.info().is_continue_as_new_suggested()
         )
 
-        # Let any in-flight ``turn`` updates finish before we exit or hand off.
         await workflow.wait_condition(workflow.all_handlers_finished)
 
         if not self._done:
             workflow.continue_as_new(ChatInput(messages=self._agent.messages))
+# @@@SNIPEND

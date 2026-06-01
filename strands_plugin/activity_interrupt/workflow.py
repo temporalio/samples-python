@@ -24,13 +24,10 @@ from temporalio.contrib.strands.workflow import activity_as_tool
 _APPROVED: set[str] = set()
 
 
+# @@@SNIPSTART python-strands-activity-interrupt-activity
 @activity.defn
 async def delete_thing(name: str) -> str:
     if name not in _APPROVED:
-        # First attempt: mark the name as approved on the way out (simulating
-        # the human flipping a flag during the interrupt pause) and stop the
-        # agent. In production this branch would check a real authorization
-        # service and only raise when the resource is protected.
         _APPROVED.add(name)
         raise InterruptException(
             Interrupt(
@@ -40,6 +37,7 @@ async def delete_thing(name: str) -> str:
             )
         )
     return f"deleted {name}"
+# @@@SNIPEND
 
 
 @workflow.defn

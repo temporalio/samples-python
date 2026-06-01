@@ -22,17 +22,20 @@ from typing import List, Optional
 from aiohttp import web
 from google.protobuf import json_format
 from temporalio.api.common.v1 import Payload, Payloads
+from temporalio.api.sdk.v1 import ExternalStorageReference
 from temporalio.converter import ExternalStorage, PayloadCodec
+
+_REFERENCE_MESSAGE_TYPE = ExternalStorageReference.DESCRIPTOR.full_name.encode()
 
 
 def _is_storage_reference(payload: Payload) -> bool:
-    """A payload is an external-storage reference iff it carries external_payloads metadata.
-
-    When the SDK offloads a payload to external storage it replaces the
-    in-band bytes with a small protobuf "claim check" — the ``external_payloads``
-    repeated field is the marker the SDK uses to recognize it on the way back.
+    """A payload is an external-storage reference iff its metadata identifies
+    it as a serialized :class:`ExternalStorageReference` claim check.
     """
-    return len(payload.external_payloads) > 0
+    return (
+        payload.metadata.get("encoding") == b"json/protobuf"
+        and payload.metadata.get("messageType") == _REFERENCE_MESSAGE_TYPE
+    )
 
 
 def payload_routes(

@@ -60,7 +60,7 @@ async def main() -> None:
     print("\nListing Nexus operations:")
     async for op in client.list_nexus_operations(query):
         print(
-            f"  OperationId: {op.operation_id},",
+            f" OperationId: {op.operation_id},",
             f" Operation: {op.operation},",
             f" Status: {op.status.name}",
         )

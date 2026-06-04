@@ -1,11 +1,7 @@
-import asyncio
-import os
 import uuid
 from datetime import timedelta
 
-import pytest
-from temporalio.client import Client, NexusOperationFailureError
-from temporalio.service import RPCError
+from temporalio.client import Client
 from temporalio.worker import Worker
 
 from nexus_standalone_operations.handler import HelloWorkflow, MyNexusServiceHandler
@@ -21,11 +17,6 @@ from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
 
 
 async def test_nexus_standalone_operations(client: Client):
-    if not os.getenv("ENABLE_STANDALONE_NEXUS_TESTS"):
-        pytest.skip(
-            "Standalone Nexus operations not yet supported by default dev server. Set ENABLE_STANDALONE_NEXUS_TESTS=1 to enable."
-        )
-
     endpoint_name = f"test-nexus-standalone-{uuid.uuid4()}"
 
     create_response = await create_nexus_endpoint(
@@ -44,19 +35,14 @@ async def test_nexus_standalone_operations(client: Client):
                 service=MyNexusService, endpoint=endpoint_name
             )
 
-            # Test sync echo operation (with retry for endpoint propagation)
+            # Test sync echo operation
             echo_result = None
-            for _ in range(30):
-                try:
-                    echo_result = await nexus_client.execute_operation(
-                        MyNexusService.echo,
-                        EchoInput(message="test-echo"),
-                        id=str(uuid.uuid4()),
-                        schedule_to_close_timeout=timedelta(seconds=10),
-                    )
-                    break
-                except (RPCError, NexusOperationFailureError):
-                    await asyncio.sleep(0.5)
+            echo_result = await nexus_client.execute_operation(
+                MyNexusService.echo,
+                EchoInput(message="test-echo"),
+                id=str(uuid.uuid4()),
+                schedule_to_close_timeout=timedelta(seconds=10),
+            )
             assert isinstance(echo_result, EchoOutput)
             assert echo_result.message == "test-echo"
 

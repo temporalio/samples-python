@@ -56,8 +56,8 @@ async def main() -> None:
     print(f"`MyNexusService.Hello` result: {hello_result.greeting}")
 
     # List nexus operations.
-    query = f'Endpoint = "{ENDPOINT_NAME}"'
     print("\nListing Nexus operations:")
+    query = f'Endpoint = "{ENDPOINT_NAME}"'
     async for op in client.list_nexus_operations(query):
         print(
             f" OperationId: {op.operation_id},",

@@ -1,7 +1,9 @@
 import uuid
 from datetime import timedelta
 
+import pytest
 from temporalio.client import Client
+from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 from nexus_standalone_operations.handler import HelloWorkflow, MyNexusServiceHandler
@@ -16,7 +18,10 @@ from nexus_standalone_operations.worker import TASK_QUEUE
 from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
 
 
-async def test_nexus_standalone_operations(client: Client):
+async def test_nexus_standalone_operations(client: Client, env: WorkflowEnvironment):
+    if env.supports_time_skipping:
+        pytest.skip("Time Skipping server does not support standalone nexus operations")
+
     endpoint_name = f"test-nexus-standalone-{uuid.uuid4()}"
 
     create_response = await create_nexus_endpoint(

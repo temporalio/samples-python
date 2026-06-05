@@ -1,1 +1,8 @@
 * @temporalio/sdk
+
+# The Nexus team owns any folder whose name starts or ends with "nexus",
+# both at the repo root and under tests/
+/nexus*/ @temporalio/nexus
+/*nexus/ @temporalio/nexus
+/tests/nexus*/ @temporalio/nexus
+/tests/*nexus/ @temporalio/nexus

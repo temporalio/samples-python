@@ -1614,7 +1614,7 @@ wheels = [
 
 [[package]]
 name = "langsmith"
-version = "0.7.38"
+version = "0.8.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -1624,12 +1624,13 @@ dependencies = [
     { name = "requests" },
     { name = "requests-toolbelt" },
     { name = "uuid-utils" },
+    { name = "websockets" },
     { name = "xxhash" },
     { name = "zstandard" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/af/c9/b3e54cfcb480876dfe33ecfdd64feeb621a86d9e6f4a6b9eb46851807018/langsmith-0.7.38.tar.gz", hash = "sha256:0db529b768d66c45f22fe959a0af7151342704fefafdecf3c60b14097c14fdb1", size = 4431914, upload-time = "2026-04-29T00:21:42.865Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/dd/f4c8a12987318e505b10760d30c3c2d45e8dc87ba8f47a004c753a9e7b35/langsmith-0.8.9.tar.gz", hash = "sha256:f16e37fcd5a8a2d4db30eae0e399a866a65ce5cc86218825c59409ed57a3bf53", size = 4428684, upload-time = "2026-06-03T17:56:09.448Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/bc/a19d0a6d5575c637796675831dbef3555568e84d913f14ec579f92162ffa/langsmith-0.7.38-py3-none-any.whl", hash = "sha256:9c400ad508c0e4edc37bd55987047c6b8aac36ddd55f6096e3806f4d6a100618", size = 392310, upload-time = "2026-04-29T00:21:40.534Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/2f/a701663c9fb4d9630448622a684bc372b4905b9a6dbe2297d55a70fde04e/langsmith-0.8.9-py3-none-any.whl", hash = "sha256:c9519cabc75568d088df045710d1b86eae9780c91054528b2aa7e6cb1fc80c52", size = 403165, upload-time = "2026-06-03T17:56:07.226Z" },
 ]
 
 [[package]]
@@ -3857,11 +3858,11 @@ wheels = [
 
 [[package]]
 name = "soupsieve"
-version = "2.8.3"
+version = "2.8.4"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/7b/ae/2d9c981590ed9999a0d91755b47fc74f74de286b0f5cee14c9269041e6c4/soupsieve-2.8.3.tar.gz", hash = "sha256:3267f1eeea4251fb42728b6dfb746edc9acaffc4a45b27e19450b676586e8349", size = 118627, upload-time = "2026-01-20T04:27:02.457Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/47/2c/0a5f6f8ee0d5589e48c7640213ed5175d52cf540a06725b628cc1a45d6ce/soupsieve-2.8.4.tar.gz", hash = "sha256:e121fd02e975c695e4e9e8774a5ee35d74714b59307868dcc5319ad2d9e3328e", size = 121110, upload-time = "2026-05-24T13:55:57.154Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/2c/1462b1d0a634697ae9e55b3cecdcb64788e8b7d63f54d923fcd0bb140aed/soupsieve-2.8.3-py3-none-any.whl", hash = "sha256:ed64f2ba4eebeab06cc4962affce381647455978ffc1e36bb79a545b91f45a95", size = 37016, upload-time = "2026-01-20T04:27:01.012Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/f5/0c41cb68dcae6b7de4fac4188a3a9589e21fb31df21ea3a2e888db95e6c9/soupsieve-2.8.4-py3-none-any.whl", hash = "sha256:e7e6b0769c8f51ed59acab6e994b00621096cfb1c640a7509295987388fbaf65", size = 37304, upload-time = "2026-05-24T13:55:55.406Z" },
 ]
 
 [[package]]
@@ -3892,7 +3893,7 @@ wheels = [
 
 [[package]]
 name = "strands-agents"
-version = "1.41.0"
+version = "1.42.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -3908,14 +3909,14 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f0/2f/315889aa7ec662d72db1743df253bbc463a64715c77f0a244f6483bcdc1d/strands_agents-1.41.0.tar.gz", hash = "sha256:e91837ab7f3b90fc2200426ea8756e0cd6a0f665a488c72d03ab835788f6adcf", size = 886067, upload-time = "2026-05-21T17:50:09.682Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/9e/8d577e0ff9ad0a15b368f43c61b7034f918b1c1b51ef17465d1a39a00403/strands_agents-1.42.0.tar.gz", hash = "sha256:39113d67d2fc3e5686f58c63ab71b68e458d578f9e6e0105e03b8a3960b97595", size = 872195, upload-time = "2026-06-01T18:38:22.243Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1b/4a/7855503e8e270324e1092745712b78e7de50fc64340ed9cf4eea0cd1c57c/strands_agents-1.41.0-py3-none-any.whl", hash = "sha256:1792e488812ce9fd8a9e815cf37b86a5de33f5b9cae5b1e54608129712cea142", size = 438042, upload-time = "2026-05-21T17:50:07.371Z" },
+    { url = "https://files.pythonhosted.org/packages/86/16/426f1f8c7d2678230b68755fcb3c0b8f59bc3a5591efe48343566b8e73c5/strands_agents-1.42.0-py3-none-any.whl", hash = "sha256:6cc04a32fc23a443a651d0e40198d946afc809888ae6fbc1fd07b2d5b6e354b3", size = 440999, upload-time = "2026-06-01T18:38:20.231Z" },
 ]
 
 [[package]]
 name = "strands-agents-tools"
-version = "0.6.0"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -3936,9 +3937,9 @@ dependencies = [
     { name = "tzdata", marker = "sys_platform == 'win32'" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4b/0c/5266b0f12a6809f5f33d2fc4811ab095b7f2907138695e2443c1e0754eef/strands_agents_tools-0.6.0.tar.gz", hash = "sha256:6b5ae6ddf17435079bd5efeda23b4297eea93313527ef87d19fcb0fe1d49d001", size = 490145, upload-time = "2026-05-21T18:32:20.559Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d4/74/aed74502a19a18ce1ddcd56e1dc4a0de6e9f2cb6babcc9f2d1969f253c0b/strands_agents_tools-0.8.0.tar.gz", hash = "sha256:fd93104d2d8dcff780505e8a2fca0cb2fa7a3da6bae01369073b60da0e08c5aa", size = 490638, upload-time = "2026-06-03T19:20:03.872Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f9/d0/981a9e766c73761c3a9404c4c8ce0bd2b13d9d9697a57c688c4788040ebc/strands_agents_tools-0.6.0-py3-none-any.whl", hash = "sha256:1ce0249a1761cecc61e14d81d63d6a36e9068a1069c4d3354ca68e0d7c26a643", size = 319407, upload-time = "2026-05-21T18:32:18.472Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/37/9f611363451cf38f912c7551b73308339e6af54bf1b5e9a3e8efc7ae0972/strands_agents_tools-0.8.0-py3-none-any.whl", hash = "sha256:7446ae423794b6f886fb36e1a0f8a62fe0546978c18b805e6f50dcdddee1559e", size = 319602, upload-time = "2026-06-03T19:20:01.92Z" },
 ]
 
 [[package]]
@@ -3955,14 +3956,22 @@ wheels = [
 
 [[package]]
 name = "temporalio"
-version = "1.27.2"
-source = { git = "https://github.com/temporalio/sdk-python.git?branch=strands#c84320c66a55b9e3ad5284342426f302046c2272" }
+version = "1.28.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nexus-rpc" },
     { name = "protobuf" },
     { name = "python-dateutil", marker = "python_full_version < '3.11'" },
     { name = "types-protobuf" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d3/04/8e7cd6a203ee40700a8d3d34bca6f1da3a6083888fa5654bc05514b633fa/temporalio-1.28.0.tar.gz", hash = "sha256:eb390ee968204a9f8fda91544d6f03497a7614acbfcc9862b5bd08a2d26edb04", size = 2619977, upload-time = "2026-06-04T17:22:07.52Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fb/9b/9b260f50a369ed21daad04bc58d31ce47fd7ee640d40ce9eb94115ffc6d5/temporalio-1.28.0-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:544e48028d83ffda51d6e0cdb1bf27babc868b3f63adb0e1613efcbbaab197a3", size = 14767177, upload-time = "2026-06-04T17:21:55.761Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/1f/80d7bde35f723a5871fa0f2aa01d0715a8c0dc610e15943ae0e8b0f50bc6/temporalio-1.28.0-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:737f3d9c470514ed0e4922ebe00ef4a186c82343e195d26b9c485e0bfcc4f14d", size = 14223876, upload-time = "2026-06-04T17:21:58.344Z" },
+    { url = "https://files.pythonhosted.org/packages/34/7e/517cdff2710935105a38b58539c7d4f8959ec6241953d51bf482fedbc721/temporalio-1.28.0-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:1b8ecc38c2cdae5efe8b127b1cbe726e9c92b10bc506753f1074957984fc6d7d", size = 14473526, upload-time = "2026-06-04T17:22:00.663Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/8c/518ec97457e50d67caabc40b44946b7feca0cbce20adb0bb651e7f6a7900/temporalio-1.28.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:17a9993342d4ba4ae0c4b37a95e8f2aa488379d0917a637d8fdd5f4332aad3e2", size = 14940291, upload-time = "2026-06-04T17:22:02.939Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/79/b7fe353287f15d501145aeff266e565e1fae05cce2875d0fde6ca4397aca/temporalio-1.28.0-cp310-abi3-win_amd64.whl", hash = "sha256:41381cbd68d1206c55750147118de3962bcc79229a61035296f3c0af44a3d006", size = 15245109, upload-time = "2026-06-04T17:22:05.365Z" },
 ]
 
 [package.optional-dependencies]
@@ -4083,7 +4092,7 @@ trio-async = [
 [package.metadata]
 requires-dist = [
     { name = "protobuf", specifier = ">=5.29.6,<6" },
-    { name = "temporalio", git = "https://github.com/temporalio/sdk-python.git?branch=strands" },
+    { name = "temporalio", specifier = ">=1.28.0,<2" },
 ]
 
 [package.metadata.requires-dev]
@@ -4127,22 +4136,22 @@ langgraph = [
     { name = "langchain", specifier = ">=0.3.0" },
     { name = "langchain-anthropic", specifier = ">=0.3.0" },
     { name = "langgraph", specifier = ">=1.1.3" },
-    { name = "temporalio", extras = ["langgraph", "langsmith"], git = "https://github.com/temporalio/sdk-python.git?branch=strands" },
+    { name = "temporalio", extras = ["langgraph", "langsmith"], specifier = ">=1.28.0" },
 ]
 langsmith-tracing = [
     { name = "langsmith", specifier = ">=0.7.0" },
     { name = "openai", specifier = ">=1.4.0" },
-    { name = "temporalio", extras = ["pydantic", "langsmith"], git = "https://github.com/temporalio/sdk-python.git?branch=strands" },
+    { name = "temporalio", extras = ["pydantic", "langsmith"], specifier = ">=1.28.0" },
 ]
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [
     { name = "opentelemetry-exporter-otlp-proto-grpc" },
-    { name = "temporalio", extras = ["opentelemetry"], git = "https://github.com/temporalio/sdk-python.git?branch=strands" },
+    { name = "temporalio", extras = ["opentelemetry"] },
 ]
 openai-agents = [
     { name = "openai-agents", extras = ["litellm"], specifier = ">=0.14.1" },
     { name = "requests", specifier = ">=2.32.0,<3" },
-    { name = "temporalio", extras = ["openai-agents", "opentelemetry"], git = "https://github.com/temporalio/sdk-python.git?branch=strands" },
+    { name = "temporalio", extras = ["openai-agents", "opentelemetry"], specifier = ">=1.28.0" },
 ]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]
 sentry = [{ name = "sentry-sdk", specifier = ">=2.13.0" }]
@@ -4151,7 +4160,7 @@ strands-agents = [
     { name = "mcp", specifier = ">=1.0.0" },
     { name = "strands-agents", specifier = ">=1.39.0" },
     { name = "strands-agents-tools", specifier = ">=0.5.2" },
-    { name = "temporalio", extras = ["strands-agents", "pydantic"], git = "https://github.com/temporalio/sdk-python.git?branch=strands" },
+    { name = "temporalio", extras = ["strands-agents", "pydantic"], specifier = ">=1.28.0" },
 ]
 trio-async = [
     { name = "trio", specifier = ">=0.28.0,<0.29" },

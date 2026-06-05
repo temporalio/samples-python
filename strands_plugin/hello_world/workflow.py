@@ -16,4 +16,6 @@ class HelloWorldWorkflow:
     async def run(self, prompt: str) -> str:
         result = await self.agent.invoke_async(prompt)
         return str(result)
+
+
 # @@@SNIPEND

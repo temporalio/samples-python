@@ -59,4 +59,6 @@ class ChatWorkflow:
 
         if not self._done:
             workflow.continue_as_new(ChatInput(messages=self._agent.messages))
+
+
 # @@@SNIPEND

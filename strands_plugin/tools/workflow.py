@@ -34,6 +34,8 @@ async def fetch_weather(city: str) -> dict:
         "temperature_f": 72,
         "conditions": "sunny",
     }
+
+
 # @@@SNIPEND
 
 
@@ -94,4 +96,6 @@ class ToolsWorkflow:
     async def run(self, prompt: str) -> str:
         result = await self.agent.invoke_async(prompt)
         return str(result)
+
+
 # @@@SNIPEND

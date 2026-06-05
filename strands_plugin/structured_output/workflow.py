@@ -33,4 +33,6 @@ class StructuredOutputWorkflow:
         result = await self.agent.invoke_async(prompt)
         assert isinstance(result.structured_output, PersonInfo)
         return result.structured_output
+
+
 # @@@SNIPEND

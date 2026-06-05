@@ -37,6 +37,8 @@ async def delete_thing(name: str) -> str:
             )
         )
     return f"deleted {name}"
+
+
 # @@@SNIPEND
 
 

@@ -24,6 +24,8 @@ from temporalio.contrib.strands.workflow import activity_as_hook
 async def persist_tool_call(tool_name: str) -> None:
     # In production, write to a database / S3 / your audit pipeline.
     activity.logger.info(f"audit: tool {tool_name} completed")
+
+
 # @@@SNIPEND
 
 
@@ -50,6 +52,8 @@ class AuditHook(HookProvider):
 
     def _record(self, event: AfterToolCallEvent) -> None:
         self.fired.append(event.tool_use["name"])
+
+
 # @@@SNIPEND
 
 

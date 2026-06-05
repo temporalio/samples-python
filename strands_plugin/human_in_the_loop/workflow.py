@@ -35,6 +35,8 @@ class ApprovalHook(HookProvider):
         )
         if approval != "approve":
             event.cancel_tool = "denied"
+
+
 # @@@SNIPEND
 
 
@@ -74,4 +76,6 @@ class HumanInTheLoopWorkflow:
             ]
             result = await self.agent.invoke_async(responses)
         return str(result)
+
+
 # @@@SNIPEND

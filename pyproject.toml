@@ -78,7 +78,6 @@ cloud-export-to-parquet = [
 
 [tool.uv]
 constraint-dependencies = [
-    "langsmith>=0.7.34",
     # yarl 1.24.0 was published without an sdist and only has cp310 wheels, so it cannot
     # install on the Python 3.14 CI jobs.
     "yarl!=1.24.0",

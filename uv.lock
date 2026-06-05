@@ -11,10 +11,7 @@ resolution-markers = [
 ]
 
 [manifest]
-constraints = [
-    { name = "langsmith", specifier = ">=0.7.34" },
-    { name = "yarl", specifier = "!=1.24.0" },
-]
+constraints = [{ name = "yarl", specifier = "!=1.24.0" }]
 
 [[package]]
 name = "aioboto3"

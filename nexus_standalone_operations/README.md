@@ -14,7 +14,13 @@ without wrapping them in a workflow. It shows both synchronous and asynchronous
 
 ### Instructions
 
-Start a Temporal server. (See the main samples repo [README](../README.md)).
+Start a Temporal dev server with the dynamic config flags required for standalone Nexus operations:
+
+```bash
+temporal server start-dev \
+  --dynamic-config-value "nexusoperation.enableStandalone=true" \
+  --dynamic-config-value "history.enableChasmCallbacks=true"
+```
 
 Create the Nexus endpoint:
 

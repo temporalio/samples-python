@@ -2,7 +2,12 @@ This sample demonstrates how to execute Nexus operations directly from client co
 without wrapping them in a workflow. It shows both synchronous and asynchronous
 (workflow-backed) operations, plus listing and counting operations.
 
-## Note: Standalone Nexus operations require a server version that supports this feature.
+
+### Temporal Python SDK support for Standalone Nexus Operations is at [Pre-release](https://docs.temporal.io/evaluate/development-production-features/release-stages#pre-release).
+
+All APIs are experimental and may be subject to backwards-incompatible changes.
+
+Standalone Nexus operations require a server version that supports this feature. Use the dev server build at https://github.com/temporalio/cli/releases/tag/v1.7.2-standalone-nexus-operations.
 
 ### Sample directory structure
 
@@ -13,6 +18,9 @@ without wrapping them in a workflow. It shows both synchronous and asynchronous
 
 
 ### Instructions
+
+Run the [Temporal dev server build that supports standalone Nexus operations](https://github.com/temporalio/cli/releases/tag/v1.7.2-standalone-nexus-operations). 
+(If you are going to run locally, you will want to start it in another terminal; this command is blocking and runs until it receives a SIGINT (Ctrl + C) command.)
 
 Start a Temporal dev server with the dynamic config flags required for standalone Nexus operations:
 

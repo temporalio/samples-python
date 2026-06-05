@@ -31,11 +31,14 @@ class MyNexusServiceHandler:
     ) -> EchoOutput:
         return EchoOutput(message=input.message)
 
-    @nexus.workflow_run_operation
+    @nexus.temporal_operation
     async def hello(
-        self, ctx: nexus.WorkflowRunOperationContext, input: HelloInput
-    ) -> nexus.WorkflowHandle[HelloOutput]:
-        return await ctx.start_workflow(
+        self,
+        _ctx: nexus.TemporalStartOperationContext,
+        client: nexus.TemporalNexusClient,
+        input: HelloInput,
+    ) -> nexus.TemporalOperationResult[HelloOutput]:
+        return await client.start_workflow(
             HelloWorkflow.run,
             input,
             id=str(uuid.uuid4()),

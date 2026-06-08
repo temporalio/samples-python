@@ -53,7 +53,9 @@ uv run nexus_standalone_operations/starter.py
 
 ```
 Echo result: hello
-Hello result: Hello, World!
+
+Started `MyNexusService.Hello`. OperationID: hello-...
+`MyNexusService.Hello` result: Hello, World!
 
 Listing Nexus operations:
   OperationId: echo-..., Operation: echo, Status: COMPLETED

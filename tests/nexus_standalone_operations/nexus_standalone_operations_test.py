@@ -16,6 +16,7 @@ from nexus_standalone_operations.service import (
 )
 from nexus_standalone_operations.worker import TASK_QUEUE
 from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
+from tests.helpers import assert_eventually
 
 
 async def test_nexus_standalone_operations(client: Client, env: WorkflowEnvironment):
@@ -62,8 +63,13 @@ async def test_nexus_standalone_operations(client: Client, env: WorkflowEnvironm
             assert hello_result.greeting == "Hello, Test!"
 
             # Test count operations
-            count = await client.count_nexus_operations(f'Endpoint = "{endpoint_name}"')
-            assert count.count >= 0
+            async def check_count():
+                count = await client.count_nexus_operations(
+                    f'Endpoint = "{endpoint_name}"'
+                )
+                assert count.count == 2
+
+            await assert_eventually(check_count)
     finally:
         _ = await delete_nexus_endpoint(
             id=create_response.endpoint.id,

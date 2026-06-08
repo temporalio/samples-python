@@ -15,8 +15,8 @@ from nexus_standalone_operations.service import (
     MyNexusService,
 )
 from nexus_standalone_operations.worker import TASK_QUEUE
-from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
 from tests.helpers import assert_eventually
+from tests.helpers.nexus import create_nexus_endpoint, delete_nexus_endpoint
 
 
 async def test_nexus_standalone_operations(client: Client, env: WorkflowEnvironment):

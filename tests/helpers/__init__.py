@@ -1,9 +1,8 @@
+import asyncio
+import time
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-import time
-import asyncio
 from typing import TypeVar
-
 
 T = TypeVar("T")
 

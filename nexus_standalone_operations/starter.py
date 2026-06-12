@@ -14,6 +14,7 @@ from temporalio.envconfig import ClientConfig
 
 from nexus_standalone_operations.service import (
     EchoInput,
+    EchoOutput,
     HelloInput,
     MyNexusService,
 )
@@ -33,13 +34,21 @@ async def main() -> None:
     )
 
     # Start sync echo operation and await the result immediately.
+    operation_id = f"echo-{uuid.uuid4()}"
     echo_result = await nexus_client.execute_operation(
         MyNexusService.echo,
         EchoInput(message="hello"),
-        id=f"echo-{uuid.uuid4()}",
+        id=operation_id,
         schedule_to_close_timeout=timedelta(seconds=10),
     )
     print(f"Echo result: {echo_result.message}")
+
+    # Get a handle and the result of an existing operation
+    existing_op_handle = client.get_nexus_operation_handle(
+        operation_id, operation=MyNexusService.echo
+    )
+    existing_result = await existing_op_handle.result()
+    print(f"Echo result from existing operation handle: {existing_result.message}")
 
     # Start async (workflow-backed) hello operation and get a NexusOperationHandle.
     handle = await nexus_client.start_operation(

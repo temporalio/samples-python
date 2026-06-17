@@ -1,6 +1,6 @@
 # LangGraph Plugin Samples
 
-These samples demonstrate the [Temporal LangGraph plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/langgraph), which runs LangGraph workflows as durable Temporal workflows. Each LangGraph graph node (Graph API) or `@task` (Functional API) executes as a Temporal activity with automatic retries, timeouts, and crash recovery.
+These samples demonstrate the [Temporal LangGraph plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/langgraph), which runs LangGraph workflows as durable Temporal workflows. Each LangGraph graph node (Graph API) or `@task` (Functional API) executes directly inside a workflow or as a Temporal activity with automatic retries, timeouts, and crash recovery.
 
 Samples are organized by API style:
 
@@ -62,7 +62,7 @@ uv run langgraph_plugin/<api>/langsmith_tracing/main.py
 
 ## Key Features Demonstrated
 
-- **Durable execution** -- Every graph node / `@task` runs as a Temporal activity with configurable timeouts and retry policies.
+- **Durable execution** -- Every graph node / `@task` runs in a Workflow or as a Temporal activity with configurable timeouts and retry policies.
 - **Human-in-the-loop** -- LangGraph's `interrupt()` pauses the graph; Temporal signals deliver human input; queries expose pending state to UIs.
 - **Continue-as-new with caching** -- `cache()` captures completed task results; passing the cache to the next execution avoids re-running them.
 - **Conditional routing** -- Graph API's `add_conditional_edges` and Functional API's native `if/else`/`while` for agent loops.

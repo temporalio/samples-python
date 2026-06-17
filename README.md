@@ -69,6 +69,8 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [eager_wf_start](eager_wf_start) - Run a workflow using Eager Workflow Start
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
 * [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
+* [external_storage](external_storage) - Offload large payloads to S3-compatible object storage, plus a codec server for the Web UI and CLI.
+* [external_storage_redis](external_storage_redis) - Redis driver for external storage
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
@@ -79,6 +81,8 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [Nexus Messaging](nexus_messaging): Demonstrates how send signal, update and query messages through Nexus.
   This contains two samples, one sending messages to an existing workflow and a second that creates a workflow through Nexus
   and sends messages to it.
+* [nexus_standalone_operations](nexus_standalone_operations) - Execute Nexus operations directly from client code,
+without wrapping them in a workflow.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
@@ -87,6 +91,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
+* [strands_plugin](strands_plugin) - Run Strands Agents as durable Temporal workflows (model calls, tools, MCP, HITL).
 * [trio_async](trio_async) - Use asyncio Temporal in Trio-based environments.
 * [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.

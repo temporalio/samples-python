@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.27.0,<2"]
+dependencies = ["temporalio>=1.28.0,<2", "protobuf>=5.29.6,<6"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -20,6 +20,7 @@ dev = [
     "mypy>=1.4.1,<2",
     "pytest>=7.1.2,<8",
     "pytest-asyncio>=0.18.3,<0.19",
+    "fakeredis>=2,<3",
     "frozenlist>=1.4.0,<2",
     "pyright>=1.1.394",
     "types-pyyaml>=6.0.12.20241230,<7",
@@ -28,19 +29,26 @@ dev = [
 ]
 bedrock = ["boto3>=1.34.92,<2"]
 dsl = ["pyyaml>=6.0.1,<7", "types-pyyaml>=6.0.12,<7", "dacite>=1.8.1,<2"]
-encryption = ["cryptography>=38.0.1,<39", "aiohttp>=3.8.1,<4"]
+encryption = ["cryptography>=38.0.1,<39", "aiohttp>=3.13.3,<4"]
+external-storage = [
+    "aioboto3>=15.1.0,<15.2",
+    "aiohttp>=3.13.3,<4",
+    "moto[server]>=4.0.0",
+    "types_aiobotocore_s3>=2.25.2",
+]
+external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 google-adk = ["temporalio[google-adk] >= 1.28.0", "google-adk>=1.27.0,<2"]
 langsmith-tracing = [
     "openai>=1.4.0",
     "langsmith>=0.7.0",
-    "temporalio[pydantic,langsmith]>=1.27.0",
+    "temporalio[pydantic,langsmith]>=1.28.0",
 ]
 langgraph = [
     "langgraph>=1.1.3",
     "langchain>=0.3.0",
     "langchain-anthropic>=0.3.0",
-    "temporalio[langgraph,langsmith]>=1.27.0",
+    "temporalio[langgraph,langsmith]>=1.28.0",
 ]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
@@ -49,17 +57,31 @@ open-telemetry = [
 ]
 openai-agents = [
     "openai-agents[litellm] >= 0.14.1",
-    "temporalio[openai-agents,opentelemetry] >= 1.27.0",
+    "temporalio[openai-agents,opentelemetry] >= 1.28.0",
     "requests>=2.32.0,<3",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=2.13.0"]
+strands-agents = [
+    "strands-agents>=1.39.0",
+    "strands-agents-tools>=0.5.2",
+    "mcp>=1.0.0",
+    "boto3>=1.34.92,<2",
+    "temporalio[strands-agents,pydantic]>=1.28.0",
+]
 trio-async = ["trio>=0.28.0,<0.29", "trio-asyncio>=0.15.0,<0.16"]
 cloud-export-to-parquet = [
     "pandas>=2.3.3,<3 ; python_version >= '3.10' and python_version < '4.0'",
     "numpy>=1.26.0,<2 ; python_version >= '3.10' and python_version < '3.13'",
     "boto3>=1.34.89,<2",
     "pyarrow>=19.0.1",
+]
+
+[tool.uv]
+constraint-dependencies = [
+    # yarl 1.24.0 was published without an sdist and only has cp310 wheels, so it cannot
+    # install on the Python 3.14 CI jobs.
+    "yarl!=1.24.0",
 ]
 
 [tool.hatch.metadata]
@@ -82,6 +104,8 @@ packages = [
     "custom_metric",
     "dsl",
     "encryption",
+    "external_storage",
+    "external_storage_redis",
     "gevent_async",
     "hello",
     "langgraph_plugin",
@@ -99,6 +123,7 @@ packages = [
     "schedules",
     "sentry",
     "sleep_for_days",
+    "strands_plugin",
     "tests",
     "trio_async",
     "updatable_timer",

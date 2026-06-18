@@ -9,16 +9,16 @@ from temporalio.contrib.google_adk_agents import (
 )
 from temporalio.worker import Worker
 
-from google_adk_agents.mcp.toolsets import filesystem_toolset
-from google_adk_agents.mcp.workflows.filesystem_workflow import FilesystemMcpWorkflow
+from google_adk_agents.mcp.toolsets import echo_toolset
+from google_adk_agents.mcp.workflows.echo_workflow import EchoMcpWorkflow
 
 
 async def main():
-    # The provider adds the filesystem-list-tools and filesystem-call-tool
-    # activities. Same as the other samples: build the plugin once and give the
-    # same instance to the client and the worker.
+    # The provider adds the echo-list-tools and echo-call-tool activities. Same
+    # as the other samples: build the plugin once and give the same instance to
+    # the client and the worker.
     plugin = GoogleAdkPlugin(
-        toolset_providers=[TemporalMcpToolSetProvider("filesystem", filesystem_toolset)]
+        toolset_providers=[TemporalMcpToolSetProvider("echo", echo_toolset)]
     )
 
     client = await Client.connect("localhost:7233", plugins=[plugin])
@@ -26,7 +26,7 @@ async def main():
     worker = Worker(
         client,
         task_queue="google-adk-agents-mcp",
-        workflows=[FilesystemMcpWorkflow],
+        workflows=[EchoMcpWorkflow],
         plugins=[plugin],
     )
     await worker.run()

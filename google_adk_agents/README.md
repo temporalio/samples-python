@@ -41,7 +41,7 @@ Each directory contains a complete example with its own README:
 | [basic](./basic/README.md) | A single ADK agent with `TemporalModel` and one model call — no tools. The minimal end-to-end example. |
 | [tools](./tools/README.md) | A Temporal activity wrapped as an ADK tool with `activity_tool`, so tool calls run as their own activities. |
 | [agent_patterns](./agent_patterns/README.md) | A coordinator `LlmAgent` with `sub_agents`, each a `TemporalModel` with a per-agent activity summary. |
-| [mcp](./mcp/README.md) | An MCP filesystem toolset via `TemporalMcpToolSet` / `TemporalMcpToolSetProvider`, running MCP tools as activities. Requires Node/`npx`. |
+| [mcp](./mcp/README.md) | A local echo MCP toolset via `TemporalMcpToolSet` / `TemporalMcpToolSetProvider`, running MCP tools as activities. Self-contained, no Node required. |
 | [streaming](./streaming/README.md) | Token streaming via `TemporalModel(streaming_topic=...)` + `WorkflowStream`, consumed by a starter with `WorkflowStreamClient`. |
 
 To run any scenario, start its worker in one terminal and its workflow starter

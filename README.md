@@ -97,6 +97,7 @@ without wrapping them in a workflow.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
 * [worker_multiprocessing](worker_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks and other CPU bound operations by running multiple workers.
+* [workflow_pause](workflow_pause/) - Demonstrate the experimental Workflow Pause feature: pause/unpause, signals, queries, updates, activities, and cancel/terminate.
 
 ## Test
 

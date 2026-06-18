@@ -1,5 +1,6 @@
 """Start the streaming workflow and consume model chunks live."""
 
+# @@@SNIPSTART python-google-genai-streaming-run-workflow
 import asyncio
 import os
 from datetime import timedelta
@@ -45,3 +46,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

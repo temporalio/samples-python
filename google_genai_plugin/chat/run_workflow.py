@@ -1,5 +1,6 @@
 """Start the chat workflow with a multi-turn conversation."""
 
+# @@@SNIPSTART python-google-genai-chat-run-workflow
 import asyncio
 import os
 
@@ -27,3 +28,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

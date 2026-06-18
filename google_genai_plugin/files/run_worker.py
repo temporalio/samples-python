@@ -1,5 +1,6 @@
 """Worker for the files sample."""
 
+# @@@SNIPSTART python-google-genai-files-worker
 import asyncio
 import os
 
@@ -31,3 +32,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

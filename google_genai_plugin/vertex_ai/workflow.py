@@ -7,6 +7,7 @@ as workflow arguments (read from the environment by the starter) to keep the
 workflow deterministic.
 """
 
+# @@@SNIPSTART python-google-genai-vertex-ai-workflow
 from temporalio import workflow
 from temporalio.contrib.google_genai import TemporalAsyncClient
 
@@ -25,3 +26,6 @@ class VertexAIWorkflow:
             contents=prompt,
         )
         return response.text or ""
+
+
+# @@@SNIPEND

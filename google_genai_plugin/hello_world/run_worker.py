@@ -1,5 +1,6 @@
 """Worker for the hello world sample."""
 
+# @@@SNIPSTART python-google-genai-hello-world-worker
 import asyncio
 import os
 
@@ -32,3 +33,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

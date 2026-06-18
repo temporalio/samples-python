@@ -1,5 +1,6 @@
 """Worker for the interactions sample."""
 
+# @@@SNIPSTART python-google-genai-interactions-worker
 import asyncio
 import os
 
@@ -31,3 +32,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

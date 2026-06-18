@@ -5,6 +5,7 @@ call runs as a durable Temporal activity, and the SDK threads prior turns into
 each request automatically.
 """
 
+# @@@SNIPSTART python-google-genai-chat-workflow
 from temporalio import workflow
 from temporalio.contrib.google_genai import TemporalAsyncClient
 
@@ -20,3 +21,6 @@ class ChatWorkflow:
             response = await chat.send_message(prompt)
             replies.append(response.text or "")
         return replies
+
+
+# @@@SNIPEND

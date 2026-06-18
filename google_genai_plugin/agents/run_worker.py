@@ -1,5 +1,6 @@
 """Worker for the agents sample."""
 
+# @@@SNIPSTART python-google-genai-agents-worker
 import asyncio
 import os
 
@@ -31,3 +32,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

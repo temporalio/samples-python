@@ -9,6 +9,7 @@ Gemini's automatic function-calling (AFC) loop runs inside the workflow and
 invokes both as needed.
 """
 
+# @@@SNIPSTART python-google-genai-tools-workflow
 from datetime import timedelta
 
 from google.genai import types
@@ -51,3 +52,6 @@ class ToolsWorkflow:
         if "sunny" in weather.lower():
             return "Go for a hike."
         return "Visit a museum."
+
+
+# @@@SNIPEND

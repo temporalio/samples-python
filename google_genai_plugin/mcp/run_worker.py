@@ -5,6 +5,7 @@ the plugin. The plugin opens a pooled MCP connection on the worker and runs
 ``list_tools`` / ``call_tool`` as activities.
 """
 
+# @@@SNIPSTART python-google-genai-mcp-worker
 import asyncio
 import os
 import sys
@@ -54,3 +55,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

@@ -4,6 +4,7 @@ The file is read on the worker, so ``sample.txt`` must be on a path the worker
 process can access (here it ships alongside this sample).
 """
 
+# @@@SNIPSTART python-google-genai-files-run-workflow
 import asyncio
 import os
 from pathlib import Path
@@ -30,3 +31,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

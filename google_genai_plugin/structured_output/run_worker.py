@@ -1,5 +1,6 @@
 """Worker for the structured output sample."""
 
+# @@@SNIPSTART python-google-genai-structured-output-worker
 import asyncio
 import os
 
@@ -31,3 +32,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

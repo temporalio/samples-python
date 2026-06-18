@@ -1,5 +1,6 @@
 """Start the tools workflow."""
 
+# @@@SNIPSTART python-google-genai-tools-run-workflow
 import asyncio
 import os
 
@@ -23,3 +24,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

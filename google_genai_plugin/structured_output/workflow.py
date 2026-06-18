@@ -6,6 +6,7 @@ makes Gemini return matching JSON, which the SDK parses into the model on
 ``response.parsed``.
 """
 
+# @@@SNIPSTART python-google-genai-structured-output-workflow
 from google.genai import types
 from pydantic import BaseModel
 from temporalio import workflow
@@ -34,3 +35,6 @@ class StructuredOutputWorkflow:
         recipe = response.parsed
         assert isinstance(recipe, Recipe)
         return recipe
+
+
+# @@@SNIPEND

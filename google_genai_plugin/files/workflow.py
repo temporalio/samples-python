@@ -5,6 +5,7 @@ there, not in the workflow — and the returned file handle is then referenced i
 a ``generate_content`` call.
 """
 
+# @@@SNIPSTART python-google-genai-files-workflow
 from typing import cast
 
 from google.genai import types
@@ -27,3 +28,6 @@ class FilesWorkflow:
             contents=contents,
         )
         return response.text or ""
+
+
+# @@@SNIPEND

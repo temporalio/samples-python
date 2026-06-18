@@ -7,6 +7,7 @@ while the workflow runs durably. The workflow holds itself open on a ``finish``
 signal so a subscriber can reliably read the stream before the run completes.
 """
 
+# @@@SNIPSTART python-google-genai-streaming-workflow
 from temporalio import workflow
 from temporalio.contrib.google_genai import TemporalAsyncClient
 from temporalio.contrib.workflow_streams import WorkflowStream
@@ -35,3 +36,6 @@ class StreamingWorkflow:
     @workflow.signal
     def finish(self) -> None:
         self._done = True
+
+
+# @@@SNIPEND

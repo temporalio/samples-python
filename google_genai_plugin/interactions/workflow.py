@@ -6,6 +6,7 @@ delete — runs as a Temporal activity. Unlike ``client.models``, this API has n
 automatic function calling.
 """
 
+# @@@SNIPSTART python-google-genai-interactions-workflow
 from typing import Any
 
 from temporalio import workflow
@@ -26,3 +27,6 @@ class InteractionsWorkflow:
         await client.interactions.delete(interaction.id)
 
         return {"id": interaction.id, "status": str(fetched.status)}
+
+
+# @@@SNIPEND

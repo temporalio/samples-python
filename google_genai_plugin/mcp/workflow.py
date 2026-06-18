@@ -6,6 +6,7 @@ loop discovers and calls the MCP tools, with ``list_tools`` / ``call_tool``
 running as Temporal activities against a pooled worker-side connection.
 """
 
+# @@@SNIPSTART python-google-genai-mcp-workflow
 from datetime import timedelta
 
 from google.genai import types
@@ -35,3 +36,6 @@ class McpWorkflow:
             config=types.GenerateContentConfig(tools=[session]),
         )
         return response.text or ""
+
+
+# @@@SNIPEND

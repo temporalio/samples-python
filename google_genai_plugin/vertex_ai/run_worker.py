@@ -5,6 +5,7 @@ Uses ``genai.Client(vertexai=True, ...)`` with Application Default Credentials
 ``GOOGLE_APPLICATION_CREDENTIALS`` to a service-account key file.
 """
 
+# @@@SNIPSTART python-google-genai-vertex-ai-worker
 import asyncio
 import os
 
@@ -40,3 +41,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+# @@@SNIPEND

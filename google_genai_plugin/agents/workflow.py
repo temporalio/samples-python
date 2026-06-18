@@ -4,6 +4,7 @@ Managed agents are server-side resources you create, fetch, list, and delete.
 Each operation runs as a Temporal activity.
 """
 
+# @@@SNIPSTART python-google-genai-agents-workflow
 from typing import Any
 
 from temporalio import workflow
@@ -29,3 +30,6 @@ class AgentsWorkflow:
             "fetched_id": fetched.id,
             "listed_ids": [a.id for a in (listing.agents or [])],
         }
+
+
+# @@@SNIPEND

@@ -5,6 +5,7 @@ Temporal activity, so it gets retries, timeouts, and crash recovery for free —
 and no credentials ever enter the workflow.
 """
 
+# @@@SNIPSTART python-google-genai-hello-world-workflow
 from temporalio import workflow
 from temporalio.contrib.google_genai import TemporalAsyncClient
 
@@ -19,3 +20,6 @@ class HelloWorldWorkflow:
             contents=prompt,
         )
         return response.text or ""
+
+
+# @@@SNIPEND

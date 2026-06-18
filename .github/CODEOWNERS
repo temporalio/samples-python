@@ -11,3 +11,14 @@
 /*nexus/ @temporalio/nexus
 /tests/nexus*/ @temporalio/nexus
 /tests/*nexus/ @temporalio/nexus
+
+# The AI SDK team owns the AI integration samples and their tests. We add
+# @temporalio/sdk too, so the SDK team can continue to manage repo-wide concerns.
+/google_adk_agents/ @temporalio/ai-sdk @temporalio/sdk
+/langgraph_plugin/ @temporalio/ai-sdk @temporalio/sdk
+/langsmith_tracing/ @temporalio/ai-sdk @temporalio/sdk
+/openai_agents/ @temporalio/ai-sdk @temporalio/sdk
+/strands_plugin/ @temporalio/ai-sdk @temporalio/sdk
+/tests/langgraph_plugin/ @temporalio/ai-sdk @temporalio/sdk
+/tests/langsmith_tracing/ @temporalio/ai-sdk @temporalio/sdk
+/tests/strands_plugin/ @temporalio/ai-sdk @temporalio/sdk

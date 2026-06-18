@@ -11,3 +11,6 @@
 /*nexus/ @temporalio/nexus
 /tests/nexus*/ @temporalio/nexus
 /tests/*nexus/ @temporalio/nexus
+
+/google_genai_plugin/       @temporalio/sdk @temporalio/ai-sdk
+/tests/google_genai_plugin/ @temporalio/sdk @temporalio/ai-sdk

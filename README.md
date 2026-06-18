@@ -72,6 +72,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [external_storage](external_storage) - Offload large payloads to S3-compatible object storage, plus a codec server for the Web UI and CLI.
 * [external_storage_redis](external_storage_redis) - Redis driver for external storage
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
+* [google_genai_plugin](google_genai_plugin) - Run the Google Gemini SDK inside durable Temporal workflows (generate_content, tools/AFC, streaming, chat, structured output, MCP, files, interactions, agents, Vertex AI).
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [langchain](langchain) - Orchestrate workflows for LangChain.
 * [langgraph_plugin](langgraph_plugin) - Run LangGraph workflows as durable Temporal workflows (Graph API and Functional API).

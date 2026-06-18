@@ -38,6 +38,10 @@ external-storage = [
 ]
 external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
+google-genai = [
+    "mcp>=1.0.0",
+    "temporalio[google-genai,pydantic]>=1.28.0",
+]
 langsmith-tracing = [
     "openai>=1.4.0",
     "langsmith>=0.7.0",
@@ -106,6 +110,7 @@ packages = [
     "external_storage",
     "external_storage_redis",
     "gevent_async",
+    "google_genai_plugin",
     "hello",
     "langgraph_plugin",
     "langsmith_tracing",

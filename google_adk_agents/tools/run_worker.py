@@ -11,8 +11,8 @@ from google_adk_agents.tools.workflows.weather_workflow import WeatherAgentWorkf
 
 
 async def main():
-    # Construct the plugin once and share the same instance between the
-    # client and the worker.
+    # Build the plugin once and give the same instance to the client and the
+    # worker.
     plugin = GoogleAdkPlugin()
 
     client = await Client.connect("localhost:7233", plugins=[plugin])

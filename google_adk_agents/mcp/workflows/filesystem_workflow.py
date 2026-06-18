@@ -14,11 +14,11 @@ from google_adk_agents.mcp.toolsets import filesystem_toolset
 class FilesystemMcpWorkflow:
     @workflow.run
     async def run(self, prompt: str) -> str:
-        # TemporalMcpToolSet runs the MCP server's list-tools / call-tool
-        # operations as activities (named "filesystem-list-tools" /
-        # "filesystem-call-tool" by the provider on the worker). The
-        # not_in_workflow_toolset factory lets the same agent run locally,
-        # outside a workflow, by talking to the MCP server directly.
+        # TemporalMcpToolSet runs the MCP server's list-tools and call-tool
+        # calls as activities (the provider names them filesystem-list-tools and
+        # filesystem-call-tool on the worker). The not_in_workflow_toolset
+        # factory lets you run this same agent locally, outside a workflow, by
+        # hitting the MCP server directly.
         agent = Agent(
             name="filesystem_agent",
             model=TemporalModel("gemini-2.5-flash"),

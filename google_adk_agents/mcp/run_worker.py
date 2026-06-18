@@ -14,9 +14,9 @@ from google_adk_agents.mcp.workflows.filesystem_workflow import FilesystemMcpWor
 
 
 async def main():
-    # The provider contributes the filesystem-list-tools / filesystem-call-tool
-    # activities. Construct the plugin once and share the same instance between
-    # the client and the worker.
+    # The provider adds the filesystem-list-tools and filesystem-call-tool
+    # activities. Same as the other samples: build the plugin once and give the
+    # same instance to the client and the worker.
     plugin = GoogleAdkPlugin(
         toolset_providers=[TemporalMcpToolSetProvider("filesystem", filesystem_toolset)]
     )

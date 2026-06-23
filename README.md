@@ -113,3 +113,6 @@ without wrapping them in a workflow.
 To run the tests:
 
     uv run poe test
+
+Note that this will skip running `openai_agents` tests against real OpenAI API calls if an API key is not found, and use only mocked models. 
+To run with real model calls, set `OPENAI_API_KEY` in your environment.

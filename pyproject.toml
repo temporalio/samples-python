@@ -38,6 +38,7 @@ external-storage = [
 ]
 external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
+google-adk = ["temporalio[google-adk] >= 1.28.0", "google-adk>=1.27.0,<2"]
 google-genai = [
     "mcp>=1.0.0",
     "temporalio[google-genai,pydantic]>=1.28.0",

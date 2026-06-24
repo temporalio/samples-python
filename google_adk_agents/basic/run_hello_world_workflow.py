@@ -9,6 +9,7 @@ from google_adk_agents.basic.workflows.hello_world_workflow import (
 
 
 async def main():
+    # @@@SNIPSTART google-adk-agents-basic-starter
     client = await Client.connect("localhost:7233", plugins=[GoogleAdkPlugin()])
 
     result = await client.execute_workflow(
@@ -18,6 +19,7 @@ async def main():
         task_queue="google-adk-agents-basic",
     )
     print(f"Result: {result}")
+    # @@@SNIPEND
 
 
 if __name__ == "__main__":

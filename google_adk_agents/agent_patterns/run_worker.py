@@ -12,8 +12,6 @@ from google_adk_agents.agent_patterns.workflows.multi_agent_workflow import (
 
 
 async def main():
-    # Build the plugin once and give the same instance to the client and the
-    # worker.
     plugin = GoogleAdkPlugin()
 
     client = await Client.connect("localhost:7233", plugins=[plugin])

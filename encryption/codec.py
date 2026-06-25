@@ -5,12 +5,8 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from temporalio.api.common.v1 import Payload
 from temporalio.converter import PayloadCodec
 
-default_key = b"test-key-test-key-test-key-test!"
-default_key_id = "test-key-id"
-
-
 class EncryptionCodec(PayloadCodec):
-    def __init__(self, key_id: str = default_key_id, key: bytes = default_key) -> None:
+    def __init__(self, key_id: str, key: bytes) -> None:
         super().__init__()
         self.key_id = key_id
         # We are using direct AESGCM to be compatible with samples from

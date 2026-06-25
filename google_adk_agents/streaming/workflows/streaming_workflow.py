@@ -12,15 +12,14 @@ from temporalio.contrib.workflow_streams import WorkflowStream
 class StreamingAgentWorkflow:
     @workflow.init
     def __init__(self, prompt: str) -> None:
-        # The workflow hosts a WorkflowStream. The streaming activity publishes
-        # raw LlmResponse chunks to it as they come back from the model.
+        # The streaming activity publishes LlmResponse chunks to this stream as
+        # they come back from the model.
         self.stream = WorkflowStream()
 
     @workflow.run
     async def run(self, prompt: str) -> str:
-        # streaming_topic is the topic the chunks get published to.
-        # RunConfig(streaming_mode=SSE) tells ADK to stream, which routes the
-        # call through the invoke_model_streaming activity.
+        # streaming_mode=SSE routes the call through the invoke_model_streaming
+        # activity.
         model = TemporalModel("gemini-2.5-flash", streaming_topic="responses")
         agent = Agent(
             name="streaming_agent",

@@ -19,8 +19,8 @@ class MultiAgentWorkflow:
             app_name="multi_agent_app", user_id="user"
         )
 
-        # Give each sub-agent its own TemporalModel with an ActivityConfig
-        # summary, so its model turns show up as named activities in history.
+        # The ActivityConfig summary makes each model turn a named activity in
+        # history.
         researcher = LlmAgent(
             name="researcher",
             model=TemporalModel(
@@ -39,8 +39,7 @@ class MultiAgentWorkflow:
             instruction="You are a poet. Write a haiku based on the research.",
         )
 
-        # The coordinator hands off to the sub-agents using ADK's built-in
-        # transfer_to_agent, which runs durably here.
+        # ADK's transfer_to_agent handoff runs durably here.
         coordinator = LlmAgent(
             name="coordinator",
             model=TemporalModel(

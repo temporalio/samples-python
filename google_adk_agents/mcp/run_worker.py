@@ -14,9 +14,7 @@ from google_adk_agents.mcp.workflows.echo_workflow import EchoMcpWorkflow
 
 
 async def main():
-    # The provider adds the echo-list-tools and echo-call-tool activities. Same
-    # as the other samples: build the plugin once and give the same instance to
-    # the client and the worker.
+    # @@@SNIPSTART google-adk-agents-mcp-worker
     plugin = GoogleAdkPlugin(
         toolset_providers=[TemporalMcpToolSetProvider("echo", echo_toolset)]
     )
@@ -30,6 +28,7 @@ async def main():
         plugins=[plugin],
     )
     await worker.run()
+    # @@@SNIPEND
 
 
 if __name__ == "__main__":

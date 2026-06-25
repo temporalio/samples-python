@@ -16,8 +16,6 @@ WORKFLOW_ID = "google-adk-agents-streaming-workflow-id"
 async def main():
     client = await Client.connect("localhost:7233", plugins=[GoogleAdkPlugin()])
 
-    # Start the workflow but don't wait on the result yet, so we can subscribe
-    # to its stream while it's running.
     handle = await client.start_workflow(
         StreamingAgentWorkflow.run,
         "Tell me a short story about a robot learning to paint.",
@@ -25,7 +23,6 @@ async def main():
         task_queue="google-adk-agents-streaming",
     )
 
-    # Subscribe to the "responses" topic and print text chunks as they arrive.
     stream = WorkflowStreamClient.create(client, WORKFLOW_ID)
 
     async def print_chunks() -> None:

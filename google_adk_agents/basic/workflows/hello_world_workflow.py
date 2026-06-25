@@ -11,23 +11,20 @@ from temporalio.contrib.google_adk_agents import TemporalModel
 class HelloWorldAgentWorkflow:
     @workflow.run
     async def run(self, prompt: str) -> str:
-        # A normal ADK agent. The one Temporal-specific piece is TemporalModel,
-        # which runs each model call as an `invoke_model` activity.
+        # TemporalModel runs each model call as an `invoke_model` activity.
         agent = Agent(
             name="hello_world_agent",
             model=TemporalModel("gemini-2.5-flash"),
             instruction="You only respond in haikus.",
         )
 
-        # InMemoryRunner drives the agent. The plugin points ADK's session-id
-        # generation at workflow.uuid4(), so creating a session here is
-        # replay-safe.
+        # The plugin points ADK's session-id generation at workflow.uuid4(), so
+        # creating a session here is replay-safe.
         runner = InMemoryRunner(agent=agent, app_name="hello_world_app")
         session = await runner.session_service.create_session(
             app_name="hello_world_app", user_id="user"
         )
 
-        # Keep the last bit of text the agent produces.
         final_text = ""
         async with Aclosing(
             runner.run_async(

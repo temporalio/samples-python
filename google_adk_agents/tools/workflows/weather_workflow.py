@@ -16,9 +16,8 @@ from google_adk_agents.tools.activities.weather_activity import get_weather
 class WeatherAgentWorkflow:
     @workflow.run
     async def run(self, prompt: str) -> str:
-        # Wrap the get_weather activity as an ADK tool. When the model calls it,
-        # activity_tool runs it as a real Temporal activity instead of inline,
-        # so it's retryable and shows up in history.
+        # activity_tool runs the tool call as a real Temporal activity, so it's
+        # retryable and shows up in history.
         weather_tool = temporalio.contrib.google_adk_agents.workflow.activity_tool(
             get_weather, start_to_close_timeout=timedelta(seconds=60)
         )

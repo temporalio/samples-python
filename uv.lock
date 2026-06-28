@@ -5052,6 +5052,10 @@ google-adk = [
     { name = "google-adk" },
     { name = "temporalio", extra = ["google-adk"] },
 ]
+google-genai = [
+    { name = "mcp" },
+    { name = "temporalio", extra = ["pydantic"] },
+]
 langgraph = [
     { name = "langchain" },
     { name = "langchain-anthropic" },
@@ -5139,6 +5143,10 @@ gevent = [{ name = "gevent", marker = "python_full_version >= '3.8'", specifier 
 google-adk = [
     { name = "google-adk", specifier = ">=1.27.0,<2" },
     { name = "temporalio", extras = ["google-adk"], specifier = ">=1.28.0" },
+]
+google-genai = [
+    { name = "mcp", specifier = ">=1.0.0" },
+    { name = "temporalio", extras = ["google-genai", "pydantic"], specifier = ">=1.28.0" },
 ]
 langgraph = [
     { name = "langchain", specifier = ">=0.3.0" },

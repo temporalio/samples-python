@@ -73,6 +73,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [external_storage_redis](external_storage_redis) - Redis driver for external storage
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [google_adk_agents](google_adk_agents) - Run Google ADK agents as durable Temporal workflows (model calls, tools, multi-agent, MCP, streaming).
+* [google_genai_plugin](google_genai_plugin) - Run the Google Gemini SDK inside durable Temporal workflows (generate_content, tools/AFC, streaming, chat, structured output, MCP, files, interactions, agents, Vertex AI).
 * [hello_nexus](hello_nexus) - Define a Nexus service, implement operation handlers, and call them from a workflow.
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [lambda_worker](lambda_worker) - Run a Temporal Worker inside an AWS Lambda function.

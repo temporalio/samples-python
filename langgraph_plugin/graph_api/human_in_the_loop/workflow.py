@@ -6,6 +6,7 @@ combined with Temporal signals to receive the input asynchronously.
 
 from datetime import timedelta
 
+from langchain.chat_models import init_chat_model
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
@@ -20,21 +21,25 @@ class State(TypedDict):
 
 
 async def generate_draft(state: State) -> dict[str, str]:
-    """Generate a draft response. Replace with an LLM call in production."""
-    return {
-        "value": (
-            f"Here's my response to '{state['value']}': "
-            "The answer is 42. Let me know if this helps!"
-        )
-    }
+    """Generate a draft response with an LLM."""
+    response = await init_chat_model("claude-sonnet-4-6").ainvoke(
+        f"Please respond concisely to: {state['value']}"
+    )
+    return {"value": str(response.content)}
 
 
 async def human_review(state: State) -> dict[str, str]:
-    """Present draft to human for review via interrupt."""
+    """Present draft to human for review via interrupt; revise with LLM on feedback."""
     feedback = interrupt(state["value"])
     if feedback == "approve":
         return {"value": state["value"]}
-    return {"value": f"[Revised] {state['value']} (incorporating feedback: {feedback})"}
+    response = await init_chat_model("claude-sonnet-4-6").ainvoke(
+        "Revise the following draft according to the reviewer's feedback. "
+        "Output only the revised draft, with no preamble.\n\n"
+        f"Draft:\n{state['value']}\n\n"
+        f"Feedback:\n{feedback}"
+    )
+    return {"value": str(response.content)}
 
 
 def make_chatbot_graph() -> StateGraph:

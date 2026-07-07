@@ -22,12 +22,19 @@ async def main() -> None:
 
     # Subscribe to all topics on the workflow's stream and demultiplex on topic.
     ws = WorkflowStreamClient.create(client, handle.id)
+    # Streaming is at-least-once per activity attempt, so a retried node may
+    # re-publish tokens. Dedupe on the chunk's seq to consume idempotently.
+    seen_tokens: set[int] = set()
     async for item in ws.subscribe(
         from_offset=0,
         result_type=dict,
         poll_cooldown=timedelta(milliseconds=50),
     ):
         if item.topic == "tokens":
+            seq = item.data["seq"]
+            if seq in seen_tokens:
+                continue  # duplicate from a node retry; already consumed.
+            seen_tokens.add(seq)
             print(item.data["token"], end="", flush=True)
         elif item.topic == "progress":
             if item.data.get("done"):

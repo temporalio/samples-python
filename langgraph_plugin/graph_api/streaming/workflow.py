@@ -36,11 +36,18 @@ async def outline(state: State) -> dict[str, str]:
 
 
 async def write_story(state: State) -> dict[str, str]:
-    """Write the story, emitting each word as a token via the stream writer."""
+    """Write the story, emitting each word as a token via the stream writer.
+
+    Streaming is at-least-once per activity attempt: if this node retries
+    (transient failure, worker restart) it re-runs from scratch and re-publishes
+    its writes, so subscribers may see the same token twice. Each chunk therefore
+    carries a monotonic ``seq`` so consumers can dedupe idempotently. A retry
+    re-emits the same ``seq`` values, letting the client drop the duplicates.
+    """
     writer = get_stream_writer()
     words = f"{state['story']} Once upon a time, there was {state['topic']}.".split()
-    for word in words:
-        writer({"token": word + " "})
+    for seq, word in enumerate(words):
+        writer({"seq": seq, "token": word + " "})
     return {"story": " ".join(words)}
 
 

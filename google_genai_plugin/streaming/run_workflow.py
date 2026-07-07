@@ -7,13 +7,19 @@ from datetime import timedelta
 
 from google.genai import types
 from temporalio.client import Client
+from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
 from google_genai_plugin.streaming.workflow import StreamingWorkflow
 
 
 async def main() -> None:
-    client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
+    # The stream publishes Pydantic GenerateContentResponse chunks, so the
+    # consumer needs the Pydantic data converter to decode them.
+    client = await Client.connect(
+        os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"),
+        data_converter=pydantic_data_converter,
+    )
     workflow_id = "google-genai-streaming"
 
     handle = await client.start_workflow(

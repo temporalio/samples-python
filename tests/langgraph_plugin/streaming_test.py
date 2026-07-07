@@ -57,7 +57,11 @@ async def test_streaming_graph_api(client: Client) -> None:
     assert tokens, "expected at least one token"
     assert all("seq" in t and "token" in t for t in tokens)
     seen: set[int] = set()
-    deduped = [t for t in tokens if not (t["seq"] in seen or seen.add(t["seq"]))]
+    deduped: list[dict[str, Any]] = []
+    for t in tokens:
+        if t["seq"] not in seen:
+            seen.add(t["seq"])
+            deduped.append(t)
     assembled = "".join(t["token"] for t in deduped).strip()
     assert assembled == result
 

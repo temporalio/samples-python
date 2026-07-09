@@ -74,6 +74,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [google_adk_agents](google_adk_agents) - Run Google ADK agents as durable Temporal workflows (model calls, tools, multi-agent, MCP, streaming).
 * [hello_nexus](hello_nexus) - Define a Nexus service, implement operation handlers, and call them from a workflow.
+* [hello_standalone_nexus](hello_standalone_nexus) - Use Nexus Operations without using a workflow.
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [lambda_worker](lambda_worker) - Run a Temporal Worker inside an AWS Lambda function.
 * [langgraph_plugin](langgraph_plugin) - Run LangGraph workflows as durable Temporal workflows (Graph API and Functional API).

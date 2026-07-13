@@ -11,7 +11,7 @@ from nexus_standalone_operations.handler import HelloWorkflow, MyNexusServiceHan
 
 interrupt_event = asyncio.Event()
 
-TASK_QUEUE = "nexus-standalone-operations"
+TASK_QUEUE = "nexus-handler-queue"
 
 
 async def main() -> None:

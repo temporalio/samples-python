@@ -23,11 +23,10 @@ Standalone Nexus operations require a server version that supports this feature.
 
 ## Run locally against a dev server
 
-1. Start the [Temporal dev server build that supports standalone Nexus operations](https://docs.temporal.io/standalone-nexus-operation#temporal-cli-support)
-   with the required namespaces pre-created (this command is blocking; run it in its own terminal):
+1. Start the [Temporal dev server build that supports standalone Nexus operations](https://docs.temporal.io/standalone-nexus-operation#temporal-cli-support) with the required namespaces pre-created:
 
    ```bash
-   temporal server start-dev \
+   ./temporal server start-dev \
      --namespace my-caller-namespace \
      --namespace my-handler-namespace
    ```
@@ -35,7 +34,7 @@ Standalone Nexus operations require a server version that supports this feature.
 2. Create a Nexus endpoint that routes to the handler namespace and the worker's task queue:
 
    ```bash
-   temporal operator nexus endpoint create \
+   ./temporal operator nexus endpoint create \
      --name my-nexus-endpoint \
      --target-namespace my-handler-namespace \
      --target-task-queue nexus-handler-queue

@@ -1,4 +1,5 @@
 * @temporalio/sdk
+/langgraph_plugin/ @temporalio/sdk @temporalio/ai-sdk
 
 # SDK & Nexus own the README, pyproject.toml, and uv.lock
 /README.md @temporalio/sdk @temporalio/nexus

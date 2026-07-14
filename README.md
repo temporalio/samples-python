@@ -65,6 +65,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [custom_metric](custom_metric) - Custom metric to record the workflow type in the activity schedule to start latency.
+* [deepagents_plugin](deepagents_plugin) - Make LangChain Deep Agents durable: each LLM/tool/backend call becomes a Temporal Activity while the agent loop replays in the Workflow.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
 * [eager_wf_start](eager_wf_start) - Run a workflow using Eager Workflow Start
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.

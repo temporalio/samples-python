@@ -1,0 +1,71 @@
+import asyncio
+import uuid
+from datetime import timedelta
+
+from langchain_core.load import load
+from temporalio.client import Client
+from temporalio.contrib.deepagents import DeepAgentsPlugin
+from temporalio.contrib.deepagents.testing import mock_model_provider
+from temporalio.contrib.workflow_streams import WorkflowStreamClient
+from temporalio.worker import Worker
+
+from deepagents_plugin.streaming.workflow import STREAMING_TOPIC, StreamingWorkflow
+
+
+async def test_streaming(client: Client) -> None:
+    # streaming_topic=... flips model dispatch to the streaming activity, which
+    # publishes chunks to the topic while still returning the aggregated message
+    # as the durable result. An in-test subscriber collects the chunks.
+    plugin = DeepAgentsPlugin(
+        model_provider=mock_model_provider(["Streamed answer."]),
+        streaming_topic=STREAMING_TOPIC,
+    )
+    task_queue = f"deepagents-streaming-{uuid.uuid4()}"
+
+    config = client.config()
+    config["plugins"] = [*config["plugins"], plugin]
+    client = Client(**config)
+
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[StreamingWorkflow],
+        max_cached_workflows=0,
+    ):
+        workflow_id = f"deepagents-streaming-{uuid.uuid4()}"
+        handle = await client.start_workflow(
+            StreamingWorkflow.run,
+            "Write a sentence about durable execution.",
+            id=workflow_id,
+            task_queue=task_queue,
+        )
+
+        chunks: list[str] = []
+
+        async def consume() -> None:
+            stream = WorkflowStreamClient.create(client, workflow_id)
+            async for item in stream.subscribe(
+                [STREAMING_TOPIC],
+                from_offset=0,
+                result_type=dict,
+                poll_cooldown=timedelta(milliseconds=10),
+            ):
+                text = getattr(load(item.data), "content", "")
+                if text:
+                    chunks.append(text)
+
+        consume_task = asyncio.create_task(consume())
+        result = await handle.result()
+        # The workflow has completed; give the subscriber a beat to drain, then stop.
+        await asyncio.sleep(0.5)
+        consume_task.cancel()
+        try:
+            await consume_task
+        except asyncio.CancelledError:
+            pass
+
+    # The durable result matches the non-streaming path...
+    assert "Streamed answer." in result
+    # ...and the same content was streamed out to the subscriber.
+    assert chunks, "expected at least one streamed chunk"
+    assert "Streamed answer." in "".join(chunks)

@@ -10,7 +10,8 @@ The plugin adds no shim here. The recommended Temporal mapping is:
 
 * expose the pending approval via a ``@workflow.query`` so a client can read it;
 * resume via a ``@workflow.update`` that feeds the human's decision back with the
-  native ``Command(resume={"decisions": [...]})`` protocol.
+  native ``Command(resume={"decisions": [...]})`` protocol; its validator rejects
+  unsupported decisions before they are accepted into workflow history.
 
 The ``InMemorySaver`` is replay-safe because its state lives in the workflow's
 own memory (rehydrated by deterministic replay); the ``thread_id`` is the stable
@@ -64,6 +65,8 @@ class HumanInTheLoopAgent:
             self._pending = str(getattr(pending[0], "value", pending[0]))
             # Block until a client approves/rejects via the `resume` update.
             await workflow.wait_condition(lambda: self._resumed)
+            # No longer paused: the query goes back to reporting None.
+            self._pending = None
             result = await agent.ainvoke(
                 Command(resume={"decisions": [{"type": self._decision}]}),
                 config=config,
@@ -80,6 +83,14 @@ class HumanInTheLoopAgent:
         """Resume the paused agent with ``"approve"`` or ``"reject"``."""
         self._decision = decision
         self._resumed = True
+
+    @resume.validator
+    def validate_resume(self, decision: str) -> None:
+        # Runs before the update is accepted, keeping invalid decisions out of
+        # workflow history entirely. Only the decisions this workflow feeds to
+        # `Command(resume=...)` are allowed.
+        if decision not in ("approve", "reject"):
+            raise ValueError('decision must be "approve" or "reject"')
 
 
 # @@@SNIPEND

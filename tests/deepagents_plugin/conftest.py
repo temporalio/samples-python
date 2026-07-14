@@ -14,14 +14,27 @@ A module-level `pytest.mark.skipif` cannot help here: the mark is only read
 is evaluated before any test module is imported, so it skips these files
 cleanly when the plugin is unavailable while still running them once it is
 installed on 3.11+.
+
+The guard performs a real (guarded) import rather than `find_spec`: the
+subpackage can exist on disk while its runtime deps do not — e.g. a
+plugin-carrying `temporalio` build installed without the `deepagents`
+dependency group — and only an actual import proves the test modules can load.
+The version check runs first so the import is never attempted on interpreters
+the plugin does not support.
 """
 
-import importlib.util
 import sys
 
 collect_ignore_glob: list[str] = []
 
-if sys.version_info < (3, 11) or (
-    importlib.util.find_spec("temporalio.contrib.deepagents") is None
-):
+_plugin_available = False
+if sys.version_info >= (3, 11):
+    try:
+        import temporalio.contrib.deepagents  # noqa: F401
+
+        _plugin_available = True
+    except ImportError:
+        _plugin_available = False
+
+if not _plugin_available:
     collect_ignore_glob = ["*_test.py"]

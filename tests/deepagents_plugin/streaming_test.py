@@ -16,8 +16,9 @@ async def test_streaming(client: Client) -> None:
     # streaming_topic=... flips model dispatch to the streaming activity, which
     # publishes chunks to the topic while still returning the aggregated message
     # as the durable result. An in-test subscriber collects the chunks.
+    expected = "Streamed answer."
     plugin = DeepAgentsPlugin(
-        model_provider=mock_model_provider(["Streamed answer."]),
+        model_provider=mock_model_provider([expected]),
         streaming_topic=STREAMING_TOPIC,
     )
     task_queue = f"deepagents-streaming-{uuid.uuid4()}"
@@ -53,19 +54,19 @@ async def test_streaming(client: Client) -> None:
                 text = getattr(load(item.data), "content", "")
                 if text:
                     chunks.append(text)
+                # The subscription is open-ended; return once the full answer
+                # has been observed.
+                if expected in "".join(chunks):
+                    return
 
         consume_task = asyncio.create_task(consume())
         result = await handle.result()
-        # The workflow has completed; give the subscriber a beat to drain, then stop.
-        await asyncio.sleep(0.5)
-        consume_task.cancel()
-        try:
-            await consume_task
-        except asyncio.CancelledError:
-            pass
+        # No fixed sleep: the subscriber exits as soon as it has seen the
+        # streamed content; the timeout only bounds a regression.
+        await asyncio.wait_for(consume_task, timeout=10.0)
 
     # The durable result matches the non-streaming path...
-    assert "Streamed answer." in result
+    assert expected in result
     # ...and the same content was streamed out to the subscriber.
     assert chunks, "expected at least one streamed chunk"
-    assert "Streamed answer." in "".join(chunks)
+    assert expected in "".join(chunks)

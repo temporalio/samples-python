@@ -1,0 +1,12 @@
+[project]
+name = "temporalio-gcp-open-telemetry-sample"
+version = "0.1.0"
+description = "Temporal Worker on a Google Cloud Run worker pool with OpenTelemetry"
+requires-python = ">=3.10"
+dependencies = ["temporalio[gcp-opentelemetry]"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+temporalio = { git = "https://github.com/temporalio/sdk-python", rev = "6eeb6f1f38888fce5eab7fdf58c439bcd8d2e163" }

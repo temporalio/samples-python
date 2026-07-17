@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from agents import Agent, Runner
 from temporalio import workflow
 
@@ -24,7 +26,7 @@ class LocalImageWorkflow:
         b64_image = await workflow.execute_activity(
             read_image_as_base64,
             image_path,
-            start_to_close_timeout=workflow.timedelta(seconds=30),
+            start_to_close_timeout=timedelta(seconds=30),
         )
 
         agent = Agent(

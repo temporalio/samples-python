@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import timedelta
 
 from temporalio import workflow
 
@@ -22,7 +23,7 @@ class ReasoningContentWorkflow:
         reasoning_content, regular_content = await workflow.execute_activity(
             get_reasoning_response,
             args=[prompt, model_name],
-            start_to_close_timeout=workflow.timedelta(minutes=5),
+            start_to_close_timeout=timedelta(minutes=5),
         )
 
         return ReasoningResult(

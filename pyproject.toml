@@ -36,6 +36,7 @@ external-storage = [
     "types_aiobotocore_s3>=2.25.2",
 ]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
+gcp-open-telemetry = ["temporalio[gcp-opentelemetry]"]
 langsmith-tracing = [
     "openai>=1.4.0",
     "langsmith>=0.7.0",
@@ -89,6 +90,7 @@ packages = [
     "encryption",
     "external_storage",
     "gevent_async",
+    "gcp_open_telemetry",
     "hello",
     "langgraph_plugin",
     "langsmith_tracing",
@@ -114,6 +116,9 @@ packages = [
 
 [tool.hatch.build.targets.wheel.sources]
 "./**/*.py" = "**/*.py"
+
+[tool.uv.sources]
+temporalio = { git = "https://github.com/temporalio/sdk-python", rev = "6eeb6f1f38888fce5eab7fdf58c439bcd8d2e163" }
 
 [build-system]
 requires = ["hatchling"]

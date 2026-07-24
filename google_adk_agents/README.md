@@ -39,6 +39,7 @@ Each directory contains a complete example with its own README:
 | Scenario | What it shows |
 | --- | --- |
 | [basic](./basic/README.md) | A single ADK agent with `TemporalModel` and one model call — no tools. The minimal end-to-end example. |
+| [chatbot](./chatbot/README.md) | A multi-turn conversation over one persisted ADK session, with each turn driven by a workflow Update handler that returns the assistant's reply. |
 | [tools](./tools/README.md) | A Temporal activity wrapped as an ADK tool with `activity_tool`, so tool calls run as their own activities. |
 | [agent_patterns](./agent_patterns/README.md) | A coordinator `LlmAgent` with `sub_agents`, each a `TemporalModel` with a per-agent activity summary. |
 | [mcp](./mcp/README.md) | A local echo MCP toolset via `TemporalMcpToolSet` / `TemporalMcpToolSetProvider`, running MCP tools as activities. Self-contained, no Node required. |

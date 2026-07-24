@@ -53,8 +53,8 @@ class ChatbotAgentWorkflow:
                     role="user", parts=[types.Part(text=message)]
                 ),
             )
-        ) as agen:
-            async for event in agen:
+        ) as event_stream:
+            async for event in event_stream:
                 if event.content and event.content.parts:
                     for part in event.content.parts:
                         if part.text:

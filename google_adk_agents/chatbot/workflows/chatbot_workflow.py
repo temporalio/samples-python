@@ -64,6 +64,7 @@ class ChatbotAgentWorkflow:
 
     @message.validator
     def validate_message(self, message: str) -> None:
+        # Verify user messages here
         pass
 
 

@@ -101,6 +101,7 @@ async def run_worker() -> None:
             f"{DEFAULT_METRIC_PERIODICITY}"
         )
 
+    # @@@SNIPSTART python-cloud-run-otel-worker
     # Endpoint, service name, Core metrics, and tracer provider all use the GCP
     # plugin defaults. The opt-in adds named Temporal operation spans.
     plugin = OpenTelemetryPlugin(add_temporal_spans=True)
@@ -118,6 +119,7 @@ async def run_worker() -> None:
         activities=[compose_greeting],
         graceful_shutdown_timeout=WORKER_GRACEFUL_SHUTDOWN_TIMEOUT,
     )
+    # @@@SNIPEND
 
     loop = asyncio.get_running_loop()
     shutdown_requested = False

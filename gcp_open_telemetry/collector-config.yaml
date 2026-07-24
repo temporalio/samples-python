@@ -1,3 +1,4 @@
+# @@@SNIPSTART python-cloud-run-otel-collector-config
 receivers:
   otlp:
     protocols:
@@ -64,3 +65,4 @@ service:
       processors:
         [memory_limiter, resource_detection, transform/set_project_id, batch/traces]
       exporters: [otlp_grpc]
+# @@@SNIPEND

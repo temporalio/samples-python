@@ -2,8 +2,7 @@
 
 An LLM support-ticket triage workflow demonstrating the recommended
 Temporal → Langfuse tracing setup (see [../README.md](../README.md) for the
-full runbook and [../RECOMMENDATION.md](../RECOMMENDATION.md) for the
-rationale).
+full runbook).
 
 Flow: `classify_ticket` (LLM) and `lookup_account` (plain activity) run under
 a custom `triage` span, the workflow then waits for a human decision delivered

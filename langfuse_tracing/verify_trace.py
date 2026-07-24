@@ -9,7 +9,6 @@ Usage:
     python -m langfuse_tracing.verify_trace --trace-id <hex trace id>
     python -m langfuse_tracing.verify_trace --workflow-id <workflow id>
     python -m langfuse_tracing.verify_trace --trace-id <id> --expect declined
-    python -m langfuse_tracing.verify_trace --count-generations --since-minutes 10
 
 Stdlib-only on purpose so it is trivially copy-out-able.
 """
@@ -23,7 +22,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 # Expected observation trees as (depth, name, type) rows, children sorted by
@@ -212,32 +210,6 @@ def _verify_trace(args: argparse.Namespace) -> int:
     return 0
 
 
-def _count_generations(args: argparse.Namespace) -> int:
-    """Count recent GENERATION observations (used for the anti-pattern demo)."""
-    from_time = datetime.now(timezone.utc) - timedelta(minutes=args.since_minutes)
-    result = _api_get(
-        "/api/public/observations",
-        {
-            "type": "GENERATION",
-            "fromStartTime": from_time.isoformat(),
-            "limit": "100",
-        },
-    )
-    data = result.get("data") or []
-    by_trace: dict[str, int] = {}
-    for observation in data:
-        by_trace[observation.get("traceId") or "?"] = (
-            by_trace.get(observation.get("traceId") or "?", 0) + 1
-        )
-    print(
-        f"{len(data)} GENERATION observations in the last {args.since_minutes}m "
-        f"across {len(by_trace)} trace(s)"
-    )
-    for trace_id, count in sorted(by_trace.items()):
-        print(f"    trace {trace_id}: {count} generation(s)")
-    return 0
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--trace-id", help="Trace ID printed by the starter")
@@ -254,16 +226,8 @@ def main() -> int:
         help="Assert GENERATIONs carry input/output content "
         "(default true for openinference)",
     )
-    parser.add_argument(
-        "--count-generations",
-        action="store_true",
-        help="Just count recent GENERATION observations project-wide",
-    )
-    parser.add_argument("--since-minutes", type=int, default=10)
     args = parser.parse_args()
 
-    if args.count_generations:
-        return _count_generations(args)
     if not args.trace_id and not args.workflow_id:
         parser.error("one of --trace-id or --workflow-id is required")
     return _verify_trace(args)

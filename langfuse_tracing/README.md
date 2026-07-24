@@ -8,18 +8,11 @@ endpoint. No Langfuse SDK or Langfuse-specific plugin is involved, workflow
 code stays deterministic and sandboxed, and traces are correctly nested,
 correctly typed, and duplicate-free across replay and worker restarts.
 
-Read [RECOMMENDATION.md](RECOMMENDATION.md) for the full rationale, including
-measurements of what goes wrong with the alternative "run everything in the
-workflow and disable the sandbox" approach.
-
 Contents:
 
 - **[ticket_triage/](ticket_triage/)** — the recommended pattern: an LLM
   ticket-triage workflow (two LLM activities, one plain activity, one human
   approval delivered as a workflow update).
-- **[naive_guide_style/](naive_guide_style/)** — a deliberately broken
-  anti-pattern that creates spans in workflow code with the sandbox disabled,
-  to demonstrate why that fails. Do not copy it.
 - **[verify_trace.py](verify_trace.py)** — checks a trace via the Langfuse
   public API: whole-tree equality, observation types, token usage, and
   no-duplicates.
@@ -94,16 +87,6 @@ uv run python -m langfuse_tracing.ticket_triage.starter
 # and watch the workflow (and its trace) complete cleanly.
 uv run python -m langfuse_tracing.ticket_triage.starter --pause-before-approval 20
 #   ... ctrl+c the worker, then start it again in another terminal
-```
-
-Then see the failure mode these protect against:
-
-```bash
-# ANTI-PATTERN demo (see naive_guide_style/README.md): one run of a
-# guide-style workflow scatters duplicated spans across ~6 disconnected traces.
-uv run python -m langfuse_tracing.naive_guide_style.worker
-uv run python -m langfuse_tracing.naive_guide_style.starter
-uv run python -m langfuse_tracing.verify_trace --count-generations --since-minutes 3
 ```
 
 ## Where spans come from

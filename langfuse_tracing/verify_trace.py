@@ -64,8 +64,14 @@ EXPECTED_DECLINED = [
 
 def _api_get(path: str, params: Optional[dict[str, str]] = None) -> Any:
     host = os.environ.get("LANGFUSE_HOST", "http://localhost:3000").rstrip("/")
-    public_key = os.environ["LANGFUSE_PUBLIC_KEY"]
-    secret_key = os.environ["LANGFUSE_SECRET_KEY"]
+    public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
+    secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
+    if not public_key or not secret_key:
+        raise SystemExit(
+            "LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY must be set. Copy "
+            "langfuse_tracing/.env.example to langfuse_tracing/.env and load it "
+            "in this terminal: set -a; source langfuse_tracing/.env; set +a"
+        )
     auth = base64.b64encode(f"{public_key}:{secret_key}".encode()).decode()
     url = f"{host}{path}"
     if params:
@@ -162,7 +168,9 @@ def _verify_trace(args: argparse.Namespace) -> int:
     actual = _build_tree(observations)
     if len(set(actual)) != len(actual):
         failures.append(
-            "duplicate (depth, name, type) rows — replay produced duplicates"
+            "duplicate (depth, name, type) rows — extra spans present (workflow "
+            "replay must never re-emit spans; activity retries also add a "
+            "RunActivity span per attempt)"
         )
 
     # 2. Whole-tree deep equality, types included.

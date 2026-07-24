@@ -1,8 +1,8 @@
 """Worker for the ticket triage sample."""
 
+import argparse
 import asyncio
 import logging
-import sys
 
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import OpenTelemetryPlugin
@@ -23,11 +23,17 @@ TASK_QUEUE = "langfuse-ticket-triage-task-queue"
 async def main() -> None:
     logging.basicConfig(level=logging.INFO)
 
-    # --replay-stress disables the workflow cache so every workflow task
-    # replays the workflow from the start of history — the harshest test that
-    # tracing emits each span exactly once. Traces in Langfuse must look
-    # identical with or without this flag.
-    replay_stress = "--replay-stress" in sys.argv
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--replay-stress",
+        action="store_true",
+        help="Disable the workflow cache so every workflow task replays the "
+        "workflow from the start of history — the harshest test that tracing "
+        "emits each span exactly once. Traces in Langfuse must look identical "
+        "with or without this flag.",
+    )
+    args = parser.parse_args()
+    replay_stress = args.replay_stress
 
     setup_tracing("ticket-triage-worker")
     flavor = instrument_openai()

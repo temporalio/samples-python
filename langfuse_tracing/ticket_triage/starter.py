@@ -101,8 +101,11 @@ async def main() -> None:
             print(f"Drafted reply:\n{result.reply}")
 
         host = os.environ.get("LANGFUSE_HOST", "http://localhost:3000").rstrip("/")
+        # The UI link needs the Langfuse project ID; the default matches the
+        # project provisioned by langfuse_tracing/langfuse/docker-compose.yml.
+        project = os.environ.get("LANGFUSE_PROJECT_ID", "langfuse-tracing-demo")
         print(f"Trace ID: {trace_id}")
-        print(f"Langfuse trace: {host}/project/langfuse-tracing-demo/traces/{trace_id}")
+        print(f"Langfuse trace: {host}/project/{project}/traces/{trace_id}")
     finally:
         # The starter is short-lived; flush so its spans (the trace root and
         # the client-side StartWorkflow/StartWorkflowUpdate spans) are not

@@ -11,6 +11,12 @@ from datetime import timedelta
 from typing import Optional
 
 from temporalio import workflow
+from temporalio.common import RetryPolicy
+
+# Bounded retries for the LLM activities so that a misconfigured endpoint or
+# API key fails fast instead of retrying forever. Note that each retry
+# attempt records its own RunActivity span in the trace.
+LLM_RETRY_POLICY = RetryPolicy(maximum_attempts=3)
 
 with workflow.unsafe.imports_passed_through():
     from opentelemetry import trace
@@ -42,6 +48,7 @@ class TicketTriageWorkflow:
                 classify_ticket,
                 ticket,
                 start_to_close_timeout=timedelta(seconds=60),
+                retry_policy=LLM_RETRY_POLICY,
             )
             account = await workflow.execute_activity(
                 lookup_account,
@@ -64,6 +71,7 @@ class TicketTriageWorkflow:
                 ticket=ticket, classification=classification, account=account
             ),
             start_to_close_timeout=timedelta(seconds=60),
+            retry_policy=LLM_RETRY_POLICY,
         )
         return TriageResult(
             status="replied", classification=classification, reply=reply

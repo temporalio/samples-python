@@ -26,8 +26,14 @@ logger = logging.getLogger(__name__)
 
 def _langfuse_exporter() -> OTLPSpanExporter:
     host = os.environ.get("LANGFUSE_HOST", "http://localhost:3000").rstrip("/")
-    public_key = os.environ["LANGFUSE_PUBLIC_KEY"]
-    secret_key = os.environ["LANGFUSE_SECRET_KEY"]
+    public_key = os.environ.get("LANGFUSE_PUBLIC_KEY")
+    secret_key = os.environ.get("LANGFUSE_SECRET_KEY")
+    if not public_key or not secret_key:
+        raise SystemExit(
+            "LANGFUSE_PUBLIC_KEY and LANGFUSE_SECRET_KEY must be set. Copy "
+            "langfuse_tracing/.env.example to langfuse_tracing/.env and load it "
+            "in this terminal: set -a; source langfuse_tracing/.env; set +a"
+        )
     auth = base64.b64encode(f"{public_key}:{secret_key}".encode()).decode()
     return OTLPSpanExporter(
         # Langfuse's OTLP endpoint is HTTP-only (protobuf or JSON); it has no gRPC

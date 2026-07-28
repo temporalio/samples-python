@@ -30,6 +30,7 @@ def patch_model(
     responses: list[LlmResponse],
     *,
     stream_chunks: bool = False,
+    captured: list[LlmRequest] | None = None,
 ) -> None:
     script = list(responses)
     orig_new_llm = LLMRegistry.new_llm  # staticmethod
@@ -38,6 +39,8 @@ def patch_model(
         async def generate_content_async(
             self, llm_request: LlmRequest, stream: bool = False
         ) -> AsyncGenerator[LlmResponse, None]:
+            if captured is not None:
+                captured.append(llm_request)
             if stream_chunks:
                 # The streaming sample is single-turn, so yield every scripted
                 # chunk on this one call.

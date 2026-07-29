@@ -1,4 +1,5 @@
 * @temporalio/sdk
+/langgraph_plugin/ @temporalio/sdk @temporalio/ai-sdk
 
 # SDK & Nexus own the README, pyproject.toml, and uv.lock
 /README.md @temporalio/sdk @temporalio/nexus
@@ -12,5 +13,16 @@
 /tests/nexus*/ @temporalio/nexus
 /tests/*nexus/ @temporalio/nexus
 
+# The AI SDK team owns the AI integration samples and their tests. We add
+# @temporalio/sdk too, so the SDK team can continue to manage repo-wide concerns.
+/google_adk_agents/         @temporalio/sdk @temporalio/ai-sdk
 /google_genai_plugin/       @temporalio/sdk @temporalio/ai-sdk
+/langgraph_plugin/          @temporalio/sdk @temporalio/ai-sdk
+/langsmith_tracing/         @temporalio/sdk @temporalio/ai-sdk
+/openai_agents/             @temporalio/sdk @temporalio/ai-sdk
+/strands_plugin/            @temporalio/sdk @temporalio/ai-sdk
+/tests/google_adk_agents/   @temporalio/sdk @temporalio/ai-sdk
 /tests/google_genai_plugin/ @temporalio/sdk @temporalio/ai-sdk
+/tests/langgraph_plugin/    @temporalio/sdk @temporalio/ai-sdk
+/tests/langsmith_tracing/   @temporalio/sdk @temporalio/ai-sdk
+/tests/strands_plugin/      @temporalio/sdk @temporalio/ai-sdk

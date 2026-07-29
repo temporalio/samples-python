@@ -19,7 +19,7 @@ from nexus_standalone_operations.service import (
     MyNexusService,
 )
 
-ENDPOINT_NAME = "nexus-standalone-operations-endpoint"
+ENDPOINT_NAME = "my-nexus-endpoint"
 
 
 async def main() -> None:

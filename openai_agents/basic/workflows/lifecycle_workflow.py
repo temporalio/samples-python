@@ -43,7 +43,7 @@ class ExampleHooks(RunHooks):
         )
 
     async def on_tool_end(
-        self, context: RunContextWrapper, agent: Agent, tool: Tool, result: str
+        self, context: RunContextWrapper, agent: Agent, tool: Tool, result: Any
     ) -> None:
         self.event_counter += 1
         print(

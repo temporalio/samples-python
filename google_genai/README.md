@@ -25,12 +25,6 @@ These samples demonstrate the [Temporal Google GenAI plugin](https://github.com/
    uv sync --group google-genai
    ```
 
-   > The `google-genai` extra of `temporalio` is shipping in an upcoming release. Until then, install the SDK from the source checkout:
-   >
-   > ```bash
-   > uv pip install -e ../sdk-python --extra google-genai --extra pydantic
-   > ```
-
 2. Configure credentials. Most samples use the Gemini Developer API and read an API key from the environment:
 
    ```bash

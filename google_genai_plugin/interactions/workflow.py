@@ -19,11 +19,13 @@ class InteractionsWorkflow:
     async def run(self, prompt: str) -> dict[str, Any]:
         client = TemporalAsyncClient()
 
-        interaction = await client.interactions.create(
+        # create/get return either an Interaction or a streaming response; without
+        # stream=True the result is always an Interaction.
+        interaction: Any = await client.interactions.create(
             model="gemini-2.5-flash",
             input=prompt,
         )
-        fetched = await client.interactions.get(interaction.id)
+        fetched: Any = await client.interactions.get(interaction.id)
         await client.interactions.delete(interaction.id)
 
         return {"id": interaction.id, "status": str(fetched.status)}

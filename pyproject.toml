@@ -111,7 +111,7 @@ packages = [
     "external_storage",
     "external_storage_redis",
     "gevent_async",
-    "google_genai_plugin",
+    "google_genai",
     "hello",
     "langgraph_plugin",
     "langsmith_tracing",

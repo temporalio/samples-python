@@ -25,7 +25,7 @@ on demand for the Temporal Web UI.
 ## Prerequisites
 
 * [uv](https://docs.astral.sh/uv/)
-* [Temporal CLI](https://docs.temporal.io/cli#install) with a local dev server running:
+* [Temporal CLI](https://docs.temporal.io/cli) with a local dev server running:
   ```
   temporal server start-dev
   ```

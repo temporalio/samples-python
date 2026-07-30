@@ -31,7 +31,6 @@ class EntityBedrockWorkflow:
         self,
         params: BedrockParams,
     ) -> str:
-
         if params and params.conversation_summary:
             self.conversation_history.append(
                 ("conversation_summary", params.conversation_summary)

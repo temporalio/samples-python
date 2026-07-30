@@ -1,10 +1,12 @@
 import asyncio
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
 from temporalio import activity, exceptions, workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 
@@ -19,7 +21,7 @@ class ComposeGreetingInput:
 
 # Basic activity that logs and does string concatenation
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
+def compose_greeting(input: ComposeGreetingInput) -> str:
     activity.logger.info("Running activity with parameter %s" % input)
     return f"{input.greeting}, {input.name}!"
 
@@ -100,7 +102,9 @@ async def main():
     # logging.basicConfig(level=logging.INFO)
 
     # Start client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Set workflow_class to the proper class based on version
     workflow_class = ""
@@ -123,6 +127,7 @@ async def main():
         task_queue="hello-patch-task-queue",
         workflows=[workflow_class],  # type: ignore
         activities=[compose_greeting],
+        activity_executor=ThreadPoolExecutor(5),
     ):
         try:
             result = await client.execute_workflow(

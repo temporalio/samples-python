@@ -1,10 +1,14 @@
 import asyncio
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
 
 async def main():
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
+
     handle = client.get_schedule_handle(
         "workflow-schedule-id",
     )

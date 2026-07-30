@@ -1,23 +1,26 @@
 # Temporal Python SDK Samples
 
-This is the set of Python samples for the [Python SDK](https://github.com/temporalio/sdk-python).
+This is a collection of samples showing how to use the [Python SDK](https://github.com/temporalio/sdk-python).
 
 ## Usage
 
 Prerequisites:
 
-* Python >= 3.9
-* [Poetry](https://python-poetry.org)
+* [uv](https://docs.astral.sh/uv/)
 * [Temporal CLI installed](https://docs.temporal.io/cli#install)
 * [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
 
+The SDK requires Python >= 3.10. You can install Python using uv. For example,
+
+    uv python install 3.13
+
 With this repository cloned, run the following at the root of the directory:
 
-    poetry install
+    uv sync
 
-That loads all required dependencies. Then to run a sample, usually you just run it in Python. For example:
+That loads all required dependencies. Then to run a sample, usually you just run it under uv. For example:
 
-    poetry run python hello/hello_activity.py
+    uv run hello/hello_activity.py
 
 Some examples require extra dependencies. See each sample's directory for specific instructions.
 
@@ -38,6 +41,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_async_activity_completion](hello/hello_async_activity_completion.py) - Complete an activity outside of the
     function that was called.
   * [hello_cancellation](hello/hello_cancellation.py) - Manually react to cancellation inside workflows and activities.
+  * [hello_change_log_level](hello/hello_change_log_level.py) - Change the level of workflow task failure from WARN to ERROR.
   * [hello_child_workflow](hello/hello_child_workflow.py) - Execute a child workflow from a workflow.
   * [hello_continue_as_new](hello/hello_continue_as_new.py) - Use continue as new to restart a workflow.
   * [hello_cron](hello/hello_cron.py) - Execute a workflow once a minute.
@@ -51,37 +55,62 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_search_attributes](hello/hello_search_attributes.py) - Start workflow with search attributes then change
     while running.
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
+  * [hello update](hello/hello_update.py) - Send a request to and a response from a client to a workflow execution.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
+* [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
 * [cloud_export_to_parquet](cloud_export_to_parquet) - Set up schedule workflow to process exported files on an hourly basis
 * [context_propagation](context_propagation) - Context propagation through workflows/activities via interceptor.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
+* [custom_metric](custom_metric) - Custom metric to record the workflow type in the activity schedule to start latency.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
+* [eager_wf_start](eager_wf_start) - Run a workflow using Eager Workflow Start
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
+* [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
+* [external_storage](external_storage) - Offload large payloads to S3-compatible object storage, plus a codec server for the Web UI and CLI.
+* [external_storage_redis](external_storage_redis) - Redis driver for external storage
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
-* [langchain](langchain) - Orchestrate workflows for LangChain.
+* [google_adk_agents](google_adk_agents) - Run Google ADK agents as durable Temporal workflows (model calls, tools, multi-agent, MCP, streaming).
+* [hello_nexus](hello_nexus) - Define a Nexus service, implement operation handlers, and call them from a workflow.
+* [hello_standalone_nexus](hello_standalone_nexus) - Use Nexus Operations without using a workflow.
+* [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
+* [lambda_worker](lambda_worker) - Run a Temporal Worker inside an AWS Lambda function.
+* [langgraph_plugin](langgraph_plugin) - Run LangGraph workflows as durable Temporal workflows (Graph API and Functional API).
+* [langsmith_tracing](langsmith_tracing) - Trace Temporal workflows with LangSmith via the LangSmith plugin.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.
+* [nexus_cancel](nexus_cancel) - Fan out concurrent Nexus operations, take the first result, and cancel the rest.
+* [Nexus Messaging](nexus_messaging): Demonstrates how send signal, update and query messages through Nexus.
+  This contains two samples, one sending messages to an existing workflow and a second that creates a workflow through Nexus
+  and sends messages to it.
+* [nexus_multiple_args](nexus_multiple_args) - Map a Nexus operation to a handler workflow that takes multiple arguments.
+* [nexus_standalone_operations](nexus_standalone_operations) - Execute Nexus operations directly from client code,
+without wrapping them in a workflow.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
+* [openai_agents](openai_agents) - Run OpenAI Agents SDK agents as durable Temporal workflows.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
+* [pydantic_converter_v1](pydantic_converter_v1) - Data converter for Pydantic v1 models (prefer pydantic_converter for v2).
+* [replay](replay) - Verify that workflow code changes are compatible with existing histories.
+* [resource_pool](resource_pool) - Allocate a pool of shared resources across workflows.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.
+* [sleep_for_days](sleep_for_days) - A workflow that runs forever, sending an email every 30 days.
+* [strands_plugin](strands_plugin) - Run Strands Agents as durable Temporal workflows (model calls, tools, MCP, HITL).
 * [trio_async](trio_async) - Use asyncio Temporal in Trio-based environments.
+* [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
+* [worker_multiprocessing](worker_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks and other CPU bound operations by running multiple workers.
 * [worker_specific_task_queues](worker_specific_task_queues) - Use unique task queues to ensure activities run on specific workers.
 * [worker_versioning](worker_versioning) - Use the Worker Versioning feature to more easily version your workflows & other code.
+* [workflow_streams](workflow_streams) - Workflow-hosted durable event stream via `temporalio.contrib.workflow_streams`. **Experimental**
 
 ## Test
 
-Running the tests requires `poe` to be installed.
+To run the tests:
 
-    python -m pip install poethepoet
-
-Once you have `poe` installed you can run:
-
-    poe test
+    uv run poe test

@@ -1,14 +1,16 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from typing import List
 
 from temporalio import activity, workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 
 @activity.defn
-async def say_hello_activity(name: str) -> str:
+def say_hello_activity(name: str) -> str:
     return f"Hello, {name}!"
 
 
@@ -40,7 +42,9 @@ class SayHelloWorkflow:
 
 async def main():
     # Start client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(
@@ -48,8 +52,8 @@ async def main():
         task_queue="hello-parallel-activity-task-queue",
         workflows=[SayHelloWorkflow],
         activities=[say_hello_activity],
+        activity_executor=ThreadPoolExecutor(10),
     ):
-
         # While the worker is running, use the client to run the workflow and
         # print out its result. Note, in many production setups, the client
         # would be in a completely separate process from the worker.

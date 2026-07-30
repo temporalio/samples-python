@@ -2,6 +2,7 @@ import argparse
 import asyncio
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
 # Since it's just used for typing purposes, it doesn't matter which one we
 # import
@@ -17,7 +18,9 @@ async def main():
         raise RuntimeError("Either --start-workflow or --query-workflow is required")
 
     # Connect client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     if args.start_workflow:
         handle = await client.start_workflow(

@@ -12,7 +12,7 @@ Demonstrates how Temporal and Amazon Bedrock can be used to quickly build bullet
 
 1. An AWS account with Bedrock enabled.
 2. A machine that has access to Bedrock.
-3. A local Temporal server running on the same machine. See [Temporal's dev server docs](https://docs.temporal.io/cli#start-dev-server) for more information.
+3. A local Temporal server running on the same machine. See [Temporal's dev server docs](https://docs.temporal.io/cli/server#start-dev) for more information.
 
 These examples use Amazon's Python SDK (Boto3). To configure Boto3 to use your AWS credentials, follow the instructions in [the Boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html).
 

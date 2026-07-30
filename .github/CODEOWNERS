@@ -23,4 +23,5 @@
 /tests/google_adk_agents/ @temporalio/sdk @temporalio/ai-sdk
 /tests/langgraph_plugin/  @temporalio/sdk @temporalio/ai-sdk
 /tests/langsmith_tracing/ @temporalio/sdk @temporalio/ai-sdk
+/tests/openai_agents/     @temporalio/sdk @temporalio/ai-sdk
 /tests/strands_plugin/    @temporalio/sdk @temporalio/ai-sdk

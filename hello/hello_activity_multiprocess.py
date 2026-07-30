@@ -2,7 +2,7 @@ import asyncio
 import multiprocessing
 import os
 import time
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -57,14 +57,18 @@ async def main():
     # needs some kind of manager to share state such as cancellation info and
     # heartbeat info between the host and the activity. Therefore, we must
     # provide a shared_state_manager below. A helper is provided to create it
-    # from a multiprocessing manager.
+    # from a multiprocessing manager. That helper also needs a thread pool
+    # executor to poll the heartbeat queue on; it creates one itself if we do not
+    # pass one, so we pass our own to be able to shut it down.
     #
-    # Both are used as context managers so their processes are shut down when we
-    # are done with them. They are entered outside the worker so that they
-    # outlive it.
+    # All three are used as context managers so they are shut down when we are
+    # done with them. They are entered outside the worker so that they outlive
+    # it, and the manager is entered first so that it is torn down last: it owns
+    # the heartbeat queue that the other two are still using as they stop.
     with (
-        ProcessPoolExecutor(5) as activity_executor,
         multiprocessing.Manager() as manager,
+        ThreadPoolExecutor(1) as queue_poller_executor,
+        ProcessPoolExecutor(5) as activity_executor,
     ):
         # Run a worker for the workflow
         async with Worker(
@@ -74,7 +78,7 @@ async def main():
             activities=[compose_greeting],
             activity_executor=activity_executor,
             shared_state_manager=SharedStateManager.create_from_multiprocessing(
-                manager
+                manager, queue_poller_executor
             ),
         ):
             # While the worker is running, use the client to run the workflow and

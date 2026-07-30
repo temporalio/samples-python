@@ -3,11 +3,14 @@
 # Based on the upstream https://github.com/langfuse/langfuse/blob/v3.224.1/docker-compose.yml
 # with these changes for a local demo:
 #   - Langfuse images pinned to a specific release instead of the floating `:3` tag.
-#   - Only the Langfuse UI/API (port 3000) is published on the host. Postgres, ClickHouse,
-#     Redis, and MinIO stay on the compose network (upstream binds them to 127.0.0.1, which
-#     can collide with other local stacks, e.g. another Postgres on 5432).
+#   - Only two ports are published on the host: the Langfuse UI/API (3000) and MinIO's
+#     S3 endpoint (127.0.0.1:9090, used by Langfuse's presigned media/export URLs).
+#     Postgres, ClickHouse, Redis, and the Langfuse worker stay on the compose network —
+#     upstream publishes several of these on the host (e.g. Postgres on 127.0.0.1:5432,
+#     MinIO on all interfaces), which can collide with other local stacks.
 #   - Headless initialization (LANGFUSE_INIT_*) provisions the org, project, API keys, and
-#     login user on first start, so the sample works without any UI clicking. Idempotent.
+#     login user on first start; provisioning is skipped when the resources already
+#     exist, so restarts are safe.
 #   - All secrets below are throwaway demo values. Do not reuse them outside local demos.
 #
 # Usage:
@@ -127,6 +130,11 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-miniosecret}
+    ports:
+      # Loopback-only S3 endpoint; matches the LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT
+      # and LANGFUSE_S3_BATCH_EXPORT_EXTERNAL_ENDPOINT defaults (localhost:9090)
+      # so presigned media/export URLs resolve from the browser.
+      - 127.0.0.1:9090:9000
     volumes:
       - langfuse_minio_data:/data
     healthcheck:

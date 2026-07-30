@@ -48,7 +48,10 @@ async def main() -> None:
         plugins=[OpenTelemetryPlugin(add_temporal_spans=True)],
     )
 
-    # A unique workflow ID per run gives one Langfuse trace per run.
+    # A fresh workflow ID per run avoids Temporal workflow ID conflicts and
+    # gives each run its own Langfuse session (langfuse.session.id on the root
+    # span below). The trace itself is keyed by the root span's trace ID,
+    # which is new on every run.
     workflow_id = f"ticket-triage-{uuid.uuid4().hex[:8]}"
 
     ticket = Ticket(

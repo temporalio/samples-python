@@ -3,7 +3,8 @@
 Fetches the trace, reconstructs the observation tree, and deep-compares it
 against the expected shape — including observation types — then checks that
 every GENERATION carries a model and token usage, and that no observation was
-duplicated (the replay-stress test would surface duplicates here).
+duplicated (running the worker with --replay-stress surfaces replay-caused
+duplicates here, if there were any).
 
 Usage:
     python -m langfuse_tracing.verify_trace --trace-id <hex trace id>

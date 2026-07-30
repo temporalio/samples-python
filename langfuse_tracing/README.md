@@ -72,21 +72,24 @@ ticket-triage                                   SPAN   (root; session/user/tags)
 ## Prove the replay-safety claims
 
 Durable execution means workflow code re-executes (replays) on worker
-restarts and cache evictions. These two experiments show the trace is
-unaffected — rerun `verify_trace.py` after each and it still passes with the
-identical tree:
+restarts and cache evictions. These two experiments show tracing is
+unaffected — each run still verifies cleanly with the same tree shape and no
+duplicate observations:
 
 ```bash
 # Replay stress: disable the workflow cache so EVERY workflow task replays
 # the workflow from the start of history.
 uv run python -m langfuse_tracing.ticket_triage.worker --replay-stress
 uv run python -m langfuse_tracing.ticket_triage.starter
+uv run python -m langfuse_tracing.verify_trace --trace-id <printed trace id>
 
 # Worker restart mid-workflow: the starter waits 20s before sending the
-# approval; kill the worker while the workflow is parked, start a new one,
-# and watch the workflow (and its trace) complete cleanly.
+# approval. Give the triage activities a few seconds to finish, then kill the
+# worker while the workflow durably awaits approval; start a new worker and
+# watch the workflow (and its trace) complete cleanly.
 uv run python -m langfuse_tracing.ticket_triage.starter --pause-before-approval 20
-#   ... ctrl+c the worker, then start it again in another terminal
+#   ... after ~5s, ctrl+c the worker, then start it again in another terminal
+uv run python -m langfuse_tracing.verify_trace --trace-id <printed trace id>
 ```
 
 ## Where spans come from
@@ -128,8 +131,9 @@ verified against Langfuse by this sample):
   `opentelemetry-exporter-otlp-proto-http` (the gRPC exporter will not work).
 - Short-lived processes must flush: the starter and worker call
   `force_flush()` on exit (see `telemetry.py`).
-- One workflow run = one workflow ID = one Langfuse trace/session; never
-  reuse workflow IDs across runs.
+- Use a fresh workflow ID per run: the starter reports it as the Langfuse
+  session ID, so each run groups cleanly in the Sessions view. (The trace
+  itself is keyed by the starter's root span, which is new on every run.)
 - `OTEL_SDK_DISABLED=true` turns off export without code changes.
 - Ingestion is asynchronous; `verify_trace.py` polls until the trace is
   stable.

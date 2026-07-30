@@ -52,6 +52,6 @@ To run any scenario, start its worker in one terminal and its workflow starter
 in another:
 
 ```bash
-uv run python -m google_adk_agents.<scenario>.run_worker
-uv run python -m google_adk_agents.<scenario>.run_<name>_workflow
+uv run google_adk_agents/<scenario>/run_worker.py
+uv run google_adk_agents/<scenario>/run_<name>_workflow.py
 ```

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 
 from temporalio.client import Client
 from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
@@ -15,7 +16,9 @@ async def main():
     # @@@SNIPSTART google-adk-agents-basic-worker
     plugin = GoogleAdkPlugin()
 
-    client = await Client.connect("localhost:7233", plugins=[plugin])
+    client = await Client.connect(
+        os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"), plugins=[plugin]
+    )
 
     worker = Worker(
         client,

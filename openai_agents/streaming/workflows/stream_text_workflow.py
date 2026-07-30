@@ -1,3 +1,27 @@
+"""Streaming counterpart to the OpenAI Agents SDK ``stream_text.py`` example.
+
+Adapted from https://github.com/openai/openai-agents-python/blob/main/examples/basic/stream_text.py
+
+The upstream example calls ``Runner.run_streamed`` and iterates raw
+``ResponseTextDeltaEvent``s as they arrive over HTTP. Inside a Temporal
+workflow the model call runs in an activity, so the workflow cannot iterate
+the live HTTP stream directly. The plugin's streaming support runs
+``model.stream_response()`` inside the activity and publishes each event to
+the workflow's stream, where external subscribers see them as they are
+produced.
+
+The workflow itself only needs to:
+
+1. host a ``WorkflowStream`` so the streaming activity has somewhere to
+   publish to;
+2. call ``Runner.run_streamed`` (rather than ``Runner.run``) so the agents
+   framework drives the streaming activity.
+
+``stream_events()`` inside the workflow resolves only once the activity
+returns, so in-workflow consumption is over the final list — not
+deltas-as-they-arrive. Streaming is for external observers.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -7,39 +31,13 @@ from openai.types.responses import ResponseTextDeltaEvent
 from temporalio import workflow
 from temporalio.contrib.workflow_streams import WorkflowStream, WorkflowStreamState
 
-from openai_agents.streaming.shared import TOPIC_DONE
-
-"""Streaming counterpart to the OpenAI Agents SDK ``stream_text.py`` example.
-
-Adapted from https://github.com/openai/openai-agents-python/blob/main/examples/basic/stream_text.py
-
-The upstream example calls ``Runner.run_streamed`` and iterates raw
-``ResponseTextDeltaEvent``s as they arrive over HTTP. Inside a Temporal
-workflow the model call runs in an activity, so the workflow cannot
-iterate the live HTTP stream directly. The plugin's streaming support
-runs ``model.stream_response()`` inside the activity and publishes each
-``TResponseStreamEvent`` to the workflow's stream. Events are coalesced
-into batches over ``streaming_event_batch_interval`` (default 100ms)
-before being delivered to subscribers as signals — buffered token
-streaming, not per-token. Output arrives in small bursts; the cadence
-is visible compared to a true per-token render but is close enough for
-most UIs.
-
-The workflow itself only needs to:
-
-1. host a ``WorkflowStream`` so the activity has somewhere to publish to;
-2. call ``Runner.run_streamed`` (rather than ``Runner.run``) so the agent
-   framework drives the streaming activity.
-
-In a Temporal workflow ``stream_events()`` resolves only after the
-underlying activity returns, so any in-workflow consumption is on the
-final list — not deltas-as-they-arrive.
-"""
+from openai_agents.streaming.shared import DRAIN_INTERVAL, TOPIC_DONE
 
 
 @dataclass
 class StreamTextInput:
     prompt: str
+    # Carries stream state across continue-as-new. None on a fresh start.
     stream_state: WorkflowStreamState | None = None
 
 
@@ -47,10 +45,11 @@ class StreamTextInput:
 class StreamTextWorkflow:
     @workflow.init
     def __init__(self, input: StreamTextInput) -> None:
-        # Required: the streaming activity publishes to this stream.
-        # Without it, the publish signals are unhandled and dropped.
+        # Construct the stream from @workflow.init so the publish-Signal
+        # handler is registered before the streaming activity publishes.
+        # Without a stream, those signals are unhandled and dropped.
         self.stream = WorkflowStream(prior_state=input.stream_state)
-        self.done = self.stream.topic(TOPIC_DONE, type=type(None))
+        self.done = self.stream.topic(TOPIC_DONE, type=bool)
 
     @workflow.run
     async def run(self, input: StreamTextInput) -> str:
@@ -60,11 +59,9 @@ class StreamTextWorkflow:
         )
         result = Runner.run_streamed(agent, input=input.prompt)
 
-        # Runner.run_streamed launches the agent loop in a background
-        # task; iterating consumes from it and waits for completion.
-        # The workflow side only sees the events once the activity
-        # returns, so this loop accumulates a count for logging.
-        # External subscribers receive them as the activity publishes.
+        # The workflow only sees these events once the activity returns, so
+        # the loop just counts them. External subscribers receive them as the
+        # activity publishes them.
         deltas = 0
         async for event in result.stream_events():
             if event.type == "raw_response_event" and isinstance(
@@ -72,8 +69,11 @@ class StreamTextWorkflow:
             ):
                 deltas += 1
         workflow.logger.info("collected %d delta events", deltas)
-        # Sentinel for the external subscriber. Without it the
-        # subscriber's async iterator would block on its next poll
-        # waiting for events that never come.
-        self.done.publish(None)
+
+        # In-band terminator so the subscriber can stop without racing the
+        # workflow's completion, then a brief pause to let its next poll
+        # deliver the tail of the stream — the log lives in workflow memory
+        # and is gone once this run completes.
+        self.done.publish(True)
+        await workflow.sleep(DRAIN_INTERVAL)
         return result.final_output

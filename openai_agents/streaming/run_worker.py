@@ -28,15 +28,14 @@ async def main() -> None:
         plugins=[
             OpenAIAgentsPlugin(
                 model_params=ModelActivityParameters(
-                    # Streaming relies on heartbeats to detect a stuck
-                    # LLM call. Pick a heartbeat_timeout comfortably
-                    # larger than the expected delta cadence.
+                    # The streaming activity heartbeats on a background task,
+                    # so a heartbeat_timeout well under start_to_close_timeout
+                    # detects a stuck model call early.
                     heartbeat_timeout=timedelta(seconds=10),
                     start_to_close_timeout=timedelta(minutes=5),
-                    # streaming_event_topic defaults to None (no
-                    # publishing). Set to a topic to publish raw stream
-                    # events for external subscribers.
-                    streaming_event_topic=TOPIC_EVENTS,
+                    # Required for Runner.run_streamed: the topic the streaming
+                    # activity publishes raw model events to.
+                    streaming_topic=TOPIC_EVENTS,
                 ),
             ),
         ],

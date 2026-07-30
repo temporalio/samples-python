@@ -1,28 +1,33 @@
+"""Start StreamTextWorkflow and render its model output as it streams."""
+
 from __future__ import annotations
 
 import asyncio
 import uuid
+from typing import Any, cast
 
 from agents.items import TResponseStreamEvent
 from openai.types.responses import ResponseTextDeltaEvent
-from temporalio.api.common.v1 import Payload
 from temporalio.client import Client
+from temporalio.common import RawValue
 from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
-from openai_agents.streaming.shared import (
-    TASK_QUEUE,
-    TOPIC_DONE,
-    TOPIC_EVENTS,
-    race_with_workflow,
-)
+from openai_agents.streaming.shared import TASK_QUEUE, TOPIC_DONE, TOPIC_EVENTS
 from openai_agents.streaming.workflows.stream_text_workflow import (
     StreamTextInput,
     StreamTextWorkflow,
 )
 
+# TResponseStreamEvent is a typing.Annotated union rather than a class, so it
+# needs a cast to satisfy from_payload's type[T] signature. The plugin's
+# pydantic converter resolves the union's discriminator at runtime.
+EVENT_TYPE = cast(type, TResponseStreamEvent)
+
 
 async def main() -> None:
+    # The plugin's data converter is what decodes the OpenAI event payloads
+    # published on TOPIC_EVENTS.
     client = await Client.connect(
         "localhost:7233",
         plugins=[OpenAIAgentsPlugin()],
@@ -39,23 +44,24 @@ async def main() -> None:
     stream = WorkflowStreamClient.create(client, workflow_id)
     converter = client.data_converter.payload_converter
 
-    async def render() -> None:
-        # Subscribe to both the streaming-event topic and the workflow's
-        # done-sentinel so we can break cleanly without racing
-        # handle.result() against the next poll. result_type is left
-        # unset (we get raw Payloads) because the two topics carry
-        # different types — we decode based on item.topic.
-        async for item in stream.subscribe([TOPIC_EVENTS, TOPIC_DONE]):
-            if item.topic == TOPIC_DONE:
-                return
-            assert isinstance(item.data, Payload)
-            event = converter.from_payload(item.data, TResponseStreamEvent)
-            if event.type == "raw_response_event" and isinstance(
-                event.data, ResponseTextDeltaEvent
-            ):
-                print(event.data.delta, end="", flush=True)
+    # A single iterator over both topics — one subscriber, no cancellation race
+    # between concurrent ones. result_type=RawValue delivers the underlying
+    # Payload so heterogeneous topics can be decoded per item.topic. The loop
+    # ends on the in-band terminator, or by the iterator exhausting if the
+    # workflow reaches a terminal state without publishing one (e.g. on
+    # failure); either way handle.result() below surfaces the outcome.
+    async for item in stream.subscribe(
+        [TOPIC_EVENTS, TOPIC_DONE], result_type=RawValue
+    ):
+        if item.topic == TOPIC_DONE:
+            break
+        # Subscribers receive native OpenAI events, not the agents-SDK
+        # StreamEvent wrappers that stream_events() yields in the workflow.
+        event: Any = converter.from_payload(item.data.payload, EVENT_TYPE)
+        if isinstance(event, ResponseTextDeltaEvent):
+            print(event.delta, end="", flush=True)
 
-    result = await race_with_workflow(render(), handle)
+    result = await handle.result()
     print("\n--- final result ---")
     print(result)
 

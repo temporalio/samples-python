@@ -120,6 +120,7 @@ packages = [
     "pydantic_converter_v1",
     "pyproject.toml",
     "replay",
+    "reqrespupdate",
     "schedules",
     "sentry",
     "sleep_for_days",

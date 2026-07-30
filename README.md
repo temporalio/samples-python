@@ -97,6 +97,7 @@ without wrapping them in a workflow.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [pydantic_converter_v1](pydantic_converter_v1) - Data converter for Pydantic v1 models (prefer pydantic_converter for v2).
 * [replay](replay) - Verify that workflow code changes are compatible with existing histories.
+* [reqrespupdate](reqrespupdate) - Send a request to a long-running workflow and get a response back via an update, with continue-as-new to bound history.
 * [resource_pool](resource_pool) - Allocate a pool of shared resources across workflows.
 * [schedules](schedules) - Demonstrates a Workflow Execution that occurs according to a schedule.
 * [sentry](sentry) - Report errors to Sentry.

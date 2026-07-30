@@ -5,6 +5,7 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
+from reqrespupdate import TASK_QUEUE
 from reqrespupdate.activities import uppercase
 from reqrespupdate.workflow import UppercaseWorkflow
 
@@ -18,7 +19,7 @@ async def main():
 
     async with Worker(
         client,
-        task_queue="reqrespupdate-task-queue",
+        task_queue=TASK_QUEUE,
         workflows=[UppercaseWorkflow],
         activities=[uppercase],
     ):

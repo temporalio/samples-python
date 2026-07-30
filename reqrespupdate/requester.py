@@ -4,7 +4,7 @@ from temporalio.client import Client, WorkflowUpdateFailedError
 from temporalio.envconfig import ClientConfig
 from temporalio.exceptions import ApplicationError
 
-from reqrespupdate.starter import WORKFLOW_ID
+from reqrespupdate import WORKFLOW_ID
 from reqrespupdate.workflow import BACKOFF_ERROR_TYPE, Request, UppercaseWorkflow
 
 

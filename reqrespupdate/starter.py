@@ -3,10 +3,8 @@ import asyncio
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
+from reqrespupdate import TASK_QUEUE, WORKFLOW_ID
 from reqrespupdate.workflow import UppercaseWorkflow, UppercaseWorkflowInput
-
-WORKFLOW_ID = "reqrespupdate-workflow-id"
-TASK_QUEUE = "reqrespupdate-task-queue"
 
 
 async def main():

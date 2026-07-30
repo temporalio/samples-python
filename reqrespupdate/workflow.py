@@ -53,6 +53,13 @@ class UppercaseWorkflow:
 
     @workflow.init
     def __init__(self, input: UppercaseWorkflowInput) -> None:
+        # A run has to accept at least one request, otherwise it continues as
+        # new the moment it starts and the chain never does any work.
+        if input.requests_before_continue_as_new < 1:
+            raise ApplicationError(
+                "requests_before_continue_as_new must be at least 1",
+                non_retryable=True,
+            )
         self.input = input
         self.request_count = 0
 

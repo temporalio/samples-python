@@ -1,7 +1,10 @@
+import asyncio
 import uuid
 
+import pytest
 from temporalio.client import Client, WorkflowUpdateFailedError
 from temporalio.exceptions import ApplicationError
+from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 from reqrespupdate.activities import uppercase
@@ -13,12 +16,14 @@ from reqrespupdate.workflow import (
 )
 
 
-async def request_uppercase(handle, text: str) -> str:
+async def request_uppercase(handle, text: str, max_attempts: int = 10) -> str:
     """Request an uppercasing, retrying if the workflow is continuing as new.
 
-    This is the same backoff the requester in this sample performs.
+    This is the same backoff the requester in this sample performs, bounded so
+    that a workflow which never continues as new fails the test instead of
+    retrying forever.
     """
-    while True:
+    for _ in range(max_attempts):
         try:
             response = await handle.execute_update(
                 UppercaseWorkflow.uppercase, Request(input=text)
@@ -29,11 +34,19 @@ async def request_uppercase(handle, text: str) -> str:
                 isinstance(err.cause, ApplicationError)
                 and err.cause.type == BACKOFF_ERROR_TYPE
             ):
+                await asyncio.sleep(0.1)
                 continue
             raise
+    raise AssertionError(
+        f"Request for {text} still rejected after {max_attempts} attempts"
+    )
 
 
-async def test_uppercase(client: Client):
+async def test_uppercase(client: Client, env: WorkflowEnvironment):
+    if env.supports_time_skipping:
+        pytest.skip(
+            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
+        )
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
         client,
@@ -54,7 +67,13 @@ async def test_uppercase(client: Client):
             await handle.terminate()
 
 
-async def test_continues_as_new_without_losing_requests(client: Client):
+async def test_continues_as_new_without_losing_requests(
+    client: Client, env: WorkflowEnvironment
+):
+    if env.supports_time_skipping:
+        pytest.skip(
+            "Java test server: https://github.com/temporalio/sdk-java/issues/1903"
+        )
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
         client,
@@ -78,7 +97,7 @@ async def test_continues_as_new_without_losing_requests(client: Client):
             for i in range(6):
                 assert await request_uppercase(handle, f"foo{i}") == f"FOO{i}"
 
-            description = await client.get_workflow_handle(handle.id).describe()
+            description = await handle.describe()
             assert description.run_id != handle.first_execution_run_id
         finally:
-            await client.get_workflow_handle(handle.id).terminate()
+            await handle.terminate()

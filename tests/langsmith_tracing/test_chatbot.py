@@ -1,5 +1,6 @@
 import json
 import uuid
+from unittest.mock import MagicMock
 
 from temporalio import activity
 from temporalio.client import Client
@@ -27,7 +28,9 @@ def _make_function_call_response(
     )
 
 
-async def test_chatbot_save_note(client: Client, env: WorkflowEnvironment):
+async def test_chatbot_save_note(
+    client: Client, env: WorkflowEnvironment, mock_ls_client: MagicMock
+):
     """Test save_note tool call loop — save_note runs as a workflow method."""
     call_count = 0
 
@@ -47,7 +50,7 @@ async def test_chatbot_save_note(client: Client, env: WorkflowEnvironment):
         task_queue="test-langsmith-chatbot",
         workflows=[ChatbotWorkflow],
         activities=[mock_call_openai],
-        plugins=[LangSmithPlugin()],
+        plugins=[LangSmithPlugin(client=mock_ls_client)],
     ):
         wf_handle = await client.start_workflow(
             ChatbotWorkflow.run,
@@ -68,8 +71,10 @@ async def test_chatbot_save_note(client: Client, env: WorkflowEnvironment):
         assert result == "Session ended."
 
 
-async def test_chatbot_read_note(client: Client, env: WorkflowEnvironment):
-    """Test read_note tool call loop — read_note runs as a workflow method."""
+async def test_chatbot_read_note(
+    client: Client, env: WorkflowEnvironment, mock_ls_client: MagicMock
+):
+    """Test read_note tool call loop — saves a note first, then reads it back."""
     call_count = 0
 
     @activity.defn(name="call_openai")
@@ -97,7 +102,7 @@ async def test_chatbot_read_note(client: Client, env: WorkflowEnvironment):
         task_queue="test-langsmith-chatbot-read",
         workflows=[ChatbotWorkflow],
         activities=[mock_call_openai],
-        plugins=[LangSmithPlugin()],
+        plugins=[LangSmithPlugin(client=mock_ls_client)],
     ):
         wf_handle = await client.start_workflow(
             ChatbotWorkflow.run,

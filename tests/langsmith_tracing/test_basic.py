@@ -1,4 +1,5 @@
 import uuid
+from unittest.mock import MagicMock
 
 from temporalio import activity
 from temporalio.client import Client
@@ -10,7 +11,9 @@ from langsmith_tracing.basic.activities import OpenAIRequest
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
 
 
-async def test_basic_workflow(client: Client, env: WorkflowEnvironment):
+async def test_basic_workflow(
+    client: Client, env: WorkflowEnvironment, mock_ls_client: MagicMock
+):
     expected_text = "Temporal is a durable execution platform."
 
     @activity.defn(name="call_openai")
@@ -22,7 +25,7 @@ async def test_basic_workflow(client: Client, env: WorkflowEnvironment):
         task_queue="test-langsmith-basic",
         workflows=[BasicLLMWorkflow],
         activities=[mock_call_openai],
-        plugins=[LangSmithPlugin()],
+        plugins=[LangSmithPlugin(client=mock_ls_client)],
     ):
         result = await client.execute_workflow(
             BasicLLMWorkflow.run,

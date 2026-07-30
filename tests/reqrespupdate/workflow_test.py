@@ -1,9 +1,7 @@
 import uuid
 
-import pytest
 from temporalio.client import Client, WorkflowUpdateFailedError
 from temporalio.exceptions import ApplicationError
-from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 from reqrespupdate.activities import uppercase
@@ -35,9 +33,7 @@ async def request_uppercase(handle, text: str) -> str:
             raise
 
 
-async def test_uppercase(client: Client, env: WorkflowEnvironment):
-    if env.supports_time_skipping:
-        pytest.skip("Java test server does not support workflow update")
+async def test_uppercase(client: Client):
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
         client,
@@ -58,11 +54,7 @@ async def test_uppercase(client: Client, env: WorkflowEnvironment):
             await handle.terminate()
 
 
-async def test_continues_as_new_without_losing_requests(
-    client: Client, env: WorkflowEnvironment
-):
-    if env.supports_time_skipping:
-        pytest.skip("Java test server does not support workflow update")
+async def test_continues_as_new_without_losing_requests(client: Client):
     task_queue = f"tq-{uuid.uuid4()}"
     async with Worker(
         client,

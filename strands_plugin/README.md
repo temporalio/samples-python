@@ -33,7 +33,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
 
    You can pick a specific model by passing it to `BedrockModel(model_id="...")` in each sample's worker.
 
-3. Start a [Temporal dev server](https://docs.temporal.io/cli/server#start-dev):
+3. Start a local dev server with the [Temporal CLI](https://docs.temporal.io/cli):
 
    ```bash
    temporal server start-dev

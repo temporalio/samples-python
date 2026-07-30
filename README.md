@@ -7,8 +7,10 @@ This is a collection of samples showing how to use the [Python SDK](https://gith
 Prerequisites:
 
 * [uv](https://docs.astral.sh/uv/)
-* [Temporal CLI installed](https://docs.temporal.io/cli#install)
-* [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
+* [Temporal CLI](https://docs.temporal.io/cli) with a local dev server running:
+  ```
+  temporal server start-dev
+  ```
 
 The SDK requires Python >= 3.10. You can install Python using uv. For example,
 

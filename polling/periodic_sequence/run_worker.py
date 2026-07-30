@@ -1,6 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from polling.periodic_sequence.activities import compose_greeting
@@ -8,7 +9,9 @@ from polling.periodic_sequence.workflows import ChildWorkflow, GreetingWorkflow
 
 
 async def main():
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     worker = Worker(
         client,

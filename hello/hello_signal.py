@@ -3,6 +3,7 @@ from typing import List
 
 from temporalio import workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 
@@ -40,8 +41,11 @@ class GreetingWorkflow:
 
 
 async def main():
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Start client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(
@@ -49,7 +53,6 @@ async def main():
         task_queue="hello-signal-task-queue",
         workflows=[GreetingWorkflow],
     ):
-
         # While the worker is running, use the client to start the workflow.
         # Note, in many production setups, the client would be in a completely
         # separate process from the worker.

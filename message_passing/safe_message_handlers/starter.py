@@ -6,6 +6,7 @@ from typing import Optional
 
 from temporalio import common
 from temporalio.client import Client, WorkflowHandle
+from temporalio.envconfig import ClientConfig
 
 from message_passing.safe_message_handlers.workflow import (
     ClusterManagerAssignNodesToJobInput,
@@ -16,8 +17,10 @@ from message_passing.safe_message_handlers.workflow import (
 
 
 async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] = None):
-
-    await wf.signal(ClusterManagerWorkflow.start_cluster)
+    cluster_status = await wf.execute_update(
+        ClusterManagerWorkflow.wait_until_cluster_started
+    )
+    print(f"Cluster started with {len(cluster_status.nodes)} nodes")
 
     print("Assigning jobs to nodes...")
     allocation_updates = []
@@ -52,7 +55,9 @@ async def do_cluster_lifecycle(wf: WorkflowHandle, delay_seconds: Optional[int] 
 
 async def main(should_test_continue_as_new: bool):
     # Connect to Temporal
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     print("Starting cluster")
     cluster_manager_handle = await client.start_workflow(
@@ -60,7 +65,7 @@ async def main(should_test_continue_as_new: bool):
         ClusterManagerInput(test_continue_as_new=should_test_continue_as_new),
         id=f"ClusterManagerWorkflow-{uuid.uuid4()}",
         task_queue="safe-message-handlers-task-queue",
-        id_reuse_policy=common.WorkflowIDReusePolicy.TERMINATE_IF_RUNNING,
+        id_conflict_policy=common.WorkflowIDConflictPolicy.TERMINATE_EXISTING,
     )
     delay_seconds = 10 if should_test_continue_as_new else 1
     await do_cluster_lifecycle(cluster_manager_handle, delay_seconds=delay_seconds)

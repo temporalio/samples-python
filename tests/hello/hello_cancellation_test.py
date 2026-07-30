@@ -1,5 +1,6 @@
 import asyncio
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from temporalio.client import Client, WorkflowExecutionStatus, WorkflowFailureError
@@ -21,6 +22,7 @@ async def test_cancel_workflow(client: Client):
         task_queue=task_queue_name,
         workflows=[CancellationWorkflow],
         activities=[cleanup_activity, never_complete_activity],
+        activity_executor=ThreadPoolExecutor(5),
     ):
         handle = await client.start_workflow(
             CancellationWorkflow.run,

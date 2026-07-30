@@ -17,6 +17,11 @@ class GetLanguagesInput:
 
 
 @dataclass
+class SetLanguageInput:
+    language: Language
+
+
+@dataclass
 class ApproveInput:
     name: str
 
@@ -24,17 +29,19 @@ class ApproveInput:
 @workflow.defn
 class GreetingWorkflow:
     """
-    A workflow that that returns a greeting in one of two languages.
+    A workflow that that returns a greeting in one of multiple supported
+    languages.
 
-    It supports a Query to obtain the current language, an Update to change the
-    current language and receive the previous language in response, and a Signal
-    to approve the Workflow so that it is allowed to return its result.
+    It exposes a query to obtain the current language, a signal to approve the
+    workflow so that it is allowed to return its result, and two updates for
+    changing the current language and receiving the previous language in
+    response.
+
+    One of the update handlers is not an `async def`, so it can only mutate and
+    return local workflow state; the other update handler is `async def` and
+    executes an activity which calls a remote service, giving access to language
+    translations which are not available in local workflow state.
     """
-
-    # 👉 This Workflow does not use any async handlers and so cannot use any
-    # Activities. It only supports two languages, whose greetings are hardcoded
-    # in the Workflow definition. See ClusterManagerWorkflow for
-    # a Workflow that uses an async Update handler to call an Activity.
 
     def __init__(self) -> None:
         self.approved_for_release = False
@@ -72,21 +79,21 @@ class GreetingWorkflow:
         self.approver_name = input.name
 
     @workflow.update
-    def set_language(self, language: Language) -> Language:
+    def set_language(self, input: SetLanguageInput) -> Language:
         # 👉 An Update handler can mutate the Workflow state and return a value.
-        previous_language, self.language = self.language, language
+        previous_language, self.language = self.language, input.language
         return previous_language
 
     @set_language.validator
-    def validate_language(self, language: Language) -> None:
-        if language not in self.greetings:
+    def validate_language(self, input: SetLanguageInput) -> None:
+        if input.language not in self.greetings:
             # 👉 In an Update validator you raise any exception to reject the Update.
-            raise ValueError(f"{language.name} is not supported")
+            raise ValueError(f"{input.language.name} is not supported")
 
     @workflow.update
-    async def set_language_using_activity(self, language: Language) -> Language:
+    async def set_language_using_activity(self, input: SetLanguageInput) -> Language:
         # 👉 This update handler is async, so it can execute an activity.
-        if language not in self.greetings:
+        if input.language not in self.greetings:
             # 👉 We use a lock so that, if this handler is executed multiple
             # times, each execution can schedule the activity only when the
             # previously scheduled activity has completed. This ensures that
@@ -94,20 +101,22 @@ class GreetingWorkflow:
             async with self.lock:
                 greeting = await workflow.execute_activity(
                     call_greeting_service,
-                    language,
+                    input.language,
                     start_to_close_timeout=timedelta(seconds=10),
                 )
+                # 👉 The requested language might not be supported by the remote
+                # service. If so, we raise ApplicationError, which will fail the
+                # Update. The WorkflowExecutionUpdateAccepted event will still
+                # be added to history. (Update validators can be used to reject
+                # updates before any event is written to history, but they
+                # cannot be async, and so we cannot use an update validator for
+                # this purpose.)
                 if greeting is None:
-                    # 👉 An update validator cannot be async, so cannot be used
-                    # to check that the remote call_greeting_service supports
-                    # the requested language. Raising ApplicationError will fail
-                    # the Update, but the WorkflowExecutionUpdateAccepted event
-                    # will still be added to history.
                     raise ApplicationError(
-                        f"Greeting service does not support {language.name}"
+                        f"Greeting service does not support {input.language.name}"
                     )
-                self.greetings[language] = greeting
-        previous_language, self.language = self.language, language
+                self.greetings[input.language] = greeting
+        previous_language, self.language = self.language, input.language
         return previous_language
 
     @workflow.query

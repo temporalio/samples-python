@@ -3,6 +3,7 @@ import logging
 
 from temporalio import workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 
@@ -22,7 +23,9 @@ async def main():
     logging.basicConfig(level=logging.INFO)
 
     # Start client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(
@@ -30,7 +33,6 @@ async def main():
         task_queue="hello-continue-as-new-task-queue",
         workflows=[LoopingWorkflow],
     ):
-
         # While the worker is running, use the client to run the workflow. Note,
         # in many production setups, the client would be in a completely
         # separate process from the worker.

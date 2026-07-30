@@ -1,4 +1,5 @@
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 from temporalio import activity
 from temporalio.client import Client
@@ -18,6 +19,7 @@ async def test_execute_workflow(client: Client):
         client,
         task_queue=task_queue_name,
         workflows=[GreetingWorkflow],
+        activity_executor=ThreadPoolExecutor(5),
         activities=[compose_greeting],
     ):
         assert "Hello, World!" == await client.execute_workflow(

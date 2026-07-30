@@ -41,7 +41,9 @@ def event_loop():
 async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
     env_type = request.config.getoption("--workflow-environment")
     if env_type == "local":
-        env = await WorkflowEnvironment.start_local()
+        env = await WorkflowEnvironment.start_local(
+            dev_server_download_version="v1.7.4-standalone-nexus-operations",
+        )
     elif env_type == "time-skipping":
         env = await WorkflowEnvironment.start_time_skipping()
     else:

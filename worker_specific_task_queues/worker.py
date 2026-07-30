@@ -6,6 +6,7 @@ from uuid import UUID
 
 from temporalio import activity
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from worker_specific_task_queues import tasks
@@ -31,7 +32,9 @@ async def main():
         return task_queue
 
     # Start client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker to distribute the workflows
     run_futures = []

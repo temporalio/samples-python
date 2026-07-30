@@ -9,6 +9,7 @@ import signal
 
 import gevent
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from gevent_async import activity, workflow
@@ -39,13 +40,14 @@ async def async_main():
     )
 
     # Connect client
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     # Create an executor for use by Temporal. This cannot be the outer one
     # running this async main. The max_workers here needs to have enough room to
     # support the max concurrent activities/workflows settings.
     with GeventExecutor(max_workers=200) as executor:
-
         # Run a worker for the workflow and activities
         async with Worker(
             client,
@@ -65,7 +67,6 @@ async def async_main():
             max_concurrent_activities=100,
             max_concurrent_workflow_tasks=100,
         ):
-
             # Wait until interrupted
             logging.info("Worker started, ctrl+c to exit")
             await interrupt_event.wait()

@@ -10,6 +10,7 @@ from temporalio.client import (
     ScheduleSpec,
     WorkflowFailureError,
 )
+from temporalio.envconfig import ClientConfig
 
 from cloud_export_to_parquet.workflows import (
     ProtoToParquet,
@@ -20,7 +21,10 @@ from cloud_export_to_parquet.workflows import (
 async def main() -> None:
     """Main function to run temporal workflow."""
     # Create client connected to server at the given address
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
+
     # TODO: update s3_bucket and namespace to the actual usecase
     wf_input = ProtoToParquetWorkflowInput(
         num_delay_hour=2,

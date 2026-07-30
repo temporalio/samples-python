@@ -1,14 +1,8 @@
-from dataclasses import dataclass
+from typing import Any, NoReturn
 
 from temporalio import activity
 
 
-@dataclass
-class ComposeGreetingInput:
-    greeting: str
-    name: str
-
-
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
+async def compose_greeting(input: Any) -> NoReturn:
     raise RuntimeError("Service is down")

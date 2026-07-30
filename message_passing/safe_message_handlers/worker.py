@@ -2,12 +2,14 @@ import asyncio
 import logging
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from message_passing.safe_message_handlers.workflow import (
     ClusterManagerWorkflow,
     assign_nodes_to_job,
     find_bad_nodes,
+    start_cluster,
     unassign_nodes_for_job,
 )
 
@@ -15,13 +17,20 @@ interrupt_event = asyncio.Event()
 
 
 async def main():
-    client = await Client.connect("localhost:7233")
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
 
     async with Worker(
         client,
         task_queue="safe-message-handlers-task-queue",
         workflows=[ClusterManagerWorkflow],
-        activities=[assign_nodes_to_job, unassign_nodes_for_job, find_bad_nodes],
+        activities=[
+            assign_nodes_to_job,
+            unassign_nodes_for_job,
+            find_bad_nodes,
+            start_cluster,
+        ],
     ):
         logging.info("ClusterManagerWorkflow worker started, ctrl+c to exit")
         await interrupt_event.wait()

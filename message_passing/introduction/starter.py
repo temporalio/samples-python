@@ -2,6 +2,7 @@ import asyncio
 from typing import Optional
 
 from temporalio.client import Client, WorkflowUpdateStage
+from temporalio.envconfig import ClientConfig
 
 from message_passing.introduction import TASK_QUEUE
 from message_passing.introduction.workflows import (
@@ -9,11 +10,16 @@ from message_passing.introduction.workflows import (
     GetLanguagesInput,
     GreetingWorkflow,
     Language,
+    SetLanguageInput,
 )
 
 
 async def main(client: Optional[Client] = None):
-    client = client or await Client.connect("localhost:7233")
+    if not client:
+        config = ClientConfig.load_client_connect_config()
+        config.setdefault("target_host", "localhost:7233")
+        client = await Client.connect(**config)
+
     wf_handle = await client.start_workflow(
         GreetingWorkflow.run,
         id="greeting-workflow-1234",
@@ -28,20 +34,20 @@ async def main(client: Optional[Client] = None):
 
     # 👉 Execute an Update
     previous_language = await wf_handle.execute_update(
-        GreetingWorkflow.set_language, Language.CHINESE
+        GreetingWorkflow.set_language, SetLanguageInput(language=Language.CHINESE)
     )
-    current_language = await wf_handle.query(GreetingWorkflow.get_language)
-    print(f"language changed: {previous_language.name} -> {current_language.name}")
+    assert await wf_handle.query(GreetingWorkflow.get_language) == Language.CHINESE
+    print(f"language changed: {previous_language.name} -> {Language.CHINESE.name}")
 
     # 👉 Start an Update and then wait for it to complete
     update_handle = await wf_handle.start_update(
         GreetingWorkflow.set_language_using_activity,
-        Language.ARABIC,
+        SetLanguageInput(language=Language.ARABIC),
         wait_for_stage=WorkflowUpdateStage.ACCEPTED,
     )
     previous_language = await update_handle.result()
-    current_language = await wf_handle.query(GreetingWorkflow.get_language)
-    print(f"language changed: {previous_language.name} -> {current_language.name}")
+    assert await wf_handle.query(GreetingWorkflow.get_language) == Language.ARABIC
+    print(f"language changed: {previous_language.name} -> {Language.ARABIC.name}")
 
     # 👉 Send a Signal
     await wf_handle.signal(GreetingWorkflow.approve, ApproveInput(name=""))

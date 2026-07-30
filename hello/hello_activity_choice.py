@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
@@ -6,28 +7,29 @@ from typing import List
 
 from temporalio import activity, workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 # Activities that will be called by the workflow
 
 
 @activity.defn
-async def order_apples(amount: int) -> str:
+def order_apples(amount: int) -> str:
     return f"Ordered {amount} Apples..."
 
 
 @activity.defn
-async def order_bananas(amount: int) -> str:
+def order_bananas(amount: int) -> str:
     return f"Ordered {amount} Bananas..."
 
 
 @activity.defn
-async def order_cherries(amount: int) -> str:
+def order_cherries(amount: int) -> str:
     return f"Ordered {amount} Cherries..."
 
 
 @activity.defn
-async def order_oranges(amount: int) -> str:
+def order_oranges(amount: int) -> str:
     return f"Ordered {amount} Oranges..."
 
 
@@ -79,8 +81,11 @@ class PurchaseFruitsWorkflow:
 
 
 async def main():
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Start client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(
@@ -88,8 +93,8 @@ async def main():
         task_queue="hello-activity-choice-task-queue",
         workflows=[PurchaseFruitsWorkflow],
         activities=[order_apples, order_bananas, order_cherries, order_oranges],
+        activity_executor=ThreadPoolExecutor(5),
     ):
-
         # While the worker is running, use the client to run the workflow and
         # print out its result. Note, in many production setups, the client
         # would be in a completely separate process from the worker.

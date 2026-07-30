@@ -1,9 +1,11 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
 from temporalio import activity, workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 
@@ -18,7 +20,7 @@ class ComposeGreetingInput:
 
 # Basic activity that logs and does string concatenation
 @activity.defn
-async def compose_greeting(input: ComposeGreetingInput) -> str:
+def compose_greeting(input: ComposeGreetingInput) -> str:
     activity.logger.info("Running activity with parameter %s" % input)
     return f"{input.greeting}, {input.name}!"
 
@@ -41,8 +43,12 @@ async def main():
     # import logging
     # logging.basicConfig(level=logging.INFO)
 
+    # Load configuration
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Start client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(**config)
 
     # Run a worker for the workflow
     async with Worker(
@@ -50,8 +56,11 @@ async def main():
         task_queue="hello-activity-task-queue",
         workflows=[GreetingWorkflow],
         activities=[compose_greeting],
+        # Non-async activities require an executor;
+        # a thread pool executor is recommended.
+        # This same thread pool could be passed to multiple workers if desired.
+        activity_executor=ThreadPoolExecutor(5),
     ):
-
         # While the worker is running, use the client to run the workflow and
         # print out its result. Note, in many production setups, the client
         # would be in a completely separate process from the worker.

@@ -7,6 +7,7 @@ from typing import List
 
 from temporalio import activity, workflow
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 from temporalio.worker.workflow_sandbox import (
     SandboxedWorkflowRunner,
@@ -70,9 +71,14 @@ interrupt_event = asyncio.Event()
 
 async def main():
     logging.basicConfig(level=logging.INFO)
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Connect client using the Pydantic converter
+
     client = await Client.connect(
-        "localhost:7233", data_converter=pydantic_data_converter
+        **config,
+        data_converter=pydantic_data_converter,
     )
 
     # Run a worker for the workflow

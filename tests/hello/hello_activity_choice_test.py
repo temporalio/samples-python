@@ -20,13 +20,12 @@ activity_test_data = [
 ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "activity_func, order_amount, expected_result", activity_test_data
 )
-async def test_order_fruit(activity_func, order_amount, expected_result):
+def test_order_fruit(activity_func, order_amount, expected_result):
     activity_environment = ActivityEnvironment()
 
-    result = await activity_environment.run(activity_func, order_amount)
+    result = activity_environment.run(activity_func, order_amount)
 
     assert result == expected_result

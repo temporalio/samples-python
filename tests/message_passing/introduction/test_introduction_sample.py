@@ -10,6 +10,7 @@ from message_passing.introduction.workflows import (
     GetLanguagesInput,
     GreetingWorkflow,
     Language,
+    SetLanguageInput,
     call_greeting_service,
 )
 
@@ -63,7 +64,7 @@ async def test_set_language(client: Client, env: WorkflowEnvironment):
         )
         assert await wf_handle.query(GreetingWorkflow.get_language) == Language.ENGLISH
         previous_language = await wf_handle.execute_update(
-            GreetingWorkflow.set_language, Language.CHINESE
+            GreetingWorkflow.set_language, SetLanguageInput(language=Language.CHINESE)
         )
         assert previous_language == Language.ENGLISH
         assert await wf_handle.query(GreetingWorkflow.get_language) == Language.CHINESE
@@ -88,7 +89,8 @@ async def test_set_invalid_language(client: Client, env: WorkflowEnvironment):
 
         with pytest.raises(WorkflowUpdateFailedError):
             await wf_handle.execute_update(
-                GreetingWorkflow.set_language, Language.ARABIC
+                GreetingWorkflow.set_language,
+                SetLanguageInput(language=Language.ARABIC),
             )
 
 
@@ -117,7 +119,7 @@ async def test_set_language_that_is_only_available_via_remote_service(
         assert await wf_handle.query(GreetingWorkflow.get_language) == Language.ENGLISH
         previous_language = await wf_handle.execute_update(
             GreetingWorkflow.set_language_using_activity,
-            Language.ARABIC,
+            SetLanguageInput(language=Language.ARABIC),
         )
         assert previous_language == Language.ENGLISH
         assert await wf_handle.query(GreetingWorkflow.get_language) == Language.ARABIC

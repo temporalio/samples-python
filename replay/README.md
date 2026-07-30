@@ -3,18 +3,18 @@
 This sample shows you how you can verify changes to workflow code are compatible with existing
 workflow histories.
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from this directory to start the
+To run, first see [README.md](../README.md) for prerequisites. Then, run the following from the root directory to start the
 worker:
 
-    poetry run python worker.py
+    uv run replay/worker.py
 
 This will start the worker. Then, in another terminal, run the following to execute a workflow:
 
-    poetry run python starter.py
+    uv run replay/starter.py
 
 Next, run the replayer:
 
-    poetry run python replayer.py
+    uv run replay/replayer.py
 
 Which should produce some output like:
 

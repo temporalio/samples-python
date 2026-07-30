@@ -1,2 +1,9 @@
 .venv
+.idea
 __pycache__
+.vscode
+.DS_Store
+.claude
+.mypy_cache/
+**/client.key
+**/client.pem

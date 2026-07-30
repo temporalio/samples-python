@@ -4,19 +4,19 @@ This sample shows how to configure OpenTelemetry to capture workflow traces and 
 
 For this sample, the optional `open_telemetry` dependency group must be included. To include, run:
 
-    poetry install --with open_telemetry
+    uv sync --group open-telemetry
 
 To run, first see [README.md](../README.md) for prerequisites. Then run the following to start an [Aspire](https://hub.docker.com/r/microsoft/dotnet-aspire-dashboard/) OTEL collector
 
     docker compose up
 
-Now, from this directory, start the worker in its own terminal:
+Now, start the worker in its own terminal:
 
-    poetry run python worker.py
+    uv run open_telemetry/worker.py
 
 Then, in another terminal, run the following to execute the workflow:
 
-    poetry run python starter.py
+    uv run open_telemetry/starter.py
 
 The workflow should complete with the hello result.
 

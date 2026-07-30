@@ -1,23 +1,29 @@
 import asyncio
-import os
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 
-from sentry.worker import GreetingWorkflow
+from sentry.workflow import SentryExampleWorkflow, SentryExampleWorkflowInput
 
 
 async def main():
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+
     # Connect client
-    client = await Client.connect("localhost:7233")
+    client = await Client.connect(**config)
 
     # Run workflow
-    result = await client.execute_workflow(
-        GreetingWorkflow.run,
-        "World",
-        id="sentry-workflow-id",
-        task_queue="sentry-task-queue",
-    )
-    print(f"Workflow result: {result}")
+    try:
+        result = await client.execute_workflow(
+            SentryExampleWorkflow.run,
+            SentryExampleWorkflowInput(option="broken"),
+            id="sentry-workflow-id",
+            task_queue="sentry-task-queue",
+        )
+        print(f"Workflow result: {result}")
+    except Exception:
+        print("Workflow failed - check Sentry for details")
 
 
 if __name__ == "__main__":

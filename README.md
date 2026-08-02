@@ -80,6 +80,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [langfuse_tracing](langfuse_tracing) - Trace Temporal workflows in Langfuse with the OpenTelemetry plugin and OTLP export.
 * [langgraph_plugin](langgraph_plugin) - Run LangGraph workflows as durable Temporal workflows (Graph API and Functional API).
 * [langsmith_tracing](langsmith_tracing) - Trace Temporal workflows with LangSmith via the LangSmith plugin.
+* [litellm_activity](litellm_activity) - Call LLM providers through LiteLLM from a Temporal Activity.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.

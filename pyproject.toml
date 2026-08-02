@@ -58,6 +58,7 @@ langgraph = [
     "langchain-anthropic>=0.3.0",
     "temporalio[langgraph,langsmith]>=1.30.0",
 ]
+litellm = ["litellm>=1.85.0,<2"]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
     "temporalio[opentelemetry]",
@@ -119,6 +120,7 @@ packages = [
     "langfuse_tracing",
     "langgraph_plugin",
     "langsmith_tracing",
+    "litellm_activity",
     "message_passing",
     "nexus",
     "open_telemetry",

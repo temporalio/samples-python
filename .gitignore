@@ -8,3 +8,4 @@ __pycache__
 **/client.key
 **/client.pem
 *.egg-info/
+.env

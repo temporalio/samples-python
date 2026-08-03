@@ -77,6 +77,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [hello_standalone_nexus](hello_standalone_nexus) - Use Nexus Operations without using a workflow.
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [lambda_worker](lambda_worker) - Run a Temporal Worker inside an AWS Lambda function.
+* [langfuse_tracing](langfuse_tracing) - Trace Temporal workflows in Langfuse with the OpenTelemetry plugin and OTLP export.
 * [langgraph_plugin](langgraph_plugin) - Run LangGraph workflows as durable Temporal workflows (Graph API and Functional API).
 * [langsmith_tracing](langsmith_tracing) - Trace Temporal workflows with LangSmith via the LangSmith plugin.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.

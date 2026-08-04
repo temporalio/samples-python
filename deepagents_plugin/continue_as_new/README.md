@@ -1,11 +1,14 @@
 # Continue as New
 
 A long-running research agent whose conversation could outgrow Temporal's
-workflow-history limit. `run_deep_agent(..., continue_as_new_after=N)` keeps the
-run bounded: once history passes `N` events and the agent still has pending
-todos, it snapshots the accumulated messages **and** the model/tool result cache
-and continues into a fresh run. Completed model/tool calls are reused from the
-carried cache rather than re-run.
+workflow-history limit. `run_deep_agent(agent, input, state_snapshot=...)` keeps
+the run bounded: once a turn ends with pending todos and the server recommends
+continuing (`workflow.info().is_continue_as_new_suggested()` — the default and
+recommended mode, which accounts for both history length and size), it snapshots
+the accumulated messages **and** the model/tool result cache and continues into
+a fresh run. Completed model/tool calls are reused from the carried cache rather
+than re-run. To trigger on a fixed history-event count instead, pass an explicit
+`continue_as_new_after=N`.
 
 The `@workflow.run` signature is `run(self, input, state_snapshot=None)`, where
 `input` is the messages mapping and `state_snapshot` is how `run_deep_agent`
@@ -18,7 +21,8 @@ checkpointer would do I/O from workflow code and is not replay-safe.
 
 ## What This Sample Demonstrates
 
-- `run_deep_agent(agent, input, continue_as_new_after=..., state_snapshot=...)`
+- `run_deep_agent(agent, input, state_snapshot=...)` in the default
+  server-suggested mode (with `continue_as_new_after=N` as the explicit override)
 - The `run(self, input, state_snapshot=None)` continue-as-new contract
 - Carrying both messages and the result cache across continue-as-new
 
@@ -43,6 +47,6 @@ uv run --no-sync deepagents_plugin/continue_as_new/run_workflow.py
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | `LongResearchAgent` driven by `run_deep_agent` with `continue_as_new_after` |
+| `workflow.py` | `LongResearchAgent` driven by `run_deep_agent` |
 | `run_worker.py` | Adds `DeepAgentsPlugin`, starts the worker |
 | `run_workflow.py` | Executes the workflow and prints the result |

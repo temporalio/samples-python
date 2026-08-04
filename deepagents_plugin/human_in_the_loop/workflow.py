@@ -21,14 +21,12 @@ workflow id.
 # @@@SNIPSTART python-deepagents-human-in-the-loop-workflow
 from datetime import timedelta
 
+from deepagents import create_deep_agent
+from langchain_core.runnables import RunnableConfig
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
 from temporalio import workflow
-
-with workflow.unsafe.imports_passed_through():
-    from deepagents import create_deep_agent
-    from langchain_core.runnables import RunnableConfig
-    from langgraph.checkpoint.memory import InMemorySaver
-    from langgraph.types import Command
-    from temporalio.contrib.deepagents import tool_as_activity
+from temporalio.contrib.deepagents import tool_as_activity
 
 
 @workflow.defn

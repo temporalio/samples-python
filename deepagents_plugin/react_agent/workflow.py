@@ -11,23 +11,23 @@ an activity:
 * ``tool_as_activity`` — wrap a LangChain tool (``web_search``) whose body does
   I/O so its execution runs as a ``deepagents.invoke_tool`` activity.
 
-The model is constructed explicitly as ``TemporalModel(...)`` to show the
-non-auto path (the plugin would otherwise wrap a bare ``model=`` string for you).
-Every model turn and every tool call in the loop is a durable activity.
+The agent itself is built with ``create_temporal_deep_agent`` — the recommended
+way to scope ``activity_options`` (timeouts, retry policy) for *this agent's*
+model calls, instead of relying on the plugin-wide default. (A vanilla
+``create_deep_agent`` with a bare ``model=`` string also works; the plugin wraps
+it automatically with the plugin-wide options.) Every model turn and every tool
+call in the loop is a durable activity.
 """
 
 from datetime import timedelta
 
+from langchain_core.tools import tool
 from temporalio import activity, workflow
-
-with workflow.unsafe.imports_passed_through():
-    from deepagents import create_deep_agent
-    from langchain_core.tools import tool
-    from temporalio.contrib.deepagents import (
-        TemporalModel,
-        activity_as_tool,
-        tool_as_activity,
-    )
+from temporalio.contrib.deepagents import (
+    activity_as_tool,
+    create_temporal_deep_agent,
+    tool_as_activity,
+)
 
 
 # @@@SNIPSTART python-deepagents-react-agent-activity
@@ -62,13 +62,16 @@ class ReactAgent:
             web_search,
             start_to_close_timeout=timedelta(seconds=30),
         )
-        agent = create_deep_agent(
-            model=TemporalModel(model="anthropic:claude-sonnet-4-5"),
+        agent = create_temporal_deep_agent(
+            model="anthropic:claude-sonnet-4-5",
             tools=[weather_tool, search_tool],
             system_prompt=(
                 "You are a research assistant. Use the get_weather and "
                 "web_search tools when they help answer the question."
             ),
+            # Scopes the model-call activity options to this agent — the
+            # recommended way to set model timeouts/retries per agent.
+            activity_options={"start_to_close_timeout": timedelta(minutes=2)},
         )
         result = await agent.ainvoke(
             {"messages": [{"role": "user", "content": question}]}

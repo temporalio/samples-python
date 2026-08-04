@@ -7,10 +7,8 @@ plugin captures the LLM calls that ``DeepAgentsPlugin`` runs as activities.
 """
 
 # @@@SNIPSTART python-deepagents-langsmith-tracing-workflow
+from deepagents import create_deep_agent
 from temporalio import workflow
-
-with workflow.unsafe.imports_passed_through():
-    from deepagents import create_deep_agent
 
 
 @workflow.defn

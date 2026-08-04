@@ -1,11 +1,14 @@
 """Long-running research agent that carries state across continue-as-new.
 
 A long conversation would bloat workflow history until it hits Temporal's limit.
-``run_deep_agent(agent, input, continue_as_new_after=N, state_snapshot=...)``
-solves this: once the current turn finishes past the ``N``-event threshold and
-there is still pending work, it snapshots the accumulated messages **and** the
-model/tool result cache and continues into a fresh run — so completed model/tool
-calls are reused, not re-run, after the continue-as-new.
+``run_deep_agent(agent, input, state_snapshot=...)`` solves this: once a turn
+finishes with pending work and the server recommends continuing
+(``workflow.info().is_continue_as_new_suggested()`` — the default and
+recommended mode, accounting for both history length and size), it snapshots the
+accumulated messages **and** the model/tool result cache and continues into a
+fresh run — so completed model/tool calls are reused, not re-run, after the
+continue-as-new. Pass ``continue_as_new_after=N`` instead to trigger on a fixed
+history-event count.
 
 The contract ``run_deep_agent`` requires is that the ``@workflow.run`` method
 accepts the carried state, i.e. its signature is
@@ -20,11 +23,9 @@ I/O from workflow code.
 # @@@SNIPSTART python-deepagents-continue-as-new-workflow
 from typing import Any
 
+from deepagents import create_deep_agent
 from temporalio import workflow
-
-with workflow.unsafe.imports_passed_through():
-    from deepagents import create_deep_agent
-    from temporalio.contrib.deepagents import run_deep_agent
+from temporalio.contrib.deepagents import run_deep_agent
 
 
 @workflow.defn
@@ -47,9 +48,9 @@ class LongResearchAgent:
             # carried input as its first arg, so re-wrapping it here would nest a
             # dict where a message is expected and corrupt the conversation.
             input,
-            # Continue-as-new once history passes this many events and the agent
-            # still has pending todos. Tune to your model's turn size.
-            continue_as_new_after=10_000,
+            # No threshold: continue-as-new fires when the agent still has
+            # pending todos and the server suggests continuing — the recommended
+            # mode. Pass continue_as_new_after=N to use a fixed event count.
             state_snapshot=state_snapshot,
         )
         return result["messages"][-1].content

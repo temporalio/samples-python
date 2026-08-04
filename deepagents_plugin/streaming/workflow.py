@@ -13,12 +13,10 @@ subscribers can attach by workflow id (see ``run_workflow.py``).
 """
 
 # @@@SNIPSTART python-deepagents-streaming-workflow
+from langchain_core.messages import HumanMessage
 from temporalio import workflow
+from temporalio.contrib.deepagents import TemporalModel
 from temporalio.contrib.workflow_streams import WorkflowStream
-
-with workflow.unsafe.imports_passed_through():
-    from langchain_core.messages import HumanMessage
-    from temporalio.contrib.deepagents import TemporalModel
 
 STREAMING_TOPIC = "model-chunks"
 

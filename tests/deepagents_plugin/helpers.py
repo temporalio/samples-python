@@ -6,6 +6,9 @@ from temporalio.api.enums.v1 import EventType
 from temporalio.client import WorkflowHandle
 
 INVOKE_MODEL = "deepagents.invoke_model"
+INVOKE_MODEL_STREAMING = "deepagents.invoke_model_streaming"
+INVOKE_TOOL = "deepagents.invoke_tool"
+BACKEND_OP = "deepagents.backend_op"
 
 
 async def count_scheduled_activities(handle: WorkflowHandle) -> Counter:

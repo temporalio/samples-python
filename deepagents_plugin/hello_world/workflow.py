@@ -10,10 +10,11 @@ replays deterministically in the workflow.
 """
 
 # @@@SNIPSTART python-deepagents-hello-world-workflow
+# No `workflow.unsafe.imports_passed_through()` guard is needed: the plugin
+# configures the workflow sandbox to pass the deepagents / LangChain import
+# tree through, so workflow files import them like any other module.
+from deepagents import create_deep_agent
 from temporalio import workflow
-
-with workflow.unsafe.imports_passed_through():
-    from deepagents import create_deep_agent
 
 
 @workflow.defn

@@ -11,11 +11,10 @@ from deepagents_plugin.continue_as_new.workflow import LongResearchAgent
 
 
 async def test_continue_as_new(client: Client) -> None:
-    # The sample's threshold (continue_as_new_after=10_000) is far above what a
-    # short scripted run reaches, so this exercises the run_deep_agent contract
-    # on the real sample workflow without triggering a continue-as-new. The
-    # first arg is the messages mapping (the run_deep_agent contract), not a
-    # bare string.
+    # The sample defers to the server-suggested mode, which a short scripted
+    # run never triggers, so this exercises the run_deep_agent contract on the
+    # real sample workflow without a continue-as-new. The first arg is the
+    # messages mapping (the run_deep_agent contract), not a bare string.
     plugin = DeepAgentsPlugin(
         model_provider=mock_model_provider(["The research is complete: done."]),
     )

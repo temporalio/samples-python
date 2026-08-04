@@ -10,6 +10,11 @@ from temporalio.contrib.workflow_streams import WorkflowStreamClient
 from temporalio.worker import Worker
 
 from deepagents_plugin.streaming.workflow import STREAMING_TOPIC, StreamingWorkflow
+from tests.deepagents_plugin.helpers import (
+    INVOKE_MODEL,
+    INVOKE_MODEL_STREAMING,
+    count_scheduled_activities,
+)
 
 
 async def test_streaming(client: Client) -> None:
@@ -70,3 +75,8 @@ async def test_streaming(client: Client) -> None:
     # ...and the same content was streamed out to the subscriber.
     assert chunks, "expected at least one streamed chunk"
     assert expected in "".join(chunks)
+    # Dispatch really flipped to the streaming activity: with streaming_topic
+    # set, the model call ran as invoke_model_streaming, not invoke_model.
+    counts = await count_scheduled_activities(handle)
+    assert counts[INVOKE_MODEL_STREAMING] == 1, counts
+    assert counts[INVOKE_MODEL] == 0, counts

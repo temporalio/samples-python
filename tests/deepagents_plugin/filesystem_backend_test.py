@@ -7,6 +7,7 @@ from temporalio.contrib.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
 from deepagents_plugin.filesystem_backend.workflow import FilesystemAgent
+from tests.deepagents_plugin.helpers import BACKEND_OP, count_scheduled_activities
 
 
 async def test_filesystem_backend(client: Client, tmp_path) -> None:
@@ -49,13 +50,19 @@ async def test_filesystem_backend(client: Client, tmp_path) -> None:
         workflows=[FilesystemAgent],
         max_cached_workflows=0,
     ):
-        result = await client.execute_workflow(
+        handle = await client.start_workflow(
             FilesystemAgent.run,
             args=[str(tmp_path), "Write 'hello' to notes.txt and read it back."],
             id=f"deepagents-filesystem-backend-{uuid.uuid4()}",
             task_queue=task_queue,
         )
+        result = await handle.result()
 
     assert "hello" in result
-    # The write really landed on disk — performed in the backend_op activity.
+    # The write really landed on disk...
     assert (tmp_path / "notes.txt").read_text() == "hello"
+    # ...and the file ops really crossed the activity boundary (write + read as
+    # backend_op activities) — the on-disk assert alone cannot distinguish an
+    # in-workflow write in this single-process test.
+    counts = await count_scheduled_activities(handle)
+    assert counts[BACKEND_OP] >= 2, counts

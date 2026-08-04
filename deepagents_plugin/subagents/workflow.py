@@ -14,10 +14,8 @@ model calls run as activities.
 """
 
 # @@@SNIPSTART python-deepagents-subagents-workflow
+from deepagents import create_deep_agent
 from temporalio import workflow
-
-with workflow.unsafe.imports_passed_through():
-    from deepagents import create_deep_agent
 
 
 @workflow.defn

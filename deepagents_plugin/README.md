@@ -19,7 +19,7 @@ one side.
 | Sample | Description |
 |--------|-------------|
 | [hello_world](hello_world) | Minimal single-shot Deep Agent; a bare `model=` string auto-routed through the model activity. Start here. |
-| [react_agent](react_agent) | Tool-calling loop showing the explicit per-tool choice: `activity_as_tool` for an existing activity, `tool_as_activity` for an I/O tool, plus an explicit `TemporalModel`. |
+| [react_agent](react_agent) | Tool-calling loop showing the explicit per-tool choice: `activity_as_tool` for an existing activity, `tool_as_activity` for an I/O tool, plus per-agent `activity_options` via `create_temporal_deep_agent`. |
 | [human_in_the_loop](human_in_the_loop) | Pause on `interrupt_on` and resume via the native LangGraph protocol, mapped to a Temporal Query + Update. |
 | [continue_as_new](continue_as_new) | Long-running agent that carries messages and the model/tool result cache across continue-as-new via `run_deep_agent`. |
 | [filesystem_backend](filesystem_backend) | Durable real filesystem I/O by wrapping a `FilesystemBackend` in `TemporalBackend`. |
@@ -111,13 +111,14 @@ uv run --no-sync deepagents_plugin/langsmith_tracing/main.py
 
 - **Durable model invocation** — every LLM call runs in an `invoke_model`
   activity with configurable timeouts and retries; a bare `model=` string is
-  auto-routed, or use `TemporalModel(...)` explicitly.
+  auto-routed, or use `create_temporal_deep_agent(..., activity_options=...)`
+  to scope model-call options per agent (recommended).
 - **Explicit Workflow-vs-Activity tool choice** — `activity_as_tool`,
   `tool_as_activity`, and `TemporalBackend` move I/O out of workflow code.
 - **Human-in-the-loop** — the native LangGraph `interrupt_on` return value
   mapped to a Temporal Query and Update.
-- **Long-lived agents** — `run_deep_agent(continue_as_new_after=...)` carries
-  messages and the result cache across continue-as-new.
+- **Long-lived agents** — `run_deep_agent(...)` carries messages and the result
+  cache across server-suggested (or explicitly thresholded) continue-as-new.
 - **Sub-agent durability** — sub-agents inherit the durable model object with no
   extra wiring.
 - **Streaming** — forward model chunks to external subscribers while keeping the

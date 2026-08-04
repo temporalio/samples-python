@@ -18,6 +18,10 @@ Temporal messaging:
 The `InMemorySaver` is replay-safe (its state is workflow memory rehydrated by
 replay); the `thread_id` is the workflow id.
 
+For clarity this sample handles a single interrupt. A production workflow would
+loop — re-checking `__interrupt__` after each resume — since the model may
+request another guarded tool call.
+
 ## What This Sample Demonstrates
 
 - `interrupt_on` + an in-workflow `InMemorySaver` checkpointer

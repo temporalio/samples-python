@@ -8,6 +8,7 @@ from temporalio.contrib.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
 from deepagents_plugin.human_in_the_loop.workflow import HumanInTheLoopAgent
+from tests.deepagents_plugin.helpers import INVOKE_TOOL, count_scheduled_activities
 
 
 async def test_human_in_the_loop_approve(client: Client) -> None:
@@ -51,3 +52,7 @@ async def test_human_in_the_loop_approve(client: Client) -> None:
         result = await handle.result()
 
     assert "Rome" in result
+    # The approved book_trip really executed as an invoke_tool activity after
+    # the resume — not just claimed by the scripted final message.
+    counts = await count_scheduled_activities(handle)
+    assert counts[INVOKE_TOOL] == 1, counts

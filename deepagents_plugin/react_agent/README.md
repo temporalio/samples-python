@@ -11,13 +11,14 @@ core decision when making an agent durable:
   I/O so its execution runs as a `deepagents.invoke_tool` activity instead of
   inline in the workflow.
 
-The model is built explicitly as `TemporalModel(model="anthropic:claude-sonnet-4-5")`
-to show the non-auto path. Every model turn and every tool call is a durable
-activity.
+The agent is built with `create_temporal_deep_agent(..., activity_options=...)`
+— the recommended way to scope model-call activity options (timeouts, retry
+policy) to one agent instead of relying on the plugin-wide default. Every model
+turn and every tool call is a durable activity.
 
 ## What This Sample Demonstrates
 
-- `TemporalModel` constructed explicitly (vs. the auto-wrapped `model=` string)
+- `create_temporal_deep_agent` with per-agent `activity_options` for model calls
 - `activity_as_tool` for an existing `@activity.defn`
 - `tool_as_activity` for a LangChain tool that does I/O
 - Registering the user activity on the worker alongside the plugin's activities

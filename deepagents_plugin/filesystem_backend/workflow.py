@@ -17,12 +17,10 @@ environment inside the workflow) to keep the workflow deterministic.
 # @@@SNIPSTART python-deepagents-filesystem-backend-workflow
 from datetime import timedelta
 
+from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend
 from temporalio import workflow
-
-with workflow.unsafe.imports_passed_through():
-    from deepagents import create_deep_agent
-    from deepagents.backends import FilesystemBackend
-    from temporalio.contrib.deepagents import TemporalBackend
+from temporalio.contrib.deepagents import TemporalBackend
 
 
 @workflow.defn

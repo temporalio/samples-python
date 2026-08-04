@@ -7,6 +7,7 @@ from temporalio.contrib.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
 from deepagents_plugin.react_agent.workflow import ReactAgent, get_weather
+from tests.deepagents_plugin.helpers import INVOKE_TOOL, count_scheduled_activities
 
 
 async def test_react_agent(client: Client) -> None:
@@ -38,11 +39,18 @@ async def test_react_agent(client: Client) -> None:
         activities=[get_weather],
         max_cached_workflows=0,
     ):
-        result = await client.execute_workflow(
+        handle = await client.start_workflow(
             ReactAgent.run,
             "What's the weather in Paris, and what is Temporal?",
             id=f"deepagents-react-agent-{uuid.uuid4()}",
             task_queue=task_queue,
         )
+        result = await handle.result()
 
     assert "durable" in result
+    # Both tool seams really crossed the activity boundary: get_weather ran as
+    # the user's own activity (activity_as_tool) and web_search ran through the
+    # plugin's invoke_tool activity (tool_as_activity).
+    counts = await count_scheduled_activities(handle)
+    assert counts["get_weather"] == 1, counts
+    assert counts[INVOKE_TOOL] == 1, counts

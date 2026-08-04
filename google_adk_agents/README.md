@@ -23,7 +23,10 @@ model turn is durable and observable.
 
 ## Prerequisites
 
-- Temporal server [running locally](https://docs.temporal.io/cli/server#start-dev)
+- [Temporal CLI](https://docs.temporal.io/cli) with a local dev server running:
+  ```
+  temporal server start-dev
+  ```
 - Dependencies installed via `uv sync --group google-adk`
 - Google API key set as an environment variable:
   `export GOOGLE_API_KEY=your_key_here`
@@ -49,6 +52,6 @@ To run any scenario, start its worker in one terminal and its workflow starter
 in another:
 
 ```bash
-uv run python -m google_adk_agents.<scenario>.run_worker
-uv run python -m google_adk_agents.<scenario>.run_<name>_workflow
+uv run google_adk_agents/<scenario>/run_worker.py
+uv run google_adk_agents/<scenario>/run_<name>_workflow.py
 ```

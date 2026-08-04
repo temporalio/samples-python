@@ -39,6 +39,14 @@ external-storage = [
 external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 google-adk = ["temporalio[google-adk] >= 1.31.0", "google-adk>=2.2.0,<3"]
+langfuse-tracing = [
+    "openai>=1.4.0",
+    "temporalio[opentelemetry]>=1.30.0,<2",
+    # Langfuse's OTLP endpoint is HTTP-only (no gRPC), so use the http exporter.
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
+    "openinference-instrumentation-openai>=0.1.52",
+    "opentelemetry-instrumentation-openai-v2>=2.1b0",
+]
 langsmith-tracing = [
     "openai>=1.4.0",
     "langsmith>=0.7.0",
@@ -108,6 +116,7 @@ packages = [
     "external_storage_redis",
     "gevent_async",
     "hello",
+    "langfuse_tracing",
     "langgraph_plugin",
     "langsmith_tracing",
     "message_passing",

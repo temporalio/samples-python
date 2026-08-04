@@ -29,6 +29,8 @@ async def main() -> None:
         task_queue="deepagents-streaming",
     )
 
+    printed: list[str] = []
+
     async def consume() -> None:
         stream = WorkflowStreamClient.create(client, workflow_id)
         async for item in stream.subscribe(
@@ -40,19 +42,31 @@ async def main() -> None:
             chunk = load(item.data)
             text = getattr(chunk, "content", "")
             if text:
+                printed.append(str(text))
                 print(text, end="", flush=True)
 
     consume_task = asyncio.create_task(consume())
     result = await handle.result()
-    print()
 
-    # The workflow has completed; give the subscriber a beat to drain, then stop.
+    # The workflow has completed, but the subscriber may still be catching up on
+    # the tail of the stream. The streamed chunks add up to the durable result,
+    # so drain until all of it has been printed; the timeout only bounds a
+    # regression, it never gates the happy path.
+    async def drained() -> None:
+        while result not in "".join(printed):
+            await asyncio.sleep(0.05)
+
+    try:
+        await asyncio.wait_for(drained(), timeout=10.0)
+    except asyncio.TimeoutError:
+        print("\n(timed out waiting for the subscriber to drain the stream)")
     consume_task.cancel()
     try:
         await consume_task
     except asyncio.CancelledError:
         pass
 
+    print()
     print(f"Final result: {result}")
 
 

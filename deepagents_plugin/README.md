@@ -29,6 +29,11 @@ one side.
 
 ## Prerequisites
 
+> **Python ≥ 3.11 required.** `deepagents` (and therefore the plugin) does not
+> support older interpreters. On Python 3.10 the `deepagents` dependency group
+> resolves to nothing, so `uv sync` silently installs none of the dependencies
+> below.
+
 1. Install dependencies:
 
    ```bash

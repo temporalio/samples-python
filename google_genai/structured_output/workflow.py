@@ -6,13 +6,14 @@ makes Gemini return matching JSON, which the SDK parses into the model on
 ``response.parsed``.
 """
 
-# @@@SNIPSTART python-google-genai-structured-output-workflow
 from google.genai import types
 from pydantic import BaseModel
 from temporalio import workflow
 from temporalio.contrib.google_genai import TemporalAsyncClient
+from temporalio.exceptions import ApplicationError
 
 
+# @@@SNIPSTART python-google-genai-structured-output-workflow
 class Recipe(BaseModel):
     name: str
     ingredients: list[str]
@@ -33,7 +34,15 @@ class StructuredOutputWorkflow:
             ),
         )
         recipe = response.parsed
-        assert isinstance(recipe, Recipe)
+        if not isinstance(recipe, Recipe):
+            # ``parsed`` is None when the model returns malformed JSON. Fail the
+            # workflow with an ApplicationError rather than asserting: an
+            # assertion is a workflow task failure, which Temporal retries
+            # forever, so the run would hang instead of failing visibly.
+            raise ApplicationError(
+                f"Gemini did not return a valid Recipe: {response.text!r}",
+                non_retryable=True,
+            )
         return recipe
 
 

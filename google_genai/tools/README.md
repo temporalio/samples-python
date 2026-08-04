@@ -9,7 +9,7 @@ the SDK's automatic function-calling (AFC) loop:
 | Plain workflow method | Pure, deterministic logic — runs in-workflow with no activity dispatch. |
 
 A single prompt exercises both: the model calls `get_weather` (an activity),
-then `recommend_activity` (a workflow method).
+then `recommend_thing_to_do` (a workflow method).
 
 ## What This Sample Demonstrates
 
@@ -34,6 +34,6 @@ uv run google_genai/tools/run_workflow.py
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | `get_weather` activity, `recommend_activity` method, and `ToolsWorkflow` |
+| `workflow.py` | `get_weather` activity, `recommend_thing_to_do` method, and `ToolsWorkflow` |
 | `run_worker.py` | Registers `GoogleGenAIPlugin` + the `get_weather` activity |
 | `run_workflow.py` | Executes the workflow and prints the result |

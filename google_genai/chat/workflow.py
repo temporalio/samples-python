@@ -5,11 +5,11 @@ call runs as a durable Temporal activity, and the SDK threads prior turns into
 each request automatically.
 """
 
-# @@@SNIPSTART python-google-genai-chat-workflow
 from temporalio import workflow
 from temporalio.contrib.google_genai import TemporalAsyncClient
 
 
+# @@@SNIPSTART python-google-genai-chat-workflow
 @workflow.defn
 class ChatWorkflow:
     @workflow.run

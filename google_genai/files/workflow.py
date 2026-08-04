@@ -5,7 +5,6 @@ there, not in the workflow — and the returned file handle is then referenced i
 a ``generate_content`` call.
 """
 
-# @@@SNIPSTART python-google-genai-files-workflow
 from typing import cast
 
 from google.genai import types
@@ -13,6 +12,7 @@ from temporalio import workflow
 from temporalio.contrib.google_genai import TemporalAsyncClient
 
 
+# @@@SNIPSTART python-google-genai-files-workflow
 @workflow.defn
 class FilesWorkflow:
     @workflow.run

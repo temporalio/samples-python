@@ -6,7 +6,6 @@ loop discovers and calls the MCP tools, with ``list_tools`` / ``call_tool``
 running as Temporal activities against a pooled worker-side connection.
 """
 
-# @@@SNIPSTART python-google-genai-mcp-workflow
 from datetime import timedelta
 
 from google.genai import types
@@ -18,6 +17,7 @@ from temporalio.contrib.google_genai import (
 from temporalio.workflow import ActivityConfig
 
 
+# @@@SNIPSTART python-google-genai-mcp-workflow
 @workflow.defn
 class McpWorkflow:
     @workflow.run

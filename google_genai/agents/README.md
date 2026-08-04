@@ -12,6 +12,22 @@ Temporal activity.
 
 - `client.agents.create(id=..., system_instruction=...)`
 - `client.agents.get(id)`, `client.agents.list(page_size=...)`, `client.agents.delete(id)`
+- Cleaning up the agent in a `finally` block so a failure mid-cycle doesn't leak it
+
+## Creating Server-Side Resources Durably
+
+Every call here runs as an activity, so each one can be retried — including
+after it already succeeded on the backend but its completion was lost. Two
+habits worth carrying into real code:
+
+- **Make creates idempotent.** `client.agents.create(id=...)` with a
+  caller-chosen id fails with "already exists" on such a retry. Derive the id
+  deterministically from workflow state (`workflow.uuid4()`, or the workflow id)
+  so every attempt targets the same resource, and treat "already exists" as
+  success — for example by falling back to `client.agents.get(id)`.
+- **Clean up in a `finally`.** Without it, a failing `get`/`list` skips the
+  `delete` and the agent lingers on Google's backend even though the workflow
+  ended.
 
 ## Running the Sample
 

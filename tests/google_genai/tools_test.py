@@ -16,7 +16,7 @@ async def test_tools(client: Client) -> None:
         [
             function_call_response("get_weather", {"city": "Tokyo"}),
             function_call_response(
-                "recommend_activity", {"weather": "It's 72F and sunny in Tokyo."}
+                "recommend_thing_to_do", {"weather": "It's 72F and sunny in Tokyo."}
             ),
             text_response("It's sunny in Tokyo — go for a hike!"),
         ]

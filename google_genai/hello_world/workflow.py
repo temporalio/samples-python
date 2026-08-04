@@ -5,11 +5,11 @@ Temporal activity, so it gets retries, timeouts, and crash recovery for free —
 and no credentials ever enter the workflow.
 """
 
-# @@@SNIPSTART python-google-genai-hello-world-workflow
 from temporalio import workflow
 from temporalio.contrib.google_genai import TemporalAsyncClient
 
 
+# @@@SNIPSTART python-google-genai-hello-world-workflow
 @workflow.defn
 class HelloWorldWorkflow:
     @workflow.run

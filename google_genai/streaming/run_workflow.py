@@ -12,6 +12,27 @@ from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
 from google_genai.streaming.workflow import StreamingWorkflow
 
+# Only a chunk carrying finish_reason ends the subscribe loop, so bound the
+# wait: if generation fails mid-stream, no such chunk ever arrives.
+STREAM_TIMEOUT = 60.0
+
+
+async def consume(client: Client, workflow_id: str) -> None:
+    """Subscribe to the "gemini" topic and print chunks as the model produces them."""
+    stream = WorkflowStreamClient.create(client, workflow_id)
+    async for item in stream.subscribe(
+        ["gemini"],
+        from_offset=0,
+        result_type=types.GenerateContentResponse,
+        poll_cooldown=timedelta(milliseconds=50),
+    ):
+        chunk: types.GenerateContentResponse = item.data
+        if chunk.text:
+            print(chunk.text, end="", flush=True)
+        if chunk.candidates and chunk.candidates[0].finish_reason:
+            print()
+            return
+
 
 async def main() -> None:
     # The stream publishes Pydantic GenerateContentResponse chunks, so the
@@ -29,20 +50,10 @@ async def main() -> None:
         task_queue="google-genai-streaming",
     )
 
-    # Subscribe to the "gemini" topic and print chunks as the model produces them.
-    stream = WorkflowStreamClient.create(client, workflow_id)
-    async for item in stream.subscribe(
-        ["gemini"],
-        from_offset=0,
-        result_type=types.GenerateContentResponse,
-        poll_cooldown=timedelta(milliseconds=50),
-    ):
-        chunk: types.GenerateContentResponse = item.data
-        if chunk.text:
-            print(chunk.text, end="", flush=True)
-        if chunk.candidates and chunk.candidates[0].finish_reason:
-            print()
-            break
+    try:
+        await asyncio.wait_for(consume(client, workflow_id), timeout=STREAM_TIMEOUT)
+    except asyncio.TimeoutError:
+        print(f"\nNo end-of-stream chunk after {STREAM_TIMEOUT}s; giving up.")
 
     # Release the workflow now that we've consumed the stream.
     await handle.signal(StreamingWorkflow.finish)

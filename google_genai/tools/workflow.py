@@ -2,14 +2,13 @@
 
 1. ``@activity.defn get_weather`` wrapped via ``activity_as_tool`` — runs as a
    durable Temporal activity. Use this for I/O or non-deterministic work.
-2. ``recommend_activity`` — a plain workflow method passed directly as a tool.
+2. ``recommend_thing_to_do`` — a plain workflow method passed directly as a tool.
    It runs deterministically in-workflow with no activity dispatch.
 
 Gemini's automatic function-calling (AFC) loop runs inside the workflow and
 invokes both as needed.
 """
 
-# @@@SNIPSTART python-google-genai-tools-workflow
 from datetime import timedelta
 
 from google.genai import types
@@ -18,6 +17,7 @@ from temporalio.contrib.google_genai import TemporalAsyncClient, activity_as_too
 from temporalio.workflow import ActivityConfig
 
 
+# @@@SNIPSTART python-google-genai-tools-activity
 @activity.defn
 async def get_weather(city: str) -> str:
     """Look up the current weather for a city."""
@@ -25,6 +25,10 @@ async def get_weather(city: str) -> str:
     return f"It's 72F and sunny in {city}."
 
 
+# @@@SNIPEND
+
+
+# @@@SNIPSTART python-google-genai-tools-workflow
 @workflow.defn
 class ToolsWorkflow:
     @workflow.run
@@ -41,13 +45,13 @@ class ToolsWorkflow:
                             start_to_close_timeout=timedelta(seconds=30),
                         ),
                     ),
-                    self.recommend_activity,
+                    self.recommend_thing_to_do,
                 ],
             ),
         )
         return response.text or ""
 
-    async def recommend_activity(self, weather: str) -> str:
+    async def recommend_thing_to_do(self, weather: str) -> str:
         """Recommend something to do given a weather description."""
         if "sunny" in weather.lower():
             return "Go for a hike."

@@ -4223,6 +4223,9 @@ wheels = [
 google-adk = [
     { name = "google-adk" },
 ]
+google-genai = [
+    { name = "google-genai" },
+]
 langgraph = [
     { name = "langgraph" },
 ]
@@ -4299,6 +4302,10 @@ gevent = [
 google-adk = [
     { name = "google-adk" },
     { name = "temporalio", extra = ["google-adk"] },
+]
+google-genai = [
+    { name = "mcp" },
+    { name = "temporalio", extra = ["google-genai", "pydantic"] },
 ]
 langfuse-tracing = [
     { name = "openai" },
@@ -4394,6 +4401,10 @@ gevent = [{ name = "gevent", marker = "python_full_version >= '3.8'", specifier 
 google-adk = [
     { name = "google-adk", specifier = ">=2.2.0,<3" },
     { name = "temporalio", extras = ["google-adk"], specifier = ">=1.31.0" },
+]
+google-genai = [
+    { name = "mcp", specifier = ">=1.0.0" },
+    { name = "temporalio", extras = ["google-genai", "pydantic"], specifier = ">=1.31.0" },
 ]
 langfuse-tracing = [
     { name = "openai", specifier = ">=1.4.0" },

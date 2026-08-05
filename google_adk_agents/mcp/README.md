@@ -28,13 +28,13 @@ server, `uv sync --group google-adk`, and `export GOOGLE_API_KEY=...`).
 Start the worker in one terminal:
 
 ```bash
-uv run python -m google_adk_agents.mcp.run_worker
+uv run google_adk_agents/mcp/run_worker.py
 ```
 
 Then start the workflow in another terminal:
 
 ```bash
-uv run python -m google_adk_agents.mcp.run_echo_workflow
+uv run google_adk_agents/mcp/run_echo_workflow.py
 ```
 
 The worker spawns `echo_mcp_server.py` itself; you don't need to start it

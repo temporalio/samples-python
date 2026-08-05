@@ -1,0 +1,6 @@
+Temporal is a durable execution platform. Workflows written with the Temporal
+SDK run as ordinary code, but their state is persisted by the Temporal service,
+so they survive process crashes, machine restarts, and deploys. Activities
+encapsulate side effects like network calls; Temporal handles their retries and
+timeouts. The Google GenAI plugin builds on this by running every Gemini API
+call as a durable activity.

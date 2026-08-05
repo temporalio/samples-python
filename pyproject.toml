@@ -28,6 +28,23 @@ dev = [
     "poethepoet>=0.36.0",
 ]
 bedrock = ["boto3>=1.34.92,<2"]
+# The Deep Agents plugin requires Python >= 3.11, so every dependency in this
+# group is gated on the interpreter version. On 3.10 the group resolves to
+# nothing and the samples are skipped.
+#
+# The plugin distribution itself (`temporalio-contrib-deepagents`) is
+# experimental and not yet on PyPI, so it is NOT listed here — a hard,
+# unpublishable dependency would break `uv lock`/`uv sync` for everyone.
+# Install it separately with the interim install step documented in
+# deepagents_plugin/README.md until it publishes; then add
+# `temporalio-contrib-deepagents>=0.1.0 ; python_version >= '3.11'` to this group.
+deepagents = [
+    "deepagents>=0.6.12,<0.7 ; python_version >= '3.11'",
+    "langchain>=1.3.11,<2 ; python_version >= '3.11'",
+    "langchain-core>=1.4.8,<2 ; python_version >= '3.11'",
+    "langchain-anthropic>=1.4.7,<2 ; python_version >= '3.11'",
+    "temporalio[langsmith]>=1.30.0 ; python_version >= '3.11'",
+]
 dsl = ["pyyaml>=6.0.1,<7", "types-pyyaml>=6.0.12,<7", "dacite>=1.8.1,<2"]
 encryption = ["cryptography>=38.0.1,<39", "aiohttp>=3.13.3,<4"]
 external-storage = [
@@ -114,6 +131,7 @@ packages = [
     "custom_converter",
     "custom_decorator",
     "custom_metric",
+    "deepagents_plugin",
     "dsl",
     "encryption",
     "external_storage",

@@ -41,4 +41,4 @@ The workflow returns both the final response and complete message history for in
 
 The following patterns from the [reference repository](https://github.com/openai/openai-agents-python/tree/main/examples/handoffs) are not included in this Temporal adaptation:
 
-- **Message Filter Streaming**: Streaming capabilities are not yet available in the Temporal integration
+- **Message Filter Streaming**: Differs from the included message-filter example only in rendering the same run's output as it streams. The Temporal integration does support that — see [Streaming](../streaming/README.md) — but it is demonstrated there rather than duplicated here.

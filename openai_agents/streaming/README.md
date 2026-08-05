@@ -29,9 +29,10 @@ Two things to know before reading the samples:
 
 * `streaming_topic` is **required** for `Runner.run_streamed`. If it is unset,
   `run_streamed` raises before scheduling any activity.
-* The workflow must host a `WorkflowStream`, constructed in `@workflow.init` so
-  the publish-signal handler is registered before the activity publishes.
-  Without one, the publishes are unhandled and silently dropped.
+* The workflow must host a `WorkflowStream`. It has to be constructed from a
+  method named `__init__` — `WorkflowStream` inspects its caller's frame and
+  raises otherwise — and `@workflow.init` is what makes the workflow's run
+  argument (carrying `stream_state` for continue-as-new) available there.
 
 ## Running the Examples
 
@@ -114,9 +115,16 @@ streaming benefit is for external observers.
   `heartbeat_timeout` well below `start_to_close_timeout` to detect a stuck
   model call early.
 * Delivery is at-least-once per activity attempt. An attempt that fails
-  mid-response leaves its events on the stream and the retry publishes a second
-  sequence; `stream_events()` in the workflow only sees the final successful
-  attempt. The [workflow_streams module
-  documentation](https://github.com/temporalio/sdk-python/blob/main/temporalio/contrib/workflow_streams/README.md)
-  covers the trade and the conventional `RETRY` event pattern for surfacing it
-  to consumers.
+  mid-response leaves its partial events on the stream — they are flushed
+  before the failure is reported — and the retry publishes a whole new
+  response. `stream_events()` in the workflow only sees the successful attempt,
+  so the workflow's return value stays correct while a naive subscriber renders
+  the truncated attempt followed by the full one.
+
+  The plugin's streaming activity publishes no retry marker, so subscribers
+  detect this in band: every OpenAI stream event carries a `sequence_number`
+  that starts at 0 per response, and a number that fails to advance means a new
+  attempt. `run_stream_text_workflow.py` prints a notice at that seam;
+  `workflow_streams/run_llm.py` shows the fuller treatment, where an activity
+  you own publishes an explicit `RetryEvent` from `activity.info().attempt` and
+  the consumer erases the failed attempt's output.

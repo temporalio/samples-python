@@ -3,7 +3,7 @@ from datetime import timedelta
 from typing import Any, cast
 
 from agents.items import TResponseStreamEvent
-from openai.types.responses import ResponseTextDeltaEvent
+from openai.types.responses import ResponseCompletedEvent, ResponseTextDeltaEvent
 from temporalio.client import Client
 from temporalio.common import RawValue
 from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
@@ -25,7 +25,12 @@ from openai_agents.streaming.workflows.stream_text_workflow import (
     StreamTextInput,
     StreamTextWorkflow,
 )
-from tests.openai_agents._mock_model import ScriptedModelProvider, ToolCall
+from tests.openai_agents._mock_model import (
+    FailMidStream,
+    ScriptedModelProvider,
+    ScriptEntry,
+    ToolCall,
+)
 
 JOKES = (
     "Why did the developer go broke? He used up all his cache. "
@@ -40,7 +45,7 @@ EVENT_TYPE = cast(type, TResponseStreamEvent)
 POLL_COOLDOWN = timedelta(milliseconds=50)
 
 
-def _client_with_plugin(client: Client, script: list[str | ToolCall]) -> Client:
+def _client_with_plugin(client: Client, script: list[ScriptEntry]) -> Client:
     config = client.config()
     config["plugins"] = [
         *config["plugins"],
@@ -100,6 +105,77 @@ async def test_stream_text(client: Client) -> None:
     # reassemble into exactly what the workflow returns.
     assert len(deltas) > 1, "expected the text to arrive as several deltas"
     assert "".join(deltas) == JOKES
+    assert result == JOKES
+
+
+async def test_retried_attempt_is_detectable(client: Client) -> None:
+    """A retried model activity re-streams, and subscribers can tell.
+
+    Turn one calls the tool; turn two dies after four deltas and its retry
+    answers in full. The partial deltas are already on the stream when the
+    attempt fails, so a subscriber that just concatenates them renders the
+    truncated text followed by the whole answer. run_stream_text_workflow.py
+    finds the seam with the rule asserted here: a sequence_number that fails
+    to advance while a response is still in flight. Turn two's own restart
+    must not trip it — that one follows a completed response.
+    """
+    client = _client_with_plugin(
+        client,
+        [ToolCall("how_many_jokes"), FailMidStream(JOKES, after_deltas=4), JOKES],
+    )
+    task_queue = f"openai-agents-stream-retry-{uuid.uuid4()}"
+    workflow_id = f"stream-retry-{uuid.uuid4()}"
+
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[StreamItemsWorkflow],
+        activities=[how_many_jokes],
+        max_cached_workflows=0,
+    ):
+        handle = await client.start_workflow(
+            StreamItemsWorkflow.run,
+            StreamItemsInput(),
+            id=workflow_id,
+            task_queue=task_queue,
+        )
+
+        stream = WorkflowStreamClient.create(client, workflow_id)
+        converter = client.data_converter.payload_converter
+        all_deltas: list[str] = []
+        deltas_since_restart: list[str] = []
+        restarts = 0
+        last_sequence = -1
+        response_in_flight = False
+        async for item in stream.subscribe(
+            [TOPIC_EVENTS, TOPIC_DONE],
+            result_type=RawValue,
+            poll_cooldown=POLL_COOLDOWN,
+        ):
+            if item.topic == TOPIC_DONE:
+                break
+            event: Any = converter.from_payload(item.data.payload, EVENT_TYPE)
+
+            sequence = event.sequence_number
+            if sequence <= last_sequence and response_in_flight:
+                restarts += 1
+                deltas_since_restart = []
+            last_sequence = sequence
+            response_in_flight = not isinstance(event, ResponseCompletedEvent)
+
+            if isinstance(event, ResponseTextDeltaEvent):
+                all_deltas.append(event.delta)
+                deltas_since_restart.append(event.delta)
+
+        result = await handle.result()
+
+    assert restarts == 1, "expected exactly one detected retry"
+    # The failed attempt's partial text is on the stream ahead of the retry's,
+    # so a naive reassembly is corrupt while the workflow's result is not.
+    naive = "".join(all_deltas)
+    assert len(naive) > len(JOKES) and naive.endswith(JOKES)
+    # Discarding at the seam recovers exactly the successful attempt.
+    assert "".join(deltas_since_restart) == JOKES
     assert result == JOKES
 
 

@@ -45,8 +45,10 @@ class StreamItemsInput:
 class StreamItemsWorkflow:
     @workflow.init
     def __init__(self, input: StreamItemsInput) -> None:
-        # Construct the stream from @workflow.init so the publish-Signal
-        # handler is registered before the streaming activity publishes.
+        # WorkflowStream requires construction from a method named __init__
+        # (it checks its caller's frame and raises otherwise), and
+        # @workflow.init is what makes the run argument — and the
+        # stream_state it carries across continue-as-new — available here.
         self.stream = WorkflowStream(prior_state=input.stream_state)
         self.items = self.stream.topic(TOPIC_ITEMS, type=ItemEvent)
         self.done = self.stream.topic(TOPIC_DONE, type=bool)
@@ -91,4 +93,9 @@ class StreamItemsWorkflow:
         # stream — the log lives in workflow memory and is gone once this run
         # completes.
         await workflow.sleep(DRAIN_INTERVAL)
-        return "\n\n".join(messages) if messages else result.final_output
+        # final_output is typed Any and is None when a run ends without
+        # message output, so assert the str this signature promises rather
+        # than letting a None through.
+        if not messages:
+            return result.final_output_as(str, raise_if_incorrect_type=True)
+        return "\n\n".join(messages)

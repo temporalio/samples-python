@@ -45,9 +45,10 @@ class StreamTextInput:
 class StreamTextWorkflow:
     @workflow.init
     def __init__(self, input: StreamTextInput) -> None:
-        # Construct the stream from @workflow.init so the publish-Signal
-        # handler is registered before the streaming activity publishes.
-        # Without a stream, those signals are unhandled and dropped.
+        # WorkflowStream requires construction from a method named __init__
+        # (it checks its caller's frame and raises otherwise), and
+        # @workflow.init is what makes the run argument — and the
+        # stream_state it carries across continue-as-new — available here.
         self.stream = WorkflowStream(prior_state=input.stream_state)
         self.done = self.stream.topic(TOPIC_DONE, type=bool)
 
@@ -76,4 +77,7 @@ class StreamTextWorkflow:
         # and is gone once this run completes.
         self.done.publish(True)
         await workflow.sleep(DRAIN_INTERVAL)
-        return result.final_output
+        # final_output is typed Any and is None when a run ends without
+        # message output, so assert the str this signature promises rather
+        # than letting a None through.
+        return result.final_output_as(str, raise_if_incorrect_type=True)

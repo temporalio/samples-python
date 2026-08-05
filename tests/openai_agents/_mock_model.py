@@ -3,7 +3,8 @@
 Each entry in the script drives one ``stream_response`` call — that is, one
 model activity: a ``str`` streams that text as deltas followed by a terminal
 ``ResponseCompletedEvent``, a :class:`ToolCall` emits a function call so the
-agent runs the tool and comes back for another turn.
+agent runs the tool and comes back for another turn, and a
+:class:`FailMidStream` cuts a response short so the activity is retried.
 
 The plugin takes a ``model_provider`` directly, so nothing needs patching.
 """
@@ -13,7 +14,7 @@ from __future__ import annotations
 import itertools
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Union
 
 from agents import (
     AgentOutputSchemaBase,
@@ -49,6 +50,25 @@ class ToolCall:
     arguments: str = "{}"
 
 
+@dataclass
+class FailMidStream:
+    """Script entry that streams a few deltas and then raises.
+
+    Simulates a model activity that dies partway through a response. The
+    deltas it published are already on the workflow's stream, and because
+    entries are consumed one per ``stream_response`` call, the activity's
+    retry advances to the next script entry — normally the same text in
+    full, as a real retry would re-sample the whole response.
+    """
+
+    text: str
+    after_deltas: int = 4
+
+
+# One script entry per stream_response call.
+ScriptEntry = Union[str, ToolCall, FailMidStream]
+
+
 def _message(text: str) -> ResponseOutputMessage:
     return ResponseOutputMessage(
         id="msg_mock",
@@ -76,11 +96,11 @@ def _response(output: list[Any]) -> Response:
 class ScriptedStreamingModel(Model):
     """Model that replays a fixed script of turns, one per streamed call."""
 
-    def __init__(self, script: list[str | ToolCall]) -> None:
+    def __init__(self, script: list[ScriptEntry]) -> None:
         self._script = list(script)
         self._calls = itertools.count()
 
-    def _next_turn(self) -> str | ToolCall:
+    def _next_turn(self) -> ScriptEntry:
         if not self._script:
             raise AssertionError("ScriptedStreamingModel script exhausted")
         return self._script.pop(0)
@@ -112,10 +132,13 @@ class ScriptedStreamingModel(Model):
             )
             return
 
-        for start in range(0, len(turn), _DELTA_CHARS):
+        text = turn.text if isinstance(turn, FailMidStream) else turn
+        for index, start in enumerate(range(0, len(text), _DELTA_CHARS)):
+            if isinstance(turn, FailMidStream) and index == turn.after_deltas:
+                raise RuntimeError("scripted mid-stream model failure")
             yield ResponseTextDeltaEvent(
                 content_index=0,
-                delta=turn[start : start + _DELTA_CHARS],
+                delta=text[start : start + _DELTA_CHARS],
                 item_id="msg_mock",
                 logprobs=[],
                 output_index=0,
@@ -123,7 +146,7 @@ class ScriptedStreamingModel(Model):
                 type="response.output_text.delta",
             )
         yield ResponseCompletedEvent(
-            response=_response([_message(turn)]),
+            response=_response([_message(text)]),
             sequence_number=next(seq),
             type="response.completed",
         )
@@ -143,7 +166,7 @@ class ScriptedStreamingModel(Model):
 class ScriptedModelProvider(ModelProvider):
     """Hands out one shared model so the script advances across turns."""
 
-    def __init__(self, script: list[str | ToolCall]) -> None:
+    def __init__(self, script: list[ScriptEntry]) -> None:
         self._model = ScriptedStreamingModel(script)
 
     def get_model(self, model_name: str | None) -> Model:

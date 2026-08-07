@@ -63,6 +63,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
 * [cloud_export_to_parquet](cloud_export_to_parquet) - Set up schedule workflow to process exported files on an hourly basis
+* [cloud_run_worker](cloud_run_worker) - Run a Temporal Worker inside a Google Cloud Run container with graceful SIGTERM shutdown and optional mTLS for Temporal Cloud.
 * [context_propagation](context_propagation) - Context propagation through workflows/activities via interceptor.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.

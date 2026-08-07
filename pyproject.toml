@@ -100,7 +100,7 @@ constraint-dependencies = [
 exclude = ["lambda_worker*"]
 
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.poe.tasks]

@@ -6,8 +6,7 @@ import uuid
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from litellm_activity.shared import LLMRequest
-from litellm_activity.worker import TASK_QUEUE
+from litellm_activity.shared import DEFAULT_MODEL, TASK_QUEUE, LLMRequest
 from litellm_activity.workflow import LiteLLMWorkflow
 
 
@@ -19,7 +18,7 @@ async def main() -> None:
     prompt = " ".join(sys.argv[1:]) or "Explain Temporal in one sentence."
     request = LLMRequest(
         prompt=prompt,
-        model=os.getenv("LITELLM_MODEL", "openai/gpt-4o-mini"),
+        model=os.getenv("LITELLM_MODEL", DEFAULT_MODEL),
     )
     result = await client.execute_workflow(
         LiteLLMWorkflow.run,

@@ -6,9 +6,8 @@ from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from litellm_activity.activities import call_litellm
+from litellm_activity.shared import TASK_QUEUE
 from litellm_activity.workflow import LiteLLMWorkflow
-
-TASK_QUEUE = "litellm-activity-task-queue"
 
 
 async def main() -> None:

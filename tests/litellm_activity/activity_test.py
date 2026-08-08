@@ -1,12 +1,13 @@
 from typing import Any
 
+import pytest
 from litellm import ModelResponse
 
 from litellm_activity import activities
 from litellm_activity.shared import LLMRequest
 
 
-async def test_call_litellm(monkeypatch: Any) -> None:
+async def test_call_litellm(monkeypatch: pytest.MonkeyPatch) -> None:
     captured: dict[str, Any] = {}
 
     async def mock_acompletion(**kwargs: Any) -> ModelResponse:

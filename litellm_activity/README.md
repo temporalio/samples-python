@@ -33,14 +33,14 @@ Start a local Temporal server, then run these commands in separate terminals:
 
 ```bash
 # Terminal 1: run the Worker
-uv run --group litellm python -m litellm_activity.worker
+uv run --group litellm litellm_activity/worker.py
 
 # Terminal 2: start a Workflow
-uv run --group litellm python -m litellm_activity.starter \
+uv run --group litellm litellm_activity/starter.py \
   "Why should LLM calls run in Temporal Activities?"
 ```
 
-The Activity gives each provider call a 30-second client timeout. The Workflow gives each Activity attempt 45 seconds, limits the entire Activity execution to two minutes, and retries failures up to three times with exponential backoff. LiteLLM's own retries are disabled so Temporal records and controls every attempt.
+The Activity gives each provider call a 30-second client timeout. The Workflow gives each Activity attempt 45 seconds, limits the entire Activity execution to two minutes, and retries failures for up to three total attempts with exponential backoff. LiteLLM's own retries are disabled so Temporal records and controls every attempt.
 
 ## Tests
 

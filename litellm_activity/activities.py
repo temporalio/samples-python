@@ -1,3 +1,5 @@
+from typing import cast
+
 from litellm import ModelResponse, acompletion
 from temporalio import activity
 
@@ -19,9 +21,8 @@ async def call_litellm(request: LLMRequest) -> str:
     )
 
     if not isinstance(response, ModelResponse):
-        raise TypeError("Expected a non-streaming LiteLLM response")
+        raise TypeError(
+            f"Expected a non-streaming LiteLLM response, got {type(response).__name__}"
+        )
 
-    content = response.choices[0].message.content
-    if not content:
-        raise ValueError("LiteLLM returned an empty response")
-    return content
+    return cast(str, response.choices[0].message.content)

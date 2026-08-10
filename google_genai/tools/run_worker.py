@@ -1,6 +1,5 @@
 """Worker for the tools sample."""
 
-# @@@SNIPSTART python-google-genai-tools-worker
 import asyncio
 import os
 
@@ -21,16 +20,17 @@ async def main() -> None:
         plugins=[plugin],
     )
 
+    # @@@SNIPSTART python-google-genai-tools-worker
     worker = Worker(
         client,
         task_queue="google-genai-tools",
         workflows=[ToolsWorkflow],
         activities=[get_weather],
     )
+    # @@@SNIPEND
     print("Worker started. Ctrl+C to exit.")
     await worker.run()
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-# @@@SNIPEND

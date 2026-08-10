@@ -5,7 +5,6 @@ the plugin. The plugin opens a pooled MCP connection on the worker and runs
 ``list_tools`` / ``call_tool`` as activities.
 """
 
-# @@@SNIPSTART python-google-genai-mcp-worker
 import asyncio
 import os
 import sys
@@ -25,6 +24,7 @@ from google_genai.mcp.workflow import McpWorkflow
 ECHO_SERVER = str(Path(__file__).parent / "echo_mcp_server.py")
 
 
+# @@@SNIPSTART python-google-genai-mcp-worker
 @asynccontextmanager
 async def echo_session() -> AsyncIterator[ClientSession]:
     """Yield a connected, initialized session to the stdio echo MCP server."""
@@ -38,6 +38,7 @@ async def echo_session() -> AsyncIterator[ClientSession]:
 async def main() -> None:
     genai_client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
     plugin = GoogleGenAIPlugin(genai_client, mcp_servers={"echo": echo_session})
+    # @@@SNIPEND
 
     client = await Client.connect(
         os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"),
@@ -55,4 +56,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-# @@@SNIPEND

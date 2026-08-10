@@ -1,6 +1,5 @@
 """Start the streaming workflow and consume model chunks live."""
 
-# @@@SNIPSTART python-google-genai-streaming-run-workflow
 import asyncio
 import os
 from datetime import timedelta
@@ -17,6 +16,7 @@ from google_genai.streaming.workflow import StreamingWorkflow
 STREAM_TIMEOUT = 60.0
 
 
+# @@@SNIPSTART python-google-genai-streaming-run-workflow
 async def consume(client: Client, workflow_id: str) -> None:
     """Subscribe to the "gemini" topic and print chunks as the model produces them."""
     stream = WorkflowStreamClient.create(client, workflow_id)
@@ -41,6 +41,7 @@ async def main() -> None:
         os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"),
         data_converter=pydantic_data_converter,
     )
+    # @@@SNIPEND
     workflow_id = "google-genai-streaming"
 
     handle = await client.start_workflow(
@@ -63,4 +64,3 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
-# @@@SNIPEND

@@ -116,62 +116,8 @@ constraint-dependencies = [
     "yarl!=1.24.0",
 ]
 
-<<<<<<< HEAD
-[tool.hatch.metadata]
-allow-direct-references = true
-
-[tool.hatch.build.targets.sdist]
-include = ["./**/*.py"]
-exclude = ["lambda_worker/**"]
-
-[tool.hatch.build.targets.wheel]
-include = ["./**/*.py"]
-exclude = ["lambda_worker/**"]
-packages = [
-    "activity_worker",
-    "bedrock",
-    "cloud_export_to_parquet",
-    "context_propagation",
-    "custom_converter",
-    "custom_decorator",
-    "custom_metric",
-    "deepagents_plugin",
-    "dsl",
-    "encryption",
-    "external_storage",
-    "external_storage_redis",
-    "gevent_async",
-    "hello",
-    "langfuse_tracing",
-    "langgraph_plugin",
-    "langsmith_tracing",
-    "message_passing",
-    "nexus",
-    "open_telemetry",
-    "patching",
-    "polling",
-    "prometheus",
-    "pydantic_converter",
-    "pydantic_converter_v1",
-    "pyproject.toml",
-    "replay",
-    "schedules",
-    "sentry",
-    "sleep_for_days",
-    "strands_plugin",
-    "tests",
-    "trio_async",
-    "updatable_timer",
-    "worker_specific_task_queues",
-    "worker_versioning",
-]
-
-[tool.hatch.build.targets.wheel.sources]
-"./**/*.py" = "**/*.py"
-=======
 [tool.setuptools.packages.find]
 exclude = ["lambda_worker*"]
->>>>>>> origin/main
 
 [build-system]
 requires = ["setuptools>=77"]

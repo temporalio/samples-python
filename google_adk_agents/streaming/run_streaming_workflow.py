@@ -1,4 +1,5 @@
 import asyncio
+import os
 from datetime import timedelta
 
 from google.adk.models.llm_response import LlmResponse
@@ -14,7 +15,10 @@ WORKFLOW_ID = "google-adk-agents-streaming-workflow-id"
 
 
 async def main():
-    client = await Client.connect("localhost:7233", plugins=[GoogleAdkPlugin()])
+    client = await Client.connect(
+        os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"),
+        plugins=[GoogleAdkPlugin()],
+    )
 
     handle = await client.start_workflow(
         StreamingAgentWorkflow.run,

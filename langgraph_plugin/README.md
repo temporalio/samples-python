@@ -27,7 +27,7 @@ Samples are organized by API style:
    uv sync --group langgraph
    ```
 
-2. Start a [Temporal dev server](https://docs.temporal.io/cli#start-dev-server):
+2. Start a local dev server with the [Temporal CLI](https://docs.temporal.io/cli):
 
    ```bash
    temporal server start-dev

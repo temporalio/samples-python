@@ -17,7 +17,10 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 
 ## Prerequisites
 
-- Temporal server [running locally](https://docs.temporal.io/cli/server#start-dev)
+- [Temporal CLI](https://docs.temporal.io/cli) with a local dev server running:
+  ```
+  temporal server start-dev
+  ```
 - Required dependencies installed via `uv sync --group openai-agents`
 - OpenAI API key set as environment variable: `export OPENAI_API_KEY=your_key_here`
 
@@ -36,3 +39,4 @@ Each directory contains a complete example with its own README for detailed inst
 - **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 - **[Reasoning Content](./reasoning_content/README.md)** - Example of how to retrieve the thought process of reasoning models.
 - **[Financial Research Agent](./financial_research_agent/README.md)** - Multi-agent financial research system with planner, search, analyst, writer, and verifier agents collaborating.
+- **[Streaming](./streaming/README.md)** - `Runner.run_streamed` with buffered token streaming to external subscribers via `temporalio.contrib.workflow_streams`. **Experimental.**

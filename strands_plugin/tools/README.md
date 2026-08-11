@@ -13,7 +13,7 @@ A single prompt exercises all three. The resulting Temporal history shows an `in
 ## What This Sample Demonstrates
 
 - Three coexisting tool surfaces on one agent
-- `workflow.activity_as_tool` carrying per-tool activity options (timeouts)
+- `activity_as_tool` (from `temporalio.contrib.strands.workflow`) carrying per-tool activity options (timeouts)
 - Wrapping `strands_tools` tools so runtime host access happens in an activity
 
 ## Running the Sample

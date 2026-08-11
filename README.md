@@ -7,8 +7,10 @@ This is a collection of samples showing how to use the [Python SDK](https://gith
 Prerequisites:
 
 * [uv](https://docs.astral.sh/uv/)
-* [Temporal CLI installed](https://docs.temporal.io/cli#install)
-* [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
+* [Temporal CLI](https://docs.temporal.io/cli) with a local dev server running:
+  ```
+  temporal server start-dev
+  ```
 
 The SDK requires Python >= 3.10. You can install Python using uv. For example,
 
@@ -74,6 +76,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [external_storage_redis](external_storage_redis) - Redis driver for external storage
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [google_adk_agents](google_adk_agents) - Run Google ADK agents as durable Temporal workflows (model calls, tools, multi-agent, MCP, streaming).
+* [google_genai](google_genai) - Run the Google Gemini SDK inside durable Temporal workflows.
 * [hello_nexus](hello_nexus) - Define a Nexus service, implement operation handlers, and call them from a workflow.
 * [hello_standalone_nexus](hello_standalone_nexus) - Use Nexus Operations without using a workflow.
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
@@ -81,6 +84,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [langfuse_tracing](langfuse_tracing) - Trace Temporal workflows in Langfuse with the OpenTelemetry plugin and OTLP export.
 * [langgraph_plugin](langgraph_plugin) - Run LangGraph workflows as durable Temporal workflows (Graph API and Functional API).
 * [langsmith_tracing](langsmith_tracing) - Trace Temporal workflows with LangSmith via the LangSmith plugin.
+* [litellm_activity](litellm_activity) - Call LLM providers through LiteLLM from a Temporal Activity.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.

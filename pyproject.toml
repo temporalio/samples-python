@@ -58,6 +58,10 @@ external-storage = [
 external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 google-adk = ["temporalio[google-adk] >= 1.31.0", "google-adk>=2.2.0,<3"]
+google-genai = [
+    "mcp>=1.0.0",
+    "temporalio[google-genai,pydantic]>=1.31.0",
+]
 langfuse-tracing = [
     "openai>=1.4.0",
     "temporalio[opentelemetry]>=1.30.0,<2",
@@ -77,6 +81,7 @@ langgraph = [
     "langchain-anthropic>=0.3.0",
     "temporalio[langgraph,langsmith]>=1.31.0",
 ]
+litellm = ["litellm>=1.85.0,<2"]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
     "temporalio[opentelemetry]",
@@ -111,6 +116,7 @@ constraint-dependencies = [
     "yarl!=1.24.0",
 ]
 
+<<<<<<< HEAD
 [tool.hatch.metadata]
 allow-direct-references = true
 
@@ -162,10 +168,14 @@ packages = [
 
 [tool.hatch.build.targets.wheel.sources]
 "./**/*.py" = "**/*.py"
+=======
+[tool.setuptools.packages.find]
+exclude = ["lambda_worker*"]
+>>>>>>> origin/main
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
 
 [tool.poe.tasks]
 format = [

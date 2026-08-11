@@ -18,13 +18,13 @@ Before running, review the [prerequisites in the suite README](../README.md)
 Start the worker in one terminal:
 
 ```bash
-uv run python -m google_adk_agents.streaming.run_worker
+uv run google_adk_agents/streaming/run_worker.py
 ```
 
 Then start the workflow in another terminal:
 
 ```bash
-uv run python -m google_adk_agents.streaming.run_streaming_workflow
+uv run google_adk_agents/streaming/run_streaming_workflow.py
 ```
 
 ## What to expect

@@ -4,8 +4,7 @@ Run a Deep Agent durably **and** trace its LLM calls to
 [LangSmith](https://smith.langchain.com/), by composing `LangSmithPlugin`
 alongside `DeepAgentsPlugin`. The plugin carries no tracing context of its own;
 the observability plugin captures the model calls that `DeepAgentsPlugin` runs as
-activities. Per the plugin's composition guidance, the observability plugin is
-registered **before** `DeepAgentsPlugin`.
+activities. Registration order of the two plugins does not matter.
 
 Following the shipped tracing samples, this scenario bundles the worker and
 starter into a single `main.py` and has no automated test (it requires external
@@ -14,7 +13,7 @@ API keys).
 ## What This Sample Demonstrates
 
 - Composing `DeepAgentsPlugin` with `temporalio.contrib.langsmith.LangSmithPlugin`
-- Registering the observability plugin before `DeepAgentsPlugin`
+- Order-independent plugin registration
 
 ## Running the Sample
 

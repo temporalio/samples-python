@@ -40,19 +40,19 @@ one side.
    uv sync --group deepagents
    ```
 
-   > The `temporalio-contrib-deepagents` plugin is experimental and not yet
-   > published to PyPI, so it is not part of the `deepagents` group above.
-   > Until it publishes, install it from a local checkout of the SDK (adjust
-   > the path to wherever your `sdk-python` checkout lives):
+   > The Deep Agents plugin ships as the `temporalio[deepagents]` extra. It
+   > is merged to `sdk-python` `main` but not yet in a tagged release, so the
+   > `deepagents` group above does not include it yet. Until the next
+   > `temporalio` release (>= 1.31.0), install it from main:
    >
    > ```bash
-   > uv pip install ../sdk-python/temporalio/contrib/deepagents
+   > uv pip install "temporalio[deepagents] @ git+https://github.com/temporalio/sdk-python.git"
    > ```
    >
-   > The plugin uses a namespace-package overlay layout, so install it
-   > non-editable (no `-e`) — an editable install cannot map its sources onto
-   > `temporalio.contrib.deepagents`. Once it is on PyPI this step goes away
-   > and you can add `temporalio-contrib-deepagents` to the `deepagents` group.
+   > This builds the SDK from source (including its Rust core), so expect a
+   > few minutes on first install. Once 1.31.0 is on PyPI this step goes
+   > away: `temporalio[deepagents]` joins the `deepagents` group and a plain
+   > `uv sync --group deepagents` is all you need.
 
 2. Configure a model provider. The samples use
    `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key:
@@ -73,11 +73,12 @@ one side.
 
 ## Running a Sample
 
-> **Use `uv run --no-sync`.** Because the experimental plugin is installed
-> out-of-band (`uv pip install …` above) and is not in any dependency group, a
-> bare `uv run` or `uv sync` re-syncs the environment to the lockfile first and
-> uninstalls it. `--no-sync` runs against the environment as-is. (Once the
-> plugin publishes and joins the `deepagents` group, the flag is unnecessary.)
+> **Use `uv run --no-sync`.** Because the plugin is installed out-of-band
+> from sdk-python main (see Prerequisites) and is not yet in any dependency
+> group, a bare `uv run` or `uv sync` re-syncs the environment to the lockfile
+> first and uninstalls it. `--no-sync` runs against the environment as-is.
+> (Once temporalio >= 1.31.0 joins the `deepagents` group, the flag becomes
+> unnecessary.)
 
 Most samples have two scripts. Start the Worker first, then the Workflow starter
 in a separate terminal:

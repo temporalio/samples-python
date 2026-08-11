@@ -2,9 +2,8 @@
 
 Single-process driver: starts a Worker, executes the Workflow once, prints the
 result, then shuts down. Composes ``LangSmithPlugin`` with ``DeepAgentsPlugin``
-so the agent runs durably *and* its LLM calls are traced to LangSmith. Per the
-plugin's "Composing with other plugins" guidance, the observability plugin is
-registered **before** ``DeepAgentsPlugin``.
+so the agent runs durably *and* its LLM calls are traced to LangSmith.
+Registration order of the two plugins does not matter.
 
 Requires ``ANTHROPIC_API_KEY`` and ``LANGSMITH_API_KEY`` (or ``LANGCHAIN_API_KEY``)
 in the environment.

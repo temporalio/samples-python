@@ -32,12 +32,14 @@ bedrock = ["boto3>=1.34.92,<2"]
 # group is gated on the interpreter version. On 3.10 the group resolves to
 # nothing and the samples are skipped.
 #
-# The plugin distribution itself (`temporalio-contrib-deepagents`) is
-# experimental and not yet on PyPI, so it is NOT listed here — a hard,
-# unpublishable dependency would break `uv lock`/`uv sync` for everyone.
-# Install it separately with the interim install step documented in
-# deepagents_plugin/README.md until it publishes; then add
-# `temporalio-contrib-deepagents>=0.1.0 ; python_version >= '3.11'` to this group.
+# The plugin ships as the `temporalio[deepagents]` extra. It is merged to
+# sdk-python main but not yet in a tagged release, so the extra is NOT listed
+# here — today's PyPI temporalio does not carry it, and `uv lock` must keep
+# working for everyone. Until the next release, install it from main with the
+# interim step documented in deepagents_plugin/README.md. Once
+# temporalio >= 1.31.0 is on PyPI, replace this group's `temporalio[langsmith]`
+# entry with `"temporalio[deepagents,langsmith]>=1.31.0 ; python_version >= '3.11'"`
+# and delete this note.
 deepagents = [
     "deepagents>=0.6.12,<0.7 ; python_version >= '3.11'",
     "langchain>=1.3.11,<2 ; python_version >= '3.11'",

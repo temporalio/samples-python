@@ -20,7 +20,8 @@ researcher's LLM calls run as durable activities.
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group deepagents`, an `ANTHROPIC_API_KEY` in your
+Prerequisites: Python >= 3.11 with the [suite setup](../README.md#prerequisites)
+applied (interim plugin install), an `ANTHROPIC_API_KEY` in your
 environment, and a running Temporal dev server (`temporal server start-dev`).
 
 > The experimental plugin is not in the `deepagents` group — install it as shown

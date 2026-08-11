@@ -17,7 +17,8 @@ API keys).
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group deepagents`, a running Temporal dev server
+Prerequisites: Python >= 3.11 with the [suite setup](../README.md#prerequisites)
+applied (interim plugin install), a running Temporal dev server
 (`temporal server start-dev`), and these environment variables:
 
 ```bash

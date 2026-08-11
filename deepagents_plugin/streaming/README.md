@@ -1,7 +1,10 @@
 # Streaming
 
-Stream a Deep Agent's model output to external subscribers in real time, while
-keeping the durable workflow result identical to the non-streaming path.
+Stream model output from a durable workflow to external subscribers in real
+time, while keeping the durable workflow result identical to the non-streaming
+path. Streaming is async-only, so the workflow drives the plugin's
+`TemporalModel.astream(...)` directly — the same seam a full Deep Agent's model
+calls go through.
 
 Constructing the plugin with `DeepAgentsPlugin(streaming_topic=...)` flips model
 dispatch from `deepagents.invoke_model` to `deepagents.invoke_model_streaming`.
@@ -23,7 +26,8 @@ they arrive.
 
 ## Running the Sample
 
-Prerequisites: `uv sync --group deepagents`, an `ANTHROPIC_API_KEY` in your
+Prerequisites: Python >= 3.11 with the [suite setup](../README.md#prerequisites)
+applied (interim plugin install), an `ANTHROPIC_API_KEY` in your
 environment, and a running Temporal dev server (`temporal server start-dev`).
 
 > The experimental plugin is not in the `deepagents` group — install it as shown

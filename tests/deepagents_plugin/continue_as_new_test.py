@@ -2,7 +2,7 @@ import uuid
 from typing import Any
 
 from temporalio import workflow
-from temporalio.client import Client
+from temporalio.client import Client, WorkflowExecutionStatus
 from temporalio.contrib.deepagents import DeepAgentsPlugin, run_deep_agent
 from temporalio.contrib.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
@@ -94,12 +94,13 @@ async def test_continue_as_new_carries_conversation(client: Client) -> None:
         workflows=[_ContinueAsNewProbe],
         max_cached_workflows=0,
     ):
-        result = await client.execute_workflow(
+        handle = await client.start_workflow(
             _ContinueAsNewProbe.run,
             {"messages": ["start"]},
             id=f"deepagents-continue-as-new-probe-{uuid.uuid4()}",
             task_queue=task_queue,
         )
+        result = await handle.result()
 
     # Reaching >= 3 messages is only possible if each pre-continue-as-new
     # snapshot was carried into the continued run and merged. Every carried
@@ -108,3 +109,8 @@ async def test_continue_as_new_carries_conversation(client: Client) -> None:
     assert len(result["messages"]) >= 3, result
     assert all(isinstance(m, str) for m in result["messages"]), result
     assert result["todos"][0]["status"] == "completed"
+    # The boundary really happened: a loop-in-one-run implementation would
+    # produce the same final result, so pin the FIRST run's close event.
+    first = client.get_workflow_handle(handle.id, run_id=handle.first_execution_run_id)
+    desc = await first.describe()
+    assert desc.status == WorkflowExecutionStatus.CONTINUED_AS_NEW, desc.status

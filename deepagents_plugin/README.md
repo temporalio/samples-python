@@ -41,18 +41,19 @@ one side.
    ```
 
    > The Deep Agents plugin ships as the `temporalio[deepagents]` extra. It
-   > is merged to `sdk-python` `main` but not yet in a tagged release, so the
-   > `deepagents` group above does not include it yet. Until the next
-   > `temporalio` release (>= 1.31.0), install it from main:
+   > is merged to `sdk-python` `main` but the current PyPI release (1.31.0)
+   > predates the merge and does not carry the extra, so the `deepagents`
+   > group above does not include it yet. Until a release ships the extra
+   > (> 1.31.0), install it from main:
    >
    > ```bash
    > uv pip install "temporalio[deepagents] @ git+https://github.com/temporalio/sdk-python.git"
    > ```
    >
    > This builds the SDK from source (including its Rust core), so expect a
-   > few minutes on first install. Once 1.31.0 is on PyPI this step goes
-   > away: `temporalio[deepagents]` joins the `deepagents` group and a plain
-   > `uv sync --group deepagents` is all you need.
+   > few minutes on first install. Once a release with the extra is on PyPI
+   > this step goes away: `temporalio[deepagents]` joins the `deepagents`
+   > group and a plain `uv sync --group deepagents` is all you need.
 
 2. Configure a model provider. The samples use
    `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key:
@@ -77,8 +78,8 @@ one side.
 > from sdk-python main (see Prerequisites) and is not yet in any dependency
 > group, a bare `uv run` or `uv sync` re-syncs the environment to the lockfile
 > first and uninstalls it. `--no-sync` runs against the environment as-is.
-> (Once temporalio >= 1.31.0 joins the `deepagents` group, the flag becomes
-> unnecessary.)
+> (Once a released `temporalio[deepagents]` joins the `deepagents` group, the
+> flag becomes unnecessary.)
 
 Most samples have two scripts. Start the Worker first, then the Workflow starter
 in a separate terminal:

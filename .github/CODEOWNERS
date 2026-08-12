@@ -14,6 +14,7 @@
 
 # The AI SDK team owns the AI integration samples and their tests. We add
 # @temporalio/sdk too, so the SDK team can continue to manage repo-wide concerns.
+/deepagents_plugin/       @temporalio/sdk @temporalio/ai-sdk
 /google_adk_agents/       @temporalio/sdk @temporalio/ai-sdk
 /google_genai/            @temporalio/sdk @temporalio/ai-sdk
 /langfuse_tracing/        @temporalio/sdk @temporalio/ai-sdk
@@ -22,6 +23,7 @@
 /litellm_activity/        @temporalio/sdk @temporalio/ai-sdk
 /openai_agents/           @temporalio/sdk @temporalio/ai-sdk
 /strands_plugin/          @temporalio/sdk @temporalio/ai-sdk
+/tests/deepagents_plugin/ @temporalio/sdk @temporalio/ai-sdk
 /tests/google_adk_agents/ @temporalio/sdk @temporalio/ai-sdk
 /tests/google_genai/      @temporalio/sdk @temporalio/ai-sdk
 /tests/langfuse_tracing/  @temporalio/sdk @temporalio/ai-sdk

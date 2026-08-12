@@ -92,6 +92,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   This contains two samples, one sending messages to an existing workflow and a second that creates a workflow through Nexus
   and sends messages to it.
 * [nexus_multiple_args](nexus_multiple_args) - Map a Nexus operation to a handler workflow that takes multiple arguments.
+* [nexus_standalone_activity](nexus_standalone_activity) - Back a Nexus operation with a standalone Activity.
 * [nexus_standalone_operations](nexus_standalone_operations) - Execute Nexus operations directly from client code,
 without wrapping them in a workflow.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.

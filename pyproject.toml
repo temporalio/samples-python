@@ -6,7 +6,10 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.31.0,<2", "protobuf>=5.29.6,<6"]
+dependencies = [
+    "temporalio @ git+https://github.com/temporalio/sdk-python.git@main",
+    "protobuf>=5.29.6,<6",
+]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -38,11 +41,7 @@ external-storage = [
 ]
 external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
-google-adk = ["temporalio[google-adk] >= 1.31.0", "google-adk>=2.2.0,<3"]
-google-genai = [
-    "mcp>=1.0.0",
-    "temporalio[google-genai,pydantic]>=1.31.0",
-]
+google-adk = ["temporalio[google-adk] >= 1.30.0", "google-adk>=2.2.0,<3"]
 langfuse-tracing = [
     "openai>=1.4.0",
     "temporalio[opentelemetry]>=1.30.0,<2",

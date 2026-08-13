@@ -74,6 +74,7 @@ langgraph = [
     "temporalio[langgraph,langsmith]>=1.31.0",
 ]
 litellm = ["litellm>=1.85.0,<2"]
+llm-stream = ["openai>=1.4.0"]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
     "temporalio[opentelemetry]",

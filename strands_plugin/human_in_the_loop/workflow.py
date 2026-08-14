@@ -6,7 +6,6 @@ the approval response, then resumes the agent with the response.
 """
 
 from datetime import timedelta
-from typing import Optional
 
 from strands import tool
 from strands.hooks import HookProvider, HookRegistry
@@ -49,15 +48,15 @@ class HumanInTheLoopWorkflow:
             tools=[delete_file],
             hooks=[ApprovalHook()],
         )
-        self._approval: Optional[str] = None
-        self._pending_reason: Optional[str] = None
+        self._approval: str | None = None
+        self._pending_reason: str | None = None
 
     @workflow.signal
     def approve(self, response: str) -> None:
         self._approval = response
 
     @workflow.query
-    def pending_approval(self) -> Optional[str]:
+    def pending_approval(self) -> str | None:
         return self._pending_reason
 
     @workflow.run

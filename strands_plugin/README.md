@@ -24,12 +24,6 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
    uv sync --group strands-agents
    ```
 
-   > The `strands` extra of `temporalio` is shipping in an upcoming release. Until then, install the SDK from the strands branch:
-   >
-   > ```bash
-   > uv pip install -e ../sdk-python --extra strands-agents --extra pydantic
-   > ```
-
 2. Configure AWS credentials. The samples use the plugin's default `BedrockModel()`, which picks up the standard AWS SDK credential chain. Make sure the credentials grant access to a Bedrock model in your selected region (e.g., `us-west-2`).
 
    ```bash
@@ -39,7 +33,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
 
    You can pick a specific model by passing it to `BedrockModel(model_id="...")` in each sample's worker.
 
-3. Start a [Temporal dev server](https://docs.temporal.io/cli#start-dev-server):
+3. Start a local dev server with the [Temporal CLI](https://docs.temporal.io/cli):
 
    ```bash
    temporal server start-dev

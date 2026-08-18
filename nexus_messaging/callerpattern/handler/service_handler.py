@@ -1,8 +1,7 @@
 """
 Nexus operation handler implementation for the entity pattern. Each operation receives a
-user_id, which is mapped to a workflow ID. Operations use Temporal operation handlers so
-the SDK can manage their lifecycle and link the caller's Nexus operation to the target
-Workflow.
+user_id, which is mapped to a workflow ID. The operations are synchronous because queries
+and updates against a running workflow complete quickly.
 """
 
 from __future__ import annotations

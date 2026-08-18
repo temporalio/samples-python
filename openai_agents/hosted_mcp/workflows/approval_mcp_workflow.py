@@ -10,6 +10,7 @@ from agents import (
 from temporalio import workflow
 
 
+# @@@SNIPSTART python-openai-agents-hosted-mcp-approval-workflow
 def approval_callback(request: MCPToolApprovalRequest) -> MCPToolApprovalFunctionResult:
     """Simple approval callback that logs the request and approves by default.
 
@@ -21,6 +22,9 @@ def approval_callback(request: MCPToolApprovalRequest) -> MCPToolApprovalFunctio
 
     result: MCPToolApprovalFunctionResult = {"approve": True}
     return result
+
+
+# @@@SNIPEND
 
 
 @workflow.defn

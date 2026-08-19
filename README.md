@@ -74,6 +74,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [env_config](env_config) - Load client configuration from TOML files with programmatic overrides.
 * [external_storage](external_storage) - Offload large payloads to S3-compatible object storage, plus a codec server for the Web UI and CLI.
 * [external_storage_redis](external_storage_redis) - Redis driver for external storage
+* [gcp_cloud_run](gcp_cloud_run) - Run a Temporal Worker on a Google Cloud Run worker pool with OpenTelemetry traces and metrics exported to a Google-Built Collector sidecar.
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [google_adk_agents](google_adk_agents) - Run Google ADK agents as durable Temporal workflows (model calls, tools, multi-agent, MCP, streaming).
 * [google_genai](google_genai) - Run the Google Gemini SDK inside durable Temporal workflows.

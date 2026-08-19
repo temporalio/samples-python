@@ -8,6 +8,7 @@ agents.
 """
 
 
+# @@@SNIPSTART python-openai-agents-agent-as-tool-workflow
 def orchestrator_agent() -> Agent:
     spanish_agent = Agent(
         name="spanish_agent",
@@ -50,6 +51,9 @@ def orchestrator_agent() -> Agent:
         ],
     )
     return orchestrator_agent
+
+
+# @@@SNIPEND
 
 
 def synthesizer_agent() -> Agent:

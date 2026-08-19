@@ -43,6 +43,7 @@ SEED_NOTES = [
 class MemoryResearchScratchpadWorkflow:
     @workflow.run
     async def run(self) -> str:
+        # @@@SNIPSTART python-openai-agents-stateful-mcp-workflow
         async with temporal_openai_agents.workflow.stateful_mcp_server(
             "MemoryServer",
         ) as server:
@@ -57,6 +58,7 @@ class MemoryResearchScratchpadWorkflow:
                     mcp_servers=[server],
                     model_settings=ModelSettings(tool_choice="required"),
                 )
+                # @@@SNIPEND
 
                 # Step 1: Write seed notes to memory
                 write_prompt_lines = [

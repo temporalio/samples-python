@@ -39,4 +39,5 @@ Each directory contains a complete example with its own README for detailed inst
 - **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 - **[Reasoning Content](./reasoning_content/README.md)** - Example of how to retrieve the thought process of reasoning models.
 - **[Financial Research Agent](./financial_research_agent/README.md)** - Multi-agent financial research system with planner, search, analyst, writer, and verifier agents collaborating.
+- **[Sandbox](./sandbox/README.md)** - `SandboxAgent` with a shell and filesystem, where every sandbox operation runs as a Temporal activity. **Pre-release.**
 - **[Streaming](./streaming/README.md)** - `Runner.run_streamed` with buffered token streaming to external subscribers via `temporalio.contrib.workflow_streams`. **Experimental.**

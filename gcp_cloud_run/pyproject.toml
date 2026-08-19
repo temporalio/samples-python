@@ -1,0 +1,17 @@
+[project]
+name = "temporalio-gcp-cloud-run-sample"
+version = "0.1.0"
+description = "Temporal Worker on a Google Cloud Run worker pool with OpenTelemetry"
+requires-python = ">=3.10"
+dependencies = ["temporalio[cloud-run-worker-otel]"]
+
+[tool.uv]
+package = false
+
+# TEMPORARY: the Cloud Run OpenTelemetry plugin is not released yet, so this
+# builds `temporalio` from the local SDK checkout. Replace this source with the
+# first released `temporalio[cloud-run-worker-otel]` version (or a pushed git
+# rev) before merging this sample or building the container image. The local
+# path is not available inside the Docker build context.
+[tool.uv.sources]
+temporalio = { path = "../../sdk-python", editable = true }

@@ -32,7 +32,7 @@ class WorkerSettings:
     address: str
     namespace: str
     task_queue: str
-    api_key: str
+    api_key: str | None
 
     @classmethod
     def from_environment(
@@ -45,8 +45,10 @@ class WorkerSettings:
             or f"{namespace}.tmprl.cloud:7233",
             namespace=namespace,
             task_queue=_required(env, "TEMPORAL_TASK_QUEUE"),
-            # Secret Manager preserves trailing newlines from the source file.
-            api_key=_required(env, "TEMPORAL_API_KEY"),
+            # Optional: set for Temporal Cloud (enables TLS). Omit for a
+            # plaintext self-hosted / dev server. Secret Manager preserves
+            # trailing newlines from the source file.
+            api_key=_optional(env, "TEMPORAL_API_KEY"),
         )
 
 
@@ -112,7 +114,8 @@ async def run_worker() -> None:
         settings.address,
         namespace=settings.namespace,
         api_key=settings.api_key,
-        tls=True,
+        # TLS for Temporal Cloud (api key present); plaintext for a dev server.
+        tls=bool(settings.api_key),
         plugins=[plugin],
     )
     worker = Worker(

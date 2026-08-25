@@ -1,0 +1,25 @@
+[project]
+name = "google-adk-agents-metrics-sample"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "google-adk>=2.2.0,<3",
+    "opentelemetry-exporter-prometheus>=0.48b0",
+    "temporalio[google-adk,opentelemetry] @ git+https://github.com/temporalio/sdk-python.git@78159d7735b2defc6493669f6c14a0fae6eab985",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.1.2,<9",
+    "pytest-asyncio>=0.23,<2",
+    "ruff>=0.5.0,<0.6",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.uv]
+package = false

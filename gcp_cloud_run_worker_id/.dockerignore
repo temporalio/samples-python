@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!pyproject.toml
+!activities.py
+!settings.py
+!worker.py
+!workflows.py

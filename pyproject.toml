@@ -105,7 +105,7 @@ constraint-dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-exclude = ["lambda_worker*"]
+exclude = ["lambda_worker*", "gcp_cloud_run_worker_id*"]
 
 [build-system]
 requires = ["setuptools>=77"]
@@ -132,12 +132,12 @@ log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(linen
 
 [tool.ruff]
 target-version = "py310"
-extend-exclude = ["lambda_worker"]
+extend-exclude = ["lambda_worker", "gcp_cloud_run_worker_id"]
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
-exclude = ["lambda_worker/"]
+exclude = ["lambda_worker/", "gcp_cloud_run_worker_id/"]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

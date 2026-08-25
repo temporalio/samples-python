@@ -1,0 +1,31 @@
+[project]
+name = "temporalio-samples-gcp-cloud-run-worker-id"
+version = "0.1a1"
+description = "Temporal worker identity and deployment version on a Google Cloud Run worker pool"
+authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = "MIT"
+dependencies = ["temporalio>=1.31.0,<2"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0,<0.6",
+    "mypy>=1.4.1,<2",
+]
+
+[tool.uv]
+package = false
+
+# TEMPORARY: the Google Cloud Run metadata helper
+# (temporalio.contrib.gcp.cloud_run.get_google_cloud_run_metadata) is not
+# released yet, so this pins `temporalio` to the local SDK checkout on the
+# `cloud-run-worker-id` branch so the sample can be run and type-checked
+# locally. Remove this [tool.uv.sources] override and rely on the released
+# `temporalio` above once an SDK release that includes the helper is on PyPI.
+#
+# Note: this local path is NOT available inside a Docker build context (the
+# build context is this directory only), so the container build must use a
+# released or git-pinned `temporalio` instead -- see the Dockerfile and README.
+[tool.uv.sources]
+temporalio = { path = "../../sdk-python-2", editable = true }

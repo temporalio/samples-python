@@ -44,6 +44,7 @@ external-storage = [
     "types_aiobotocore_s3>=2.25.2",
 ]
 external-storage-redis = ["redis>=5.0.0,<8"]
+gcp-cloud-run = ["temporalio[cloud-run-worker-otel]"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 google-adk = ["temporalio[google-adk] >= 1.32.0", "google-adk>=2.2.0,<3"]
 google-genai = [
@@ -103,6 +104,12 @@ constraint-dependencies = [
     # install on the Python 3.14 CI jobs.
     "yarl!=1.24.0",
 ]
+
+# TEMPORARY: the Cloud Run OpenTelemetry plugin (temporalio[cloud-run-worker-otel])
+# is not released yet, so build `temporalio` from the local SDK checkout. Remove
+# this source once a release that includes the plugin is available on PyPI.
+[tool.uv.sources]
+temporalio = { path = "../sdk-python", editable = true }
 
 [tool.setuptools.packages.find]
 exclude = ["lambda_worker*"]

@@ -30,7 +30,6 @@ async def test_metrics_are_not_inflated_by_replay() -> None:
             client,
             task_queue=task_queue,
             workflows=[MetricsWorkflow],
-            plugins=[plugin],
             max_cached_workflows=0,
         ):
             result = await client.execute_workflow(

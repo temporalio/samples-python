@@ -14,7 +14,7 @@ async def test_metrics_are_not_inflated_by_replay() -> None:
     from google.adk.models import LLMRegistry
     from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
     from temporalio.testing import WorkflowEnvironment
-    from temporalio.worker import Worker
+    from temporalio.worker import Replayer, Worker
 
     from google_adk_agents.metrics.models.local_metrics_model import LocalMetricsModel
     from google_adk_agents.metrics.workflows.metrics_workflow import MetricsWorkflow
@@ -30,16 +30,30 @@ async def test_metrics_are_not_inflated_by_replay() -> None:
             client,
             task_queue=task_queue,
             workflows=[MetricsWorkflow],
-            max_cached_workflows=0,
         ):
-            result = await client.execute_workflow(
+            handle = await client.start_workflow(
                 MetricsWorkflow.run,
                 "Explain replay-safe metrics.",
                 id=f"google-adk-agents-metrics-{uuid.uuid4()}",
                 task_queue=task_queue,
             )
+            result = await handle.result()
 
     assert result == "Replay-safe metrics are ready."
+    counts_before_replay = metric_counts(reader)
+    assert counts_before_replay["gen_ai.invoke_agent.duration"] > 0
+    assert counts_before_replay["gen_ai.invoke_agent.inference_calls"] > 0
+    assert counts_before_replay["gen_ai.client.operation.duration"] > 0
+    assert counts_before_replay["gen_ai.client.token.usage"] > 0
+
+    await Replayer(workflows=[MetricsWorkflow], plugins=[plugin]).replay_workflow(
+        await handle.fetch_history()
+    )
+
+    assert metric_counts(reader) == counts_before_replay
+
+
+def metric_counts(reader: InMemoryMetricReader) -> dict[str, int]:
     counts: dict[str, int] = {}
     data = reader.get_metrics_data()
     if data is not None:
@@ -51,7 +65,4 @@ async def test_metrics_are_not_inflated_by_replay() -> None:
                     counts[metric.name] = sum(
                         getattr(point, "count", 1) for point in metric.data.data_points
                     )
-    assert counts["gen_ai.invoke_agent.duration"] == 1
-    assert counts["gen_ai.invoke_agent.inference_calls"] == 1
-    assert counts["gen_ai.client.operation.duration"] == 1
-    assert counts["gen_ai.client.token.usage"] == 2
+    return counts

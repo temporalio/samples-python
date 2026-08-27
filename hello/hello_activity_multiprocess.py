@@ -2,7 +2,7 @@ import asyncio
 import multiprocessing
 import os
 import time
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
 
@@ -48,36 +48,49 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config)
 
-    # Run a worker for the workflow
-    async with Worker(
-        client,
-        task_queue="hello-activity-multiprocess-task-queue",
-        workflows=[GreetingWorkflow],
-        activities=[compose_greeting],
-        # Synchronous activities are not allowed unless we provide some kind of
-        # executor. Here we are giving a process pool executor which means the
-        # activity will actually run in a separate process. This same executor
-        # could be passed to multiple workers if desired.
-        activity_executor=ProcessPoolExecutor(5),
-        # Since we are using an executor that is not a thread pool executor,
-        # Temporal needs some kind of manager to share state such as
-        # cancellation info and heartbeat info between the host and the
-        # activity. Therefore, we must provide a shared_state_manager here. A
-        # helper is provided to create it from a multiprocessing manager.
-        shared_state_manager=SharedStateManager.create_from_multiprocessing(
-            multiprocessing.Manager()
-        ),
+    # Synchronous activities are not allowed unless we provide some kind of
+    # executor. Here we are giving a process pool executor which means the
+    # activity will actually run in a separate process. This same executor could
+    # be passed to multiple workers if desired.
+    #
+    # Since we are using an executor that is not a thread pool executor, Temporal
+    # needs some kind of manager to share state such as cancellation info and
+    # heartbeat info between the host and the activity. Therefore, we must
+    # provide a shared_state_manager below. A helper is provided to create it
+    # from a multiprocessing manager. That helper also needs a thread pool
+    # executor to poll the heartbeat queue on; it creates one itself if we do not
+    # pass one, so we pass our own to be able to shut it down.
+    #
+    # All three are used as context managers so they are shut down when we are
+    # done with them. They are entered outside the worker so that they outlive
+    # it, and the manager is entered first so that it is torn down last: it owns
+    # the heartbeat queue that the other two are still using as they stop.
+    with (
+        multiprocessing.Manager() as manager,
+        ThreadPoolExecutor(1) as queue_poller_executor,
+        ProcessPoolExecutor(5) as activity_executor,
     ):
-        # While the worker is running, use the client to run the workflow and
-        # print out its result. Note, in many production setups, the client
-        # would be in a completely separate process from the worker.
-        result = await client.execute_workflow(
-            GreetingWorkflow.run,
-            "World",
-            id="hello-activity-multiprocess-workflow-id",
+        # Run a worker for the workflow
+        async with Worker(
+            client,
             task_queue="hello-activity-multiprocess-task-queue",
-        )
-        print(f"Result on PID {os.getpid()}: {result}")
+            workflows=[GreetingWorkflow],
+            activities=[compose_greeting],
+            activity_executor=activity_executor,
+            shared_state_manager=SharedStateManager.create_from_multiprocessing(
+                manager, queue_poller_executor
+            ),
+        ):
+            # While the worker is running, use the client to run the workflow and
+            # print out its result. Note, in many production setups, the client
+            # would be in a completely separate process from the worker.
+            result = await client.execute_workflow(
+                GreetingWorkflow.run,
+                "World",
+                id="hello-activity-multiprocess-workflow-id",
+                task_queue="hello-activity-multiprocess-task-queue",
+            )
+            print(f"Result on PID {os.getpid()}: {result}")
 
 
 if __name__ == "__main__":

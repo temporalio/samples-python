@@ -1,6 +1,6 @@
 """Run a long-lived Temporal worker on a Google Cloud Run worker pool.
 
-The worker registers ``temporalio.contrib.gcp.cloud_run.WorkerIDPlugin`` on the
+The worker registers ``temporalio.contrib.gcp.cloud_run.worker_id.WorkerIDPlugin`` on the
 client. The plugin reads Cloud Run instance metadata and automatically sets the
 client identity and a PINNED Worker Deployment version, then propagates to the
 worker. The worker runs until Cloud Run sends SIGTERM (for example, on
@@ -15,7 +15,7 @@ import signal
 from activities import compose_greeting
 from settings import load_settings
 from temporalio.client import Client
-from temporalio.contrib.gcp.cloud_run import WorkerIDPlugin
+from temporalio.contrib.gcp.cloud_run.worker_id import WorkerIDPlugin
 from temporalio.worker import Worker
 from workflows import GreetingWorkflow
 

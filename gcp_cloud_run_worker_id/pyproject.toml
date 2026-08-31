@@ -18,7 +18,7 @@ dev = [
 package = false
 
 # TEMPORARY: the Google Cloud Run plugin
-# (temporalio.contrib.gcp.cloud_run.WorkerIDPlugin) is not
+# (temporalio.contrib.gcp.cloud_run.worker_id.WorkerIDPlugin) is not
 # released yet, so this pins `temporalio` to the local SDK checkout on the
 # `cloud-run-worker-id` branch so the sample can be run and type-checked
 # locally. Remove this [tool.uv.sources] override and rely on the released

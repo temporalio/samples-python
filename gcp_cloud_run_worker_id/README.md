@@ -2,7 +2,7 @@
 
 This sample runs a long-lived Temporal Worker in a [Google Cloud Run worker
 pool](https://cloud.google.com/run/docs/worker-pools) and uses the
-[`temporalio.contrib.gcp.cloud_run`](https://python.temporal.io/temporalio.contrib.gcp.cloud_run.html)
+[`temporalio.contrib.gcp.cloud_run.worker_id`](https://python.temporal.io/temporalio.contrib.gcp.cloud_run.worker_id.html)
 `WorkerIDPlugin` to derive the worker's identity and its Worker Deployment
 version from Cloud Run instance metadata.
 

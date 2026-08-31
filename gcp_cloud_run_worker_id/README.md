@@ -3,12 +3,12 @@
 This sample runs a long-lived Temporal Worker in a [Google Cloud Run worker
 pool](https://cloud.google.com/run/docs/worker-pools) and uses the
 [`temporalio.contrib.gcp.cloud_run`](https://python.temporal.io/temporalio.contrib.gcp.cloud_run.html)
-`CloudRunPlugin` to derive the worker's identity and its Worker Deployment
+`WorkerIDPlugin` to derive the worker's identity and its Worker Deployment
 version from Cloud Run instance metadata.
 
 Cloud Run runs a long-lived container rather than a per-invocation handler, so
 this is a small metadata-driven plugin -- not a worker wrapper. The worker
-registers `CloudRunPlugin()` on the client via `Client.connect(plugins=[...])`.
+registers `WorkerIDPlugin()` on the client via `Client.connect(plugins=[...])`.
 At connect time the plugin:
 
 - reads the deployment name from `CLOUD_RUN_WORKER_POOL` (worker pools), falling
@@ -41,7 +41,7 @@ Workflow/Activity definitions.
 
 | File | Description |
 |------|-------------|
-| `worker.py` | Long-lived worker: registers `CloudRunPlugin` to set identity + deployment version from Cloud Run metadata, then runs until SIGTERM |
+| `worker.py` | Long-lived worker: registers `WorkerIDPlugin` to set identity + deployment version from Cloud Run metadata, then runs until SIGTERM |
 | `workflows.py` | Sample Workflow that executes a greeting Activity (PINNED versioning behavior) |
 | `activities.py` | Sample Activity that returns a greeting string |
 | `settings.py` | Reads `TEMPORAL_*` connection settings from the environment |

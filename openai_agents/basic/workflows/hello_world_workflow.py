@@ -1,3 +1,4 @@
+# @@@SNIPSTART python-openai-agents-hello-world-workflow
 from agents import Agent, Runner
 from temporalio import workflow
 
@@ -13,3 +14,6 @@ class HelloWorldAgent:
 
         result = await Runner.run(agent, input=prompt)
         return result.final_output
+
+
+# @@@SNIPEND

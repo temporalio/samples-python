@@ -34,6 +34,7 @@ from openai_agents.basic.workflows.tools_workflow import ToolsWorkflow
 
 async def main():
     # Create client connected to server at the given address
+    # @@@SNIPSTART python-openai-agents-hello-world-worker
     client = await Client.connect(
         "localhost:7233",
         plugins=[
@@ -44,6 +45,7 @@ async def main():
             ),
         ],
     )
+    # @@@SNIPEND
 
     worker = Worker(
         client,

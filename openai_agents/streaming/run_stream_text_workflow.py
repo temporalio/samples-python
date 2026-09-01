@@ -51,6 +51,7 @@ async def main() -> None:
         task_queue=TASK_QUEUE,
     )
 
+    # @@@SNIPSTART python-openai-agents-streaming-client
     stream = WorkflowStreamClient.create(client, workflow_id)
     converter = client.data_converter.payload_converter
 
@@ -88,6 +89,7 @@ async def main() -> None:
 
         if isinstance(event, ResponseTextDeltaEvent):
             print(event.delta, end="", flush=True)
+    # @@@SNIPEND
 
     result = await handle.result()
     print("\n--- final result ---")

@@ -11,6 +11,7 @@ class FileSystemWorkflow:
     @workflow.run
     async def run(self) -> str:
         with trace(workflow_name="MCP File System Example"):
+            # @@@SNIPSTART python-openai-agents-stateless-mcp-workflow
             server: MCPServer = openai_agents.workflow.stateless_mcp_server(
                 "FileSystemServer"
             )
@@ -19,6 +20,7 @@ class FileSystemWorkflow:
                 instructions="Use the tools to read the filesystem and answer questions based on those files.",
                 mcp_servers=[server],
             )
+            # @@@SNIPEND
 
             # List the files it can read
             message = "Read the files and list them."

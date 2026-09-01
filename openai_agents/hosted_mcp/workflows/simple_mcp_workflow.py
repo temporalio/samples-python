@@ -4,6 +4,7 @@ from agents import Agent, HostedMCPTool, Runner
 from temporalio import workflow
 
 
+# @@@SNIPSTART python-openai-agents-hosted-mcp-workflow
 @workflow.defn
 class SimpleMCPWorkflow:
     @workflow.run
@@ -26,3 +27,6 @@ class SimpleMCPWorkflow:
 
         result = await Runner.run(agent, question)
         return result.final_output
+
+
+# @@@SNIPEND

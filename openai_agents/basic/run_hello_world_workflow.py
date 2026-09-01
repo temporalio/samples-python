@@ -8,6 +8,7 @@ from openai_agents.basic.workflows.hello_world_workflow import HelloWorldAgent
 
 async def main():
     # Create client connected to server at the given address
+    # @@@SNIPSTART python-openai-agents-hello-world-client
     client = await Client.connect(
         "localhost:7233",
         plugins=[
@@ -23,6 +24,7 @@ async def main():
         task_queue="openai-agents-basic-task-queue",
     )
     print(f"Result: {result}")
+    # @@@SNIPEND
 
 
 if __name__ == "__main__":

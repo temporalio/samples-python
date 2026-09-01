@@ -41,6 +41,7 @@ class StreamTextInput:
     stream_state: WorkflowStreamState | None = None
 
 
+# @@@SNIPSTART python-openai-agents-streaming-workflow
 @workflow.defn
 class StreamTextWorkflow:
     @workflow.init
@@ -81,3 +82,6 @@ class StreamTextWorkflow:
         # message output, so assert the str this signature promises rather
         # than letting a None through.
         return result.final_output_as(str, raise_if_incorrect_type=True)
+
+
+# @@@SNIPEND

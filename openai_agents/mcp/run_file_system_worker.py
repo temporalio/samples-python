@@ -23,6 +23,7 @@ async def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     samples_dir = os.path.join(current_dir, "sample_files")
 
+    # @@@SNIPSTART python-openai-agents-stateless-mcp-worker
     file_system_server = StatelessMCPServerProvider(
         "FileSystemServer",
         lambda: MCPServerStdio(
@@ -48,6 +49,7 @@ async def main():
             ),
         ],
     )
+    # @@@SNIPEND
 
     worker = Worker(
         client,

@@ -1,7 +1,7 @@
 # Tools — Temporal Activities as ADK Tools
 
 A weather agent whose `get_weather` Temporal activity is wrapped as an ADK tool
-with `activity_tool(...)`. The model decides to call the tool; the tool runs as
+with `activity_as_tool(...)`. The model decides to call the tool; the tool runs as
 its own Temporal activity — retryable and observable — rather than inline in the
 workflow. This demonstrates the activity boundary for tool calls.
 

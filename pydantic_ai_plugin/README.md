@@ -32,4 +32,4 @@ The examples use the declarative registration path: each Workflow subclasses `Py
 
 ## Unsupported
 
-**Sandboxes:** Pydantic AI does not provide an agent-facing isolation environment whose sessions and shell or filesystem operations are durably managed by this integration. Temporal's Workflow determinism sandbox is a different boundary and is not an AI-agent sandbox.
+**Sandboxes:** Pydantic AI does not provide an agent-facing isolation environment whose sessions and shell or filesystem operations are durably managed by this integration.

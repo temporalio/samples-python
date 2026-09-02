@@ -1,11 +1,11 @@
 import uuid
 
 from logfire.testing import CaptureLogfire
+from pydantic_ai.durable_exec.temporal import LogfirePlugin, PydanticAIPlugin
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import TracingInterceptor
 from temporalio.worker import Worker
 
-from pydantic_ai.durable_exec.temporal import LogfirePlugin, PydanticAIPlugin
 from pydantic_ai_plugin.logfire.workflow import (
     ObservabilityInput,
     ObservabilityWorkflow,

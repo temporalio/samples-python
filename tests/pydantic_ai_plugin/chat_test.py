@@ -1,11 +1,11 @@
 import asyncio
 import uuid
 
+from pydantic_ai.durable_exec.temporal import PydanticAIPlugin
 from temporalio.client import Client, WorkflowExecutionStatus
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
-from pydantic_ai.durable_exec.temporal import PydanticAIPlugin
 from pydantic_ai_plugin.chat.workflow import ChatInput, ChatWorkflow
 
 

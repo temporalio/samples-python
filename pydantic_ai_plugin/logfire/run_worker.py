@@ -2,10 +2,10 @@ import asyncio
 import os
 
 import logfire
+from pydantic_ai.durable_exec.temporal import LogfirePlugin, PydanticAIPlugin
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from pydantic_ai.durable_exec.temporal import LogfirePlugin, PydanticAIPlugin
 from pydantic_ai_plugin.logfire.workflow import ObservabilityWorkflow
 
 

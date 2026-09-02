@@ -1,10 +1,10 @@
 import asyncio
 import os
 
+from pydantic_ai.durable_exec.temporal import PydanticAIPlugin
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from pydantic_ai.durable_exec.temporal import PydanticAIPlugin
 from pydantic_ai_plugin.streaming.workflow import StreamingWorkflow
 
 

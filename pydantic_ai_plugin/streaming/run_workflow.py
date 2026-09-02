@@ -1,9 +1,9 @@
 import asyncio
 import uuid
 
+from pydantic_ai.durable_exec.temporal import PydanticAIPlugin
 from temporalio.client import Client
 
-from pydantic_ai.durable_exec.temporal import PydanticAIPlugin
 from pydantic_ai_plugin.streaming.workflow import (
     StreamingInput,
     StreamingWorkflow,

@@ -1,6 +1,5 @@
-from temporalio.client import Client
-
 from pydantic_ai.durable_exec.temporal import PydanticAIPlugin
+from temporalio.client import Client
 
 
 def with_pydantic_ai(client: Client) -> Client:

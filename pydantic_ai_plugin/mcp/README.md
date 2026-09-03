@@ -1,6 +1,6 @@
 # MCP
 
-The agent uses a stateless in-process FastMCP server. `MCPToolset` exposes its `support_hours` tool, while `TemporalDurability` moves MCP listing and tool calls into Temporal Activities. The server keeps no session state, so Activity retries are safe.
+The agent starts a stateless MCP server in a separate stdio process. `MCPToolset` exposes its `support_hours` tool, while `TemporalDurability` moves MCP listing and tool calls into Temporal Activities. The server keeps no session state, so Activity retries are safe.
 
 ```bash
 uv run pydantic_ai_plugin/mcp/run_worker.py

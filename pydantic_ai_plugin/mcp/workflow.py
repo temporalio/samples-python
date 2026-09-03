@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from fastmcp import FastMCP
+    from fastmcp.client.transports import StdioTransport
     from pydantic_ai import Agent
     from pydantic_ai.durable_exec.temporal import (
         PydanticAIWorkflow,
@@ -19,15 +19,14 @@ class MCPInput:
     model: str | None = None
 
 
-server = FastMCP("support-directory")
-
-
-@server.tool
-def support_hours() -> str:
-    return "Support is staffed 09:00-17:00 UTC."
-
-
-toolset = MCPToolset(server, id="support_directory")
+toolset = MCPToolset(
+    StdioTransport(
+        command="python",
+        args=["-m", "pydantic_ai_plugin.mcp.server"],
+    ),
+    id="support_directory",
+    init_timeout=20,
+)
 agent = Agent(
     TestModel(call_tools=["support_hours"], custom_output_text="Hours found."),
     name="mcp_support",

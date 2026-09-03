@@ -8,7 +8,7 @@ The samples use Pydantic AI's credential-free `TestModel` by default. Pass an Op
 | --- | --- |
 | [chat](chat) | Multi-turn Updates, durable message history, and Continue-As-New. |
 | [tools](tools) | A deterministic in-Workflow tool beside an I/O-style Activity tool. |
-| [mcp](mcp) | A stateless in-process FastMCP server whose operations run as Activities. |
+| [mcp](mcp) | A stateless stdio MCP server whose operations run as Activities. |
 | [streaming](streaming) | Pydantic AI events over Temporal Workflow Streams. |
 | [human_in_the_loop](human_in_the_loop) | Approval, rejection, and cancellation decisions delivered by Signal. |
 | [structured_output](structured_output) | A typed Pydantic model crossing Activity and Workflow boundaries. |

@@ -81,6 +81,12 @@ openai-agents = [
     "requests>=2.32.0,<3",
 ]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
+pydantic-ai = [
+    "beartype",
+    "logfire>=4.39,<4.40",
+    "mcp>=1.24,<2",
+    "pydantic-ai-slim[mcp,temporal]",
+]
 sentry = ["sentry-sdk>=2.13.0"]
 strands-agents = [
     "strands-agents>=1.39.0",
@@ -103,6 +109,12 @@ constraint-dependencies = [
     # install on the Python 3.14 CI jobs.
     "yarl!=1.24.0",
 ]
+
+[tool.uv.sources]
+# Temporal sandbox import-cycle fix:
+# https://github.com/beartype/beartype/commit/f593cd6f4dad12028c65d7792291cdd228c2d91c
+beartype = { git = "https://github.com/beartype/beartype.git", rev = "f593cd6f4dad12028c65d7792291cdd228c2d91c" }
+pydantic-ai-slim = { git = "https://github.com/pydantic/pydantic-ai.git", rev = "2b45faa97e76461c60500e9755a130b158a2418d", subdirectory = "pydantic_ai_slim" }
 
 [tool.setuptools.packages.find]
 exclude = ["lambda_worker*"]

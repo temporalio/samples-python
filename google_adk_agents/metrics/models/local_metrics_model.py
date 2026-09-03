@@ -16,6 +16,10 @@ class LocalMetricsModel(BaseLlm):
     async def generate_content_async(
         self, llm_request: LlmRequest, stream: bool = False
     ) -> AsyncGenerator[LlmResponse, None]:
+        if stream:
+            raise NotImplementedError(
+                "LocalMetricsModel does not implement streaming responses."
+            )
         yield LlmResponse(
             content=types.Content(
                 role="model",

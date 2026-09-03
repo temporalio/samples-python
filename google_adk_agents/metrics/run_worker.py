@@ -25,7 +25,6 @@ async def main() -> None:
         client,
         task_queue="google-adk-agents-metrics",
         workflows=[MetricsWorkflow],
-        max_cached_workflows=0,
     )
     await worker.run()
 

@@ -1,11 +1,11 @@
-from datetime import timedelta
-
 from google.adk import Agent
 from google.adk.runners import InMemoryRunner
 from google.adk.utils.context_utils import Aclosing
 from google.genai import types
 from temporalio import workflow
 from temporalio.contrib.google_adk_agents import TemporalModel
+
+from google_adk_agents.metrics.models.local_metrics_model import MODEL_NAME
 
 
 @workflow.defn
@@ -14,7 +14,7 @@ class MetricsWorkflow:
     async def run(self, prompt: str) -> str:
         agent = Agent(
             name="metrics_agent",
-            model=TemporalModel("local-metrics-model"),
+            model=TemporalModel(MODEL_NAME),
             instruction="Answer the user briefly.",
         )
         runner = InMemoryRunner(agent=agent, app_name="metrics_app")
@@ -35,5 +35,4 @@ class MetricsWorkflow:
                     for part in event.content.parts:
                         if part.text:
                             final_text = part.text
-        await workflow.sleep(timedelta(milliseconds=1))
         return final_text

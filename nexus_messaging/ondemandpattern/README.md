@@ -6,7 +6,7 @@ operations. `NexusRemoteGreetingService` adds a `run_from_remote` operation that
 instance to target.
 
 The caller Workflow:
-1. Starts two remote `GreetingWorkflow` instances via `run_from_remote` (backed by `workflow_run_operation`)
+1. Starts two remote `GreetingWorkflow` instances via `run_from_remote` (backed by `temporal_operation`)
 2. Queries each for supported languages
 3. Changes the language on each (Arabic and Hindi)
 4. Confirms the changes via queries

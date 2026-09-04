@@ -40,7 +40,7 @@ class CallerRemoteWorkflow:
 
         # This is an async Nexus operation -- starts a workflow on the handler and
         # returns a handle. Unlike the sync operations below, this does not block
-        # until the workflow completes. It is backed by workflow_run_operation on the
+        # until the workflow completes. It is backed by temporal_operation on the
         # handler side.
         handle_one = await self.nexus_client.start_operation(
             NexusRemoteGreetingService.run_from_remote,

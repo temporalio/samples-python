@@ -45,7 +45,12 @@ external-storage = [
 ]
 external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
-google-adk = ["temporalio[google-adk] >= 1.32.0", "google-adk>=2.2.0,<3"]
+google-adk = [
+    "temporalio[google-adk,opentelemetry]>=1.32.0,<2",
+    "google-adk>=2.2.0,<3",
+    "opentelemetry-exporter-prometheus>=0.48b0",
+    "prometheus-client>=0.21",
+]
 google-genai = [
     "mcp>=1.0.0",
     "temporalio[google-genai,pydantic]>=1.32.0",

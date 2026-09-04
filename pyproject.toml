@@ -142,7 +142,9 @@ extend-exclude = ["lambda_worker"]
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
-exclude = ["lambda_worker/"]
+# Both samples have a flat activities.py, so leaving them in
+# aborts the whole run with "Duplicate module named activities"
+exclude = ["bedrock_agentcore/", "lambda_worker/"]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

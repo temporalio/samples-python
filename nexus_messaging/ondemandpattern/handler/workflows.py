@@ -7,6 +7,7 @@ operations.
 
 import asyncio
 from datetime import timedelta
+from typing import Optional
 
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
@@ -14,11 +15,14 @@ from temporalio.exceptions import ApplicationError
 from nexus_messaging.ondemandpattern.handler.activities import call_greeting_service
 from nexus_messaging.ondemandpattern.service import (
     ApproveInput,
+    AttachApprovalContextInput,
     GetLanguagesInput,
     GetLanguagesOutput,
     Language,
     SetLanguageInput,
 )
+
+ATTACH_APPROVAL_CONTEXT_SIGNAL = "attach_approval_context"
 
 
 @workflow.defn
@@ -30,6 +34,7 @@ class GreetingWorkflow:
             Language.ENGLISH: "Hello, world",
         }
         self.language = Language.ENGLISH
+        self.approval_context: Optional[str] = None
         self.lock = asyncio.Lock()
 
     @workflow.run
@@ -54,8 +59,23 @@ class GreetingWorkflow:
 
     @workflow.signal
     def approve(self, input: ApproveInput) -> None:
-        workflow.logger.info("Approval signal received for user %s", input.user_id)
+        workflow.logger.info(
+            "Approval signal received for user %s (context: %s)",
+            input.user_id,
+            self.approval_context,
+        )
         self.approved_for_release = True
+
+    # Attaches supporting information for the eventual approval. Delivered with
+    # Signal-with-Start, so this may be the message that creates the workflow.
+    @workflow.signal(name=ATTACH_APPROVAL_CONTEXT_SIGNAL)
+    def attach_approval_context(self, input: AttachApprovalContextInput) -> None:
+        workflow.logger.info(
+            "attach_approval_context signal received for user %s: %s",
+            input.user_id,
+            input.note,
+        )
+        self.approval_context = input.note
 
     @workflow.update
     def set_language(self, input: SetLanguageInput) -> Language:

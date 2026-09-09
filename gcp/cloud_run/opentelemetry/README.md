@@ -4,7 +4,8 @@ This sample runs a long-lived Temporal Worker in a [Google Cloud Run worker
 pool](https://cloud.google.com/run/docs/worker-pools) and sends traces and
 Temporal Core metrics to a Google-Built OpenTelemetry Collector sidecar.
 
-The worker uses `temporalio.contrib.gcp.cloud_run.OpenTelemetryPlugin` to
+The worker uses
+`temporalio.contrib.gcp.cloud_run.opentelemetry.OpenTelemetryPlugin` to
 configure:
 
 - OTLP gRPC export to `http://localhost:4317`.
@@ -20,7 +21,8 @@ exports metrics to Google Managed Service for Prometheus.
 
 > The Cloud Run plugin is not released yet. Both `pyproject.toml` files (this
 > directory and the repository root) currently use a temporary local
-> `[tool.uv.sources]` path to the SDK checkout at `../sdk-python`. Replace those
+> `[tool.uv.sources]` path to the sibling `sdk-python` checkout (the root uses
+> `../sdk-python`; this directory uses `../../../../sdk-python`). Replace those
 > source pins with the first released `temporalio[cloud-run-worker-otel]`
 > version before merging this sample. The container build additionally requires
 > a released (or pushed git) SDK and a regenerated `uv.lock`, because the local
@@ -128,7 +130,7 @@ gcloud secrets create "$TEMPORAL_API_KEY_SECRET" \
   --replication-policy automatic
 
 gcloud secrets create "$COLLECTOR_CONFIG_SECRET" \
-  --data-file gcp_cloud_run/collector-config.yaml \
+  --data-file gcp/cloud_run/opentelemetry/collector-config.yaml \
   --project "$PROJECT_ID" \
   --replication-policy automatic
 ```
@@ -138,7 +140,7 @@ numeric version variable:
 
 ```bash
 gcloud secrets versions add "$COLLECTOR_CONFIG_SECRET" \
-  --data-file gcp_cloud_run/collector-config.yaml \
+  --data-file gcp/cloud_run/opentelemetry/collector-config.yaml \
   --project "$PROJECT_ID"
 ```
 
@@ -163,7 +165,7 @@ The build context is the sample directory, which keeps credentials and the
 rest of the repository out of the image build.
 
 ```bash
-gcloud builds submit gcp_cloud_run \
+gcloud builds submit gcp/cloud_run/opentelemetry \
   --project "$PROJECT_ID" \
   --region "$REGION" \
   --tag "$WORKER_IMAGE"
@@ -186,7 +188,7 @@ to protect deployments made through older Cloud Run tooling.
 export INSTANCE_COUNT=1
 export RENDERED_MANIFEST="/tmp/${WORKER_POOL}.yaml"
 
-envsubst < gcp_cloud_run/worker-pool.yaml > "$RENDERED_MANIFEST"
+envsubst < gcp/cloud_run/opentelemetry/worker-pool.yaml > "$RENDERED_MANIFEST"
 
 gcloud run worker-pools replace "$RENDERED_MANIFEST" \
   --project "$PROJECT_ID"
@@ -209,10 +211,10 @@ The local starter accepts either `TEMPORAL_API_KEY` or a file path. Prefer the
 file path so the credential does not appear in shell history.
 
 ```bash
-uv sync --group gcp-cloud-run
+uv sync --group gcp-cloud-run-opentelemetry
 
 TEMPORAL_API_KEY_FILE="$TEMPORAL_API_KEY_FILE" \
-  uv run --group gcp-cloud-run python -m gcp_cloud_run.starter
+  uv run --group gcp-cloud-run-opentelemetry python -m gcp.cloud_run.opentelemetry.starter
 ```
 
 The expected result ends with:

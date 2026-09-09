@@ -41,7 +41,7 @@ external-storage = [
     "types_aiobotocore_s3>=2.25.2",
 ]
 external-storage-redis = ["redis>=5.0.0,<8"]
-gcp-cloud-run = ["temporalio[cloud-run-worker-otel]"]
+gcp-cloud-run-opentelemetry = ["temporalio[cloud-run-worker-otel]"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 google-adk = [
     "temporalio[google-adk,opentelemetry]>=1.32.0,<2",

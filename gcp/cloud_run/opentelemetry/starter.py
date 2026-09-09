@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from temporalio.client import Client
 
-from gcp_cloud_run.workflow import GreetingWorkflow
+from gcp.cloud_run.opentelemetry.workflow import GreetingWorkflow
 
 
 def _required(name: str) -> str:

@@ -1,5 +1,5 @@
 [project]
-name = "temporalio-gcp-cloud-run-sample"
+name = "temporalio-gcp-cloud-run-opentelemetry-sample"
 version = "0.1.0"
 description = "Temporal Worker on a Google Cloud Run worker pool with OpenTelemetry"
 requires-python = ">=3.10"
@@ -14,4 +14,4 @@ package = false
 # rev) before merging this sample or building the container image. The local
 # path is not available inside the Docker build context.
 [tool.uv.sources]
-temporalio = { path = "../../sdk-python", editable = true }
+temporalio = { path = "../../../../sdk-python", editable = true }

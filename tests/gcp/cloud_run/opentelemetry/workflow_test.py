@@ -3,7 +3,7 @@ import uuid
 from temporalio.client import Client
 from temporalio.worker import Worker
 
-from gcp_cloud_run.workflow import GreetingWorkflow, compose_greeting
+from gcp.cloud_run.opentelemetry.workflow import GreetingWorkflow, compose_greeting
 
 
 async def test_greeting_workflow(client: Client):

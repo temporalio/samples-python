@@ -10,13 +10,13 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.gcp.cloud_run import (
+from temporalio.contrib.gcp.cloud_run.opentelemetry import (
     DEFAULT_METRIC_PERIODICITY,
     OpenTelemetryPlugin,
 )
 from temporalio.worker import Worker
 
-from gcp_cloud_run.workflow import GreetingWorkflow, compose_greeting
+from gcp.cloud_run.opentelemetry.workflow import GreetingWorkflow, compose_greeting
 
 COLLECTOR_HOST = "127.0.0.1"
 COLLECTOR_PORT = 4317

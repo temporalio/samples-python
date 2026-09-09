@@ -46,7 +46,11 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
-COPY --chown=app:app __init__.py worker.py workflow.py /app/gcp_cloud_run/
+# The build context is this sample directory (flat), so recreate the
+# gcp/cloud_run/opentelemetry package path and its parent package markers.
+COPY --chown=app:app __init__.py worker.py workflow.py /app/gcp/cloud_run/opentelemetry/
+RUN touch /app/gcp/__init__.py /app/gcp/cloud_run/__init__.py \
+    && chown -R app:app /app/gcp
 
 USER app
-CMD ["python", "-m", "gcp_cloud_run.worker"]
+CMD ["python", "-m", "gcp.cloud_run.opentelemetry.worker"]

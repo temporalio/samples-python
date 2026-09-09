@@ -1,7 +1,7 @@
 [project]
 name = "temporalio-samples-gcp-cloud-run-worker-id"
 version = "0.1a1"
-description = "Temporal worker identity and deployment version on a Google Cloud Run worker pool"
+description = "Temporal worker identity on a Google Cloud Run worker pool"
 authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.10"
 readme = "README.md"
@@ -26,6 +26,7 @@ package = false
 #
 # Note: this local path is NOT available inside a Docker build context (the
 # build context is this directory only), so the container build must use a
-# released or git-pinned `temporalio` instead -- see the Dockerfile and README.
+# released or git-referenced `temporalio` instead -- see the Dockerfile and
+# README.
 [tool.uv.sources]
-temporalio = { path = "../../sdk-python-2", editable = true }
+temporalio = { path = "../../../../sdk-python-2", editable = true }

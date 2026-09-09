@@ -3,26 +3,24 @@
 This sample runs a long-lived Temporal Worker in a [Google Cloud Run worker
 pool](https://cloud.google.com/run/docs/worker-pools) and uses the
 [`temporalio.contrib.gcp.cloud_run.worker_id`](https://python.temporal.io/temporalio.contrib.gcp.cloud_run.worker_id.html)
-`WorkerIDPlugin` to derive the worker's identity and its Worker Deployment
-version from Cloud Run instance metadata.
+`WorkerIDPlugin` to derive the worker's identity from Cloud Run instance
+metadata.
 
 Cloud Run runs a long-lived container rather than a per-invocation handler, so
 this is a small metadata-driven plugin -- not a worker wrapper. The worker
 registers `WorkerIDPlugin()` on the client via `Client.connect(plugins=[...])`.
 At connect time the plugin:
 
-- reads the deployment name from `CLOUD_RUN_WORKER_POOL` (worker pools), falling
-  back to `K_SERVICE` (services);
+- reads the worker-pool or service name from `CLOUD_RUN_WORKER_POOL` (worker
+  pools), falling back to `K_SERVICE` (services);
 - reads the revision from `CLOUD_RUN_REVISION`, falling back to `K_REVISION`;
 - fetches this container's unique instance id from the Cloud Run metadata server.
 
 From that it sets the client `identity` to `<instance_id>@<revision>` (unless you
-passed one) and configures the worker with a `WorkerDeploymentConfig` (deployment
-name = worker-pool name, build id = revision) with Worker Versioning enabled and
-a **PINNED** default versioning behavior. Client plugins propagate to workers
-automatically, so there is nothing to wire up on the `Worker`. The sample
-registers a simple greeting Workflow and Activity, but the pattern applies to any
-Workflow/Activity definitions.
+passed one), so each running container is individually identifiable as a poller.
+Client plugins propagate to workers automatically, so there is nothing to wire up
+on the `Worker`. The sample registers a simple greeting Workflow and Activity,
+but the pattern applies to any Workflow/Activity definitions.
 
 > **Worker pools vs. services.** A Cloud Run *worker pool* has no HTTP endpoint;
 > it is designed for long-running background workloads such as a Temporal
@@ -31,18 +29,18 @@ Workflow/Activity definitions.
 > zero after testing.
 
 > **This helper is not released yet.** `pyproject.toml` pins `temporalio` to a
-> local path source (`../../sdk-python-2`) so the sample can be run and
+> local path source (`../../../../sdk-python-2`) so the sample can be run and
 > type-checked locally. Drop that `[tool.uv.sources]` override once an SDK
 > release that includes the helper is on PyPI. The local path is not available
 > inside a Docker build context, so the container build must use a released or
-> git-pinned `temporalio`; see the `Dockerfile`.
+> git-referenced `temporalio`; see the `Dockerfile`.
 
 ## Files
 
 | File | Description |
 |------|-------------|
-| `worker.py` | Long-lived worker: registers `WorkerIDPlugin` to set identity + deployment version from Cloud Run metadata, then runs until SIGTERM |
-| `workflows.py` | Sample Workflow that executes a greeting Activity (PINNED versioning behavior) |
+| `worker.py` | Long-lived worker: registers `WorkerIDPlugin` to set identity from Cloud Run metadata, then runs until SIGTERM |
+| `workflows.py` | Sample Workflow that executes a greeting Activity |
 | `activities.py` | Sample Activity that returns a greeting string |
 | `settings.py` | Reads `TEMPORAL_*` connection settings from the environment |
 | `starter.py` | Helper program to start a Workflow execution from a local machine |
@@ -101,7 +99,7 @@ container, which the helper reads automatically -- you do not set them yourself.
 ## 2. Confirm the worker registered
 
 Check the worker-pool logs for the startup line, which reports the derived
-identity, deployment, and build id:
+worker identity:
 
 ```bash
 gcloud run worker-pools logs read temporal-worker --region us-central1 --limit 50
@@ -116,14 +114,15 @@ temporal task-queue describe --task-queue gcp-cloud-run
 
 ## 3. Start a Workflow
 
-Run the starter locally against the same Temporal service and task queue:
+Run the starter locally from the repository root, against the same Temporal
+service and task queue:
 
 ```bash
 TEMPORAL_ADDRESS=your-namespace.account-id.tmprl.cloud:7233 \
 TEMPORAL_NAMESPACE=your-namespace.account-id \
 TEMPORAL_TASK_QUEUE=gcp-cloud-run \
 TEMPORAL_API_KEY="$(cat /secure/path/to/temporal-api-key)" \
-  uv run python starter.py
+  uv run python -m gcp.cloud_run.worker_id.starter
 ```
 
 The expected output ends with:

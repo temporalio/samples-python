@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
 # NOTE: the Google Cloud Run metadata helper is not released yet, so
-# `pyproject.toml` pins `temporalio` to a local path source (../../sdk-python-2)
-# that is OUTSIDE this build context and therefore unavailable here. Before
-# building the image, either:
+# `pyproject.toml` pins `temporalio` to a local path source
+# (../../../../sdk-python-2) that is OUTSIDE this build context and therefore
+# unavailable here. Before building the image, either:
 #   * wait for an SDK release that includes the helper and drop the
 #     [tool.uv.sources] override so `temporalio` installs from PyPI, or
 #   * replace that override with a pushed git revision, e.g.
@@ -50,7 +50,11 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
-COPY --chown=app:app activities.py settings.py worker.py workflows.py ./
+# The build context is this sample directory (flat), so recreate the
+# gcp/cloud_run/worker_id package path and its parent package markers.
+COPY --chown=app:app __init__.py activities.py settings.py worker.py workflows.py /app/gcp/cloud_run/worker_id/
+RUN touch /app/gcp/__init__.py /app/gcp/cloud_run/__init__.py \
+    && chown -R app:app /app/gcp
 
 USER app
-CMD ["python", "worker.py"]
+CMD ["python", "-m", "gcp.cloud_run.worker_id.worker"]

@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import asyncio
 
-from settings import load_settings
 from temporalio.client import Client
-from workflows import GreetingWorkflow
+
+from gcp.cloud_run.worker_id.settings import load_settings
+from gcp.cloud_run.worker_id.workflows import GreetingWorkflow
 
 
 async def main() -> None:

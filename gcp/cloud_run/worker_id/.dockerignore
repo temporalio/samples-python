@@ -1,6 +1,7 @@
 *
 !Dockerfile
 !pyproject.toml
+!__init__.py
 !activities.py
 !settings.py
 !worker.py

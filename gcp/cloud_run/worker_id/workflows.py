@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from temporalio import common, workflow
+from temporalio import workflow
 
 with workflow.unsafe.imports_passed_through():
-    from activities import compose_greeting
+    from gcp.cloud_run.worker_id.activities import compose_greeting
 
 
-# PINNED matches the default versioning behavior the Cloud Run helper sets on
-# the worker's deployment config: an execution stays on the build id (Cloud Run
-# revision) that started it until it is explicitly migrated.
-@workflow.defn(versioning_behavior=common.VersioningBehavior.PINNED)
+@workflow.defn
 class GreetingWorkflow:
     @workflow.run
     async def run(self, name: str) -> str:

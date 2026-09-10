@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!pyproject.toml
+!__init__.py
+!worker.py
+!workflow.py

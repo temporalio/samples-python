@@ -27,19 +27,17 @@ they arrive.
 ## Running the Sample
 
 Prerequisites: Python >= 3.11 with the [suite setup](../README.md#prerequisites)
-applied (interim plugin install), an `ANTHROPIC_API_KEY` in your
+applied, an `ANTHROPIC_API_KEY` in your
 environment, and a running Temporal dev server (`temporal server start-dev`).
 
 > The experimental plugin is not in the `deepagents` group — install it as shown
-> in the [suite README](../README.md#prerequisites) and run with `--no-sync`, or
-> a bare `uv run`/`uv sync` re-syncs the environment and uninstalls it.
 
 ```bash
 # Terminal 1
-uv run --no-sync deepagents_plugin/streaming/run_worker.py
+uv run deepagents_plugin/streaming/run_worker.py
 
 # Terminal 2
-uv run --no-sync deepagents_plugin/streaming/run_workflow.py
+uv run deepagents_plugin/streaming/run_workflow.py
 ```
 
 ## Files

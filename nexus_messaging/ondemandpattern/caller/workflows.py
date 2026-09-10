@@ -8,6 +8,7 @@ from temporalio import workflow
 
 from nexus_messaging.ondemandpattern.service import (
     ApproveInput,
+    AttachApprovalContextInput,
     GetLanguageInput,
     GetLanguagesInput,
     Language,
@@ -38,10 +39,33 @@ class CallerRemoteWorkflow:
         # users we want to process. The first calls start two workflows, one for each
         # user. Subsequent calls perform different actions between the two users.
 
+        # Attach information before the Workflow exists. Because attach_approval_context
+        # is backed by Signal-with-Start on the handler, this call creates the Workflow
+        # and delivers the note to it.
+        await self.nexus_client.execute_operation(
+            NexusRemoteGreetingService.attach_approval_context,
+            AttachApprovalContextInput(
+                note="queued for localization review by the nightly batch",
+                user_id=REMOTE_WORKFLOW_ONE,
+            ),
+        )
+        log.append(
+            f"Attached approval context before the workflow existed: "
+            f"{REMOTE_WORKFLOW_ONE}"
+        )
+        workflow.logger.info(
+            "attached approval context for %s, creating the workflow",
+            REMOTE_WORKFLOW_ONE,
+        )
+
         # This is an async Nexus operation -- starts a workflow on the handler and
         # returns a handle. Unlike the sync operations below, this does not block
         # until the workflow completes. It is backed by temporal_operation on the
         # handler side.
+
+        # The Workflow for this user is already running due to the call above. The
+        # handler sets the conflict policy to USE_EXISTING, so this call attaches the
+        # operation's completion callback to the running execution.
         handle_one = await self.nexus_client.start_operation(
             NexusRemoteGreetingService.run_from_remote,
             RunFromRemoteInput(user_id=REMOTE_WORKFLOW_ONE),
@@ -55,6 +79,23 @@ class CallerRemoteWorkflow:
         )
         log.append(f"started remote greeting workflow: {REMOTE_WORKFLOW_TWO}")
         workflow.logger.info("started remote greeting workflow %s", REMOTE_WORKFLOW_TWO)
+
+        # This user's Workflow was created by run_from_remote just above, so here
+        # Signal-with-Start skips the start and only delivers the Signal.
+        await self.nexus_client.execute_operation(
+            NexusRemoteGreetingService.attach_approval_context,
+            AttachApprovalContextInput(
+                note="translation approved by the localization team",
+                user_id=REMOTE_WORKFLOW_TWO,
+            ),
+        )
+        log.append(
+            f"Attached approval context to the running workflow: {REMOTE_WORKFLOW_TWO}"
+        )
+        workflow.logger.info(
+            "attached approval context for %s, messaging the existing workflow",
+            REMOTE_WORKFLOW_TWO,
+        )
 
         # Query the remote workflows for supported languages.
         languages_output = await self.nexus_client.execute_operation(

@@ -33,6 +33,7 @@ async def main() -> None:
     # Cloud Run. It sets the client identity to <instance_id>@<revision> so each
     # running container is identifiable. Client plugins propagate to workers
     # automatically, so there is nothing to wire up on the Worker.
+    # @@@SNIPSTART python-cloud-run-worker-id
     client = await Client.connect(
         settings.address,
         namespace=settings.namespace,
@@ -40,6 +41,7 @@ async def main() -> None:
         api_key=settings.api_key,
         tls=settings.tls,
     )
+    # @@@SNIPEND
 
     worker = Worker(
         client,

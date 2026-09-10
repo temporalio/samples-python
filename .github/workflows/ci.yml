@@ -23,6 +23,9 @@ jobs:
           - os: macos-arm
             runsOn: macos-latest
     runs-on: ${{ matrix.runsOn || matrix.os }}
+    # Normal matrix jobs finish in 7-14 minutes; without an explicit limit a
+    # hung test run burns GitHub's 6-hour default before failing.
+    timeout-minutes: 30
     steps:
       - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8
       - name: Print build information

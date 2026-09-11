@@ -6,28 +6,36 @@ operations. `NexusRemoteGreetingService` adds a `run_from_remote` operation that
 instance to target.
 
 The caller Workflow:
-1. Starts two remote `GreetingWorkflow` instances via `run_from_remote` (backed by `workflow_run_operation`)
-2. Queries each for supported languages
-3. Changes the language on each (Arabic and Hindi)
-4. Confirms the changes via queries
-5. Approves both Workflows
-6. Waits for each to complete and returns their results
+1. Attaches approval context for the first user via `attach_approval_context`, before anything has
+   started that user's Workflow
+2. Starts two remote `GreetingWorkflow` instances via `run_from_remote` (backed by `temporal_operation`)
+3. Attaches approval context for the second user, whose Workflow now already exists
+4. Queries each for supported languages
+5. Changes the language on each (Arabic and Hindi)
+6. Confirms the changes via queries
+7. Approves both Workflows
+8. Waits for each to complete and returns their results
 
 ### Running
 
-Start a Temporal server:
+This sample requires a Temporal dev server build that supports Workflow Update callbacks. Download the compatible
+binary from the [Temporal CLI pre-release instructions](https://docs.temporal.io/standalone-nexus-operation#temporal-cli-support).
+
+Start the Temporal dev server with the required namespaces pre-created and Workflow Update callbacks enabled:
 
 ```bash
-temporal server start-dev
+./temporal server start-dev \
+  --dynamic-config-value history.enableUpdateCallbacks=true \
+  --dynamic-config-value history.enableCHASMSignalBacklinks=true \
+  --dynamic-config-value history.enableSignalWithStartFromWorkflow=true \
+  --namespace nexus-messaging-handler-namespace \
+  --namespace nexus-messaging-caller-namespace
 ```
 
-Create the namespaces and Nexus endpoint:
+Create the Nexus endpoint:
 
 ```bash
-temporal operator namespace create --namespace nexus-messaging-handler-namespace
-temporal operator namespace create --namespace nexus-messaging-caller-namespace
-
-temporal operator nexus endpoint create \
+./temporal operator nexus endpoint create \
   --name nexus-messaging-nexus-endpoint \
   --target-namespace nexus-messaging-handler-namespace \
   --target-task-queue nexus-messaging-handler-task-queue
@@ -48,8 +56,10 @@ uv run python -m nexus_messaging.ondemandpattern.caller.app
 Expected output:
 
 ```
+Attached approval context before the workflow existed: UserId One
 started remote greeting workflow: UserId One
 started remote greeting workflow: UserId Two
+Attached approval context to the running workflow: UserId Two
 Supported languages for UserId One: [<Language.CHINESE: 2>, <Language.ENGLISH: 3>]
 Supported languages for UserId Two: [<Language.CHINESE: 2>, <Language.ENGLISH: 3>]
 UserId One changed language: ENGLISH -> ARABIC

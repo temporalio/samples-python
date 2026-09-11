@@ -58,6 +58,12 @@ class ApproveOutput:
     pass
 
 
+@dataclass
+class AttachApprovalContextInput:
+    note: str
+    user_id: str
+
+
 @nexusrpc.service
 class NexusRemoteGreetingService:
     # Starts a new GreetingWorkflow with the given workflow ID (asynchronous).
@@ -70,3 +76,6 @@ class NexusRemoteGreetingService:
     set_language: nexusrpc.Operation[SetLanguageInput, Language]
     # Approves the specified workflow, allowing it to complete.
     approve: nexusrpc.Operation[ApproveInput, ApproveOutput]
+    # Attaches supporting information for the Workflow approval, either by
+    # messaging a running Workflow or creating a Workflow.
+    attach_approval_context: nexusrpc.Operation[AttachApprovalContextInput, None]

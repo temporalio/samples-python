@@ -30,6 +30,23 @@ The example uses Anthropic Claude by default but can be modified to use other Li
 
 Find more LiteLLM providers at: https://docs.litellm.ai/docs/providers
 
+#### OpenRouter
+Uses [OpenRouter](https://openrouter.ai/) as the model provider, so the agent can run on any of the hundreds of models OpenRouter serves through one API key. OpenRouter speaks the OpenAI Chat Completions API, so the stock `OpenAIProvider` works once it is pointed at OpenRouter's base URL.
+
+Start the OpenRouter worker:
+```bash
+export OPENROUTER_API_KEY="your_openrouter_api_key"
+
+uv run openai_agents/model_providers/run_openrouter_worker.py
+```
+
+Then run the example in a separate terminal:
+```bash
+uv run openai_agents/model_providers/run_openrouter_workflow.py
+```
+
+The workflow uses `openai/gpt-4o-mini`; change `OPENROUTER_MODEL` in [workflows/openrouter_workflow.py](workflows/openrouter_workflow.py) to any OpenRouter model slug, or to `openrouter/auto` to let OpenRouter pick. See the [openrouter](../../openrouter) sample for calling OpenRouter directly from Activities with cost tracking and budgets.
+
 ### Extra
 
 #### GPT-OSS with Ollama

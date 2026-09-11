@@ -101,6 +101,7 @@ without wrapping them in a workflow.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.
+* [pydantic_ai_plugin](pydantic_ai_plugin) - Run Pydantic AI agents as durable Temporal workflows, including chat, tools, MCP, HITL, structured output, streaming, multi-agent orchestration, and Logfire.
 * [pydantic_converter](pydantic_converter) - Data converter for using Pydantic models.
 * [pydantic_converter_v1](pydantic_converter_v1) - Data converter for Pydantic v1 models (prefer pydantic_converter for v2).
 * [replay](replay) - Verify that workflow code changes are compatible with existing histories.

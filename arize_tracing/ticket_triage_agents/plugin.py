@@ -9,7 +9,7 @@ TASK_QUEUE = "arize-ticket-triage-agents-task-queue"
 
 
 # @@@SNIPSTART python-arize-tracing-agents-plugin
-def agents_plugin() -> OpenAIAgentsPlugin:
+def agents_plugin(*, register_activities: bool = True) -> OpenAIAgentsPlugin:
     """The OpenAI Agents plugin, configured to export through OpenTelemetry.
 
     Construct it after ``setup_tracing()``: with ``use_otel_instrumentation=True``
@@ -22,6 +22,8 @@ def agents_plugin() -> OpenAIAgentsPlugin:
     return OpenAIAgentsPlugin(
         use_otel_instrumentation=True,
         add_temporal_spans=True,
+        # False for a workflow-only worker (see worker.py --role).
+        register_activities=register_activities,
         model_params=ModelActivityParameters(
             start_to_close_timeout=timedelta(seconds=60),
             retry_policy=RetryPolicy(

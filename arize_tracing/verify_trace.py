@@ -247,9 +247,22 @@ def _verify_common(
     args: argparse.Namespace,
 ) -> None:
     # No duplicate spans (workflow replay must never re-emit spans).
-    span_ids = [s["context"]["span_id"] for s in spans]
-    if len(set(span_ids)) != len(span_ids):
+    all_ids = [s["context"]["span_id"] for s in spans]
+    if len(set(all_ids)) != len(all_ids):
         failures.append("duplicate span ids present")
+
+    # Every child points at a span that is part of the trace. A missing parent
+    # means a span was exported with the wrong parent, which Arize renders as a
+    # detached subtree.
+    span_ids = {s["context"]["span_id"] for s in spans}
+    orphans = [
+        s for s in spans if s.get("parent_id") and s["parent_id"] not in span_ids
+    ]
+    if orphans:
+        names = sorted({s["name"] for s in orphans})
+        failures.append(
+            f"{len(orphans)} span(s) reference a parent that is not in the trace: {names}"
+        )
 
     # The root carries the OpenInference trace-level attributes.
     roots = [s for s in spans if not s.get("parent_id")]

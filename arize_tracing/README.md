@@ -86,7 +86,9 @@ session.
 ### With the OpenAI Agents SDK
 
 ```bash
-uv run python -m arize_tracing.ticket_triage_agents.worker
+# Two worker processes (see "Known issue" below), then the starter
+uv run python -m arize_tracing.ticket_triage_agents.worker --role workflows
+uv run python -m arize_tracing.ticket_triage_agents.worker --role activities
 uv run python -m arize_tracing.ticket_triage_agents.starter
 uv run python -m arize_tracing.verify_trace --trace-id <printed trace id> --scenario agents
 ```
@@ -96,19 +98,36 @@ OpenTelemetry bridge produces the OpenInference kinds directly:
 
 ```
 Ticket triage agents                             AGENT  (root; session, user, input, output)
-└─ temporal:startWorkflow:TicketTriageAgentsWorkflow   CHAIN
-   └─ temporal:executeWorkflow                   CHAIN
-      ├─ Agent workflow → Triage agent           AGENT
-      │  ├─ turn → temporal:startActivity → temporal:executeActivity → response   LLM
-      │  ├─ lookup_account                       TOOL   (a Temporal activity as an agent tool)
-      │  │  └─ temporal:startActivity → temporal:executeActivity
-      │  └─ turn → temporal:startActivity → temporal:executeActivity → response   LLM
-      └─ Agent workflow → Reply agent            AGENT
-         └─ turn → temporal:startActivity → temporal:executeActivity → response   LLM
+├─ temporal:startWorkflow:TicketTriageAgentsWorkflow   CHAIN
+│  └─ temporal:executeWorkflow                   CHAIN
+│     ├─ Agent workflow → Triage agent           AGENT
+│     │  ├─ turn                                 CHAIN
+│     │  │  └─ temporal:startActivity            CHAIN  (model call)
+│     │  │     ├─ temporal:executeActivity → response   LLM
+│     │  │     └─ lookup_account                 TOOL   (a Temporal activity as an agent tool)
+│     │  │        └─ temporal:startActivity → temporal:executeActivity
+│     │  └─ turn → temporal:startActivity → temporal:executeActivity → response   LLM
+│     └─ Agent workflow → Reply agent            AGENT
+│        └─ turn → temporal:startActivity → temporal:executeActivity → response   LLM
 └─ temporal:updateWorkflow                       CHAIN
 ```
 
+(The tool span nests under the preceding model call's `temporal:startActivity`
+span rather than directly under the turn because the plugin leaves that span
+current in the Agents SDK scope after it finishes; see
+[temporalio/sdk-python#1855](https://github.com/temporalio/sdk-python/issues/1855).)
+
 ![Ticket triage agents trace in Phoenix](phoenix-ticket-triage-agents.png)
+
+**Known issue.** With `use_otel_instrumentation=True`, a single worker process
+that runs both the workflow and its activities exports the
+`temporal:startActivity` spans with a parent that is not in the trace, so the
+model-call and tool subtrees appear detached from the agent turns in Arize
+([temporalio/sdk-python#1852](https://github.com/temporalio/sdk-python/issues/1852)).
+`verify_trace.py` reports this as spans referencing a missing parent. Running
+the workflow and the activities in separate worker processes, as above, avoids
+it; `worker.py` without `--role` runs both in one process, which is fine for
+the framework-agnostic scenario but not for this one until the fix lands.
 
 ## How replay, retries, and restarts show up
 
@@ -212,9 +231,10 @@ the AX UI or the `ax` CLI there.
 - `OTEL_SDK_DISABLED=true` turns off export without code changes.
 - Ingestion is asynchronous; `verify_trace.py` polls until the trace is stable.
 - The OpenAI Agents SDK bridge (`use_otel_instrumentation=True`) is Public
-  Preview in the Temporal SDK. Run the starter and the worker as separate
-  processes, as the sample does, and see `quiet_otel_context_detach_errors()`
-  in `telemetry.py` for a known log-noise issue.
+  Preview in the Temporal SDK. Run the starter, the workflow worker, and the
+  activity worker as separate processes, as the sample does (see the known
+  issue above), and see `quiet_otel_context_detach_errors()` in `telemetry.py`
+  for a known log-noise issue.
 
 ## Tests
 

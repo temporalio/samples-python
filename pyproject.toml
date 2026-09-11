@@ -48,11 +48,12 @@ gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 google-adk = [
     "temporalio[google-adk,opentelemetry]>=1.32.0,<2",
     "google-adk>=2.2.0,<3",
+    "mcp>=1.27.1,<2",
     "opentelemetry-exporter-prometheus>=0.48b0",
     "prometheus-client>=0.21",
 ]
 google-genai = [
-    "mcp>=1.0.0",
+    "mcp>=1.27.1,<2",
     "temporalio[google-genai,pydantic]>=1.32.0",
 ]
 langfuse-tracing = [
@@ -75,6 +76,7 @@ langgraph = [
     "temporalio[langgraph,langsmith]>=1.32.0",
 ]
 litellm = ["litellm>=1.85.0,<2"]
+llm-stream = ["openai>=1.4.0"]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
     "temporalio[opentelemetry]",

@@ -1,0 +1,493 @@
+# OpenAI Agents SDK + Temporal Integration
+
+## Overview
+This integration combines OpenAI's Agents SDK with Temporal's durable execution engine to create production-ready AI agent workflows. The key innovation is that every **model invocation** within the agentic loop automatically becomes a Temporal Activity, providing durability, observability, and scalability without code changes. **Note**: This behavior requires the `OpenAIAgentsPlugin` to be registered with the Temporal worker.
+
+## Core Concept
+When you call `Runner.run(agent, input)` in a Temporal workflow (with `OpenAIAgentsPlugin` registered), it:
+1. Executes inside the Temporal workflow (not as an Activity)
+2. Orchestrates the agentic loop
+3. Each model invocation automatically creates a Temporal Activity
+4. Provides automatic retries, state persistence, and error handling
+5. Enables horizontal scaling (each agent runs in its own process/thread)
+6. Integrates tracing between Temporal and OpenAI systems
+
+## Architecture Summary
+- **Workflow Layer**: Temporal workflows orchestrate agent execution
+- **Agent Layer**: OpenAI agents with specialized capabilities and tools
+- **Activity Layer**: Model invocations become Temporal Activities automatically
+- **Tool Layer**: External capabilities (web search, code execution, file search, image generation)
+- **State Management**: Persistent conversation state and context across executions
+- **Error Handling**: Automatic retries and fault tolerance for production reliability
+
+## Basic Pattern
+```python
+from temporalio import workflow
+from agents import Agent, Runner
+
+@workflow.defn
+class AgentWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        agent = Agent(
+            name="Assistant",
+            instructions="You are a helpful assistant.",
+            model="gpt-4o"
+        )
+        
+        # Runner.run() executes inside the workflow
+        # Model invocations automatically create Temporal Activities
+        result = await Runner.run(agent, input=input)
+        return result.final_output
+```
+
+## Worker Setup
+```python
+from temporalio import Client
+from temporalio.worker import Worker
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin, ModelActivityParameters
+from datetime import timedelta
+
+# Create client with plugin
+client = await Client.connect(
+    "localhost:7233",
+    plugins=[
+        OpenAIAgentsPlugin(
+            model_params=ModelActivityParameters(
+                start_to_close_timeout=timedelta(seconds=30)
+            )
+        )
+    ]
+)
+
+# Create worker
+worker = Worker(
+    client,
+    task_queue="openai-agents-task-queue",
+    workflows=[AgentWorkflow]
+)
+```
+
+## Multi-Agent Workflow
+```python
+from temporalio import workflow
+from agents import Agent, Runner
+
+@workflow.defn
+class MultiAgentWorkflow:
+    @workflow.run
+    async def run(self, task: str) -> str:
+        # Plan with planner agent
+        planner = Agent(name="Planner", instructions="...")
+        plan = await Runner.run(planner, f"Plan: {task}")
+        
+        # Execute with executor agent
+        executor = Agent(name="Executor", instructions="...")
+        result = await Runner.run(executor, f"Execute: {plan.final_output}")
+        
+        return result.final_output
+```
+
+
+## Key Benefits
+- **Durability**: Survives crashes, restarts, and failures
+- **Scalability**: Independent scaling of different agent types
+- **Observability**: Unified tracing across Temporal and OpenAI
+- **Production Ready**: Automatic retries, rate limit handling, state persistence
+- **Resumability**: Agentic loops can resume from any model invocation point
+
+## Common Patterns
+
+### 1. Sequential Agents
+```python
+# Run agents one after another
+planner = Agent(name="Planner", instructions="...")
+plan = await Runner.run(planner, input)
+
+executor = Agent(name="Executor", instructions="...")
+result = await Runner.run(executor, plan.final_output)
+```
+
+### 2. Parallel Agents
+```python
+# Use asyncio.gather() for concurrent execution
+results = await asyncio.gather(
+    Runner.run(agent1, input1),
+    Runner.run(agent2, input2),
+    Runner.run(agent3, input3)
+)
+```
+
+### 3. Agent Handoffs
+```python
+# Use handoffs parameter for agent-to-agent transitions
+triage_agent = Agent(
+    name="Triage",
+    handoffs=[specialist_agent1, specialist_agent2]
+)
+```
+
+### 4. State Management
+```python
+# Leverage workflow state for conversation history
+@workflow.defn
+class ConversationWorkflow:
+    def __init__(self):
+        self.history = []
+    
+    @workflow.run
+    async def run(self, message: str):
+        self.history.append(f"User: {message}")
+        result = await Runner.run(agent, self.history)
+        self.history.append(f"Agent: {result.final_output}")
+```
+
+
+### 5. Guardrails & Validation
+```python
+# Input and output guardrails
+@input_guardrail
+async def validate_input(context, agent, input):
+    # Custom validation logic
+    return GuardrailFunctionOutput(tripwire_triggered=False)
+
+agent = Agent(
+    name="SafeAgent",
+    input_guardrails=[validate_input]
+)
+```
+
+### 6. Custom Model Providers
+```python
+# Custom model provider for local/OSS models
+class CustomModelProvider(ModelProvider):
+    def get_model(self, model_name: str) -> Model:
+        return OpenAIChatCompletionsModel(
+            model=model_name,
+            openai_client=ollama_client
+        )
+
+# Use in client
+client = await Client.connect(
+    "localhost:7233",
+    plugins=[
+        OpenAIAgentsPlugin(model_provider=CustomModelProvider())
+    ]
+)
+```
+
+### 7. Activity-Based I/O
+```python
+# External I/O operations in activities
+@activity.defn
+async def external_api_call(data: str) -> str:
+    # Non-deterministic operations
+    return await some_external_api(data)
+
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self, input: str):
+        result = await workflow.execute_activity(
+            external_api_call,
+            input,
+            start_to_close_timeout=workflow.timedelta(seconds=30)
+        )
+        return result
+```
+
+## Documentation Index
+
+### Core Integration Patterns
+- **[BASIC.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/BASIC.md)** - Fundamental agent patterns, lifecycle hooks, dynamic prompts, image processing, conversation continuity
+- **[AGENT_PATTERNS.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/AGENT_PATTERNS.md)** - Advanced patterns: deterministic flows, parallelization, LLM-as-a-judge, agents-as-tools, guardrails, forcing tool use
+
+### Tool Integration & External Services
+- **[TOOLS.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/TOOLS.md)** - Code interpreter, file search, image generation, web search, knowledge base setup
+- **[HOSTED_MCP.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/HOSTED_MCP.md)** - Model Context Protocol integration with approval workflows
+- **[MODEL_PROVIDERS.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/MODEL_PROVIDERS.md)** - Custom LLM providers, LiteLLM integration, local Ollama support
+
+### Multi-Agent Systems
+- **[CUSTOMER_SERVICE.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/CUSTOMER_SERVICE.md)** - Persistent conversations, agent handoffs, stateful workflows
+- **[FINANCIAL_RESEARCH_AGENT.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/FINANCIAL_RESEARCH_AGENT.md)** - Multi-agent orchestration, parallel search execution, specialist analysis tools
+- **[RESEARCH_BOT.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/RESEARCH_BOT.md)** - Web research workflows, parallel search execution, intelligent planning
+
+### Advanced Features
+- **[HANDOFFS.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/HANDOFFS.md)** - Agent handoff patterns, message filtering, context management
+- **[REASONING_CONTENT.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/REASONING_CONTENT.md)** - Access model reasoning content, explainable AI, step-by-step thinking
+
+### Architecture & Implementation
+- **[ARCHITECTURE.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/ARCHITECTURE.md)** - Deep technical architecture, system design, execution flow diagrams
+- **[README.md](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/README.md)** - High-level overview, integration benefits, quick start guide
+
+## File Structure
+```
+openai_agents/
+├── basic/           # Fundamental patterns (9 workflows)
+├── agent_patterns/  # Multi-agent architectures (8 patterns)
+├── tools/           # Tool integration examples (4 tools)
+├── handoffs/        # Agent collaboration (1 workflow)
+├── hosted_mcp/      # MCP integration (2 workflows)
+├── model_providers/ # Custom LLM providers (2 workflows)
+├── reasoning_content/ # Model reasoning access (1 workflow)
+├── customer_service/ # Conversational workflows (1 workflow)
+├── financial_research_agent/ # Complex multi-agent system (1 workflow)
+└── research_bot/    # Research workflow example (1 workflow)
+```
+
+## Task Queue Conventions
+Each service uses dedicated task queues for isolation and scalability:
+- `openai-agents-basic-task-queue` - Basic patterns and examples
+- `openai-agents-patterns-task-queue` - Advanced agent patterns
+- `openai-agents-tools-task-queue` - Tool integration workflows
+- `openai-agents-handoffs-task-queue` - Agent handoff patterns
+- `openai-agents-hosted-mcp-task-queue` - MCP integration workflows
+- `openai-agents-model-providers-task-queue` - Custom model providers
+- `reasoning-content-task-queue` - Reasoning content extraction
+- `openai-agents-task-queue` - Customer service and research workflows
+- `financial-research-task-queue` - Financial research agent
+
+## Key Conventions
+
+### Workflow Structure
+```python
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        # Workflow implementation
+        pass
+```
+
+### Agent Configuration
+```python
+agent = Agent(
+    name="DescriptiveName",  # Clear, descriptive names
+    instructions="Specific instructions...",  # Focused instructions
+    model="gpt-4o",  # Specify model when needed
+    tools=[...],  # Tool integration
+    handoffs=[...],  # Agent handoffs
+    input_guardrails=[...],  # Input validation
+    output_guardrails=[...]  # Output validation
+)
+```
+
+### Worker Setup
+```python
+# Client with plugin (required for model invocations to become activities)
+client = await Client.connect(
+    "localhost:7233",
+    plugins=[OpenAIAgentsPlugin()]
+)
+
+# Worker (no plugins needed here)
+worker = Worker(
+    client,
+    task_queue="service-specific-task-queue",
+    workflows=[WorkflowClass],
+    activities=[...]  # Custom activities if needed
+)
+```
+
+### Error Handling
+- Temporal automatically retries failed model invocations
+- Use try/catch for custom error handling
+- Implement graceful degradation for external tool failures
+- Use workflow queries and updates for real-time error reporting
+
+## Quick Reference
+
+### Essential Imports
+```python
+# Core Temporal imports
+from temporalio import workflow, activity
+from temporalio.client import Client
+from temporalio.worker import Worker
+
+# OpenAI Agents SDK imports
+from agents import Agent, Runner, WebSearchTool, CodeInterpreterTool
+from agents import FileSearchTool, ImageGenerationTool, HostedMCPTool
+from agents import input_guardrail, output_guardrail, function_tool
+
+# Temporal OpenAI integration
+from temporalio.contrib.openai_agents import OpenAIAgentsPlugin, ModelActivityParameters
+
+# Pydantic for structured data
+from pydantic import BaseModel
+```
+
+### Common Setup Patterns
+```python
+# Basic workflow setup
+@workflow.defn
+class MyWorkflow:
+    @workflow.run
+    async def run(self, input: str) -> str:
+        agent = Agent(name="MyAgent", instructions="...")
+        result = await Runner.run(agent, input)
+        return result.final_output
+
+# Worker setup with plugin in client
+async def create_worker():
+    client = await Client.connect(
+        "localhost:7233",
+        plugins=[OpenAIAgentsPlugin()]
+    )
+    worker = Worker(
+        client,
+        task_queue="my-task-queue",
+        workflows=[MyWorkflow]
+    )
+    return worker
+```
+
+## Getting Started
+1. Start Temporal server: `temporal server start-dev`
+2. Install dependencies: `uv sync --group openai-agents`
+3. Set OpenAI API key: `export OPENAI_API_KEY=your_key`
+4. Run worker: `uv run openai_agents/basic/run_worker.py`
+5. Execute workflow: `uv run openai_agents/basic/run_hello_world_workflow.py`
+
+## Available Tools
+
+### Core Tools
+- **WebSearchTool**: Web search with location-aware context
+- **CodeInterpreterTool**: Python code execution for calculations and data analysis
+- **FileSearchTool**: Vector-based document search using OpenAI's file search
+- **ImageGenerationTool**: DALL-E integration for image creation
+- **HostedMCPTool**: Model Context Protocol integration with approval workflows
+
+### Tool Configuration Examples
+```python
+# Web Search with location context
+WebSearchTool(user_location={"type": "approximate", "city": "New York"})
+
+# Code Interpreter with auto container
+CodeInterpreterTool(tool_config={
+    "type": "code_interpreter",
+    "container": {"type": "auto"}
+})
+
+# File Search with vector store
+FileSearchTool(
+    max_num_results=3,
+    vector_store_ids=["vs_123"],
+    include_search_results=True
+)
+
+# Image Generation with quality control
+ImageGenerationTool(tool_config={
+    "type": "image_generation",
+    "quality": "low"  # or "high"
+})
+
+# MCP Tool without approval
+HostedMCPTool(tool_config={
+    "type": "mcp",
+    "server_label": "gitmcp",
+    "server_url": "https://gitmcp.io/openai/codex",
+    "require_approval": "never"
+})
+
+# MCP Tool with approval callback
+HostedMCPTool(
+    tool_config={
+        "type": "mcp",
+        "server_label": "gitmcp",
+        "server_url": "https://gitmcp.io/openai/codex",
+        "require_approval": "always"
+    },
+    on_approval_request=approval_callback
+)
+```
+
+## Data Models & Pydantic Integration
+
+### Common Pydantic Models
+```python
+from pydantic import BaseModel
+
+# Financial research models
+class FinancialSearchItem(BaseModel):
+    reason: str
+    query: str
+
+class FinancialSearchPlan(BaseModel):
+    searches: list[FinancialSearchItem]
+
+# Image generation result
+class ImageGenerationResult(BaseModel):
+    final_output: str
+    image_data: str | None = None
+
+# Reasoning content models (from activities)
+class ReasoningResult(BaseModel):
+    reasoning_content: str | None
+    regular_content: str | None
+    prompt: str
+```
+
+### Output Type Integration
+```python
+agent = Agent(
+    name="StructuredAgent",
+    instructions="Generate structured output",
+    output_type=MyPydanticModel  # Enforces structured output
+)
+
+result = await Runner.run(agent, input)
+structured_output = result.final_output_as(MyPydanticModel)
+```
+
+## Best Practices
+- Keep agents focused on single responsibilities
+- Use descriptive agent names for debugging
+- Leverage workflow state for conversation context
+- Handle agent failures gracefully with Temporal's retry mechanisms
+- Use appropriate timeouts for agent operations
+- Monitor both Temporal and OpenAI dashboards for observability
+- Use Pydantic models for structured data validation
+- Implement proper error handling for external tool failures
+- Use dedicated task queues for service isolation
+- Follow naming conventions for workflows and agents
+
+## Integration Summary
+
+### Core Architecture Benefits
+- **Implicit Activity Creation**: Model invocations automatically become Temporal Activities
+- **Durable Execution**: Agent workflows survive crashes, restarts, and failures
+- **Horizontal Scaling**: Each agent can run in its own process/thread
+- **Unified Observability**: Tracing across both Temporal and OpenAI systems
+- **Production Ready**: Automatic retries, rate limiting, and state persistence
+
+### Service Capabilities Overview
+- **9 Basic Workflows**: Hello world, lifecycle hooks, dynamic prompts, image processing
+- **8 Agent Patterns**: Deterministic flows, parallelization, LLM-as-a-judge, guardrails
+- **4 Tool Types**: Web search, code execution, file search, image generation
+- **2 MCP Patterns**: Simple connections and approval-based workflows
+- **2 Model Providers**: LiteLLM integration and custom Ollama providers
+- **3 Multi-Agent Systems**: Customer service, financial research, research bot
+- **1 Reasoning System**: Access to model step-by-step thinking processes
+
+### Key Technical Patterns
+1. **Workflow-First Design**: All agent execution happens within Temporal workflows
+2. **Activity-Based I/O**: External operations (API calls, file I/O) in activities
+3. **Stateful Conversations**: Persistent state across multiple interactions
+4. **Parallel Execution**: Concurrent agent execution using `asyncio.gather()`
+5. **Tool Integration**: Seamless integration of external capabilities
+6. **Error Resilience**: Automatic retries and graceful degradation
+7. **Structured Output**: Pydantic models for type-safe data exchange
+8. **Guardrails**: Input/output validation for production safety
+
+### Development Workflow
+1. **Design**: Plan agent responsibilities and workflow structure
+2. **Implement**: Create workflows with proper error handling
+3. **Test**: Use dedicated task queues for isolated testing
+4. **Deploy**: Scale workers independently based on demand
+5. **Monitor**: Use Temporal and OpenAI dashboards for observability
+
+## Resources
+- [Temporal Blog](https://temporal.io/blog/announcing-openai-agents-sdk-integration)
+- [Python SDK](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)
+- [Community Demos](https://github.com/temporal-community/openai-agents-demos)
+- [Architecture Deep Dive](https://raw.githubusercontent.com/temporalio/samples-python/refs/heads/main/docs/openai_agents/ARCHITECTURE.md)

@@ -10,7 +10,7 @@ from openrouter.prompt_batch.workflow import OPENROUTER_RETRY_POLICY
 # The shared dataclasses are passed through the sandbox so that objects the
 # Activity returns are the same classes the Workflow compares against.
 with workflow.unsafe.imports_passed_through():
-    from openrouter.activities import OpenRouterActivities, error_type
+    from openrouter.activities import OUT_OF_CREDITS, OpenRouterActivities
     from openrouter.shared import (
         MAX_PROMPTS_PER_BATCH,
         BatchResult,
@@ -22,7 +22,7 @@ with workflow.unsafe.imports_passed_through():
         SpendReport,
     )
 
-INSUFFICIENT_CREDITS = error_type(402)
+INSUFFICIENT_CREDITS = OUT_OF_CREDITS
 
 
 @workflow.defn
@@ -30,8 +30,9 @@ class BudgetGateWorkflow:
     """A prompt batch that pauses instead of failing when money runs out.
 
     Two things can pause it: the soft budget in the input (checked against the
-    cost OpenRouter reports per response) and OpenRouter itself returning 402
-    because the API key hit its credit limit. Either way the batch parks until
+    cost OpenRouter reports per response) and OpenRouter itself refusing the
+    call for lack of credits (402 for the account, 403 "Key limit exceeded"
+    for the API key). Either way the batch parks until
     a `raise_budget` Update arrives, then resumes exactly where it stopped.
     Completed prompts are never re-run.
     """
@@ -130,7 +131,7 @@ class BudgetGateWorkflow:
                             isinstance(cause, ApplicationError)
                             and cause.type == INSUFFICIENT_CREDITS
                         ):
-                            # The API key is out of credits. Park until the
+                            # Out of credits at OpenRouter. Park until the
                             # operator tops up and sends raise_budget.
                             if await self._wait_for_more_credits(prompt, timeout):
                                 continue

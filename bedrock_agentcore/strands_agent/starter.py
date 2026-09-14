@@ -1,11 +1,12 @@
 import asyncio
 import sys
 
+from strands.models import BedrockModel
 from temporalio.client import Client
 from temporalio.contrib.strands import StrandsPlugin
 from temporalio.envconfig import ClientConfig
 
-from workflows import TASK_QUEUE, StrandsAgentWorkflow
+from workflows import MODEL_ID, MODEL_NAME, TASK_QUEUE, StrandsAgentWorkflow
 
 DEFAULT_PROMPT = (
     "What is the 30th Fibonacci number, and is it divisible by 7? "
@@ -21,7 +22,12 @@ async def main() -> None:
     # automatically alongside an API key.
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
-    client = await Client.connect(**config, plugins=[StrandsPlugin()])
+    client = await Client.connect(
+        **config,
+        plugins=[
+            StrandsPlugin(models={MODEL_NAME: lambda: BedrockModel(model_id=MODEL_ID)})
+        ],
+    )
     print("Connected to Temporal Service")
 
     result = await client.execute_workflow(

@@ -4,7 +4,7 @@ This sample shows how to execute Activities directly from a Temporal Client, wit
 
 For full documentation, see [Standalone Activities - Python SDK](https://docs.temporal.io/develop/python/standalone-activities).
 
-**Note: Temporal CLI support for Standalone Activities requires CLI version 1.9.0.** See setup guide: https://docs.temporal.io/cli/setup-cli
+**Note: Temporal CLI support for Standalone Activities requires CLI version 1.9.1.** See setup guide: https://docs.temporal.io/cli/setup-cli
 
 ### Sample directory structure
 

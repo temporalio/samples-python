@@ -6,6 +6,7 @@ from strands_tools.code_interpreter.models import ExecuteCodeAction, LanguageTyp
 from temporalio import activity
 
 
+# @@@SNIPSTART python-agentcore-code-interpreter-activity
 # Use AgentCore Code Interpreter to provide a code sandbox and execute LLM generated solution
 @activity.defn
 def execute_code(
@@ -19,3 +20,6 @@ def execute_code(
     return interpreter.execute_code(
         ExecuteCodeAction(type="executeCode", code=code, language=language)
     )
+
+
+# @@@SNIPEND

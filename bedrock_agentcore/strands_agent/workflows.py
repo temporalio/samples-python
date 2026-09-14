@@ -18,6 +18,7 @@ across calls, so variables you define in one call are still there in the next. R
 the code you ran and its output."""
 
 
+# @@@SNIPSTART python-agentcore-strands-workflow
 @workflow.defn
 class StrandsAgentWorkflow:
     def __init__(self) -> None:
@@ -40,3 +41,6 @@ class StrandsAgentWorkflow:
         # Workflow sandbox blocks.
         result = await self.agent.invoke_async(prompt)
         return str(result)
+
+
+# @@@SNIPEND

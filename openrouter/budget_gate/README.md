@@ -5,7 +5,7 @@ A prompt batch that pauses instead of failing when money runs out, and resumes w
 ## What this sample demonstrates
 
 - A soft budget enforced by the Workflow from the cost OpenRouter reports on every response. When the next call would exceed it, the batch parks on `workflow.wait_condition` and stays parked for as long as it takes (hours, days) without a Worker doing anything.
-- OpenRouter's own "insufficient credits" error (HTTP 402, raised when the API key hits its credit limit) handled the same way: the failing prompt parks instead of failing, and is re-run after the operator tops up.
+- OpenRouter refusing a call for lack of credits handled the same way: HTTP 402 when the account is out of credits, or HTTP 403 `Key limit exceeded` when the API key hit its own credit limit. The failing prompt parks instead of failing, and is re-run after the operator tops up.
 - A `raise_budget` Update to resume, with a validator that rejects lowering the budget, and a `spend_report` Query showing spend, reservations, the ledger, and which prompts are parked and why.
 - Completed prompts are never re-run. A restarted Worker, or a resumed batch, continues from the first unfinished prompt.
 
@@ -60,13 +60,37 @@ Total cost: $0.000873
 
 ### Out of credits at OpenRouter
 
-Set a credit limit on your API key in the [OpenRouter dashboard](https://openrouter.ai/settings/keys) below what the batch needs, and run with a generous soft budget. When OpenRouter returns 402, the prompt parks with reason `insufficient_credits`. Raise the key's limit, then send `raise_budget` with the current budget value to resume; the parked prompt is re-run.
+Set a credit limit on your API key in the [OpenRouter dashboard](https://openrouter.ai/settings/keys) below what the batch needs, and run with a generous soft budget:
+
+```bash
+uv run --group openrouter openrouter/budget_gate/run_workflow.py --budget-usd 1.0
+```
+
+When OpenRouter refuses the call (`403 Key limit exceeded` for a per-key limit, `402` when the account is out of credits), the prompt parks with reason `insufficient_credits`:
+
+```json
+{
+  "budget_usd": 1,
+  "spent_usd": 0,
+  "completed": 0,
+  "paused": {
+    "Define durable execution in one sentence.": "insufficient_credits",
+    "Why do LLM calls belong in Activities?": "insufficient_credits"
+  }
+}
+```
+
+Raise the key's limit in the dashboard, then send `raise_budget` with the current budget value to resume; the parked prompts are re-run:
+
+```bash
+uv run --group openrouter openrouter/budget_gate/raise_budget.py <workflow-id> 1.0
+```
 
 If nobody raises the budget within `--approval-timeout-seconds` (default one hour), the batch completes with the remaining prompts listed as skipped.
 
 ## What the soft budget does and does not guarantee
 
-The cost of a call is only known after the response, so the Workflow reserves `--estimate-usd` per in-flight call and checks `spent + reserved + estimate <= budget` before starting one. Overshoot is therefore bounded by `max_concurrency * estimate`, plus the gap between the estimate and the real cost of the calls already in flight. In the run above, the second prompt alone cost more than the whole budget; the third prompt is where the gate closed. To bound the cost of a single call, set `provider.max_price` in the request (see OpenRouter's provider routing docs). The hard cap is the credit limit on the OpenRouter API key, which is what produces the 402.
+The cost of a call is only known after the response, so the Workflow reserves `--estimate-usd` per in-flight call and checks `spent + reserved + estimate <= budget` before starting one. Overshoot is therefore bounded by `max_concurrency * estimate`, plus the gap between the estimate and the real cost of the calls already in flight. In the run above, the second prompt alone cost more than the whole budget; the third prompt is where the gate closed. To bound the cost of a single call, set `provider.max_price` in the request (see OpenRouter's provider routing docs). The hard cap is the credit limit on the OpenRouter API key, which is what produces the `403 Key limit exceeded`.
 
 While parked, in-flight prompts keep their concurrency slots and every remaining prompt parks on the same condition, so nothing spends until the budget is raised.
 
@@ -74,7 +98,7 @@ While parked, in-flight prompts keep their concurrency slots and every remaining
 
 | File | Description |
 |------|-------------|
-| [workflow.py](workflow.py) | `BudgetGateWorkflow`: reservation ledger, pause on soft budget or 402, `raise_budget` Update with validator, `spend_report` Query. |
+| [workflow.py](workflow.py) | `BudgetGateWorkflow`: reservation ledger, pause on soft budget or out-of-credits, `raise_budget` Update with validator, `spend_report` Query. |
 | [run_worker.py](run_worker.py) | Builds the OpenRouter client once and runs the Worker. |
 | [run_workflow.py](run_workflow.py) | Starts a batch with a budget and prints the result. |
 | [raise_budget.py](raise_budget.py) | Sends the `raise_budget` Update. |

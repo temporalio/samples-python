@@ -131,9 +131,27 @@ async def test_insufficient_credits_is_non_retryable() -> None:
             make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
         )
 
-    assert excinfo.value.type == "OpenRouterHTTP402"
+    assert excinfo.value.type == "OpenRouterOutOfCredits"
     assert excinfo.value.non_retryable
     assert "Insufficient credits" in str(excinfo.value)
+
+
+async def test_key_limit_exceeded_is_out_of_credits_too() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            403,
+            json={
+                "error": {"code": 403, "message": "Key limit exceeded (total limit)"}
+            },
+        )
+
+    with pytest.raises(ApplicationError) as excinfo:
+        await ActivityEnvironment().run(
+            make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
+        )
+
+    assert excinfo.value.type == "OpenRouterOutOfCredits"
+    assert excinfo.value.non_retryable
 
 
 async def test_server_error_is_retryable() -> None:

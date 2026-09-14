@@ -22,7 +22,7 @@ COST_PER_CALL = 0.001
 
 
 class FakeOpenRouter:
-    """Mock Activity with a per-prompt count and an optional 402 on first call."""
+    """Mock Activity with a per-prompt count; optionally out of credits on first call."""
 
     def __init__(self, out_of_credits_for: set[str] | None = None) -> None:
         self.calls: dict[str, int] = {}
@@ -36,8 +36,8 @@ class FakeOpenRouter:
             and self.calls[request.prompt] == 1
         ):
             raise ApplicationError(
-                "OpenRouter returned HTTP 402: Insufficient credits",
-                type="OpenRouterHTTP402",
+                "OpenRouter returned HTTP 403: Key limit exceeded (total limit)",
+                type="OpenRouterOutOfCredits",
                 non_retryable=True,
             )
         return OpenRouterResult(

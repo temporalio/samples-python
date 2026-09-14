@@ -44,6 +44,13 @@ def error_type(status: int) -> str:
     return f"OpenRouterHTTP{status}"
 
 
+# Raised instead of an HTTP status type when the call failed for lack of money:
+# 402 when the account is out of credits, or 403 "Key limit exceeded" when the
+# API key hit its own credit limit. A Workflow can pause on this and resume
+# once someone tops up.
+OUT_OF_CREDITS = "OpenRouterOutOfCredits"
+
+
 def _retry_after(headers: Mapping[str, str]) -> Optional[timedelta]:
     value = headers.get("retry-after")
     if value is None:
@@ -60,10 +67,18 @@ def raise_for_status(status: int, message: str, headers: Mapping[str, str]) -> N
 
     Retryable: 408 (timeout), 429 (rate limited, honoring Retry-After), and
     any 5xx (500, 502 model down, 503 no provider available, 524, 529).
-    Non-retryable: other 4xx. 400 is a bad request, 401 a bad key, 402 means
-    the key is out of credits, 403 a moderation or permission block. Retrying
-    those only costs time.
+    Non-retryable: other 4xx. 400 is a bad request, 401 a bad key, 403 a
+    moderation or permission block. Retrying those only costs time.
+    Out of money is its own type (OUT_OF_CREDITS): 402 when the account has no
+    credits, 403 "Key limit exceeded" when the API key hit its credit limit.
     """
+    if status == 402 or (status == 403 and "limit exceeded" in message.lower()):
+        raise ApplicationError(
+            f"OpenRouter returned HTTP {status}: {message}",
+            {"status": status},
+            type=OUT_OF_CREDITS,
+            non_retryable=True,
+        )
     retryable = status in (408, 429) or status >= 500
     raise ApplicationError(
         f"OpenRouter returned HTTP {status}: {message}",

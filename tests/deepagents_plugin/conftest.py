@@ -1,21 +1,18 @@
 """Collection guard for the Deep Agents plugin tests.
 
-The plugin ships as the `temporalio[deepagents]` extra and requires
-Python >= 3.11. It is merged to sdk-python main but the current PyPI
-release (1.31.0) predates the merge, so the `deepagents` dependency group
-cannot install it yet and the canonical `poe test` run
-(`uv run --all-groups pytest`) does not have it. These test modules import
-`temporalio.contrib.deepagents` at module load, which would raise
-`ImportError` during collection whenever the plugin is absent (any
-interpreter) or the interpreter is < 3.11 — failing the whole session.
+The plugin ships as the `temporalio[deepagents]` extra (temporalio >=
+1.32.0), which the `deepagents` dependency group installs on Python >= 3.11.
+These test modules import `temporalio.contrib.deepagents` at module load,
+which would raise `ImportError` during collection whenever the plugin's
+runtime deps are absent — an interpreter below 3.11 (where the group
+resolves to nothing) or an environment synced without the group — failing
+the whole session.
 
 A module-level `pytest.mark.skipif` cannot help here: the mark is only read
 *after* the module is imported, so the import error fires first. `collect_ignore`
 is evaluated before any test module is imported, so it skips these files
-cleanly when the plugin is unavailable while still running them once it is
-installed on 3.11+ (interim: from sdk-python main per the suite README;
-after the release that ships the extra: via the `deepagents` group, at which
-point this guard becomes a no-op and the suite runs in CI).
+cleanly when the plugin is unavailable while still running them on any
+3.11+ environment synced with the group — the canonical CI run included.
 
 The guard performs a real (guarded) import rather than `find_spec`: the
 subpackage can exist on disk while its runtime deps do not — e.g. a

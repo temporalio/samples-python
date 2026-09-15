@@ -8,6 +8,10 @@ TASK_QUEUE = "agentcore-strands-task-queue"
 DEPLOYMENT_NAME = "agentcore-strands-agent-python"
 BUILD_ID = "1.0.0"
 
+# @@@SNIPSTART python-agentcore-strands-workflow
+MODEL_NAME = "nova-lite"
+MODEL_ID = "amazon.nova-lite-v1:0"
+
 with workflow.unsafe.imports_passed_through():
     from activities import execute_code
 
@@ -18,13 +22,12 @@ across calls, so variables you define in one call are still there in the next. R
 the code you ran and its output."""
 
 
-# @@@SNIPSTART python-agentcore-strands-workflow
 @workflow.defn
 class StrandsAgentWorkflow:
     def __init__(self) -> None:
-        # Configure with the plugin's default BedrockModel(), custom system
-        # prompt and code interpreter tool.
+        # Configure the model, custom system prompt and code interpreter tool.
         self.agent = TemporalAgent(
+            model=MODEL_NAME,
             start_to_close_timeout=timedelta(seconds=60),
             system_prompt=SYSTEM_PROMPT,
             tools=[

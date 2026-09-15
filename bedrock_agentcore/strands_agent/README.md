@@ -31,10 +31,8 @@ workflows kick off.
 - AWS permissions for the AgentCore CLI (S3, IAM, CloudFormation): see [Use the
   AgentCore
   CLI](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html#runtime-permissions-cli)
-- Access to an [Amazon
-  Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html)
-  foundation model in your region -- the agent uses the plugin's default
-  `BedrockModel()`
+- Access to the Amazon Nova Lite model in your target Region. The sample uses
+  the model ID `amazon.nova-lite-v1:0`.
 
 
 Docker is not needed. With the CodeZip build there is no image: the CLI uploads a
@@ -75,8 +73,8 @@ This sample opts to utilize the new AgentCore CLI for creating and updating both
 ### 1. Choose the AWS account and region
 
 Edit `agentcore/aws-targets.json` with the account ID and region to deploy into. AgentCore is only available in
-[certain regions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html), and the region
-needs the Bedrock model enabled.
+[certain regions](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-regions.html), and the Region
+must support Amazon Nova Lite.
 
 ### 2. Configure the Temporal connection
 

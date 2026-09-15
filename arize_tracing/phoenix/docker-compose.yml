@@ -1,0 +1,21 @@
+# Self-hosted Arize Phoenix for the arize_tracing samples.
+#
+# One container serves the UI, the REST API, and the OTLP/HTTP collector on
+# port 6006 (the OTLP gRPC listener on 4317 is not published; this sample
+# exports over HTTP). Traces persist in a named volume across restarts.
+#
+# Start:  docker compose -f arize_tracing/phoenix/docker-compose.yml up -d
+# Check:  curl -sf http://localhost:6006/healthz
+# UI:     http://localhost:6006
+name: phoenix-demo
+services:
+  phoenix:
+    image: arizephoenix/phoenix:version-20.9.0
+    ports:
+      - "6006:6006"
+    environment:
+      PHOENIX_WORKING_DIR: /mnt/data
+    volumes:
+      - phoenix_data:/mnt/data
+volumes:
+  phoenix_data: {}

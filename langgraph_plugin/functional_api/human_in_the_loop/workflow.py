@@ -8,7 +8,6 @@ then resumes the entrypoint with Command(resume=...).
 from datetime import timedelta
 from typing import Any
 
-from langchain.chat_models import init_chat_model
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.func import entrypoint, task
@@ -19,26 +18,20 @@ from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
 
 @task
 async def generate_draft(message: str) -> str:
-    """Generate a draft response with an LLM."""
-    response = await init_chat_model("claude-sonnet-4-6").ainvoke(
-        f"Please respond concisely to: {message}"
+    """Generate a draft response. Replace with an LLM call in production."""
+    return (
+        f"Here's my response to '{message}': "
+        "The answer is 42. Let me know if this helps!"
     )
-    return str(response.content)
 
 
 @task
 async def request_human_review(draft: str) -> str:
-    """Present draft to human for review via interrupt; revise with LLM on feedback."""
+    """Present draft to human for review via interrupt; revise on feedback."""
     feedback = interrupt(draft)
     if feedback == "approve":
         return draft
-    response = await init_chat_model("claude-sonnet-4-6").ainvoke(
-        "Revise the following draft according to the reviewer's feedback. "
-        "Output only the revised draft, with no preamble.\n\n"
-        f"Draft:\n{draft}\n\n"
-        f"Feedback:\n{feedback}"
-    )
-    return str(response.content)
+    return f"[Revised] {draft} (incorporating feedback: {feedback})"
 
 
 @entrypoint()

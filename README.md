@@ -98,6 +98,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 without wrapping them in a workflow.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [openai_agents](openai_agents) - Run OpenAI Agents SDK agents as durable Temporal workflows.
+* [openrouter](openrouter) - Call OpenRouter from Activities: fan out a prompt batch, and pause instead of failing when the budget or credits run out.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.

@@ -18,17 +18,17 @@ cd openai_agents/mcp_v2
 First, start the MCP server:
 
 ```bash
-uv run --locked python tools_server.py
+uv run python tools_server.py
 ```
 
 Then start the Temporal worker:
 
 ```bash
-uv run --locked python run_worker.py
+uv run python run_worker.py
 ```
 
 Finally, run the workflow:
 
 ```bash
-uv run --locked python run_workflow.py
+uv run python run_workflow.py
 ```

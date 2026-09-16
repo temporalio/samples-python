@@ -22,12 +22,12 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(autouse=True)
 def _restore_tasks():
-    original_funcs = [t.func for t in all_tasks]
+    original_funcs = [getattr(t, "func") for t in all_tasks]
     try:
         yield
     finally:
         for t, orig in zip(all_tasks, original_funcs):
-            t.func = orig
+            setattr(t, "func", orig)
 
 
 async def test_functional_human_in_the_loop_approve(client: Client) -> None:

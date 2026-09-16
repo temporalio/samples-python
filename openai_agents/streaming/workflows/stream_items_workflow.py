@@ -21,8 +21,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from agents import Agent, ItemHelpers, Runner
-from temporalio import workflow
 from temporalio import openai_agents as temporal_agents
+from temporalio import workflow
 from temporalio.contrib.workflow_streams import WorkflowStream, WorkflowStreamState
 
 from openai_agents.streaming.activities.joke_activities import how_many_jokes

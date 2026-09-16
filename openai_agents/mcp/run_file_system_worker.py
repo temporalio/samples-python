@@ -7,12 +7,12 @@ from datetime import timedelta
 
 from agents.mcp import MCPServerStdio
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.openai_agents import (
     ModelActivityParameters,
     OpenAIAgentsPlugin,
     StatelessMCPServerProvider,
 )
-from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from openai_agents.mcp.workflows.file_system_workflow import FileSystemWorkflow

@@ -10,7 +10,7 @@ from temporalio.envconfig import ClientConfig
 from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
-from openai_agents.mcp.v2.workflow import (
+from openai_agents.mcp_v2.workflow import (
     MCP_SERVER_NAME,
     TASK_QUEUE,
     StreamableHttpV2Workflow,

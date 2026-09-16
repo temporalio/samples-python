@@ -6,7 +6,7 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.openai_agents import OpenAIAgentsPlugin
 
-from openai_agents.mcp.v2.workflow import TASK_QUEUE, StreamableHttpV2Workflow
+from openai_agents.mcp_v2.workflow import TASK_QUEUE, StreamableHttpV2Workflow
 
 
 async def main() -> None:

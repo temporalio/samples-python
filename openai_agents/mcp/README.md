@@ -24,38 +24,7 @@ uv run openai_agents/mcp/run_file_system_workflow.py
 This sample assumes that the worker and `run_file_system_workflow.py` are on the same machine.
 
 
-### MCP v2 with Streamable HTTP
-
-This example uses the MCP v2 API: the worker registers a named server factory
-with `OpenAIAgentsPlugin(mcp_servers=...)`, and the workflow creates a durable
-proxy with `temporal_mcp_server(...)`.
-
-First, start the MCP server:
-```bash
-uv run --project openai_agents/mcp/v2 \
-  python -m openai_agents.mcp.v2.tools_server
-```
-
-Then start the worker:
-```bash
-uv run --project openai_agents/mcp/v2 \
-  python -m openai_agents.mcp.v2.run_worker
-```
-
-Finally, run the workflow:
-```bash
-uv run --project openai_agents/mcp/v2 \
-  python -m openai_agents.mcp.v2.run_workflow
-```
-
-The separate uv project keeps MCP SDK v2 isolated from samples that still use
-the MCP SDK v1 compatibility API.
-
-The remaining examples use the legacy MCP provider API, which is retained for
-compatibility.
-
-
-### Streamable HTTP MCP (Legacy Provider API)
+### Streamable HTTP MCP
 
 First, start the worker:
 ```bash

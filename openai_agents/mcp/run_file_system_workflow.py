@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.openai_agents import OpenAIAgentsPlugin
 from temporalio.envconfig import ClientConfig
 
 from openai_agents.mcp.workflows.file_system_workflow import FileSystemWorkflow

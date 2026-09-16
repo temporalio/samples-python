@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from agents.mcp import MCPServerStreamableHttp
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import (
+from temporalio.openai_agents import (
     ModelActivityParameters,
     OpenAIAgentsPlugin,
     StatelessMCPServerProvider,

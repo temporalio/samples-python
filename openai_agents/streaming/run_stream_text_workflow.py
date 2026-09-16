@@ -20,7 +20,7 @@ from agents.items import TResponseStreamEvent
 from openai.types.responses import ResponseCompletedEvent, ResponseTextDeltaEvent
 from temporalio.client import Client
 from temporalio.common import RawValue
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.openai_agents import OpenAIAgentsPlugin
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
 
 from openai_agents.streaming.shared import TASK_QUEUE, TOPIC_DONE, TOPIC_EVENTS

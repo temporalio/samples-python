@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from agents import Agent, Runner
 from temporalio import workflow
-from temporalio.contrib import openai_agents as temporal_agents
+from temporalio import openai_agents as temporal_agents
 
 from openai_agents.basic.activities.get_weather_activity import get_weather
 

@@ -62,6 +62,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
+* [bedrock_agentcore/strands_agent](bedrock_agentcore/strands_agent) - Run a AWS Strands Agent with Temporal Plugin on AgentCore Worker.
 * [cloud_export_to_parquet](cloud_export_to_parquet) - Set up schedule workflow to process exported files on an hourly basis
 * [context_propagation](context_propagation) - Context propagation through workflows/activities via interceptor.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.

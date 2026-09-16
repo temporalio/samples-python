@@ -9,25 +9,26 @@ Review the integration [prerequisites](../README.md#prerequisites), including a
 running Temporal dev server and an `OPENAI_API_KEY`, before running the sample.
 
 The sample has its own uv project because other samples still require MCP SDK
-v1. Run these commands from the repository root.
+v1. Change to the sample directory before running it:
+
+```bash
+cd openai_agents/mcp_v2
+```
 
 First, start the MCP server:
 
 ```bash
-uv run --project openai_agents/mcp_v2 --locked \
-  python -m openai_agents.mcp_v2.tools_server
+uv run --locked python tools_server.py
 ```
 
 Then start the Temporal worker:
 
 ```bash
-uv run --project openai_agents/mcp_v2 --locked \
-  python -m openai_agents.mcp_v2.run_worker
+uv run --locked python run_worker.py
 ```
 
 Finally, run the workflow:
 
 ```bash
-uv run --project openai_agents/mcp_v2 --locked \
-  python -m openai_agents.mcp_v2.run_workflow
+uv run --locked python run_workflow.py
 ```

@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
+from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
 from openai_agents.agent_patterns.workflows.agents_as_tools_workflow import (

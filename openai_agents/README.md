@@ -33,7 +33,8 @@ Each directory contains a complete example with its own README for detailed inst
 - **[Tools](./tools/README.md)** - Demonstrates available tools such as file search, image generation, and others.
 - **[Handoffs](./handoffs/README.md)** - Agents collaborating via handoffs.
 - **[Hosted MCP](./hosted_mcp/README.md)** - Using the MCP client functionality of the OpenAI Responses API.
-- **[MCP](./mcp/README.md)** - Local MCP servers (filesystem/stdio, streamable HTTP, SSE, prompt server) integrated with Temporal workflows.
+- **[MCP v2](./mcp_v2/README.md)** - MCP SDK v2 using named server factories and durable workflow proxies.
+- **[MCP](./mcp/README.md)** - Legacy MCP provider examples retained for compatibility.
 - **[Model Providers](./model_providers/README.md)** - Using custom LLM providers (e.g., Anthropic via LiteLLM).
 - **[Research Bot](./research_bot/README.md)** - Multi-agent research system with specialized roles: a planner agent, search agent, and writer agent working together to conduct comprehensive research.
 - **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.

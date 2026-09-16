@@ -3,25 +3,22 @@ from __future__ import annotations
 import asyncio
 
 from temporalio.client import Client
+from temporalio.envconfig import ClientConfig
 from temporalio.openai_agents import OpenAIAgentsPlugin
-
-from openai_agents.sandbox.shared import TASK_QUEUE
-from openai_agents.sandbox.workflows.local_sandbox_workflow import (
-    LocalSandboxWorkflow,
-)
+from workflow import TASK_QUEUE, StreamableHttpV2Workflow
 
 
 async def main() -> None:
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(
-        "localhost:7233",
+        **config,
         plugins=[OpenAIAgentsPlugin()],
     )
 
     result = await client.execute_workflow(
-        LocalSandboxWorkflow.run,
-        "Write a file holding the first 20 Fibonacci numbers, one per line, "
-        "then tell me how many lines it has and what the last one is.",
-        id="openai-agents-sandbox",
+        StreamableHttpV2Workflow.run,
+        id="streamable-http-v2-workflow",
         task_queue=TASK_QUEUE,
     )
     print(f"Result: {result}")

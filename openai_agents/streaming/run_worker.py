@@ -5,7 +5,7 @@ import logging
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import (
+from temporalio.openai_agents import (
     ModelActivityParameters,
     OpenAIAgentsPlugin,
 )

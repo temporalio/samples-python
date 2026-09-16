@@ -3,8 +3,7 @@ from __future__ import annotations
 from agents import Agent, Runner, trace
 from agents.mcp import MCPServer
 from agents.model_settings import ModelSettings
-from temporalio import workflow
-from temporalio.contrib import openai_agents
+from temporalio import openai_agents, workflow
 
 
 @workflow.defn

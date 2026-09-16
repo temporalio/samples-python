@@ -11,7 +11,7 @@ from agents import (
 )
 from openai import AsyncOpenAI
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
+from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
 from openai_agents.model_providers.workflows.gpt_oss_workflow import GptOssWorkflow

@@ -115,15 +115,15 @@ build-backend = "setuptools.build_meta"
 
 [tool.poe.tasks]
 format = [
-    { cmd = "uv run ruff check --select I --fix" },
-    { cmd = "uv run ruff format" },
+    { cmd = "uv run scripts/run_root_tool.py ruff check --select I --fix" },
+    { cmd = "uv run scripts/run_root_tool.py ruff format" },
 ]
 lint = [
-    { cmd = "uv run ruff check --select I" },
-    { cmd = "uv run ruff format --check" },
+    { cmd = "uv run scripts/run_root_tool.py ruff check --select I" },
+    { cmd = "uv run scripts/run_root_tool.py ruff format --check" },
     { ref = "lint-types" },
 ]
-lint-types = "uv run --all-groups --no-group cloud-export-to-parquet mypy --check-untyped-defs --namespace-packages ."
+lint-types = "uv run --all-groups --no-group cloud-export-to-parquet scripts/run_root_tool.py mypy --check-untyped-defs --namespace-packages ."
 test = "uv run --all-groups --no-group cloud-export-to-parquet pytest"
 
 [tool.pytest.ini_options]
@@ -135,22 +135,10 @@ testpaths = ["tests"]
 
 [tool.ruff]
 target-version = "py310"
-extend-exclude = [
-    "bedrock_agentcore/strands_agent",
-    "lambda_worker",
-    "openai_agents/mcp_v2",
-]
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
-# Standalone projects are checked in their own locked environments by CI.
-# Some also contain duplicate flat module names such as activities.py.
-exclude = [
-    "bedrock_agentcore/strands_agent/",
-    "lambda_worker/",
-    "openai_agents/mcp_v2/",
-]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

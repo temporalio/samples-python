@@ -82,6 +82,7 @@ openai-agents = [
     "temporalio-openai-agents >= 1.0.0",
     "requests>=2.32.0,<3",
 ]
+openrouter = ["openai>=1.4.0,<3"]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 sentry = ["sentry-sdk>=2.13.0"]
 strands-agents = [

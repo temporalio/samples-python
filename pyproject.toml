@@ -131,17 +131,26 @@ asyncio_mode = "auto"
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+testpaths = ["tests"]
 
 [tool.ruff]
 target-version = "py310"
-extend-exclude = ["lambda_worker"]
+extend-exclude = [
+    "bedrock_agentcore/strands_agent",
+    "lambda_worker",
+    "openai_agents/mcp_v2",
+]
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
-# Both samples have a flat activities.py, so leaving them in
-# aborts the whole run with "Duplicate module named activities"
-exclude = ["bedrock_agentcore/", "lambda_worker/"]
+# Standalone projects are checked in their own locked environments by CI.
+# Some also contain duplicate flat module names such as activities.py.
+exclude = [
+    "bedrock_agentcore/strands_agent/",
+    "lambda_worker/",
+    "openai_agents/mcp_v2/",
+]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

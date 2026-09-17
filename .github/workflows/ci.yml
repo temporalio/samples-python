@@ -25,25 +25,41 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
-          if [[ -n "$BASE_SHA" ]] && git cat-file -e "$BASE_SHA^{commit}"; then
-            changed_files="$(git diff --name-only "$BASE_SHA" "$GITHUB_SHA")"
-          else
-            changed_files="$(git ls-files)"
-          fi
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
 
-          projects_json="$({
-            for project in \
-              bedrock_agentcore/strands_agent \
-              lambda_worker \
-              openai_agents/mcp_v2
-            do
-              if grep -q "^${project}/" <<< "$changed_files"; then
-                printf '%s\n' "$project"
-              fi
-            done
-          } | jq -Rsc 'split("\n") | map(select(length > 0))')"
+          from scripts.run_root_tool import find_nested_projects
 
-          echo "projects=$projects_json" >> "$GITHUB_OUTPUT"
+          base = os.environ.get("BASE_SHA")
+          if base and subprocess.run(
+              ["git", "cat-file", "-e", f"{base}^{{commit}}"],
+              check=False,
+          ).returncode == 0:
+              changed_output = subprocess.check_output(
+                  ["git", "diff", "--name-only", base, os.environ["GITHUB_SHA"]],
+                  text=True,
+              )
+          else:
+              changed_output = subprocess.check_output(
+                  ["git", "ls-files"],
+                  text=True,
+              )
+
+          changed_files = changed_output.splitlines()
+          projects = [
+              project
+              for project in find_nested_projects(Path.cwd())
+              if any(
+                  path == project or path.startswith(f"{project}/")
+                  for path in changed_files
+              )
+          ]
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"projects={json.dumps(projects)}\n")
+          PY
 
   standalone-lint-test:
     name: Standalone (${{ matrix.project }}, Python ${{ matrix.python }})

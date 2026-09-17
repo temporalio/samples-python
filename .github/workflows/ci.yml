@@ -10,6 +10,65 @@ on: # rebuild any PRs and main branch changes
       - "releases/*"
 
 jobs:
+  detect-standalone-changes:
+    name: Detect standalone sample changes
+    runs-on: ubuntu-latest
+    outputs:
+      projects: ${{ steps.changes.outputs.projects }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+      - name: Build standalone project matrix
+        id: changes
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ -n "$BASE_SHA" ]] && git cat-file -e "$BASE_SHA^{commit}"; then
+            changed_files="$(git diff --name-only "$BASE_SHA" "$GITHUB_SHA")"
+          else
+            changed_files="$(git ls-files)"
+          fi
+
+          projects_json="$({
+            for project in \
+              bedrock_agentcore/strands_agent \
+              lambda_worker \
+              openai_agents/mcp_v2
+            do
+              if grep -q "^${project}/" <<< "$changed_files"; then
+                printf '%s\n' "$project"
+              fi
+            done
+          } | jq -Rsc 'split("\n") | map(select(length > 0))')"
+
+          echo "projects=$projects_json" >> "$GITHUB_OUTPUT"
+
+  standalone-lint-test:
+    name: Standalone (${{ matrix.project }}, Python ${{ matrix.python }})
+    needs: detect-standalone-changes
+    if: needs.detect-standalone-changes.outputs.projects != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.14"]
+        project: ${{ fromJSON(needs.detect-standalone-changes.outputs.projects) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked --all-groups
+        working-directory: ${{ matrix.project }}
+      - run: uv run poe lint
+        working-directory: ${{ matrix.project }}
+      - run: uv run poe test
+        working-directory: ${{ matrix.project }}
+
   # Build and test the project
   build-lint-test:
     strategy:

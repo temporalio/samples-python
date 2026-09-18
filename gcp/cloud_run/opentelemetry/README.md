@@ -1,6 +1,6 @@
 # Google Cloud Run OpenTelemetry Worker
 
-Run a long-lived Temporal Worker on a [Google Cloud Run worker
+Run a Temporal Worker on a [Google Cloud Run worker
 pool](https://cloud.google.com/run/docs/worker-pools) with
 `temporalio.contrib.gcp.cloud_run.opentelemetry.OpenTelemetryPlugin`. It exports
 Temporal Core metrics and traces over OTLP/gRPC to a Google-Built OpenTelemetry

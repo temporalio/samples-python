@@ -1,21 +1,16 @@
-"""Run an OpenTelemetry-instrumented Temporal Worker on Cloud Run."""
+"""Run an OpenTelemetry-instrumented Temporal Worker on a Cloud Run worker pool."""
 
 from __future__ import annotations
 
 import asyncio
-import os
 import signal
-from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.gcp.cloud_run.opentelemetry import (
-    DEFAULT_METRIC_PERIODICITY,
-    OpenTelemetryPlugin,
-)
+from temporalio.contrib.gcp.cloud_run.opentelemetry import OpenTelemetryPlugin
 from temporalio.worker import Worker
 
+from gcp.cloud_run.opentelemetry.settings import load_settings
 from gcp.cloud_run.opentelemetry.workflow import GreetingWorkflow, compose_greeting
 
 COLLECTOR_HOST = "127.0.0.1"
@@ -23,48 +18,6 @@ COLLECTOR_PORT = 4317
 COLLECTOR_STARTUP_TIMEOUT = timedelta(seconds=60)
 WORKER_GRACEFUL_SHUTDOWN_TIMEOUT = timedelta(seconds=5)
 TRACE_FLUSH_TIMEOUT = timedelta(seconds=2)
-
-
-@dataclass(frozen=True)
-class WorkerSettings:
-    """Environment-backed Temporal connection settings."""
-
-    address: str
-    namespace: str
-    task_queue: str
-    api_key: str | None
-
-    @classmethod
-    def from_environment(
-        cls, environment: Mapping[str, str] | None = None
-    ) -> WorkerSettings:
-        env = os.environ if environment is None else environment
-        namespace = _required(env, "TEMPORAL_NAMESPACE")
-        return cls(
-            address=_optional(env, "TEMPORAL_ADDRESS")
-            or f"{namespace}.tmprl.cloud:7233",
-            namespace=namespace,
-            task_queue=_required(env, "TEMPORAL_TASK_QUEUE"),
-            # Optional: set for Temporal Cloud (enables TLS). Omit for a
-            # plaintext self-hosted / dev server. Secret Manager preserves
-            # trailing newlines from the source file.
-            api_key=_optional(env, "TEMPORAL_API_KEY"),
-        )
-
-
-def _required(environment: Mapping[str, str], name: str) -> str:
-    value = _optional(environment, name)
-    if value is None:
-        raise RuntimeError(f"{name} must be set to a non-empty value")
-    return value
-
-
-def _optional(environment: Mapping[str, str], name: str) -> str | None:
-    value = environment.get(name)
-    if value is None:
-        return None
-    stripped = value.strip()
-    return stripped or None
 
 
 async def wait_for_collector(
@@ -94,28 +47,17 @@ async def wait_for_collector(
     ) from last_error
 
 
-async def run_worker() -> None:
-    """Connect to Temporal and run until Cloud Run requests shutdown."""
-    settings = WorkerSettings.from_environment()
+async def main() -> None:
+    settings = load_settings()
     await wait_for_collector()
 
-    expected_metric_periodicity = timedelta(seconds=60)
-    if DEFAULT_METRIC_PERIODICITY != expected_metric_periodicity:
-        raise RuntimeError(
-            "Expected the coordinated 60-second GCP metric periodicity, got "
-            f"{DEFAULT_METRIC_PERIODICITY}"
-        )
-
     # @@@SNIPSTART python-cloud-run-otel-worker
-    # Endpoint, service name, Core metrics, and tracer provider all use the GCP
-    # plugin defaults. The opt-in adds named Temporal operation spans.
     plugin = OpenTelemetryPlugin(add_temporal_spans=True)
     client = await Client.connect(
         settings.address,
         namespace=settings.namespace,
         api_key=settings.api_key,
-        # TLS for Temporal Cloud (api key present); plaintext for a dev server.
-        tls=bool(settings.api_key),
+        tls=settings.tls,
         plugins=[plugin],
     )
     worker = Worker(
@@ -145,8 +87,7 @@ async def run_worker() -> None:
         "Worker starting "
         f"task_queue={settings.task_queue} "
         f"otel_endpoint={plugin.endpoint} "
-        f"service_name={plugin.service_name} "
-        f"metric_periodicity={DEFAULT_METRIC_PERIODICITY.total_seconds():g}s",
+        f"service_name={plugin.service_name}",
         flush=True,
     )
     try:
@@ -157,4 +98,4 @@ async def run_worker() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(run_worker())
+    asyncio.run(main())

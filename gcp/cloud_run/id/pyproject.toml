@@ -1,0 +1,22 @@
+[project]
+name = "temporalio-samples-gcp-cloud-run-id"
+version = "0.1a1"
+description = "Cloud Run instance identity for a Temporal Worker on Google Cloud Run"
+authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
+requires-python = ">=3.10"
+readme = "README.md"
+license = "MIT"
+dependencies = ["temporalio>=1.33.0,<2"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0,<0.6",
+    "mypy>=1.4.1,<2",
+]
+
+[tool.uv]
+package = false
+
+# CloudRunIdPlugin is unreleased; pin temporalio to the SDK commit that adds it until it ships on PyPI.
+[tool.uv.sources]
+temporalio = { git = "https://github.com/temporalio/sdk-python", rev = "fa5cf46ea04920be138bafca7e20ca6208822c30" }

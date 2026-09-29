@@ -17,6 +17,7 @@ processors:
   resource_detection:
     detectors: [gcp]
     timeout: 10s
+  # Rename Temporal datapoint labels that collide with the target labels Managed Service for Prometheus injects (e.g. namespace).
   transform/collision:
     metric_statements:
       - context: datapoint
@@ -33,6 +34,7 @@ processors:
           - delete_key(attributes, "instance")
           - set(attributes["exported_project_id"], attributes["project_id"])
           - delete_key(attributes, "project_id")
+  # The Telemetry API expects the Google Cloud project in gcp.project_id.
   transform/set_project_id:
     error_mode: ignore
     trace_statements:

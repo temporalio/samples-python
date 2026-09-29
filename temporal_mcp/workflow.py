@@ -30,6 +30,7 @@ class MCPDemoResult:
     resources: list[str]
     resource_templates: list[str]
     resource_output: str
+    template_resource_output: str
 
 
 @workflow.defn
@@ -54,6 +55,7 @@ class MCPDemoWorkflow:
         resources = await client.list_resources()
         resource_templates = await client.list_resource_templates()
         resource = await client.read_resource("sample://about")
+        template_resource = await client.read_resource("sample://items/example")
 
         return MCPDemoResult(
             tools=[tool.name for tool in tools.tools],
@@ -65,4 +67,7 @@ class MCPDemoWorkflow:
                 template.name for template in resource_templates.resource_templates
             ],
             resource_output=cast(TextResourceContents, resource.contents[0]).text,
+            template_resource_output=cast(
+                TextResourceContents, template_resource.contents[0]
+            ).text,
         )

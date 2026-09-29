@@ -100,4 +100,5 @@ async def test_workflow_through_each_transport(
         resources=["about"],
         resource_templates=["item"],
         resource_output="Temporal workflows can call MCP operations durably.",
+        template_resource_output="example",
     )

@@ -6,3 +6,34 @@ dependencies = [
     "requests>=2.32.0,<3",
     "temporalio-openai-agents[mcp]>=1.0.0",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0,<0.6",
+    "mypy>=1.4.1,<2",
+    "poethepoet>=0.36.0",
+    "pytest>=7.1.2,<8",
+]
+
+[tool.poe.tasks]
+format = [
+    { cmd = "uv run ruff check --select I --fix" },
+    { cmd = "uv run ruff format" },
+]
+lint = [
+    { cmd = "uv run ruff check --select I" },
+    { cmd = "uv run ruff format --check" },
+    { ref = "lint-types" },
+]
+lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages --explicit-package-bases ."
+test = "uv run pytest"
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

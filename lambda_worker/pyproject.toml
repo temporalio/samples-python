@@ -13,6 +13,8 @@ dev = [
     "ruff>=0.5.0,<0.6",
     "mypy>=1.4.1,<2",
     "poethepoet>=0.36.0",
+    "pytest>=7.1.2,<8",
+    "pytest-asyncio>=0.18.3,<0.19",
 ]
 
 [build-system]
@@ -36,6 +38,10 @@ lint = [
     { ref = "lint-types" },
 ]
 lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages ."
+test = "uv run pytest"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
 
 [tool.ruff]
 target-version = "py310"

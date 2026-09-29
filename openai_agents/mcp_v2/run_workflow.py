@@ -5,6 +5,7 @@ import asyncio
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.openai_agents import OpenAIAgentsPlugin
+
 from workflow import TASK_QUEUE, StreamableHttpV2Workflow
 
 

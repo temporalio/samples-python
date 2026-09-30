@@ -83,8 +83,9 @@ class BudgetGateInput:
     estimated_cost_usd: float = 0.001
     model: str = DEFAULT_MODEL
     max_concurrency: int = 3
-    # How long a paused batch waits for a `raise_budget` Update before giving
-    # up on the remaining prompts.
+    # How long, from the start of the batch, parked prompts wait for a
+    # `raise_budget` Update before the batch gives up on them. One deadline is
+    # shared by the whole batch.
     approval_timeout_seconds: int = 3600
 
 

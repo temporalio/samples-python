@@ -45,7 +45,7 @@ Then run the example in a separate terminal:
 uv run openai_agents/model_providers/run_openrouter_workflow.py
 ```
 
-The workflow uses `openai/gpt-4o-mini`; change `OPENROUTER_MODEL` in [workflows/openrouter_workflow.py](workflows/openrouter_workflow.py) to any OpenRouter model slug, or to `openrouter/auto` to let OpenRouter pick. See the [openrouter](../../openrouter) sample for calling OpenRouter directly from Activities with cost tracking and budgets.
+The workflow uses `openrouter/auto`, so OpenRouter picks a model per request; change `OPENROUTER_MODEL` in [workflows/openrouter_workflow.py](workflows/openrouter_workflow.py) to pin any OpenRouter model slug. Tools that run inside the Workflow must be `async`: the Agents SDK runs sync tools in a thread, which the Workflow sandbox does not allow. See the [openrouter](../../openrouter) sample for calling OpenRouter directly from Activities with cost tracking and budgets.
 
 ### Extra
 

@@ -1,6 +1,6 @@
 import asyncio
 from datetime import timedelta
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 
 from temporalio import workflow
 from temporalio.exceptions import ActivityError, ApplicationError
@@ -46,6 +46,7 @@ class BudgetGateWorkflow:
         self._budget_version = 0
         self._ledger: list[LedgerEntry] = []
         self._paused: dict[str, str] = {}
+        self._deadline = workflow.now()
 
     @workflow.run
     async def run(self, gate: BudgetGateInput) -> BatchResult:
@@ -55,7 +56,21 @@ class BudgetGateWorkflow:
                 f"{MAX_PROMPTS_PER_BATCH}.",
                 non_retryable=True,
             )
+        if gate.max_concurrency < 1:
+            raise ApplicationError(
+                "max_concurrency must be at least 1", non_retryable=True
+            )
+        if gate.estimated_cost_usd <= 0 or gate.budget_usd < 0:
+            raise ApplicationError(
+                "estimated_cost_usd must be positive and budget_usd non-negative",
+                non_retryable=True,
+            )
         self._budget_usd = gate.budget_usd
+        # One deadline for the whole batch: every parked prompt waits until this
+        # moment, not for its own full approval timeout.
+        self._deadline = workflow.now() + timedelta(
+            seconds=gate.approval_timeout_seconds
+        )
         semaphore = asyncio.Semaphore(gate.max_concurrency)
         try:
             outcomes = await asyncio.gather(
@@ -110,9 +125,8 @@ class BudgetGateWorkflow:
     async def _answer(
         self, prompt: str, gate: BudgetGateInput, semaphore: asyncio.Semaphore
     ) -> Union[OpenRouterResult, SkippedPrompt]:
-        timeout = timedelta(seconds=gate.approval_timeout_seconds)
         async with semaphore:
-            if not await self._reserve(prompt, gate.estimated_cost_usd, timeout):
+            if not await self._reserve(prompt, gate.estimated_cost_usd):
                 return SkippedPrompt(prompt=prompt, reason="soft_budget_exhausted")
             try:
                 while True:
@@ -133,7 +147,7 @@ class BudgetGateWorkflow:
                         ):
                             # Out of credits at OpenRouter. Park until the
                             # operator tops up and sends raise_budget.
-                            if await self._wait_for_more_credits(prompt, timeout):
+                            if await self._wait_for_more_credits(prompt):
                                 continue
                             return SkippedPrompt(
                                 prompt=prompt, reason="insufficient_credits"
@@ -162,7 +176,7 @@ class BudgetGateWorkflow:
                 self._reserved_usd -= gate.estimated_cost_usd
 
     # @@@SNIPSTART python-openrouter-budget-gate-pause
-    async def _reserve(self, prompt: str, estimate: float, timeout: timedelta) -> bool:
+    async def _reserve(self, prompt: str, estimate: float) -> bool:
         """Reserve `estimate` against the budget, parking until it fits."""
 
         def fits() -> bool:
@@ -175,29 +189,34 @@ class BudgetGateWorkflow:
                 self._budget_usd,
                 prompt,
             )
-            self._paused[prompt] = "soft_budget_exhausted"
-            try:
-                # Durable pause: survives Worker restarts and can wait for hours.
-                await workflow.wait_condition(fits, timeout=timeout)
-            except asyncio.TimeoutError:
+            if not await self._park(prompt, "soft_budget_exhausted", fits):
                 return False
-            finally:
-                self._paused.pop(prompt, None)
         self._reserved_usd += estimate
         return True
 
-    # @@@SNIPEND
+    async def _park(self, prompt: str, reason: str, until: Callable[[], bool]) -> bool:
+        """Durable pause until `until()` holds or the batch deadline passes.
 
-    async def _wait_for_more_credits(self, prompt: str, timeout: timedelta) -> bool:
-        seen = self._budget_version
-        workflow.logger.info("OpenRouter key is out of credits; pausing %r", prompt)
-        self._paused[prompt] = "insufficient_credits"
+        Survives Worker restarts and can wait for hours. Returns False when the
+        deadline passed first.
+        """
+        remaining = self._deadline - workflow.now()
+        if remaining <= timedelta(0):
+            return False
+        self._paused[prompt] = reason
         try:
-            await workflow.wait_condition(
-                lambda: self._budget_version > seen, timeout=timeout
-            )
+            await workflow.wait_condition(until, timeout=remaining)
             return True
         except asyncio.TimeoutError:
             return False
         finally:
             self._paused.pop(prompt, None)
+
+    # @@@SNIPEND
+
+    async def _wait_for_more_credits(self, prompt: str) -> bool:
+        seen = self._budget_version
+        workflow.logger.info("OpenRouter says out of credits; pausing %r", prompt)
+        return await self._park(
+            prompt, "insufficient_credits", lambda: self._budget_version > seen
+        )

@@ -86,7 +86,7 @@ Raise the key's limit in the dashboard, then send `raise_budget` with the curren
 uv run --group openrouter openrouter/budget_gate/raise_budget.py <workflow-id> 1.0
 ```
 
-If nobody raises the budget within `--approval-timeout-seconds` (default one hour), the batch completes with the remaining prompts listed as skipped.
+If nobody raises the budget within `--approval-timeout-seconds` of the batch starting (default one hour; one deadline shared by every parked prompt), the batch completes with the remaining prompts listed as skipped.
 
 ## What the soft budget does and does not guarantee
 

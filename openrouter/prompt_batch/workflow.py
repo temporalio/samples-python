@@ -44,6 +44,11 @@ class PromptBatchWorkflow:
                 non_retryable=True,
             )
 
+        if batch.max_concurrency < 1:
+            raise ApplicationError(
+                "max_concurrency must be at least 1", non_retryable=True
+            )
+
         # @@@SNIPSTART python-openrouter-prompt-batch-fan-out
         semaphore = asyncio.Semaphore(batch.max_concurrency)
         outcomes = await asyncio.gather(

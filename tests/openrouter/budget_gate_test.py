@@ -5,7 +5,12 @@ from typing import AsyncIterator
 import pytest
 import pytest_asyncio
 from temporalio import activity
-from temporalio.client import Client, WorkflowHandle, WorkflowUpdateFailedError
+from temporalio.client import (
+    Client,
+    WorkflowFailureError,
+    WorkflowHandle,
+    WorkflowUpdateFailedError,
+)
 from temporalio.exceptions import ApplicationError
 from temporalio.worker import Worker
 
@@ -209,3 +214,23 @@ async def test_approval_timeout_skips_remaining_prompts(
     assert {s.reason for s in result.skipped} == {"soft_budget_exhausted"}
     assert result.total_cost_usd == pytest.approx(COST_PER_CALL)
     assert fake.calls == {"a": 1}
+
+
+async def test_zero_concurrency_is_rejected(client: Client, task_queue: str) -> None:
+    fake = FakeOpenRouter()
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[fake.call_openrouter],
+    ):
+        with pytest.raises(WorkflowFailureError) as excinfo:
+            await client.execute_workflow(
+                BudgetGateWorkflow.run,
+                BudgetGateInput(prompts=["a"], budget_usd=1.0, max_concurrency=0),
+                id=f"test-openrouter-budget-{uuid.uuid4()}",
+                task_queue=task_queue,
+            )
+    assert isinstance(excinfo.value.cause, ApplicationError)
+    assert "max_concurrency" in str(excinfo.value.cause)
+    assert fake.calls == {}

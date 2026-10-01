@@ -28,13 +28,18 @@ Differences from the framework-agnostic scenario:
 - The plugin propagates trace and span IDs but not OpenTelemetry baggage, so
   `session.id` and `user.id` live on the root span (enough for Phoenix's
   Sessions view).
+- The plugin comes from the standalone `temporalio-openai-agents` package
+  (`from temporalio.openai_agents import OpenAIAgentsPlugin`), which replaces
+  `temporalio.contrib.openai_agents`.
 - Run the starter, a workflow worker (`--role workflows`), and an activity
-  worker (`--role activities`) as separate processes, as shown. A single
-  worker process that runs both exports the `temporal:startActivity` spans
-  with a parent that is not in the trace, so the model-call and tool subtrees
-  appear detached in Arize until
-  [temporalio/sdk-python#1852](https://github.com/temporalio/sdk-python/issues/1852)
-  is fixed. The bridge is Public Preview in the Temporal SDK.
+  worker (`--role activities`) as separate processes, as shown. In
+  `temporalio-openai-agents` 1.0.0 a single worker process that runs both
+  exports the `temporal:startActivity` spans with a parent that is not in the
+  trace, so the model-call and tool subtrees appear detached in Arize
+  ([temporalio/sdk-python#1852](https://github.com/temporalio/sdk-python/issues/1852),
+  fixed upstream in
+  [temporalio/ai-integrations#26](https://github.com/temporalio/ai-integrations/pull/26)
+  but not yet released).
 
 ## Run
 

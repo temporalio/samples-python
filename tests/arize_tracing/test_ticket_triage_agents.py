@@ -26,13 +26,13 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import ModelActivityParameters
-from temporalio.contrib.openai_agents.testing import (
+from temporalio.contrib.opentelemetry import create_tracer_provider
+from temporalio.openai_agents import ModelActivityParameters
+from temporalio.openai_agents.testing import (
     AgentEnvironment,
     ResponseBuilders,
     TestModel,
 )
-from temporalio.contrib.opentelemetry import create_tracer_provider
 from temporalio.worker import Replayer, Worker
 
 from arize_tracing.telemetry import (

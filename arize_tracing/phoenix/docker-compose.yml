@@ -10,7 +10,7 @@
 name: phoenix-demo
 services:
   phoenix:
-    image: arizephoenix/phoenix:version-20.9.0
+    image: arizephoenix/phoenix:version-20.16.0
     ports:
       - "6006:6006"
     environment:

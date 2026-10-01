@@ -34,10 +34,12 @@ async def main() -> None:
         choices=["all", "workflows", "activities"],
         default="all",
         help="Run workflows and activities in this process (default), or only one "
-        "of them. Until temporalio/sdk-python#1852 is fixed, a single process that "
-        "runs both exports the temporal:startActivity spans with the wrong parent, "
-        "so the tool and model-call subtrees appear detached in Arize. Running one "
-        "worker with --role workflows and another with --role activities avoids it.",
+        "of them. temporalio-openai-agents 1.0.0 (like temporalio.contrib.openai_agents) "
+        "exports the temporal:startActivity spans with the wrong parent when one "
+        "process runs both, so the tool and model-call subtrees appear detached in "
+        "Arize. Fixed upstream in temporalio/ai-integrations#26 but not released yet; "
+        "until then run one worker with --role workflows and another with --role "
+        "activities.",
     )
     args = parser.parse_args()
     run_workflows = args.role in ("all", "workflows")

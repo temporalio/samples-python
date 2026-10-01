@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from temporalio.common import RetryPolicy
-from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
+from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 
 TASK_QUEUE = "arize-ticket-triage-agents-task-queue"
 

@@ -42,7 +42,7 @@ Contents:
 # 1. Start Phoenix (UI, REST API, and OTLP collector on port 6006)
 docker compose -f arize_tracing/phoenix/docker-compose.yml up -d
 curl -sf http://localhost:6006/healthz && echo ok
-#    ...or without Docker: uvx --from "arize-phoenix==20.9.0" phoenix serve
+#    ...or without Docker: uvx --from "arize-phoenix==20.16.0" phoenix serve
 
 # 2. Install dependencies and set environment (repo root)
 uv sync --group arize-tracing
@@ -113,21 +113,28 @@ Ticket triage agents                             AGENT  (root; session, user, in
 ```
 
 (The tool span nests under the preceding model call's `temporal:startActivity`
-span rather than directly under the turn because the plugin leaves that span
-current in the Agents SDK scope after it finishes; see
-[temporalio/sdk-python#1855](https://github.com/temporalio/sdk-python/issues/1855).)
+span rather than directly under the turn because `temporalio-openai-agents`
+1.0.0 leaves that span current in the Agents SDK scope after it finishes
+([temporalio/sdk-python#1855](https://github.com/temporalio/sdk-python/issues/1855),
+fixed upstream in
+[temporalio/ai-integrations#26](https://github.com/temporalio/ai-integrations/pull/26)
+but not yet released).)
 
 ![Ticket triage agents trace in Phoenix](phoenix-ticket-triage-agents.png)
 
-**Known issue.** With `use_otel_instrumentation=True`, a single worker process
-that runs both the workflow and its activities exports the
-`temporal:startActivity` spans with a parent that is not in the trace, so the
+**Known issue.** With `use_otel_instrumentation=True`, `temporalio-openai-agents`
+1.0.0 (like `temporalio.contrib.openai_agents`) exports the
+`temporal:startActivity` spans with a parent that is not in the trace when a
+single worker process runs both the workflow and its activities, so the
 model-call and tool subtrees appear detached from the agent turns in Arize
 ([temporalio/sdk-python#1852](https://github.com/temporalio/sdk-python/issues/1852)).
-`verify_trace.py` reports this as spans referencing a missing parent. Running
-the workflow and the activities in separate worker processes, as above, avoids
-it; `worker.py` without `--role` runs both in one process, which is fine for
-the framework-agnostic scenario but not for this one until the fix lands.
+The fix is merged upstream in
+[temporalio/ai-integrations#26](https://github.com/temporalio/ai-integrations/pull/26)
+but not yet in a release. `verify_trace.py` reports the problem as spans
+referencing a missing parent. Running the workflow and the activities in
+separate worker processes, as above, avoids it; `worker.py` without `--role`
+runs both in one process, so keep the split until a release with the fix is
+out.
 
 ## How replay, retries, and restarts show up
 
@@ -218,7 +225,10 @@ Set `ARIZE_SPACE_ID` and `ARIZE_API_KEY` (and `ARIZE_OTLP_ENDPOINT` for the EU
 region) and `telemetry.py` exports to `https://otlp.arize.com/v1/traces` with
 the same spans and attributes; `ARIZE_PROJECT_NAME` selects the project.
 `verify_trace.py` reads Phoenix's REST API and does not apply to Arize AX; use
-the AX UI or the `ax` CLI there.
+the AX UI or the `ax` CLI there. This sample was validated against Phoenix;
+the Arize AX exporter settings follow
+[Arize's Temporal guide](https://arize.com/docs/ax/integrations/python-agent-frameworks/temporal/temporal-tracing)
+and have not been exercised against an AX space here.
 
 ## Operational notes
 
@@ -230,11 +240,12 @@ the AX UI or the `ax` CLI there.
   default; reuse one to group runs.
 - `OTEL_SDK_DISABLED=true` turns off export without code changes.
 - Ingestion is asynchronous; `verify_trace.py` polls until the trace is stable.
-- The OpenAI Agents SDK bridge (`use_otel_instrumentation=True`) is Public
-  Preview in the Temporal SDK. Run the starter, the workflow worker, and the
-  activity worker as separate processes, as the sample does (see the known
-  issue above), and see `quiet_otel_context_detach_errors()` in `telemetry.py`
-  for a known log-noise issue.
+- The OpenAI Agents SDK bridge (`use_otel_instrumentation=True`) ships in the
+  standalone `temporalio-openai-agents` package and is Public Preview. Run the
+  starter, the workflow worker, and the activity worker as separate processes,
+  as the sample does (see the known issue above), and see
+  `quiet_otel_context_detach_errors()` in `telemetry.py` for a log-noise issue
+  in 1.0.0 (fixed upstream in temporalio/ai-integrations#26).
 
 ## Tests
 

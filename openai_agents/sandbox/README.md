@@ -1,6 +1,6 @@
 # Sandbox OpenAI Agents
 
-> **Pre-release.** Sandbox support in `temporalio.contrib.openai_agents` is
+> **Pre-release.** Sandbox support in `temporalio.openai_agents` is
 > subject to change before general availability.
 
 Before running this example, be sure to review the

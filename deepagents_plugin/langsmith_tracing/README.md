@@ -18,7 +18,7 @@ API keys).
 ## Running the Sample
 
 Prerequisites: Python >= 3.11 with the [suite setup](../README.md#prerequisites)
-applied (interim plugin install), a running Temporal dev server
+applied, a running Temporal dev server
 (`temporal server start-dev`), and these environment variables:
 
 ```bash
@@ -27,13 +27,10 @@ export LANGSMITH_API_KEY=...   # or LANGCHAIN_API_KEY
 export LANGSMITH_TRACING=true
 ```
 
-The experimental plugin is not in the `deepagents` group — install it as shown
-in the [suite README](../README.md#prerequisites) and run with `--no-sync`, or a
-bare `uv run`/`uv sync` re-syncs the environment and uninstalls it. Then run the
-single-process driver:
+Then run the single-process driver:
 
 ```bash
-uv run --no-sync deepagents_plugin/langsmith_tracing/main.py
+uv run deepagents_plugin/langsmith_tracing/main.py
 ```
 
 Traces appear in your LangSmith project.

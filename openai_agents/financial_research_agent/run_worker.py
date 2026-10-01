@@ -3,7 +3,7 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.openai_agents import OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
 from openai_agents.financial_research_agent.workflows.financial_research_workflow import (

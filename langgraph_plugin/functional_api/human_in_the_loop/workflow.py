@@ -17,7 +17,7 @@ from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
 
 
 @task
-def generate_draft(message: str) -> str:
+async def generate_draft(message: str) -> str:
     """Generate a draft response. Replace with an LLM call in production."""
     return (
         f"Here's my response to '{message}': "
@@ -26,8 +26,8 @@ def generate_draft(message: str) -> str:
 
 
 @task
-def request_human_review(draft: str) -> str:
-    """Pause execution to request human review of the draft."""
+async def request_human_review(draft: str) -> str:
+    """Present draft to human for review via interrupt; revise on feedback."""
     feedback = interrupt(draft)
     if feedback == "approve":
         return draft
@@ -35,7 +35,7 @@ def request_human_review(draft: str) -> str:
 
 
 @entrypoint()
-async def chatbot_entrypoint(user_message: str) -> dict:
+async def chatbot_entrypoint(user_message: str) -> dict[str, Any]:
     """Chatbot entrypoint: generate a draft, get human review, return result."""
     draft = await generate_draft(user_message)
     final_response = await request_human_review(draft)

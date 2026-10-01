@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.sandbox.shared import TASK_QUEUE
 from openai_agents.sandbox.workflows.local_sandbox_workflow import (

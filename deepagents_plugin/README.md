@@ -40,20 +40,10 @@ one side.
    uv sync --group deepagents
    ```
 
-   > The Deep Agents plugin ships as the `temporalio[deepagents]` extra. It
-   > is merged to `sdk-python` `main` but the current PyPI release (1.31.0)
-   > predates the merge and does not carry the extra, so the `deepagents`
-   > group above does not include it yet. Until a release ships the extra
-   > (> 1.31.0), install it from main:
-   >
-   > ```bash
-   > uv pip install "temporalio[deepagents] @ git+https://github.com/temporalio/sdk-python.git"
-   > ```
-   >
-   > This builds the SDK from source (including its Rust core), so expect a
-   > few minutes on first install. Once a release with the extra is on PyPI
-   > this step goes away: `temporalio[deepagents]` joins the `deepagents`
-   > group and a plain `uv sync --group deepagents` is all you need.
+   > The group installs the `temporalio[deepagents]` extra (released in
+   > `temporalio` 1.32.0) plus the Anthropic provider package. Requires
+   > Python >= 3.11 — on older interpreters the group resolves to nothing
+   > and the samples are skipped.
 
 2. Configure a model provider. The samples use
    `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key:
@@ -74,39 +64,32 @@ one side.
 
 ## Running a Sample
 
-> **Use `uv run --no-sync`.** Because the plugin is installed out-of-band
-> from sdk-python main (see Prerequisites) and is not yet in any dependency
-> group, a bare `uv run` or `uv sync` re-syncs the environment to the lockfile
-> first and uninstalls it. `--no-sync` runs against the environment as-is.
-> (Once a released `temporalio[deepagents]` joins the `deepagents` group, the
-> flag becomes unnecessary.)
-
 Most samples have two scripts. Start the Worker first, then the Workflow starter
 in a separate terminal:
 
 ```bash
 # Terminal 1: start the Worker
-uv run --no-sync deepagents_plugin/<sample>/run_worker.py
+uv run deepagents_plugin/<sample>/run_worker.py
 
 # Terminal 2: start the Workflow
-uv run --no-sync deepagents_plugin/<sample>/run_workflow.py
+uv run deepagents_plugin/<sample>/run_workflow.py
 ```
 
 For example, to run the hello world sample:
 
 ```bash
 # Terminal 1
-uv run --no-sync deepagents_plugin/hello_world/run_worker.py
+uv run deepagents_plugin/hello_world/run_worker.py
 
 # Terminal 2
-uv run --no-sync deepagents_plugin/hello_world/run_workflow.py
+uv run deepagents_plugin/hello_world/run_workflow.py
 ```
 
 The `langsmith_tracing` sample instead bundles the worker and starter into a
 single driver:
 
 ```bash
-uv run --no-sync deepagents_plugin/langsmith_tracing/main.py
+uv run deepagents_plugin/langsmith_tracing/main.py
 ```
 
 ## Key Features Demonstrated

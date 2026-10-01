@@ -4,7 +4,7 @@ from datetime import timedelta
 from agents import set_tracing_disabled
 from agents.extensions.models.litellm_provider import LitellmProvider
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
+from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
 from openai_agents.model_providers.workflows.litellm_auto_workflow import (

@@ -1,8 +1,8 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 from temporalio.envconfig import ClientConfig
+from temporalio.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.basic.workflows.remote_image_workflow import RemoteImageWorkflow
 

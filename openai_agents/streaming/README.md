@@ -1,7 +1,7 @@
 # Streaming OpenAI Agents
 
 > **Experimental.** These samples use the streaming support in
-> `temporalio.contrib.openai_agents` together with
+> `temporalio.openai_agents` together with
 > `temporalio.contrib.workflow_streams`. Both are experimental and their APIs
 > may change in future versions.
 

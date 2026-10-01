@@ -57,7 +57,9 @@ async def test_prompt_batch_collects_results_and_skips_failures(
     assert result.reported_cost_usd == 0.002
 
 
-async def test_cancellation_is_not_a_skipped_prompt(client: Client) -> None:
+async def test_cancellation_is_not_a_skipped_prompt(
+    client: Client, caplog: pytest.LogCaptureFixture
+) -> None:
     @activity.defn(name="call_openrouter")
     async def slow_call(request: OpenRouterRequest) -> OpenRouterResult:
         while True:
@@ -83,3 +85,5 @@ async def test_cancellation_is_not_a_skipped_prompt(client: Client) -> None:
             await handle.result()
 
     assert isinstance(excinfo.value.cause, CancelledError)
+    # The cancelled Activities must not have been recorded as skipped prompts.
+    assert not [r for r in caplog.records if "Skipping prompt" in r.getMessage()]

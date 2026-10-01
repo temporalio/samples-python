@@ -58,6 +58,9 @@ OUT_OF_CREDITS = "OpenRouterOutOfCredits"
 # Retry-After and try again.
 TRANSIENT_402_LIMIT_SOURCE = "openrouter_in_flight_budget"
 
+# Longest Retry-After the Activity will pass through as the next retry delay.
+MAX_RETRY_AFTER = timedelta(minutes=5)
+
 
 def _retry_after(headers: Mapping[str, str]) -> Optional[timedelta]:
     """Parse Retry-After in either its delta-seconds or HTTP-date form."""
@@ -72,7 +75,11 @@ def _retry_after(headers: Mapping[str, str]) -> Optional[timedelta]:
             delay = parsedate_to_datetime(value) - datetime.now(timezone.utc)
         except (TypeError, ValueError, OverflowError):
             return None
-    return delay if delay > timedelta(0) else None
+    if delay <= timedelta(0):
+        return None
+    # Honor the server, within reason: next_retry_delay overrides the retry
+    # policy's interval, so cap it rather than park a prompt for hours.
+    return min(delay, MAX_RETRY_AFTER)
 
 
 def raise_for_status(
@@ -209,6 +216,9 @@ class OpenRouterActivities:
             # Or a 200 with a partial answer and the provider's error on the
             # choice itself; a partial answer is not an answer.
             raise_for_status(_error_code(choice_error, 500), choice_error, raw.headers)
+        if not choices:
+            # No error and no answer: treat like a server error and retry.
+            raise_for_status(500, {"message": "Response has no choices"}, raw.headers)
 
         usage = payload.get("usage") or {}
         cost = usage.get("cost")

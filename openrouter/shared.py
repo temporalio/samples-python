@@ -19,6 +19,9 @@ BUDGET_GATE_TASK_QUEUE = "openrouter-budget-gate"
 # sliding-window pattern for larger batches.
 MAX_PROMPTS_PER_BATCH = 100
 
+# A parked batch can wait at most this long (30 days) for a raise_budget.
+MAX_APPROVAL_TIMEOUT_SECONDS = 30 * 24 * 3600
+
 # Temporal owns retries: 1s, 2s, 4s, ... capped at 60s, five attempts. The
 # Activity marks 4xx errors non-retryable and passes OpenRouter's Retry-After
 # through as the next retry delay, so this policy only governs the rest.
@@ -86,9 +89,10 @@ class BatchResult:
     results: list[OpenRouterResult]
     skipped: list[SkippedPrompt]
     # Sum of the cost OpenRouter reported on each prompt's final, successful
-    # attempt. Attempts that were billed but whose result never reached
-    # Temporal (a Worker crash after the response, say) are not in here;
-    # OpenRouter's dashboard or /api/v1/key is the source of truth for spend.
+    # attempt (budget_gate charges its estimate for a response with no cost).
+    # Attempts that were billed but whose result never reached Temporal (a
+    # Worker crash after the response, say) are not in here; OpenRouter's
+    # dashboard or /api/v1/key is the source of truth for spend.
     reported_cost_usd: float
 
 
@@ -126,7 +130,8 @@ class SpendReport:
     spent_usd: float
     reserved_usd: float
     completed: int
-    # Prompts currently parked, with why: "soft_budget_exhausted" or
-    # "insufficient_credits" (OpenRouter refused the call for lack of credits).
+    # Prompts currently parked, keyed by prompt text (duplicate prompts share
+    # one entry), with why: "soft_budget_exhausted" or "insufficient_credits"
+    # (OpenRouter refused the call for lack of credits).
     paused: dict[str, str]
     ledger: list[LedgerEntry]

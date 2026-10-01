@@ -304,3 +304,32 @@ async def test_retry_after_http_date_becomes_next_retry_delay() -> None:
     assert (
         timedelta(seconds=25) < excinfo.value.next_retry_delay <= timedelta(seconds=30)
     )
+
+
+async def test_huge_retry_after_is_capped() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            429,
+            json={"error": {"code": 429, "message": "Rate limited"}},
+            headers={"Retry-After": "1000000000"},
+        )
+
+    with pytest.raises(ApplicationError) as excinfo:
+        await ActivityEnvironment().run(
+            make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
+        )
+    assert excinfo.value.next_retry_delay == timedelta(minutes=5)
+
+
+async def test_no_choices_and_no_error_is_retried() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = completion_body()
+        body["choices"] = []
+        return httpx.Response(200, json=body)
+
+    with pytest.raises(ApplicationError) as excinfo:
+        await ActivityEnvironment().run(
+            make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
+        )
+    assert excinfo.value.type == "OpenRouterHTTP500"
+    assert not excinfo.value.non_retryable

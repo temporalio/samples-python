@@ -344,7 +344,7 @@ async def test_update_with_start_sets_the_budget_before_run(
 
 
 async def test_cancellation_is_not_a_skipped_prompt(
-    client: Client, task_queue: str
+    client: Client, task_queue: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     @activity.defn(name="call_openrouter")
     async def slow_call(request: OpenRouterRequest) -> OpenRouterResult:
@@ -375,6 +375,35 @@ async def test_cancellation_is_not_a_skipped_prompt(
             await handle.result()
 
     assert isinstance(excinfo.value.cause, CancelledError)
+    # The cancelled Activities must not have been recorded as skipped prompts.
+    assert not [r for r in caplog.records if "Skipping prompt" in r.getMessage()]
+
+
+async def test_bad_approval_timeout_fails_the_workflow(
+    client: Client, task_queue: str
+) -> None:
+    fake = FakeOpenRouter()
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[fake.call_openrouter],
+    ):
+        for bad in (-5, 10**15):
+            with pytest.raises(WorkflowFailureError) as excinfo:
+                await client.execute_workflow(
+                    BudgetGateWorkflow.run,
+                    BudgetGateInput(
+                        batch=BatchInput(prompts=["a"]),
+                        budget_usd=1.0,
+                        approval_timeout_seconds=bad,
+                    ),
+                    id=f"test-openrouter-budget-{uuid.uuid4()}",
+                    task_queue=task_queue,
+                )
+            assert isinstance(excinfo.value.cause, ApplicationError)
+            assert "approval_timeout_seconds" in str(excinfo.value.cause)
+    assert fake.calls == {}
 
 
 async def test_unknown_cost_is_charged_at_the_estimate(

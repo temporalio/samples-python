@@ -11,6 +11,7 @@ from temporalio.exceptions import ActivityError, ApplicationError, CancelledErro
 with workflow.unsafe.imports_passed_through():
     from openrouter.activities import OUT_OF_CREDITS, OpenRouterActivities
     from openrouter.shared import (
+        MAX_APPROVAL_TIMEOUT_SECONDS,
         MAX_PROMPTS_PER_BATCH,
         OPENROUTER_RETRY_POLICY,
         BatchResult,
@@ -43,6 +44,14 @@ class BudgetGateWorkflow:
         # with update-with-start is handled before run() starts, and must see
         # (and be allowed to raise) the real budget.
         self._budget_usd = gate.budget_usd
+        # Validate here, not in run(): a bad value must fail the Workflow, not
+        # raise while computing the deadline below.
+        if not 0 <= gate.approval_timeout_seconds <= MAX_APPROVAL_TIMEOUT_SECONDS:
+            raise ApplicationError(
+                "approval_timeout_seconds must be between 0 and "
+                f"{MAX_APPROVAL_TIMEOUT_SECONDS}",
+                non_retryable=True,
+            )
         # One deadline for the whole batch: every parked prompt waits until this
         # moment, not for its own full approval timeout.
         self._deadline = workflow.now() + timedelta(

@@ -37,8 +37,8 @@ temporal workflow query -w <workflow-id> --type spend_report
   "completed": 2,
   "paused": { "Name two causes of HTTP 429.": "soft_budget_exhausted" },
   "ledger": [
-    { "prompt": "Define durable execution in one sentence.", "model": "deepseek/deepseek-v4-flash-0731", "cost_usd": 0.000096, "cost_known": true, "generation_id": "gen-...", "cache_status": "MISS" },
-    { "prompt": "Why do LLM calls belong in Activities?", "model": "deepseek/deepseek-v4-flash-0731", "cost_usd": 0.000532, "cost_known": true, "generation_id": "gen-...", "cache_status": "MISS" }
+    { "prompt": "Define durable execution in one sentence.", "model": "deepseek/deepseek-v4-flash-0731", "cost_usd": 0.00009605, "cost_known": true, "generation_id": "gen-...", "cache_status": "MISS" },
+    { "prompt": "Why do LLM calls belong in Activities?", "model": "deepseek/deepseek-v4-flash-0731", "cost_usd": 0.0005325, "cost_known": true, "generation_id": "gen-...", "cache_status": "MISS" }
   ]
 }
 ```
@@ -70,7 +70,9 @@ Reported cost: $0.000873 (what OpenRouter reported on each prompt's final attemp
 Set a credit limit on your API key in the [OpenRouter dashboard](https://openrouter.ai/settings/keys) below what the batch needs, and run with a generous soft budget:
 
 ```bash
-uv run --group openrouter openrouter/budget_gate/run_workflow.py --budget-usd 1.0
+uv run --group openrouter openrouter/budget_gate/run_workflow.py --budget-usd 1.0 --max-concurrency 2 \
+  "Define durable execution in one sentence." "Why do LLM calls belong in Activities?" \
+  "Name two causes of HTTP 429." "What does a heartbeat timeout detect?"
 ```
 
 When OpenRouter refuses the call (a 402, or the `403 Key limit exceeded` we have seen for a per-key limit), the prompt parks with reason `insufficient_credits`:
@@ -79,7 +81,7 @@ When OpenRouter refuses the call (a 402, or the `403 Key limit exceeded` we have
 {
   "budget_usd": 1,
   "spent_usd": 0,
-  "reserved_usd": 0.001,
+  "reserved_usd": 0.002,
   "completed": 0,
   "paused": {
     "Define durable execution in one sentence.": "insufficient_credits",
@@ -95,7 +97,7 @@ Raise the key's limit in the dashboard, then send `raise_budget` with the curren
 uv run --group openrouter openrouter/budget_gate/raise_budget.py <workflow-id> 1.0
 ```
 
-If nobody raises the budget within `--approval-timeout-seconds` of the batch starting (default one hour; one deadline shared by every parked prompt), the batch completes with the remaining prompts listed as skipped.
+If nobody raises the budget within `--approval-timeout-seconds` of the batch starting (default one hour, at most 30 days; one deadline shared by every parked prompt), the batch completes with the remaining prompts listed as skipped.
 
 ## What the soft budget does and does not guarantee
 

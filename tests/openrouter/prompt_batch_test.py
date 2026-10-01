@@ -1,8 +1,10 @@
+import asyncio
 import uuid
 
+import pytest
 from temporalio import activity
-from temporalio.client import Client
-from temporalio.exceptions import ApplicationError
+from temporalio.client import Client, WorkflowFailureError
+from temporalio.exceptions import ApplicationError, CancelledError
 from temporalio.worker import Worker
 
 from openrouter.prompt_batch.workflow import PromptBatchWorkflow
@@ -53,3 +55,31 @@ async def test_prompt_batch_collects_results_and_skips_failures(
         ("bad", "OpenRouterHTTP400")
     ]
     assert result.reported_cost_usd == 0.002
+
+
+async def test_cancellation_is_not_a_skipped_prompt(client: Client) -> None:
+    @activity.defn(name="call_openrouter")
+    async def slow_call(request: OpenRouterRequest) -> OpenRouterResult:
+        while True:
+            activity.heartbeat()
+            await asyncio.sleep(0.1)
+
+    task_queue = f"test-openrouter-{uuid.uuid4()}"
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[PromptBatchWorkflow],
+        activities=[slow_call],
+    ):
+        handle = await client.start_workflow(
+            PromptBatchWorkflow.run,
+            BatchInput(prompts=["one", "two"], max_concurrency=2),
+            id=f"test-openrouter-{uuid.uuid4()}",
+            task_queue=task_queue,
+        )
+        await asyncio.sleep(0.5)
+        await handle.cancel()
+        with pytest.raises(WorkflowFailureError) as excinfo:
+            await handle.result()
+
+    assert isinstance(excinfo.value.cause, CancelledError)

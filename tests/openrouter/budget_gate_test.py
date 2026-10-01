@@ -1,17 +1,17 @@
 import asyncio
 import uuid
-from typing import AsyncIterator
 
 import pytest
-import pytest_asyncio
 from temporalio import activity
 from temporalio.client import (
     Client,
+    WithStartWorkflowOperation,
     WorkflowFailureError,
     WorkflowHandle,
     WorkflowUpdateFailedError,
 )
-from temporalio.exceptions import ApplicationError
+from temporalio.common import WorkflowIDConflictPolicy
+from temporalio.exceptions import ApplicationError, CancelledError
 from temporalio.worker import Worker
 
 from openrouter.budget_gate.workflow import BudgetGateWorkflow
@@ -56,9 +56,9 @@ class FakeOpenRouter:
         )
 
 
-@pytest_asyncio.fixture
-async def task_queue(client: Client) -> AsyncIterator[str]:
-    yield f"test-openrouter-budget-{uuid.uuid4()}"
+@pytest.fixture
+def task_queue() -> str:
+    return f"test-openrouter-budget-{uuid.uuid4()}"
 
 
 async def start(
@@ -306,3 +306,135 @@ async def test_raising_the_budget_admits_only_what_fits(
 
     assert [r.prompt for r in result.results] == ["a", "b", "c", "d"]
     assert fake.calls == {"a": 1, "b": 1, "c": 1, "d": 1}
+
+
+async def test_update_with_start_sets_the_budget_before_run(
+    client: Client, task_queue: str
+) -> None:
+    """An Update that lands before run() must not be overwritten by run()."""
+    fake = FakeOpenRouter()
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[fake.call_openrouter],
+    ):
+        start_op = WithStartWorkflowOperation(
+            BudgetGateWorkflow.run,
+            BudgetGateInput(
+                batch=BatchInput(prompts=["a", "b", "c"], max_concurrency=1),
+                budget_usd=0.0015,
+                estimated_cost_usd=COST_PER_CALL,
+                approval_timeout_seconds=5,
+            ),
+            id=f"test-openrouter-budget-{uuid.uuid4()}",
+            task_queue=task_queue,
+            id_conflict_policy=WorkflowIDConflictPolicy.FAIL,
+        )
+        report = await client.execute_update_with_start_workflow(
+            BudgetGateWorkflow.raise_budget, 1.0, start_workflow_operation=start_op
+        )
+        assert report.budget_usd == 1.0
+        handle = await start_op.workflow_handle()
+        result = await handle.result()
+
+    # With the raised budget honored, nothing parks and nothing is skipped.
+    assert [r.prompt for r in result.results] == ["a", "b", "c"]
+    assert result.skipped == []
+
+
+async def test_cancellation_is_not_a_skipped_prompt(
+    client: Client, task_queue: str
+) -> None:
+    @activity.defn(name="call_openrouter")
+    async def slow_call(request: OpenRouterRequest) -> OpenRouterResult:
+        # Heartbeat so the cancellation request reaches the Activity.
+        while True:
+            activity.heartbeat()
+            await asyncio.sleep(0.1)
+
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[slow_call],
+    ):
+        handle = await start(
+            client,
+            task_queue,
+            BudgetGateInput(
+                batch=BatchInput(prompts=["a", "b"], max_concurrency=2),
+                budget_usd=1.0,
+                estimated_cost_usd=COST_PER_CALL,
+                approval_timeout_seconds=60,
+            ),
+        )
+        await asyncio.sleep(0.5)
+        await handle.cancel()
+        with pytest.raises(WorkflowFailureError) as excinfo:
+            await handle.result()
+
+    assert isinstance(excinfo.value.cause, CancelledError)
+
+
+async def test_unknown_cost_is_charged_at_the_estimate(
+    client: Client, task_queue: str
+) -> None:
+    @activity.defn(name="call_openrouter")
+    async def costless(request: OpenRouterRequest) -> OpenRouterResult:
+        return OpenRouterResult(
+            prompt=request.prompt,
+            model="m",
+            answer="ok",
+            cost_usd=None,
+            generation_id="gen",
+            cache_status="",
+        )
+
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[costless],
+    ):
+        result = await client.execute_workflow(
+            BudgetGateWorkflow.run,
+            BudgetGateInput(
+                batch=BatchInput(prompts=["a", "b"], max_concurrency=1),
+                budget_usd=1.0,
+                estimated_cost_usd=0.002,
+            ),
+            id=f"test-openrouter-budget-{uuid.uuid4()}",
+            task_queue=task_queue,
+        )
+
+    assert result.reported_cost_usd == pytest.approx(0.004)
+    assert [r.cost_usd for r in result.results] == [None, None]
+
+
+async def test_credits_never_arrive_skips_with_reason(
+    client: Client, task_queue: str
+) -> None:
+    fake = FakeOpenRouter(out_of_credits_for={"a"})
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[fake.call_openrouter],
+    ):
+        result = await client.execute_workflow(
+            BudgetGateWorkflow.run,
+            BudgetGateInput(
+                batch=BatchInput(prompts=["a"], max_concurrency=1),
+                budget_usd=1.0,
+                estimated_cost_usd=COST_PER_CALL,
+                approval_timeout_seconds=1,
+            ),
+            id=f"test-openrouter-budget-{uuid.uuid4()}",
+            task_queue=task_queue,
+        )
+
+    assert result.results == []
+    assert [(s.prompt, s.reason) for s in result.skipped] == [
+        ("a", "insufficient_credits")
+    ]

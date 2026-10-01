@@ -1,11 +1,9 @@
 import asyncio
-from asyncio import CancelledError
 from datetime import timedelta
 from typing import Union
 
 from temporalio import workflow
-from temporalio.common import RetryPolicy
-from temporalio.exceptions import ActivityError, ApplicationError
+from temporalio.exceptions import ActivityError, ApplicationError, CancelledError
 
 # The shared dataclasses are passed through the sandbox so that objects the
 # Activity returns are the same classes the Workflow compares against.
@@ -13,22 +11,13 @@ with workflow.unsafe.imports_passed_through():
     from openrouter.activities import OpenRouterActivities
     from openrouter.shared import (
         MAX_PROMPTS_PER_BATCH,
+        OPENROUTER_RETRY_POLICY,
         BatchInput,
         BatchResult,
         OpenRouterRequest,
         OpenRouterResult,
         SkippedPrompt,
     )
-
-# Temporal owns retries: 1s, 2s, 4s, ... capped at 60s, five attempts. The
-# Activity marks 4xx errors non-retryable and passes OpenRouter's Retry-After
-# through as the next retry delay, so this policy only governs the rest.
-OPENROUTER_RETRY_POLICY = RetryPolicy(
-    initial_interval=timedelta(seconds=1),
-    backoff_coefficient=2.0,
-    maximum_interval=timedelta(seconds=60),
-    maximum_attempts=5,
-)
 
 
 @workflow.defn
@@ -84,7 +73,8 @@ class PromptBatchWorkflow:
             except ActivityError as e:
                 cause = e.cause
                 if isinstance(cause, CancelledError):
-                    # Workflow cancellation is not a per-prompt failure.
+                    # The Activity was cancelled (the Workflow is being cancelled);
+                    # that is not a per-prompt failure.
                     raise
                 # One bad prompt should not fail the batch. Record why and
                 # carry on; the caller decides what to do with skipped prompts.

@@ -27,7 +27,8 @@ def build_client(api_key: Optional[str] = None) -> AsyncOpenAI:
     """
     default_headers: dict[str, str] = {}
     # App attribution is optional. When set, OpenRouter lists your app in its
-    # public rankings; add X-OpenRouter-App-Visibility: hidden to opt out.
+    # public rankings; send X-OpenRouter-App-Visibility: hidden on the first
+    # request to create the app entry as hidden.
     if referer := os.getenv("OPENROUTER_HTTP_REFERER"):
         default_headers["HTTP-Referer"] = referer
     if title := os.getenv("OPENROUTER_APP_TITLE"):
@@ -47,46 +48,59 @@ def error_type(status: int) -> str:
 
 
 # Raised instead of an HTTP status type when the call failed for lack of money:
-# 402 when the account is out of credits, or 403 "Key limit exceeded" when the
-# API key hit its own credit limit. A Workflow can pause on this and resume
-# once someone tops up.
+# a 402 (OpenRouter documents this for both the account and the API key, with
+# error.metadata.limit_source saying which) or, as observed in practice, a 403
+# "Key limit exceeded" for a per-key limit. A Workflow can pause on this and
+# resume once someone tops up.
 OUT_OF_CREDITS = "OpenRouterOutOfCredits"
+
+# A 402 from OpenRouter's in-flight budget cap is transient: wait for
+# Retry-After and try again.
+TRANSIENT_402_LIMIT_SOURCE = "openrouter_in_flight_budget"
 
 
 def _retry_after(headers: Mapping[str, str]) -> Optional[timedelta]:
     """Parse Retry-After in either its delta-seconds or HTTP-date form."""
-    value = headers.get("retry-after")
-    if value is None:
+    value = (headers.get("retry-after") or "").strip()
+    if not value:
         return None
+    delay: Optional[timedelta] = None
     try:
-        return timedelta(seconds=float(value))
-    except ValueError:
-        pass
-    try:
-        delay = parsedate_to_datetime(value) - datetime.now(timezone.utc)
-    except (TypeError, ValueError):
-        return None
+        delay = timedelta(seconds=float(value))
+    except (ValueError, OverflowError):
+        try:
+            delay = parsedate_to_datetime(value) - datetime.now(timezone.utc)
+        except (TypeError, ValueError, OverflowError):
+            return None
     return delay if delay > timedelta(0) else None
 
 
-def raise_for_status(status: int, message: str, headers: Mapping[str, str]) -> NoReturn:
+def raise_for_status(
+    status: int, error: Mapping[str, Any], headers: Mapping[str, str]
+) -> NoReturn:
     """Turn an OpenRouter error into an ApplicationError with the right retry posture.
 
-    Retryable: 408 (timeout), 429 (rate limited, honoring Retry-After), and
-    any 5xx (500, 502 model down, 503 no provider available, 524, 529).
-    Non-retryable: other 4xx. 400 is a bad request, 401 a bad key, 403 a
-    moderation or permission block. Retrying those only costs time.
-    Out of money is its own type (OUT_OF_CREDITS): 402 when the account has no
-    credits, 403 "Key limit exceeded" when the API key hit its credit limit.
+    `error` is OpenRouter's error object ({"code", "message", "metadata"}).
+    Retryable: 408 (timeout), 429 (rate limited, honoring Retry-After), any
+    5xx (500, 502 model down, 503 no provider available, 524, 529), and the
+    transient in-flight-budget 402. Non-retryable: other 4xx. 400 is a bad
+    request, 401 a bad key, 403 a moderation or permission block. Retrying
+    those only costs time. Out of money is its own type (OUT_OF_CREDITS).
     """
-    if status == 402 or (status == 403 and "limit exceeded" in message.lower()):
+    message = str(error.get("message") or "")
+    metadata = error.get("metadata")
+    limit_source = metadata.get("limit_source") if isinstance(metadata, dict) else None
+    transient_402 = status == 402 and limit_source == TRANSIENT_402_LIMIT_SOURCE
+    if not transient_402 and (
+        status == 402 or (status == 403 and "limit exceeded" in message.lower())
+    ):
         raise ApplicationError(
             f"OpenRouter returned HTTP {status}: {message}",
             {"status": status},
             type=OUT_OF_CREDITS,
             non_retryable=True,
         )
-    retryable = status in (408, 429) or status >= 500
+    retryable = transient_402 or status in (408, 429) or status >= 500
     raise ApplicationError(
         f"OpenRouter returned HTTP {status}: {message}",
         {"status": status},
@@ -96,12 +110,21 @@ def raise_for_status(status: int, message: str, headers: Mapping[str, str]) -> N
     )
 
 
-def _error_message(body: Any) -> str:
-    if isinstance(body, dict):
-        error = body.get("error")
-        if isinstance(error, dict) and isinstance(error.get("message"), str):
-            return error["message"]
-    return ""
+def _error_object(body: Any) -> dict[str, Any]:
+    """OpenRouter's error object from either a raw body or openai's APIError.body.
+
+    A raw response body wraps it as {"error": {...}}; openai's APIError.body is
+    already the inner object. Accept both.
+    """
+    if not isinstance(body, dict):
+        return {}
+    inner = body.get("error", body)
+    return inner if isinstance(inner, dict) else {}
+
+
+def _error_code(error: Mapping[str, Any], default: int) -> int:
+    code = error.get("code")
+    return code if isinstance(code, int) else default
 
 
 def _content_to_text(content: Any) -> str:
@@ -169,21 +192,24 @@ class OpenRouterActivities:
                 },
             )
         except APIStatusError as e:
-            raise_for_status(
-                e.status_code, _error_message(e.body) or e.message, e.response.headers
-            )
+            error = _error_object(e.body)
+            error.setdefault("message", e.message)
+            raise_for_status(e.status_code, error, e.response.headers)
         # Connection errors and timeouts propagate as-is: Temporal retries them.
 
         payload = json.loads(raw.text)
-        error = payload.get("error")
-        if isinstance(error, dict):
+        if isinstance(payload.get("error"), dict):
             # OpenRouter can return HTTP 200 with an error body and no choices
             # when the upstream provider failed after the request was accepted.
-            raise_for_status(
-                int(error.get("code") or 500), _error_message(payload), raw.headers
-            )
-
+            error = _error_object(payload)
+            raise_for_status(_error_code(error, 500), error, raw.headers)
         choices = payload.get("choices") or []
+        choice_error = choices[0].get("error") if choices else None
+        if isinstance(choice_error, dict):
+            # Or a 200 with a partial answer and the provider's error on the
+            # choice itself; a partial answer is not an answer.
+            raise_for_status(_error_code(choice_error, 500), choice_error, raw.headers)
+
         usage = payload.get("usage") or {}
         cost = usage.get("cost")
         if not isinstance(cost, (int, float)):

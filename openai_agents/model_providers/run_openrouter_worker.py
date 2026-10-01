@@ -6,7 +6,7 @@ from datetime import timedelta
 from agents import OpenAIProvider, set_tracing_disabled
 from openai import AsyncOpenAI
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
+from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
 from openai_agents.model_providers.workflows.openrouter_workflow import (
@@ -36,8 +36,8 @@ def openrouter_provider() -> OpenAIProvider:
         max_retries=0,
         default_headers=default_headers or None,
     )
-    # Chat Completions is OpenRouter's primary endpoint; the Agents SDK
-    # defaults to the Responses API, which OpenRouter offers only in beta.
+    # These samples use Chat Completions, OpenRouter's primary endpoint; the
+    # Agents SDK defaults to the Responses API, which OpenRouter also offers.
     return OpenAIProvider(openai_client=client, use_responses=False)
 
 

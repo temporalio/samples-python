@@ -1,13 +1,10 @@
 import asyncio
 import math
-from asyncio import CancelledError
 from datetime import timedelta
-from typing import Callable, Optional, Union
+from typing import Callable, Union
 
 from temporalio import workflow
-from temporalio.exceptions import ActivityError, ApplicationError
-
-from openrouter.prompt_batch.workflow import OPENROUTER_RETRY_POLICY
+from temporalio.exceptions import ActivityError, ApplicationError, CancelledError
 
 # The shared dataclasses are passed through the sandbox so that objects the
 # Activity returns are the same classes the Workflow compares against.
@@ -15,6 +12,7 @@ with workflow.unsafe.imports_passed_through():
     from openrouter.activities import OUT_OF_CREDITS, OpenRouterActivities
     from openrouter.shared import (
         MAX_PROMPTS_PER_BATCH,
+        OPENROUTER_RETRY_POLICY,
         BatchResult,
         BudgetGateInput,
         LedgerEntry,
@@ -39,16 +37,25 @@ class BudgetGateWorkflow:
     Completed prompts are never re-run.
     """
 
-    def __init__(self) -> None:
-        self._budget_usd = 0.0
+    @workflow.init
+    def __init__(self, gate: BudgetGateInput) -> None:
+        # Set the budget and deadline here rather than in run(): an Update sent
+        # with update-with-start is handled before run() starts, and must see
+        # (and be allowed to raise) the real budget.
+        self._budget_usd = gate.budget_usd
+        # One deadline for the whole batch: every parked prompt waits until this
+        # moment, not for its own full approval timeout.
+        self._deadline = workflow.now() + timedelta(
+            seconds=gate.approval_timeout_seconds
+        )
         self._spent_usd = 0.0
         self._reserved_usd = 0.0
-        # Bumped by every raise_budget Update, so a prompt parked on a 402 can
-        # tell that the operator acted even if the soft budget did not change.
+        # Bumped by every raise_budget Update, so a prompt parked on a
+        # credits error can tell that the operator acted even if the soft
+        # budget did not change.
         self._budget_version = 0
         self._ledger: list[LedgerEntry] = []
         self._paused: dict[str, str] = {}
-        self._deadline = workflow.now()
 
     @workflow.run
     async def run(self, gate: BudgetGateInput) -> BatchResult:
@@ -74,19 +81,15 @@ class BudgetGateWorkflow:
                 "budget_usd a non-negative finite number",
                 non_retryable=True,
             )
-        self._budget_usd = gate.budget_usd
-        # One deadline for the whole batch: every parked prompt waits until this
-        # moment, not for its own full approval timeout.
-        self._deadline = workflow.now() + timedelta(
-            seconds=gate.approval_timeout_seconds
-        )
         semaphore = asyncio.Semaphore(batch.max_concurrency)
         try:
             outcomes = await asyncio.gather(
                 *(self._answer(prompt, gate, semaphore) for prompt in batch.prompts)
             )
         finally:
-            # Let an in-flight raise_budget Update finish before returning.
+            # Good hygiene for any Workflow with handlers: do not return while
+            # a handler is still running. (raise_budget is synchronous, so this
+            # is always already true here.)
             await workflow.wait_condition(workflow.all_handlers_finished)
 
         results = [o for o in outcomes if isinstance(o, OpenRouterResult)]
@@ -127,7 +130,6 @@ class BudgetGateWorkflow:
             reserved_usd=round(self._reserved_usd, 6),
             completed=len(self._ledger),
             paused=dict(self._paused),
-            paused_reason=next(iter(self._paused.values()), None),
             ledger=list(self._ledger),
         )
 
@@ -144,7 +146,11 @@ class BudgetGateWorkflow:
                     try:
                         result = await workflow.execute_activity_method(
                             OpenRouterActivities.call_openrouter,
-                            OpenRouterRequest(prompt=prompt, model=gate.batch.model),
+                            OpenRouterRequest(
+                                prompt=prompt,
+                                model=gate.batch.model,
+                                fail_once_after_call=gate.batch.fail_once_after_call,
+                            ),
                             start_to_close_timeout=timedelta(seconds=90),
                             heartbeat_timeout=timedelta(seconds=10),
                             retry_policy=OPENROUTER_RETRY_POLICY,
@@ -153,11 +159,12 @@ class BudgetGateWorkflow:
                     except ActivityError as e:
                         cause = e.cause
                         if isinstance(cause, CancelledError):
-                            # Workflow cancellation is not a per-prompt failure.
+                            # The Activity was cancelled (the Workflow is being
+                            # cancelled); that is not a per-prompt failure.
                             raise
                         if (
                             isinstance(cause, ApplicationError)
-                            and cause.type == INSUFFICIENT_CREDITS
+                            and cause.type == OUT_OF_CREDITS
                         ):
                             # Out of credits at OpenRouter. Park until the
                             # operator tops up and sends raise_budget.
@@ -207,7 +214,8 @@ class BudgetGateWorkflow:
 
         # Loop rather than check once: when the budget is raised, every parked
         # prompt is woken before any of them runs, so each must re-check after
-        # waking in case an earlier one already took the new headroom.
+        # waking in case an earlier one already took the new headroom. (Each
+        # re-park starts a new timer for the remaining time; fine at this scale.)
         while not fits():
             workflow.logger.info(
                 "Soft budget reached (spent $%.6f of $%.6f); pausing %r",

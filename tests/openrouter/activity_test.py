@@ -133,7 +133,65 @@ async def test_insufficient_credits_is_non_retryable() -> None:
 
     assert excinfo.value.type == "OpenRouterOutOfCredits"
     assert excinfo.value.non_retryable
-    assert "Insufficient credits" in str(excinfo.value)
+    assert excinfo.value.message == "OpenRouter returned HTTP 402: Insufficient credits"
+
+
+async def test_in_flight_budget_402_is_transient() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            402,
+            json={
+                "error": {
+                    "code": 402,
+                    "message": "In-flight budget exceeded",
+                    "metadata": {"limit_source": "openrouter_in_flight_budget"},
+                }
+            },
+            headers={"Retry-After": "3"},
+        )
+
+    with pytest.raises(ApplicationError) as excinfo:
+        await ActivityEnvironment().run(
+            make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
+        )
+
+    assert excinfo.value.type == "OpenRouterHTTP402"
+    assert not excinfo.value.non_retryable
+    assert excinfo.value.next_retry_delay == timedelta(seconds=3)
+
+
+async def test_provider_error_on_the_choice_is_not_an_answer() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = completion_body(answer="partial ans")
+        body["choices"][0]["finish_reason"] = "error"
+        body["choices"][0]["error"] = {"code": 502, "message": "Provider died"}
+        return httpx.Response(200, json=body)
+
+    with pytest.raises(ApplicationError) as excinfo:
+        await ActivityEnvironment().run(
+            make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
+        )
+
+    assert excinfo.value.type == "OpenRouterHTTP502"
+    assert not excinfo.value.non_retryable
+    assert "Provider died" in excinfo.value.message
+
+
+async def test_empty_or_negative_retry_after_is_ignored() -> None:
+    for value in ("", "-5", "0"):
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            return httpx.Response(
+                429,
+                json={"error": {"code": 429, "message": "Rate limited"}},
+                headers={"Retry-After": value},
+            )
+
+        with pytest.raises(ApplicationError) as excinfo:
+            await ActivityEnvironment().run(
+                make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
+            )
+        assert excinfo.value.next_retry_delay is None, repr(value)
 
 
 async def test_key_limit_exceeded_is_out_of_credits_too() -> None:
@@ -152,6 +210,10 @@ async def test_key_limit_exceeded_is_out_of_credits_too() -> None:
 
     assert excinfo.value.type == "OpenRouterOutOfCredits"
     assert excinfo.value.non_retryable
+    assert (
+        excinfo.value.message
+        == "OpenRouter returned HTTP 403: Key limit exceeded (total limit)"
+    )
 
 
 async def test_server_error_is_retryable() -> None:

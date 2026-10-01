@@ -38,6 +38,12 @@ async def main() -> None:
     parser.add_argument("--estimate-usd", type=float, default=0.0005)
     parser.add_argument("--max-concurrency", type=int, default=2)
     parser.add_argument("--approval-timeout-seconds", type=int, default=3600)
+    parser.add_argument(
+        "--fail-once",
+        action="store_true",
+        help="Fail each Activity's first attempt after the response arrives, "
+        "so the retry shows a cache hit billed at $0.",
+    )
     args = parser.parse_args()
 
     config = ClientConfig.load_client_connect_config()
@@ -52,6 +58,7 @@ async def main() -> None:
                 prompts=args.prompts,
                 model=args.model,
                 max_concurrency=args.max_concurrency,
+                fail_once_after_call=args.fail_once,
             ),
             budget_usd=args.budget_usd,
             estimated_cost_usd=args.estimate_usd,
@@ -63,7 +70,9 @@ async def main() -> None:
     print(f"Started {workflow_id}")
     print("While it runs:")
     print(f"  temporal workflow query -w {workflow_id} --type spend_report")
-    print(f"  uv run openrouter/budget_gate/raise_budget.py {workflow_id} 0.05")
+    print(
+        f"  uv run --group openrouter openrouter/budget_gate/raise_budget.py {workflow_id} 0.05"
+    )
     print("Waiting for the batch to finish...\n", flush=True)
 
     result = await handle.result()

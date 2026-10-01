@@ -1,5 +1,8 @@
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import Optional
+
+from temporalio.common import RetryPolicy
 
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 
@@ -15,6 +18,16 @@ BUDGET_GATE_TASK_QUEUE = "openrouter-budget-gate"
 # stay well under the history and payload limits; see the README for the
 # sliding-window pattern for larger batches.
 MAX_PROMPTS_PER_BATCH = 100
+
+# Temporal owns retries: 1s, 2s, 4s, ... capped at 60s, five attempts. The
+# Activity marks 4xx errors non-retryable and passes OpenRouter's Retry-After
+# through as the next retry delay, so this policy only governs the rest.
+OPENROUTER_RETRY_POLICY = RetryPolicy(
+    initial_interval=timedelta(seconds=1),
+    backoff_coefficient=2.0,
+    maximum_interval=timedelta(seconds=60),
+    maximum_attempts=5,
+)
 
 
 @dataclass
@@ -85,8 +98,10 @@ class BudgetGateInput:
     batch: BatchInput
     # Soft budget enforced by the Workflow from OpenRouter's reported cost.
     budget_usd: float
-    # Reserved per in-flight call before its real cost is known. Overshoot is
-    # bounded by batch.max_concurrency * estimated_cost_usd.
+    # Reserved per in-flight call before its real cost is known. Reservations
+    # count against the budget, so overshoot is bounded by
+    # batch.max_concurrency * max(actual cost - estimate, 0): nothing if the
+    # estimate is high enough, unbounded if it is far too low.
     estimated_cost_usd: float = 0.001
     # How long, from the start of the batch, parked prompts wait for a
     # `raise_budget` Update before the batch gives up on them. One deadline is
@@ -112,7 +127,6 @@ class SpendReport:
     reserved_usd: float
     completed: int
     # Prompts currently parked, with why: "soft_budget_exhausted" or
-    # "insufficient_credits" (OpenRouter returned 402).
+    # "insufficient_credits" (OpenRouter refused the call for lack of credits).
     paused: dict[str, str]
     ledger: list[LedgerEntry]
-    paused_reason: Optional[str] = None

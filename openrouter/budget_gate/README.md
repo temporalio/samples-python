@@ -53,7 +53,7 @@ The starter then prints the completed batch:
 [deepseek/deepseek-v4-flash-0731] $0.000180 cache=MISS  Name two causes of HTTP 429.
 [deepseek/deepseek-v4-flash-0731] $0.000065 cache=MISS  What does a heartbeat timeout detect?
 
-Total cost: $0.000873
+Reported cost: $0.000873 (what OpenRouter reported on each prompt's final attempt)
 ```
 
 `temporal workflow show -w <workflow-id>` shows the pause as a `TimerStarted` (the approval timeout), then `WorkflowExecutionUpdateAccepted` and `WorkflowExecutionUpdateCompleted` when the budget is raised, `TimerCanceled`, and the remaining Activities.
@@ -89,6 +89,8 @@ uv run --group openrouter openrouter/budget_gate/raise_budget.py <workflow-id> 1
 If nobody raises the budget within `--approval-timeout-seconds` of the batch starting (default one hour; one deadline shared by every parked prompt), the batch completes with the remaining prompts listed as skipped.
 
 ## What the soft budget does and does not guarantee
+
+`spent_usd` is the sum of what OpenRouter reported on each prompt's final, successful attempt (or the estimate, if a response carried no cost). It is not a bill: an attempt that was billed but whose response never reached Temporal, such as a Worker crash after the response, is not in it. For actual spend, use OpenRouter's dashboard or `GET /api/v1/key`.
 
 The cost of a call is only known after the response, so the Workflow reserves `--estimate-usd` per in-flight call and checks `spent + reserved + estimate <= budget` before starting one. Overshoot is therefore bounded by `max_concurrency * estimate`, plus the gap between the estimate and the real cost of the calls already in flight. In the run above, the second prompt alone cost more than the whole budget; the third prompt is where the gate closed. To bound the cost of a single call, set `provider.max_price` in the request (see OpenRouter's provider routing docs). The hard cap is the credit limit on the OpenRouter API key, which is what produces the `403 Key limit exceeded`.
 

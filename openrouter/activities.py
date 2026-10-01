@@ -1,7 +1,8 @@
 import asyncio
 import json
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from typing import Any, Mapping, NoReturn, Optional
 
 from openai import APIStatusError, AsyncOpenAI
@@ -52,14 +53,19 @@ OUT_OF_CREDITS = "OpenRouterOutOfCredits"
 
 
 def _retry_after(headers: Mapping[str, str]) -> Optional[timedelta]:
+    """Parse Retry-After in either its delta-seconds or HTTP-date form."""
     value = headers.get("retry-after")
     if value is None:
         return None
     try:
         return timedelta(seconds=float(value))
     except ValueError:
-        # HTTP-date form; let the Activity retry policy decide the delay.
+        pass
+    try:
+        delay = parsedate_to_datetime(value) - datetime.now(timezone.utc)
+    except (TypeError, ValueError):
         return None
+    return delay if delay > timedelta(0) else None
 
 
 def raise_for_status(status: int, message: str, headers: Mapping[str, str]) -> NoReturn:
@@ -179,21 +185,25 @@ class OpenRouterActivities:
         choices = payload.get("choices") or []
         usage = payload.get("usage") or {}
         cost = usage.get("cost")
+        if not isinstance(cost, (int, float)):
+            # OpenRouter reports cost on every response; if it is ever missing,
+            # say so rather than pretending the call was free.
+            activity.logger.warning("OpenRouter response has no usage.cost")
         result = OpenRouterResult(
             prompt=request.prompt,
             model=str(payload.get("model", model)),
             answer=_content_to_text((choices[0].get("message") or {}).get("content"))
             if choices
             else "",
-            cost_usd=float(cost) if isinstance(cost, (int, float)) else 0.0,
+            cost_usd=float(cost) if isinstance(cost, (int, float)) else None,
             generation_id=str(payload.get("id", "")),
             cache_status=raw.headers.get("x-openrouter-cache-status", ""),
         )
         activity.logger.info(
-            "OpenRouter call completed: attempt=%d model=%s cost_usd=%.6f cache=%s id=%s",
+            "OpenRouter call completed: attempt=%d model=%s cost_usd=%s cache=%s id=%s",
             activity.info().attempt,
             result.model,
-            result.cost_usd,
+            "unknown" if result.cost_usd is None else f"{result.cost_usd:.6f}",
             result.cache_status or "-",
             result.generation_id,
         )

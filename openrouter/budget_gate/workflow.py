@@ -1,4 +1,6 @@
 import asyncio
+import math
+from asyncio import CancelledError
 from datetime import timedelta
 from typing import Callable, Optional, Union
 
@@ -60,9 +62,15 @@ class BudgetGateWorkflow:
             raise ApplicationError(
                 "max_concurrency must be at least 1", non_retryable=True
             )
-        if gate.estimated_cost_usd <= 0 or gate.budget_usd < 0:
+        if (
+            not math.isfinite(gate.estimated_cost_usd)
+            or gate.estimated_cost_usd <= 0
+            or not math.isfinite(gate.budget_usd)
+            or gate.budget_usd < 0
+        ):
             raise ApplicationError(
-                "estimated_cost_usd must be positive and budget_usd non-negative",
+                "estimated_cost_usd must be a positive finite number and "
+                "budget_usd a non-negative finite number",
                 non_retryable=True,
             )
         self._budget_usd = gate.budget_usd
@@ -85,7 +93,7 @@ class BudgetGateWorkflow:
         return BatchResult(
             results=results,
             skipped=skipped,
-            total_cost_usd=round(self._spent_usd, 6),
+            reported_cost_usd=round(self._spent_usd, 6),
         )
 
     # @@@SNIPSTART python-openrouter-budget-gate-handlers
@@ -102,6 +110,8 @@ class BudgetGateWorkflow:
 
     @raise_budget.validator
     def validate_raise_budget(self, new_budget_usd: float) -> None:
+        if not math.isfinite(new_budget_usd):
+            raise ValueError("The budget must be a finite number.")
         if new_budget_usd < self._budget_usd:
             raise ValueError(
                 f"New budget ${new_budget_usd} is below the current budget "
@@ -141,6 +151,9 @@ class BudgetGateWorkflow:
                         break
                     except ActivityError as e:
                         cause = e.cause
+                        if isinstance(cause, CancelledError):
+                            # Workflow cancellation is not a per-prompt failure.
+                            raise
                         if (
                             isinstance(cause, ApplicationError)
                             and cause.type == INSUFFICIENT_CREDITS
@@ -161,12 +174,21 @@ class BudgetGateWorkflow:
                             "Skipping prompt %r: %s", prompt, reason
                         )
                         return SkippedPrompt(prompt=prompt, reason=reason)
-                self._spent_usd += result.cost_usd
+                # Charge what OpenRouter reported; if it reported nothing,
+                # charge the estimate rather than treating the call as free.
+                charged = (
+                    result.cost_usd
+                    if result.cost_usd is not None
+                    else gate.estimated_cost_usd
+                )
+                cost_known = result.cost_usd is not None
+                self._spent_usd += charged
                 self._ledger.append(
                     LedgerEntry(
                         prompt=prompt,
                         model=result.model,
-                        cost_usd=result.cost_usd,
+                        cost_usd=charged,
+                        cost_known=cost_known,
                         generation_id=result.generation_id,
                         cache_status=result.cache_status,
                     )

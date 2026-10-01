@@ -206,7 +206,7 @@ async def test_fail_once_after_call_fails_first_attempt_only() -> None:
     assert result.cost_usd == 0.0
 
 
-async def test_missing_cost_is_reported_as_zero() -> None:
+async def test_missing_cost_is_reported_as_unknown() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         body = completion_body()
         del body["usage"]["cost"]
@@ -215,5 +215,30 @@ async def test_missing_cost_is_reported_as_zero() -> None:
     result = await ActivityEnvironment().run(
         make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
     )
-    assert result.cost_usd == 0.0
+    assert result.cost_usd is None
     assert result.cache_status == ""
+
+
+async def test_retry_after_http_date_becomes_next_retry_delay() -> None:
+    from datetime import datetime, timedelta, timezone
+    from email.utils import format_datetime
+
+    when = datetime.now(timezone.utc) + timedelta(seconds=30)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            503,
+            json={"error": {"code": 503, "message": "No provider available"}},
+            headers={"Retry-After": format_datetime(when, usegmt=True)},
+        )
+
+    with pytest.raises(ApplicationError) as excinfo:
+        await ActivityEnvironment().run(
+            make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
+        )
+
+    assert excinfo.value.type == "OpenRouterHTTP503"
+    assert excinfo.value.next_retry_delay is not None
+    assert (
+        timedelta(seconds=25) < excinfo.value.next_retry_delay <= timedelta(seconds=30)
+    )

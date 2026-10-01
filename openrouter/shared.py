@@ -45,7 +45,9 @@ class OpenRouterResult:
     prompt: str
     model: str
     answer: str
-    cost_usd: float
+    # What OpenRouter reported for this attempt's response. None if the
+    # response carried no usage.cost (it always should).
+    cost_usd: Optional[float]
     generation_id: str
     # "HIT" or "MISS" from OpenRouter's X-OpenRouter-Cache-Status header, or ""
     # when the header is absent.
@@ -70,7 +72,11 @@ class BatchInput:
 class BatchResult:
     results: list[OpenRouterResult]
     skipped: list[SkippedPrompt]
-    total_cost_usd: float
+    # Sum of the cost OpenRouter reported on each prompt's final, successful
+    # attempt. Attempts that were billed but whose result never reached
+    # Temporal (a Worker crash after the response, say) are not in here;
+    # OpenRouter's dashboard or /api/v1/key is the source of truth for spend.
+    reported_cost_usd: float
 
 
 @dataclass
@@ -93,7 +99,9 @@ class BudgetGateInput:
 class LedgerEntry:
     prompt: str
     model: str
+    # Reported cost, or the batch's estimate when the response had no cost.
     cost_usd: float
+    cost_known: bool
     generation_id: str
     cache_status: str
 

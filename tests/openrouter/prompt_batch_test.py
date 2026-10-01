@@ -52,4 +52,4 @@ async def test_prompt_batch_collects_results_and_skips_failures(
     assert [(s.prompt, s.reason) for s in result.skipped] == [
         ("bad", "OpenRouterHTTP400")
     ]
-    assert result.total_cost_usd == 0.002
+    assert result.reported_cost_usd == 0.002

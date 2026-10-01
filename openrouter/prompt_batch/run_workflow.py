@@ -48,12 +48,16 @@ async def main() -> None:
     )
 
     for r in result.results:
-        print(f"\n[{r.model}] ${r.cost_usd:.6f} cache={r.cache_status or '-'}")
+        cost = "unknown" if r.cost_usd is None else f"${r.cost_usd:.6f}"
+        print(f"\n[{r.model}] {cost} cache={r.cache_status or '-'}")
         print(f"  Q: {r.prompt}")
         print(f"  A: {r.answer.strip()}")
     for s in result.skipped:
         print(f"\n[skipped: {s.reason}] {s.prompt}")
-    print(f"\nTotal cost: ${result.total_cost_usd:.6f}")
+    print(
+        f"\nReported cost: ${result.reported_cost_usd:.6f} "
+        "(what OpenRouter reported on each prompt's final attempt)"
+    )
     print(f"Inspect: temporal workflow show -w {workflow_id}")
 
 

@@ -1,4 +1,5 @@
 import asyncio
+from asyncio import CancelledError
 from datetime import timedelta
 from typing import Union
 
@@ -61,7 +62,7 @@ class PromptBatchWorkflow:
         return BatchResult(
             results=results,
             skipped=skipped,
-            total_cost_usd=round(sum(r.cost_usd for r in results), 6),
+            reported_cost_usd=round(sum(r.cost_usd or 0.0 for r in results), 6),
         )
 
     async def _answer(
@@ -81,9 +82,12 @@ class PromptBatchWorkflow:
                     retry_policy=OPENROUTER_RETRY_POLICY,
                 )
             except ActivityError as e:
+                cause = e.cause
+                if isinstance(cause, CancelledError):
+                    # Workflow cancellation is not a per-prompt failure.
+                    raise
                 # One bad prompt should not fail the batch. Record why and
                 # carry on; the caller decides what to do with skipped prompts.
-                cause = e.cause
                 reason = (
                     cause.type
                     if isinstance(cause, ApplicationError) and cause.type

@@ -6,7 +6,12 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
 from openrouter.budget_gate.workflow import BudgetGateWorkflow
-from openrouter.shared import BUDGET_GATE_TASK_QUEUE, DEFAULT_MODEL, BudgetGateInput
+from openrouter.shared import (
+    BUDGET_GATE_TASK_QUEUE,
+    DEFAULT_MODEL,
+    BatchInput,
+    BudgetGateInput,
+)
 
 DEFAULT_PROMPTS = [
     "Explain retries in one sentence.",
@@ -43,11 +48,13 @@ async def main() -> None:
     handle = await client.start_workflow(
         BudgetGateWorkflow.run,
         BudgetGateInput(
-            prompts=args.prompts,
+            batch=BatchInput(
+                prompts=args.prompts,
+                model=args.model,
+                max_concurrency=args.max_concurrency,
+            ),
             budget_usd=args.budget_usd,
             estimated_cost_usd=args.estimate_usd,
-            model=args.model,
-            max_concurrency=args.max_concurrency,
             approval_timeout_seconds=args.approval_timeout_seconds,
         ),
         id=workflow_id,

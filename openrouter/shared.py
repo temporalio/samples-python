@@ -81,14 +81,13 @@ class BatchResult:
 
 @dataclass
 class BudgetGateInput:
-    prompts: list[str]
+    # The batch to run: prompts, model, concurrency. Same shape as prompt_batch.
+    batch: BatchInput
     # Soft budget enforced by the Workflow from OpenRouter's reported cost.
     budget_usd: float
     # Reserved per in-flight call before its real cost is known. Overshoot is
-    # bounded by max_concurrency * estimated_cost_usd.
+    # bounded by batch.max_concurrency * estimated_cost_usd.
     estimated_cost_usd: float = 0.001
-    model: str = DEFAULT_MODEL
-    max_concurrency: int = 3
     # How long, from the start of the batch, parked prompts wait for a
     # `raise_budget` Update before the batch gives up on them. One deadline is
     # shared by the whole batch.

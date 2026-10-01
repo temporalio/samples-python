@@ -56,7 +56,7 @@ Reported cost: $0.000000 (what OpenRouter reported on each prompt's final attemp
 
 The first attempt was billed; the reported cost only covers what came back on the final attempt, which is the $0 cache hit. OpenRouter's dashboard is the source of truth for actual spend.
 
-`temporal workflow show -w <workflow-id>` shows both attempts. The cache is keyed on your API key and the exact request body, so running the same prompt again within the cache TTL (10 minutes by default here) is also a hit. OpenRouter writes the cache shortly after the response completes; a retry that arrives before that write lands is a `MISS` and is billed, which you may see occasionally with the one-second retry interval used here.
+`temporal workflow show -w <workflow-id>` shows the Activity completing on attempt 2 with the simulated failure as its last failure; the Worker log has one line per attempt with model, cost, and cache status. The cache is keyed on your API key and the exact request body, so running the same prompt again within the cache TTL (10 minutes by default here) is also a hit. OpenRouter writes the cache shortly after the response completes; a retry that arrives before that write lands is a `MISS` and is billed, which you may see occasionally with the one-second retry interval used here.
 
 ### Other options
 

@@ -1,6 +1,6 @@
 # OpenRouter
 
-These samples call [OpenRouter](https://openrouter.ai/) from Temporal Activities. OpenRouter serves hundreds of models from many providers behind one OpenAI-compatible API and one API key, and picks providers and models per request. Temporal handles everything around those calls: retries with backoff, fan-out with bounded concurrency, crash recovery, pausing for a human, and a durable per-attempt record of what was called and what it cost.
+These samples call [OpenRouter](https://openrouter.ai/) from Temporal Activities. OpenRouter serves hundreds of models from many providers behind one OpenAI-compatible API and one API key, and picks providers and models per request. Temporal handles everything around those calls: retries with backoff, fan-out with bounded concurrency, crash recovery, pausing for a human, and a durable record of each prompt's result, cost, and retry history.
 
 | Sample | Description |
 |--------|-------------|
@@ -49,7 +49,7 @@ uv run --group openrouter openrouter/prompt_batch/run_workflow.py "Explain retri
 
 [activities.py](activities.py) uses the `openai` SDK pointed at `https://openrouter.ai/api/v1`, which is the setup OpenRouter documents for OpenAI-compatible clients. OpenRouter-specific fields go in `extra_body`. Four things matter for durable execution:
 
-- **Temporal owns retries.** The client is created with `max_retries=0`, so every attempt is one HTTP call and shows up in Event History. If you use OpenRouter's official `openrouter` package instead, pass `retry_config=RetryConfig("none", ...)`: by default it retries 5xx and connection errors for up to an hour, invisibly.
+- **Temporal owns retries.** The client is created with `max_retries=0`, so every attempt is one HTTP call driven by the Activity retry policy. Event History records the attempt count and the last failure; each attempt's model, cost, and cache status is logged by the Worker. If you use OpenRouter's official `openrouter` package instead, pass `retry_config=RetryConfig("none", ...)`: by default it retries 5xx and connection errors for up to an hour, invisibly.
 - **Errors are classified.** 408, 429, and 5xx raise a retryable `ApplicationError`; 400, 401, 403 (moderation or permissions), and other 4xx raise a non-retryable one. Running out of money gets its own type, `OpenRouterOutOfCredits`: OpenRouter returns 402 when the account has no credits and 403 `Key limit exceeded` when the API key hit its own credit limit. A `Retry-After` header becomes the next retry delay. OpenRouter can also return HTTP 200 with an `error` body and no `choices`; the Activity checks for that.
 - **Retries are free when the first call succeeded.** The Activity sends `X-OpenRouter-Cache: true`, so if a Worker dies after OpenRouter answered but before Temporal recorded the result, the retried, byte-identical request is served from OpenRouter's response cache and billed at $0. Nothing per-attempt goes in the request body, so attempts stay identical.
 - **Heartbeats.** The Activity heartbeats so a dead Worker is detected after `heartbeat_timeout` (10s) rather than after the full `start_to_close_timeout`.

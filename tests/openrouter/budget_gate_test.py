@@ -16,6 +16,7 @@ from temporalio.worker import Worker
 
 from openrouter.budget_gate.workflow import BudgetGateWorkflow
 from openrouter.shared import (
+    BatchInput,
     BatchResult,
     BudgetGateInput,
     OpenRouterRequest,
@@ -97,10 +98,9 @@ async def test_soft_budget_pauses_then_resumes_on_raise_budget(
             client,
             task_queue,
             BudgetGateInput(
-                prompts=["a", "b", "c"],
+                batch=BatchInput(prompts=["a", "b", "c"], max_concurrency=1),
                 budget_usd=0.0015,
                 estimated_cost_usd=COST_PER_CALL,
-                max_concurrency=1,
                 approval_timeout_seconds=60,
             ),
         )
@@ -134,10 +134,9 @@ async def test_insufficient_credits_pauses_and_reruns_same_prompt(
             client,
             task_queue,
             BudgetGateInput(
-                prompts=["a", "b", "c"],
+                batch=BatchInput(prompts=["a", "b", "c"], max_concurrency=1),
                 budget_usd=1.0,
                 estimated_cost_usd=COST_PER_CALL,
-                max_concurrency=1,
                 approval_timeout_seconds=60,
             ),
         )
@@ -168,10 +167,9 @@ async def test_lowering_the_budget_is_rejected(client: Client, task_queue: str) 
             client,
             task_queue,
             BudgetGateInput(
-                prompts=["a", "b"],
+                batch=BatchInput(prompts=["a", "b"], max_concurrency=1),
                 budget_usd=0.0015,
                 estimated_cost_usd=COST_PER_CALL,
-                max_concurrency=1,
                 approval_timeout_seconds=60,
             ),
         )
@@ -199,10 +197,9 @@ async def test_approval_timeout_skips_remaining_prompts(
         result = await client.execute_workflow(
             BudgetGateWorkflow.run,
             BudgetGateInput(
-                prompts=["a", "b", "c"],
+                batch=BatchInput(prompts=["a", "b", "c"], max_concurrency=2),
                 budget_usd=0.0015,
                 estimated_cost_usd=COST_PER_CALL,
-                max_concurrency=2,
                 approval_timeout_seconds=1,
             ),
             id=f"test-openrouter-budget-{uuid.uuid4()}",
@@ -227,7 +224,10 @@ async def test_zero_concurrency_is_rejected(client: Client, task_queue: str) -> 
         with pytest.raises(WorkflowFailureError) as excinfo:
             await client.execute_workflow(
                 BudgetGateWorkflow.run,
-                BudgetGateInput(prompts=["a"], budget_usd=1.0, max_concurrency=0),
+                BudgetGateInput(
+                    batch=BatchInput(prompts=["a"], max_concurrency=0),
+                    budget_usd=1.0,
+                ),
                 id=f"test-openrouter-budget-{uuid.uuid4()}",
                 task_queue=task_queue,
             )
@@ -247,8 +247,62 @@ async def test_non_finite_budget_is_rejected(client: Client, task_queue: str) ->
         with pytest.raises(WorkflowFailureError):
             await client.execute_workflow(
                 BudgetGateWorkflow.run,
-                BudgetGateInput(prompts=["a"], budget_usd=float("inf")),
+                BudgetGateInput(
+                    batch=BatchInput(prompts=["a"]), budget_usd=float("inf")
+                ),
                 id=f"test-openrouter-budget-{uuid.uuid4()}",
                 task_queue=task_queue,
             )
     assert fake.calls == {}
+
+
+async def test_raising_the_budget_admits_only_what_fits(
+    client: Client, task_queue: str
+) -> None:
+    """Three prompts park; a raise that fits one call must wake only one."""
+    fake = FakeOpenRouter()
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[fake.call_openrouter],
+    ):
+        handle = await start(
+            client,
+            task_queue,
+            BudgetGateInput(
+                batch=BatchInput(prompts=["a", "b", "c", "d"], max_concurrency=3),
+                budget_usd=0.0015,
+                estimated_cost_usd=COST_PER_CALL,
+                approval_timeout_seconds=60,
+            ),
+        )
+        # "a" runs; "b" and "c" park on the soft budget, and "d" parks too
+        # once "a" frees its concurrency slot.
+        for _ in range(100):
+            report = await handle.query(BudgetGateWorkflow.spend_report)
+            if report.completed == 1 and len(report.paused) == 3:
+                break
+            await asyncio.sleep(0.1)
+        assert report.completed == 1 and len(report.paused) == 3
+
+        # Headroom for exactly one more call: spent 0.001 + 0.001 <= 0.0025.
+        await handle.execute_update(BudgetGateWorkflow.raise_budget, 0.0025)
+        for _ in range(100):
+            report = await handle.query(BudgetGateWorkflow.spend_report)
+            if report.completed == 2:
+                break
+            await asyncio.sleep(0.1)
+        # Give the others a chance to (wrongly) run; they must stay parked.
+        await asyncio.sleep(0.5)
+        report = await handle.query(BudgetGateWorkflow.spend_report)
+        assert report.completed == 2
+        assert report.spent_usd == pytest.approx(2 * COST_PER_CALL)
+        assert len(report.paused) == 2
+        assert report.reserved_usd == 0
+
+        await handle.execute_update(BudgetGateWorkflow.raise_budget, 1.0)
+        result = await handle.result()
+
+    assert [r.prompt for r in result.results] == ["a", "b", "c", "d"]
+    assert fake.calls == {"a": 1, "b": 1, "c": 1, "d": 1}

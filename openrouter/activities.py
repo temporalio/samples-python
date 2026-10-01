@@ -19,8 +19,9 @@ from openrouter.shared import (
 def build_client(api_key: Optional[str] = None) -> AsyncOpenAI:
     """OpenAI SDK client pointed at OpenRouter.
 
-    Client-side retries are disabled so that Temporal owns every retry and each
-    attempt is visible in Event History. (OpenRouter's official SDKs retry 5xx
+    Client-side retries are disabled so that Temporal owns every retry: the
+    attempt count and last failure land in Event History, and each attempt is
+    logged below. (OpenRouter's official SDKs retry 5xx
     and connection errors for up to an hour by default; if you use one of them
     instead, turn that off too.)
     """

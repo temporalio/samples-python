@@ -52,13 +52,14 @@ class BudgetGateWorkflow:
 
     @workflow.run
     async def run(self, gate: BudgetGateInput) -> BatchResult:
-        if len(gate.prompts) > MAX_PROMPTS_PER_BATCH:
+        batch = gate.batch
+        if len(batch.prompts) > MAX_PROMPTS_PER_BATCH:
             raise ApplicationError(
-                f"Batch has {len(gate.prompts)} prompts; the limit is "
+                f"Batch has {len(batch.prompts)} prompts; the limit is "
                 f"{MAX_PROMPTS_PER_BATCH}.",
                 non_retryable=True,
             )
-        if gate.max_concurrency < 1:
+        if batch.max_concurrency < 1:
             raise ApplicationError(
                 "max_concurrency must be at least 1", non_retryable=True
             )
@@ -79,10 +80,10 @@ class BudgetGateWorkflow:
         self._deadline = workflow.now() + timedelta(
             seconds=gate.approval_timeout_seconds
         )
-        semaphore = asyncio.Semaphore(gate.max_concurrency)
+        semaphore = asyncio.Semaphore(batch.max_concurrency)
         try:
             outcomes = await asyncio.gather(
-                *(self._answer(prompt, gate, semaphore) for prompt in gate.prompts)
+                *(self._answer(prompt, gate, semaphore) for prompt in batch.prompts)
             )
         finally:
             # Let an in-flight raise_budget Update finish before returning.
@@ -143,7 +144,7 @@ class BudgetGateWorkflow:
                     try:
                         result = await workflow.execute_activity_method(
                             OpenRouterActivities.call_openrouter,
-                            OpenRouterRequest(prompt=prompt, model=gate.model),
+                            OpenRouterRequest(prompt=prompt, model=gate.batch.model),
                             start_to_close_timeout=timedelta(seconds=90),
                             heartbeat_timeout=timedelta(seconds=10),
                             retry_policy=OPENROUTER_RETRY_POLICY,
@@ -204,7 +205,10 @@ class BudgetGateWorkflow:
         def fits() -> bool:
             return self._spent_usd + self._reserved_usd + estimate <= self._budget_usd
 
-        if not fits():
+        # Loop rather than check once: when the budget is raised, every parked
+        # prompt is woken before any of them runs, so each must re-check after
+        # waking in case an earlier one already took the new headroom.
+        while not fits():
             workflow.logger.info(
                 "Soft budget reached (spent $%.6f of $%.6f); pausing %r",
                 self._spent_usd,

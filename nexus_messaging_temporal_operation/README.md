@@ -1,5 +1,8 @@
-This sample shows how to expose a long-running Workflow's queries, updates, and signals as Nexus
-operations. There are two self-contained examples, each in its own directory:
+This sample shows how to expose a long-running Workflow's queries, updates, and signals as Nexus operations. This
+version uses the experimental `@nexus.temporal_operation` decorator to allow Nexus operation handlers to either return
+a synchronous result or start a Workflow as the async backing operation.
+
+There are two self-contained examples, each in its own directory:
 
 |                                | `callerpattern/`                     | `ondemandpattern/`                                           |
 |--------------------------------|--------------------------------------|--------------------------------------------------------------|

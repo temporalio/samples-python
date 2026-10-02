@@ -1,0 +1,48 @@
+[project]
+name = "temporalio-samples-arize-tracing"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "temporalio[opentelemetry]>=1.33.0,<2",
+    # 1.1.0 fixes span parenting when one worker runs both workflows and
+    # activities; its openinference extra brings the Agents SDK instrumentation.
+    "temporalio-openai-agents[openinference]>=1.1.0",
+    "openai>=3,<4",
+    # Phoenix and Arize AX ingest OTLP/HTTP; this sample never uses gRPC.
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
+    "openinference-semantic-conventions>=0.1.30",
+    "openinference-instrumentation-openai>=0.1.52",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0,<0.6",
+    "mypy>=1.4.1,<2",
+    "poethepoet>=0.36.0",
+    "pytest>=7.1.2,<8",
+    "pytest-asyncio>=0.18.3,<0.19",
+]
+
+[tool.poe.tasks]
+format = [
+    { cmd = "uv run ruff check --select I --fix" },
+    { cmd = "uv run ruff format" },
+]
+lint = [
+    { cmd = "uv run ruff check --select I" },
+    { cmd = "uv run ruff format --check" },
+    { ref = "lint-types" },
+]
+lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages --explicit-package-bases ."
+test = "uv run pytest"
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = ["."]
+testpaths = ["tests"]

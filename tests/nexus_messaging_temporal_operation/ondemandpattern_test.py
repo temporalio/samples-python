@@ -8,10 +8,13 @@ from temporalio.client import Client
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
-import nexus_messaging.ondemandpattern.handler.worker
-from nexus_messaging.ondemandpattern.caller.workflows import CallerRemoteWorkflow
-from nexus_messaging.ondemandpattern.service import (
+import nexus_messaging_temporal_operation.ondemandpattern.handler.worker
+from nexus_messaging_temporal_operation.ondemandpattern.caller.workflows import (
+    CallerRemoteWorkflow,
+)
+from nexus_messaging_temporal_operation.ondemandpattern.service import (
     ApproveInput,
+    AttachApprovalContextInput,
     GetLanguageInput,
     GetLanguagesInput,
     Language,
@@ -37,10 +40,25 @@ class TestCallerRemoteWorkflow:
 
         workflow_id = f"test-remote-{workflow.uuid4()}"
 
-        # Start a remote workflow.
+        # Signal-with-Start: no Workflow exists for this user yet, so this operation
+        # creates it and delivers the Signal.
+        await nexus_client.execute_operation(
+            NexusRemoteGreetingService.attach_approval_context,
+            AttachApprovalContextInput(note="created by signal", user_id=workflow_id),
+        )
+
+        # Start a remote Workflow. The Signal-with-Start above already created it, so
+        # this attaches to the running execution (USE_EXISTING conflict policy).
         handle = await nexus_client.start_operation(
             NexusRemoteGreetingService.run_from_remote,
             RunFromRemoteInput(user_id=workflow_id),
+        )
+
+        # Signal-with-Start again, this time against the already-running Workflow, so
+        # only the Signal is delivered.
+        await nexus_client.execute_operation(
+            NexusRemoteGreetingService.attach_approval_context,
+            AttachApprovalContextInput(note="signal only", user_id=workflow_id),
         )
 
         # Query for supported languages.
@@ -100,12 +118,14 @@ async def test_ondemandpattern_caller_workflow(
 async def _run_caller_workflow(client: Client, wf: Type):
     create_response = await create_nexus_endpoint(
         name=NEXUS_ENDPOINT,
-        task_queue=nexus_messaging.ondemandpattern.handler.worker.TASK_QUEUE,
+        task_queue=nexus_messaging_temporal_operation.ondemandpattern.handler.worker.TASK_QUEUE,
         client=client,
     )
     try:
         handler_worker_task = asyncio.create_task(
-            nexus_messaging.ondemandpattern.handler.worker.main(client)
+            nexus_messaging_temporal_operation.ondemandpattern.handler.worker.main(
+                client
+            )
         )
         try:
             async with Worker(
@@ -119,9 +139,9 @@ async def _run_caller_workflow(client: Client, wf: Type):
                     task_queue="test-caller-remote-task-queue",
                 )
         finally:
-            nexus_messaging.ondemandpattern.handler.worker.interrupt_event.set()
+            nexus_messaging_temporal_operation.ondemandpattern.handler.worker.interrupt_event.set()
             await handler_worker_task
-            nexus_messaging.ondemandpattern.handler.worker.interrupt_event.clear()
+            nexus_messaging_temporal_operation.ondemandpattern.handler.worker.interrupt_event.clear()
     finally:
         await delete_nexus_endpoint(
             id=create_response.endpoint.id,

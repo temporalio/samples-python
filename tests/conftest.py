@@ -45,6 +45,12 @@ async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
             dev_server_extra_args=[
                 "--dynamic-config-value",
                 "activity.enableCallbacks=true",
+                "--dynamic-config-value",
+                "history.enableUpdateCallbacks=true",
+                "--dynamic-config-value",
+                "history.enableCHASMSignalBacklinks=true",
+                "--dynamic-config-value",
+                "history.enableSignalWithStartFromWorkflow=true",
             ],
             dev_server_download_version="v1.7.4-standalone-nexus-operations",
         )

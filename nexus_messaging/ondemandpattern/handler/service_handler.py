@@ -40,15 +40,12 @@ class NexusRemoteGreetingServiceHandler:
         )
 
     # Starts a new GreetingWorkflow with the caller-specified user ID.
-    # This is an async Nexus operation backed by temporal_operation.
-    @nexus.temporal_operation
+    # This is an async Nexus operation backed by workflow_run_operation.
+    @nexus.workflow_run_operation
     async def run_from_remote(
-        self,
-        _ctx: nexus.TemporalStartOperationContext,
-        client: nexus.TemporalNexusClient,
-        input: RunFromRemoteInput,
-    ) -> nexus.TemporalOperationResult[str]:
-        return await client.start_workflow(
+        self, ctx: nexus.WorkflowRunOperationContext, input: RunFromRemoteInput
+    ) -> nexus.WorkflowHandle[str]:
+        return await ctx.start_workflow(
             GreetingWorkflow.run,
             id=self._get_workflow_id(input.user_id),
         )

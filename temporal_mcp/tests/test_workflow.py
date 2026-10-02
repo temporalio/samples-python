@@ -10,8 +10,8 @@ import uvicorn
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
-from run_worker import create_plugin
 from server import create_server
+from worker import create_plugin
 from workflow import TRANSPORTS, MCPDemoResult, MCPDemoWorkflow, Transport
 
 

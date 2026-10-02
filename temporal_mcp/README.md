@@ -29,28 +29,28 @@ uv sync --locked --all-groups
 For the in-process transport, start the Worker and Workflow in separate shells:
 
 ```bash
-uv run run_worker.py in-process
-uv run run_workflow.py in-process
+uv run worker.py in-process
+uv run workflow.py in-process
 ```
 
 The stdio transport uses the same commands. The Worker launches `server.py`
 automatically with the current Python interpreter:
 
 ```bash
-uv run run_worker.py stdio
-uv run run_workflow.py stdio
+uv run worker.py stdio
+uv run workflow.py stdio
 ```
 
 Streamable HTTP needs a third shell for the MCP server:
 
 ```bash
 uv run server.py streamable-http
-uv run run_worker.py streamable-http
-uv run run_workflow.py streamable-http
+uv run worker.py streamable-http
+uv run workflow.py streamable-http
 ```
 
 The HTTP server defaults to `http://127.0.0.1:8000/mcp`. Use `--host` and
-`--port` on `server.py` and `--http-url` on `run_worker.py` to change it.
+`--port` on `server.py` and `--http-url` on `worker.py` to change it.
 
 ## What the Workflow demonstrates
 

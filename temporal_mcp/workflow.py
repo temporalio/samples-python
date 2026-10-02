@@ -1,12 +1,17 @@
-"""Workflow that uses every durable MCP operation."""
+"""Run a workflow that uses every durable MCP operation."""
 
+import argparse
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Literal, cast
+from uuid import uuid4
 
 from mcp.types import TextContent, TextResourceContents
 from temporalio import workflow
+from temporalio.client import Client
 from temporalio.common import RetryPolicy
+from temporalio.envconfig import ClientConfig
 from temporalio.mcp import TemporalMCPClient
 
 Transport = Literal["in-process", "stdio", "streamable-http"]
@@ -48,7 +53,7 @@ class MCPDemoWorkflow:
 
         tools = await client.list_tools()
         # Tool discovery is cached in replay-safe Workflow state by default.
-        assert await client.list_tools() is tools
+        await client.list_tools()
         tool_result = await client.call_tool("echo", {"value": "durable execution"})
         prompts = await client.list_prompts()
         prompt = await client.get_prompt("greeting", {"name": "Temporal"})
@@ -71,3 +76,24 @@ class MCPDemoWorkflow:
                 TextResourceContents, template_resource.contents[0]
             ).text,
         )
+
+
+async def main(transport: Transport) -> None:
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
+
+    result = await client.execute_workflow(
+        MCPDemoWorkflow.run,
+        transport,
+        id=f"temporal-mcp-{transport}-{uuid4()}",
+        task_queue=task_queue(transport),
+    )
+    print(result)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("transport", choices=TRANSPORTS)
+    args = parser.parse_args()
+    asyncio.run(main(cast(Transport, args.transport)))

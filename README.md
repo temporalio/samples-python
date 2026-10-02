@@ -110,6 +110,7 @@ without wrapping them in a workflow.
 * [sentry](sentry) - Report errors to Sentry.
 * [sleep_for_days](sleep_for_days) - A workflow that runs forever, sending an email every 30 days.
 * [strands_plugin](strands_plugin) - Run Strands Agents as durable Temporal workflows (model calls, tools, MCP, HITL).
+* [temporal_mcp](temporal_mcp) - Call MCP tools, prompts, and resources durably from Temporal workflows.
 * [trio_async](trio_async) - Use asyncio Temporal in Trio-based environments.
 * [updatable_timer](updatable_timer) - A timer that can be updated while sleeping.
 * [worker_multiprocessing](worker_multiprocessing) - Leverage Python multiprocessing to parallelize workflow tasks and other CPU bound operations by running multiple workers.

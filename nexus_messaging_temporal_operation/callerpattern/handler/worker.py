@@ -7,12 +7,16 @@ from temporalio.common import WorkflowIDConflictPolicy
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from nexus_messaging_temporal_operation.callerpattern.handler.activities import call_greeting_service
+from nexus_messaging_temporal_operation.callerpattern.handler.activities import (
+    call_greeting_service,
+)
 from nexus_messaging_temporal_operation.callerpattern.handler.service_handler import (
     NexusGreetingServiceHandler,
     get_workflow_id,
 )
-from nexus_messaging_temporal_operation.callerpattern.handler.workflows import GreetingWorkflow
+from nexus_messaging_temporal_operation.callerpattern.handler.workflows import (
+    GreetingWorkflow,
+)
 
 interrupt_event = asyncio.Event()
 

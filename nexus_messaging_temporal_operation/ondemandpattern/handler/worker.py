@@ -6,11 +6,15 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from nexus_messaging_temporal_operation.ondemandpattern.handler.activities import call_greeting_service
+from nexus_messaging_temporal_operation.ondemandpattern.handler.activities import (
+    call_greeting_service,
+)
 from nexus_messaging_temporal_operation.ondemandpattern.handler.service_handler import (
     NexusRemoteGreetingServiceHandler,
 )
-from nexus_messaging_temporal_operation.ondemandpattern.handler.workflows import GreetingWorkflow
+from nexus_messaging_temporal_operation.ondemandpattern.handler.workflows import (
+    GreetingWorkflow,
+)
 
 interrupt_event = asyncio.Event()
 

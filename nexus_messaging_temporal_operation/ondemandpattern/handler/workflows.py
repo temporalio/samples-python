@@ -12,7 +12,9 @@ from typing import Optional
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from nexus_messaging_temporal_operation.ondemandpattern.handler.activities import call_greeting_service
+from nexus_messaging_temporal_operation.ondemandpattern.handler.activities import (
+    call_greeting_service,
+)
 from nexus_messaging_temporal_operation.ondemandpattern.service import (
     ApproveInput,
     AttachApprovalContextInput,

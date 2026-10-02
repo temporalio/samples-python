@@ -10,7 +10,9 @@ from datetime import timedelta
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from nexus_messaging_temporal_operation.callerpattern.handler.activities import call_greeting_service
+from nexus_messaging_temporal_operation.callerpattern.handler.activities import (
+    call_greeting_service,
+)
 from nexus_messaging_temporal_operation.callerpattern.service import (
     ApproveInput,
     GetLanguagesInput,

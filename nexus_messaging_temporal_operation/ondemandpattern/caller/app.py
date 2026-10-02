@@ -6,7 +6,9 @@ from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from nexus_messaging_temporal_operation.ondemandpattern.caller.workflows import CallerRemoteWorkflow
+from nexus_messaging_temporal_operation.ondemandpattern.caller.workflows import (
+    CallerRemoteWorkflow,
+)
 
 NAMESPACE = "nexus-messaging-caller-namespace"
 TASK_QUEUE = "nexus-messaging-caller-remote-task-queue"

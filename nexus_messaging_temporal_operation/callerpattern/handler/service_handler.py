@@ -11,7 +11,9 @@ import nexusrpc
 from temporalio import nexus
 from temporalio.client import Client, WorkflowHandle
 
-from nexus_messaging_temporal_operation.callerpattern.handler.workflows import GreetingWorkflow
+from nexus_messaging_temporal_operation.callerpattern.handler.workflows import (
+    GreetingWorkflow,
+)
 from nexus_messaging_temporal_operation.callerpattern.service import (
     ApproveInput,
     ApproveOutput,

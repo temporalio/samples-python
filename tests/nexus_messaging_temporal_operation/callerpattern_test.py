@@ -9,7 +9,9 @@ from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 import nexus_messaging_temporal_operation.callerpattern.handler.worker
-from nexus_messaging_temporal_operation.callerpattern.caller.workflows import CallerWorkflow
+from nexus_messaging_temporal_operation.callerpattern.caller.workflows import (
+    CallerWorkflow,
+)
 from nexus_messaging_temporal_operation.callerpattern.service import (
     GetLanguageInput,
     GetLanguagesInput,

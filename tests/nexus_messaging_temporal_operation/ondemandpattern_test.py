@@ -9,7 +9,9 @@ from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 import nexus_messaging_temporal_operation.ondemandpattern.handler.worker
-from nexus_messaging_temporal_operation.ondemandpattern.caller.workflows import CallerRemoteWorkflow
+from nexus_messaging_temporal_operation.ondemandpattern.caller.workflows import (
+    CallerRemoteWorkflow,
+)
 from nexus_messaging_temporal_operation.ondemandpattern.service import (
     ApproveInput,
     AttachApprovalContextInput,
@@ -121,7 +123,9 @@ async def _run_caller_workflow(client: Client, wf: Type):
     )
     try:
         handler_worker_task = asyncio.create_task(
-            nexus_messaging_temporal_operation.ondemandpattern.handler.worker.main(client)
+            nexus_messaging_temporal_operation.ondemandpattern.handler.worker.main(
+                client
+            )
         )
         try:
             async with Worker(

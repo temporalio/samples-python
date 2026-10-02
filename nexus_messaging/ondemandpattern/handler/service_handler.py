@@ -10,16 +10,11 @@ from __future__ import annotations
 import nexusrpc
 from temporalio import nexus
 from temporalio.client import Client, WorkflowHandle
-from temporalio.common import WorkflowIDConflictPolicy
 
-from nexus_messaging.ondemandpattern.handler.workflows import (
-    ATTACH_APPROVAL_CONTEXT_SIGNAL,
-    GreetingWorkflow,
-)
+from nexus_messaging.ondemandpattern.handler.workflows import GreetingWorkflow
 from nexus_messaging.ondemandpattern.service import (
     ApproveInput,
     ApproveOutput,
-    AttachApprovalContextInput,
     GetLanguageInput,
     GetLanguagesInput,
     GetLanguagesOutput,
@@ -44,8 +39,7 @@ class NexusRemoteGreetingServiceHandler:
             GreetingWorkflow.run, self._get_workflow_id(user_id)
         )
 
-    # Starts a new GreetingWorkflow with the caller-specified user ID,
-    # or attached to one already running.
+    # Starts a new GreetingWorkflow with the caller-specified user ID.
     # This is an async Nexus operation backed by temporal_operation.
     @nexus.temporal_operation
     async def run_from_remote(
@@ -57,10 +51,6 @@ class NexusRemoteGreetingServiceHandler:
         return await client.start_workflow(
             GreetingWorkflow.run,
             id=self._get_workflow_id(input.user_id),
-            # Since attach_approval_context can create the GreetingWorkflow first,
-            # this operation needs to attach to the running execution rather than
-            # fail (default behavior).
-            id_conflict_policy=WorkflowIDConflictPolicy.USE_EXISTING,
         )
 
     @nexus.temporal_operation
@@ -96,11 +86,13 @@ class NexusRemoteGreetingServiceHandler:
         client: nexus.TemporalNexusClient,
         input: SetLanguageInput,
     ) -> nexus.TemporalOperationResult[Language]:
-        return await client.start_workflow_update(
-            self._get_workflow_id(input.user_id),
+        result = await self._get_workflow_handle(
+            client.client, input.user_id
+        ).execute_update(
             GreetingWorkflow.set_language_using_activity,
             input,
         )
+        return nexus.TemporalOperationResult.sync(result)
 
     @nexus.temporal_operation
     async def approve(
@@ -113,20 +105,3 @@ class NexusRemoteGreetingServiceHandler:
             GreetingWorkflow.approve, input
         )
         return nexus.TemporalOperationResult.sync(ApproveOutput())
-
-    # Signals a Workflow, starting the Workflow first if it is not already running.
-    @nexus.temporal_operation
-    async def attach_approval_context(
-        self,
-        _ctx: nexus.TemporalStartOperationContext,
-        client: nexus.TemporalNexusClient,
-        input: AttachApprovalContextInput,
-    ) -> nexus.TemporalOperationResult[None]:
-        await client.client.start_workflow(
-            GreetingWorkflow.run,
-            id=self._get_workflow_id(input.user_id),
-            task_queue=nexus.info().task_queue,
-            start_signal=ATTACH_APPROVAL_CONTEXT_SIGNAL,
-            start_signal_args=[input],
-        )
-        return nexus.TemporalOperationResult.sync(None)

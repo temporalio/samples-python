@@ -12,7 +12,6 @@ import nexus_messaging.ondemandpattern.handler.worker
 from nexus_messaging.ondemandpattern.caller.workflows import CallerRemoteWorkflow
 from nexus_messaging.ondemandpattern.service import (
     ApproveInput,
-    AttachApprovalContextInput,
     GetLanguageInput,
     GetLanguagesInput,
     Language,
@@ -38,25 +37,10 @@ class TestCallerRemoteWorkflow:
 
         workflow_id = f"test-remote-{workflow.uuid4()}"
 
-        # Signal-with-Start: no Workflow exists for this user yet, so this operation
-        # creates it and delivers the Signal.
-        await nexus_client.execute_operation(
-            NexusRemoteGreetingService.attach_approval_context,
-            AttachApprovalContextInput(note="created by signal", user_id=workflow_id),
-        )
-
-        # Start a remote Workflow. The Signal-with-Start above already created it, so
-        # this attaches to the running execution (USE_EXISTING conflict policy).
+        # Start a remote workflow.
         handle = await nexus_client.start_operation(
             NexusRemoteGreetingService.run_from_remote,
             RunFromRemoteInput(user_id=workflow_id),
-        )
-
-        # Signal-with-Start again, this time against the already-running Workflow, so
-        # only the Signal is delivered.
-        await nexus_client.execute_operation(
-            NexusRemoteGreetingService.attach_approval_context,
-            AttachApprovalContextInput(note="signal only", user_id=workflow_id),
         )
 
         # Query for supported languages.

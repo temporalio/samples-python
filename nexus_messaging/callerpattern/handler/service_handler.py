@@ -1,8 +1,7 @@
 """
 Nexus operation handler implementation for the entity pattern. Each operation receives a
-user_id, which is mapped to a Workflow ID. The Query and Signal operations are synchronous
-because they complete quickly against a running Workflow; set_language is async because it
-is backed by a Workflow Update that may call an activity.
+user_id, which is mapped to a workflow ID. The operations are synchronous because queries
+and updates against a running workflow complete quickly.
 """
 
 from __future__ import annotations
@@ -78,11 +77,13 @@ class NexusGreetingServiceHandler:
         client: nexus.TemporalNexusClient,
         input: SetLanguageInput,
     ) -> nexus.TemporalOperationResult[Language]:
-        return await client.start_workflow_update(
-            get_workflow_id(input.user_id),
+        result = await self._get_workflow_handle(
+            client.client, input.user_id
+        ).execute_update(
             GreetingWorkflow.set_language_using_activity,
             input,
         )
+        return nexus.TemporalOperationResult.sync(result)
 
     @nexus.temporal_operation
     async def approve(

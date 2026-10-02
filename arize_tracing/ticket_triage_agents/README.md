@@ -14,7 +14,7 @@ the reply. Model calls run as Temporal activities.
 |---|---|
 | `plugin.py` | `OpenAIAgentsPlugin(use_otel_instrumentation=True, add_temporal_spans=True, ...)`: bridges Agents SDK tracing to OpenTelemetry through the OpenInference `openai-agents` instrumentation |
 | `workflows.py` | `TicketTriageAgentsWorkflow` — two agents, one activity tool, `approve` update handler + validator |
-| `worker.py` | Worker registering the workflow and the `lookup_account` activity; `--role workflows|activities|all`, `--replay-stress` |
+| `worker.py` | Worker registering the workflow and the `lookup_account` activity; `--replay-stress` |
 | `starter.py` | Opens the Agents SDK trace (which becomes the root AGENT span), sets the OpenInference attributes on it, starts the workflow, sends the approval; `--decline`, `--pause-before-approval N`, `--workflow-id`, `--user` |
 
 Differences from the framework-agnostic scenario:
@@ -29,29 +29,21 @@ Differences from the framework-agnostic scenario:
   `session.id` and `user.id` live on the root span (enough for Phoenix's
   Sessions view).
 - The plugin comes from the standalone `temporalio-openai-agents` package
-  (`from temporalio.openai_agents import OpenAIAgentsPlugin`), which replaces
-  `temporalio.contrib.openai_agents`.
-- Run the starter, a workflow worker (`--role workflows`), and an activity
-  worker (`--role activities`) as separate processes, as shown. In
-  `temporalio-openai-agents` 1.0.0 a single worker process that runs both
-  exports the `temporal:startActivity` spans with a parent that is not in the
-  trace, so the model-call and tool subtrees appear detached in Arize
-  ([temporalio/sdk-python#1852](https://github.com/temporalio/sdk-python/issues/1852),
-  fixed upstream in
-  [temporalio/ai-integrations#26](https://github.com/temporalio/ai-integrations/pull/26)
-  but not yet released).
+  (`from temporalio.openai_agents import OpenAIAgentsPlugin`). Use 1.1.0 or
+  later: earlier versions mis-parent the `temporal:startActivity` spans when one
+  worker runs both the workflow and its activities
+  ([temporalio/sdk-python#1852](https://github.com/temporalio/sdk-python/issues/1852)).
 
 ## Run
 
 ```bash
-uv run python -m arize_tracing.ticket_triage_agents.worker --role workflows
-uv run python -m arize_tracing.ticket_triage_agents.worker --role activities
-uv run python -m arize_tracing.ticket_triage_agents.starter
-uv run python -m arize_tracing.verify_trace --trace-id <printed trace id> --scenario agents
+uv run python -m ticket_triage_agents.worker
+uv run python -m ticket_triage_agents.starter
+uv run verify_trace.py --trace-id <printed trace id> --scenario agents
 
 # Replay stress and the durability demo work the same way as in ticket_triage:
-uv run python -m arize_tracing.ticket_triage_agents.worker --role workflows --replay-stress
-uv run python -m arize_tracing.ticket_triage_agents.starter --pause-before-approval 20
+uv run python -m ticket_triage_agents.worker --replay-stress
+uv run python -m ticket_triage_agents.starter --pause-before-approval 20
 ```
 
 ## Expected trace
@@ -62,10 +54,9 @@ Ticket triage agents                             AGENT  (root; session, user, in
 │  └─ temporal:executeWorkflow                   CHAIN
 │     ├─ Agent workflow → Triage agent           AGENT
 │     │  ├─ turn                                 CHAIN
-│     │  │  └─ temporal:startActivity            CHAIN  (model call)
-│     │  │     ├─ temporal:executeActivity → response   LLM
-│     │  │     └─ lookup_account                 TOOL
-│     │  │        └─ temporal:startActivity → temporal:executeActivity
+│     │  │  ├─ temporal:startActivity → temporal:executeActivity → response   LLM  (model call)
+│     │  │  └─ lookup_account                    TOOL
+│     │  │     └─ temporal:startActivity → temporal:executeActivity
 │     │  └─ turn → temporal:startActivity → temporal:executeActivity → response   LLM
 │     └─ Agent workflow → Reply agent            AGENT
 │        └─ turn → temporal:startActivity → temporal:executeActivity → response   LLM

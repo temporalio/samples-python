@@ -196,26 +196,6 @@ def setup_tracing(service_name: str) -> None:
 # @@@SNIPEND
 
 
-class _IgnoreContextDetachErrors(logging.Filter):
-    def filter(self, record: logging.LogRecord) -> bool:
-        return not record.getMessage().startswith("Failed to detach context")
-
-
-def quiet_otel_context_detach_errors() -> None:
-    """Silence OpenTelemetry's "Failed to detach context" errors.
-
-    The OpenInference OpenAI Agents processor attaches an OpenTelemetry
-    context when an Agents SDK span starts and detaches it when the span ends.
-    Temporal runs each workflow task in its own ``contextvars`` context, so for
-    agent spans that outlive a workflow task the detach happens in a different
-    context and OpenTelemetry logs an error with a traceback. Tracing is
-    unaffected (the spans are still correct and exported once), so processes
-    that use ``OpenAIAgentsPlugin(use_otel_instrumentation=True)`` call this
-    to keep their logs readable.
-    """
-    logging.getLogger("opentelemetry.context").addFilter(_IgnoreContextDetachErrors())
-
-
 def force_flush() -> None:
     """Flush any buffered spans to Arize immediately."""
     # The replay-safe provider implements force_flush but the base

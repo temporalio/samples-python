@@ -25,9 +25,9 @@ from temporalio.client import Client
 from temporalio.contrib.opentelemetry import OpenTelemetryPlugin
 from temporalio.envconfig import ClientConfig
 
-from arize_tracing.telemetry import force_flush, setup_tracing, trace_url
-from arize_tracing.ticket_triage.activities import ApprovalDecision, Ticket
-from arize_tracing.ticket_triage.workflows import TicketTriageWorkflow
+from telemetry import force_flush, setup_tracing, trace_url
+from ticket_triage.activities import ApprovalDecision, Ticket
+from ticket_triage.workflows import TicketTriageWorkflow
 
 TASK_QUEUE = "arize-ticket-triage-task-queue"
 

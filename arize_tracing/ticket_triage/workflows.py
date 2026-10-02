@@ -27,7 +27,7 @@ with workflow.unsafe.imports_passed_through():
     )
     from opentelemetry import trace
 
-    from arize_tracing.ticket_triage.activities import (
+    from ticket_triage.activities import (
         ApprovalDecision,
         Classification,
         DraftReplyInput,

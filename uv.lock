@@ -2757,24 +2757,6 @@ wheels = [
 ]
 
 [[package]]
-name = "openinference-instrumentation-openai-agents"
-version = "2.4.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "openinference-instrumentation" },
-    { name = "openinference-semantic-conventions" },
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-instrumentation" },
-    { name = "opentelemetry-semantic-conventions" },
-    { name = "typing-extensions" },
-    { name = "wrapt" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/c7/1a/5493d664baf3893f68c3441b5e7291c2f027f63d3d5d4f58e28389529419/openinference_instrumentation_openai_agents-2.4.1.tar.gz", hash = "sha256:4bcfe61d39ba914b510832096af7030472fbac0df66854bd116f60f67642adee", size = 35334, upload-time = "2026-09-10T05:43:20.312Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/79/08/65ea6e5dd68ba810e33a5c60673764efa65ddb5409807862acb5b3a2504a/openinference_instrumentation_openai_agents-2.4.1-py3-none-any.whl", hash = "sha256:c43857c9738bc785ab482d91644e0dde5be9275e3038a2000b85b3a8e1d38237", size = 38508, upload-time = "2026-09-10T05:43:18.828Z" },
-]
-
-[[package]]
 name = "openinference-semantic-conventions"
 version = "0.1.37"
 source = { registry = "https://pypi.org/simple" }
@@ -4583,15 +4565,6 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-arize-tracing = [
-    { name = "openai" },
-    { name = "openinference-instrumentation-openai" },
-    { name = "openinference-instrumentation-openai-agents" },
-    { name = "openinference-semantic-conventions" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
-    { name = "temporalio", extra = ["opentelemetry"] },
-    { name = "temporalio-openai-agents" },
-]
 bedrock = [
     { name = "boto3" },
 ]
@@ -4710,15 +4683,6 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-arize-tracing = [
-    { name = "openai", specifier = ">=1.4.0" },
-    { name = "openinference-instrumentation-openai", specifier = ">=0.1.52" },
-    { name = "openinference-instrumentation-openai-agents", specifier = ">=2,<3" },
-    { name = "openinference-semantic-conventions", specifier = ">=0.1.30" },
-    { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.30.0,<2" },
-    { name = "temporalio", extras = ["opentelemetry"], specifier = ">=1.33.0,<2" },
-    { name = "temporalio-openai-agents", specifier = ">=1.0.0" },
-]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
 cloud-export-to-parquet = [
     { name = "boto3", specifier = ">=1.34.89,<2" },

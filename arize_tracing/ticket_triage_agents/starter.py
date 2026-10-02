@@ -19,15 +19,14 @@ from opentelemetry import trace
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from arize_tracing.telemetry import (
+from telemetry import (
     force_flush,
-    quiet_otel_context_detach_errors,
     setup_tracing,
     trace_url,
 )
-from arize_tracing.ticket_triage.activities import ApprovalDecision, Ticket
-from arize_tracing.ticket_triage_agents.plugin import TASK_QUEUE, agents_plugin
-from arize_tracing.ticket_triage_agents.workflows import (
+from ticket_triage.activities import ApprovalDecision, Ticket
+from ticket_triage_agents.plugin import TASK_QUEUE, agents_plugin
+from ticket_triage_agents.workflows import (
     AgentTicketRequest,
     TicketTriageAgentsWorkflow,
 )
@@ -54,7 +53,6 @@ async def main() -> None:
     approved = not args.decline
 
     setup_tracing("ticket-triage-agents-starter")
-    quiet_otel_context_detach_errors()
     plugin = agents_plugin()
 
     config = ClientConfig.load_client_connect_config()

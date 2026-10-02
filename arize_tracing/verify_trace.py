@@ -8,12 +8,12 @@ with --replay-stress surfaces replay-caused duplicates here, if there were
 any).
 
 Usage:
-    python -m arize_tracing.verify_trace --trace-id <hex trace id>
-    python -m arize_tracing.verify_trace --workflow-id <workflow id>
-    python -m arize_tracing.verify_trace --trace-id <id> --expect declined
-    python -m arize_tracing.verify_trace --trace-id <id> --expect-attempts classify_ticket=2
-    python -m arize_tracing.verify_trace --workflow-id <id> --expect-runs 2
-    python -m arize_tracing.verify_trace --trace-id <id> --scenario agents
+    uv run verify_trace.py --trace-id <hex trace id>
+    uv run verify_trace.py --workflow-id <workflow id>
+    uv run verify_trace.py --trace-id <id> --expect declined
+    uv run verify_trace.py --trace-id <id> --expect-attempts classify_ticket=2
+    uv run verify_trace.py --workflow-id <id> --expect-runs 2
+    uv run verify_trace.py --trace-id <id> --scenario agents
 
 Stdlib-only on purpose so it is trivially copy-out-able. Reads the same
 environment variables as the samples: PHOENIX_COLLECTOR_ENDPOINT,

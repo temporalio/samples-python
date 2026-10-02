@@ -38,23 +38,29 @@ Contents:
 
 ## Run it
 
+The sample has its own uv project because the repository's root lock still
+pins `openai` 2.x for the LiteLLM samples, while `temporalio-openai-agents`
+1.1.0 needs `openai` 3. Run everything from this directory:
+
 ```bash
+cd arize_tracing
+
 # 1. Start Phoenix (UI, REST API, and OTLP collector on port 6006)
-docker compose -f arize_tracing/phoenix/docker-compose.yml up -d
+docker compose -f phoenix/docker-compose.yml up -d
 curl -sf http://localhost:6006/healthz && echo ok
 #    ...or without Docker: uvx --from "arize-phoenix==20.16.0" phoenix serve
 
-# 2. Install dependencies and set environment (repo root)
-uv sync --group arize-tracing
-cp arize_tracing/.env.example arize_tracing/.env   # edit the LLM settings
-set -a; source arize_tracing/.env; set +a
+# 2. Install dependencies and set environment
+uv sync
+cp .env.example .env   # edit the LLM settings
+set -a; source .env; set +a
 
 # 3. Run the sample (two terminals, same environment)
-uv run python -m arize_tracing.ticket_triage.worker
-uv run python -m arize_tracing.ticket_triage.starter
+uv run python -m ticket_triage.worker
+uv run python -m ticket_triage.starter
 
 # 4. Verify the trace through the Phoenix API (uses the printed trace ID)
-uv run python -m arize_tracing.verify_trace --trace-id <printed trace id>
+uv run verify_trace.py --trace-id <printed trace id>
 ```
 
 The starter prints a direct link to the trace in Phoenix (project
@@ -86,11 +92,9 @@ session.
 ### With the OpenAI Agents SDK
 
 ```bash
-# Two worker processes (see "Known issue" below), then the starter
-uv run python -m arize_tracing.ticket_triage_agents.worker --role workflows
-uv run python -m arize_tracing.ticket_triage_agents.worker --role activities
-uv run python -m arize_tracing.ticket_triage_agents.starter
-uv run python -m arize_tracing.verify_trace --trace-id <printed trace id> --scenario agents
+uv run python -m ticket_triage_agents.worker
+uv run python -m ticket_triage_agents.starter
+uv run verify_trace.py --trace-id <printed trace id> --scenario agents
 ```
 
 Here the Agents SDK trace itself becomes the root, and the plugin's
@@ -102,39 +106,16 @@ Ticket triage agents                             AGENT  (root; session, user, in
 │  └─ temporal:executeWorkflow                   CHAIN
 │     ├─ Agent workflow → Triage agent           AGENT
 │     │  ├─ turn                                 CHAIN
-│     │  │  └─ temporal:startActivity            CHAIN  (model call)
-│     │  │     ├─ temporal:executeActivity → response   LLM
-│     │  │     └─ lookup_account                 TOOL   (a Temporal activity as an agent tool)
-│     │  │        └─ temporal:startActivity → temporal:executeActivity
+│     │  │  ├─ temporal:startActivity → temporal:executeActivity → response   LLM  (model call)
+│     │  │  └─ lookup_account                    TOOL   (a Temporal activity as an agent tool)
+│     │  │     └─ temporal:startActivity → temporal:executeActivity
 │     │  └─ turn → temporal:startActivity → temporal:executeActivity → response   LLM
 │     └─ Agent workflow → Reply agent            AGENT
 │        └─ turn → temporal:startActivity → temporal:executeActivity → response   LLM
 └─ temporal:updateWorkflow                       CHAIN
 ```
 
-(The tool span nests under the preceding model call's `temporal:startActivity`
-span rather than directly under the turn because `temporalio-openai-agents`
-1.0.0 leaves that span current in the Agents SDK scope after it finishes
-([temporalio/sdk-python#1855](https://github.com/temporalio/sdk-python/issues/1855),
-fixed upstream in
-[temporalio/ai-integrations#26](https://github.com/temporalio/ai-integrations/pull/26)
-but not yet released).)
-
 ![Ticket triage agents trace in Phoenix](phoenix-ticket-triage-agents.png)
-
-**Known issue.** With `use_otel_instrumentation=True`, `temporalio-openai-agents`
-1.0.0 (like `temporalio.contrib.openai_agents`) exports the
-`temporal:startActivity` spans with a parent that is not in the trace when a
-single worker process runs both the workflow and its activities, so the
-model-call and tool subtrees appear detached from the agent turns in Arize
-([temporalio/sdk-python#1852](https://github.com/temporalio/sdk-python/issues/1852)).
-The fix is merged upstream in
-[temporalio/ai-integrations#26](https://github.com/temporalio/ai-integrations/pull/26)
-but not yet in a release. `verify_trace.py` reports the problem as spans
-referencing a missing parent. Running the workflow and the activities in
-separate worker processes, as above, avoids it; `worker.py` without `--role`
-runs both in one process, so keep the split until a release with the fix is
-out.
 
 ## How replay, retries, and restarts show up
 
@@ -159,37 +140,37 @@ Reproduce each case with the flags below; every run must still verify cleanly:
 ```bash
 # Replay stress: disable the workflow cache so EVERY workflow task replays
 # the workflow from the start of history. The trace must be identical.
-uv run python -m arize_tracing.ticket_triage.worker --replay-stress
-uv run python -m arize_tracing.ticket_triage.starter
-uv run python -m arize_tracing.verify_trace --trace-id <printed trace id>
+uv run python -m ticket_triage.worker --replay-stress
+uv run python -m ticket_triage.starter
+uv run verify_trace.py --trace-id <printed trace id>
 
 # Worker restart mid-workflow: the starter waits 20s before sending the
 # approval. Give the triage activities a few seconds to finish, then kill the
 # worker while the workflow durably awaits approval; start a new worker and
 # watch the workflow (and its trace) complete cleanly.
-uv run python -m arize_tracing.ticket_triage.starter --pause-before-approval 20
+uv run python -m ticket_triage.starter --pause-before-approval 20
 #   ... after ~5s, ctrl+c the worker, then start it again in another terminal
-uv run python -m arize_tracing.verify_trace --trace-id <printed trace id>
+uv run verify_trace.py --trace-id <printed trace id>
 
 # Activity retry: classify_ticket fails on its first attempt. Arize shows two
 # RunActivity:classify_ticket spans, the first with an error status.
-uv run python -m arize_tracing.ticket_triage.worker --fail-first-attempt
-uv run python -m arize_tracing.ticket_triage.starter
-uv run python -m arize_tracing.verify_trace --trace-id <id> --expect-attempts classify_ticket=2
+uv run python -m ticket_triage.worker --fail-first-attempt
+uv run python -m ticket_triage.starter
+uv run verify_trace.py --trace-id <id> --expect-attempts classify_ticket=2
 
 # Worker crash mid-activity: classify_ticket heartbeats for 30s first. Kill
 # the worker hard (kill -9) during that time and start a new one. The first
 # attempt's span was never ended, so it is absent; the retry appears with
 # attempt 2 after the heartbeat timeout.
-uv run python -m arize_tracing.ticket_triage.worker --slow-classify 30
-uv run python -m arize_tracing.ticket_triage.starter
-uv run python -m arize_tracing.verify_trace --trace-id <id> --expect-attempt classify_ticket=2
+uv run python -m ticket_triage.worker --slow-classify 30
+uv run python -m ticket_triage.starter
+uv run verify_trace.py --trace-id <id> --expect-attempt classify_ticket=2
 
 # Reset: rerun a finished workflow from its first workflow task. The reset
 # reapplies the original approval update, and the new run shares the trace as
 # a second RunWorkflow span with its own run ID.
 temporal workflow reset --workflow-id <workflow id> --type FirstWorkflowTask --reason demo
-uv run python -m arize_tracing.verify_trace --workflow-id <workflow id> --expect-runs 2
+uv run verify_trace.py --workflow-id <workflow id> --expect-runs 2
 ```
 
 ![Activity retry attempts in Phoenix](phoenix-retry-attempts.png)
@@ -241,27 +222,25 @@ and have not been exercised against an AX space here.
 - `OTEL_SDK_DISABLED=true` turns off export without code changes.
 - Ingestion is asynchronous; `verify_trace.py` polls until the trace is stable.
 - The OpenAI Agents SDK bridge (`use_otel_instrumentation=True`) ships in the
-  standalone `temporalio-openai-agents` package and is Public Preview. Run the
-  starter, the workflow worker, and the activity worker as separate processes,
-  as the sample does (see the known issue above), and see
-  `quiet_otel_context_detach_errors()` in `telemetry.py` for a log-noise issue
-  in 1.0.0 (fixed upstream in temporalio/ai-integrations#26).
+  standalone `temporalio-openai-agents` package and is Public Preview. Use
+  1.1.0 or later: earlier versions mis-parent the `temporal:startActivity`
+  spans when one worker runs both the workflow and its activities
+  ([temporalio/sdk-python#1852](https://github.com/temporalio/sdk-python/issues/1852)).
 
 ## Tests
 
-`tests/arize_tracing/` runs without Arize, Docker, or an LLM: mocked activities
+`tests/` runs without Arize, Docker, or an LLM: mocked activities
 (and the SDK's `TestModel` for the agents scenario), an in-memory span
 exporter, a worker with the workflow cache disabled, whole-tree span
 assertions, enrichment and retry-attempt assertions, and a `Replayer` pass
 asserting that replaying the finished workflow's history emits zero new spans.
 
 ```bash
-uv run --group arize-tracing pytest tests/arize_tracing -v
+uv run poe test                                       # or: uv run pytest -v
+uv run poe test --workflow-environment time-skipping
 ```
 
 ## Using this outside samples-python
 
-The sample is self-contained: copy the `arize_tracing/` directory, change the
-absolute imports (`arize_tracing.ticket_triage.activities` →
-`ticket_triage.activities` or similar), and install the dependencies listed
-under `arize-tracing` in this repo's `pyproject.toml`.
+The sample is self-contained: copy this directory, keep its `pyproject.toml`
+(or merge its dependencies into yours), and run the same commands.

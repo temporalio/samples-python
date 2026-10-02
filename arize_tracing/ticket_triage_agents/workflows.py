@@ -19,7 +19,7 @@ with workflow.unsafe.imports_passed_through():
     from agents import Agent, Runner
     from temporalio import openai_agents as temporal_agents
 
-    from arize_tracing.ticket_triage.activities import (
+    from ticket_triage.activities import (
         ApprovalDecision,
         Classification,
         Ticket,

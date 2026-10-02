@@ -6,12 +6,9 @@ captured with an in-memory exporter, and the worker runs with the workflow
 cache disabled so every workflow task replays the agent loop from history.
 
 Client and worker share one process here, and therefore one OpenInference
-processor. The worker-side trace replicas that Temporal creates for context
-propagation register under the same trace id as the client's trace, so in a
-single process the client's root span is not the span that ends when the
-Agents SDK trace ends. The sample runs starter and worker as separate
-processes, where the root exports correctly; these assertions therefore focus
-on the worker-side tree.
+processor; the assertions focus on the worker-side tree: span kinds, the
+tool and model-call spans nested under the agent turns, one trace id, no
+duplicate spans, and a replay pass that emits nothing new.
 """
 
 import json
@@ -35,16 +32,15 @@ from temporalio.openai_agents.testing import (
 )
 from temporalio.worker import Replayer, Worker
 
-from arize_tracing.telemetry import (
+from telemetry import (
     OpenInferenceEnrichmentProcessor,
-    quiet_otel_context_detach_errors,
 )
-from arize_tracing.ticket_triage.activities import (
+from ticket_triage.activities import (
     ApprovalDecision,
     Ticket,
     lookup_account,
 )
-from arize_tracing.ticket_triage_agents.workflows import (
+from ticket_triage_agents.workflows import (
     AgentTicketRequest,
     TicketTriageAgentsWorkflow,
 )
@@ -100,7 +96,6 @@ def _only(spans: Sequence[ReadableSpan], name: str) -> ReadableSpan:
 async def test_agent_spans_emitted_exactly_once_under_replay_stress(
     client: Client, reset_otel_tracer_provider: Any
 ) -> None:
-    quiet_otel_context_detach_errors()
     # The provider must exist before the plugin is constructed.
     exporter = _install_in_memory_exporter()
     workflow_id = f"ticket-triage-agents-test-{uuid.uuid4()}"

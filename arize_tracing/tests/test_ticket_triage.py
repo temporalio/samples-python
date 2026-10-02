@@ -25,20 +25,20 @@ from temporalio.contrib.opentelemetry import OpenTelemetryPlugin, create_tracer_
 from temporalio.exceptions import ApplicationError
 from temporalio.worker import Replayer, Worker
 
-from arize_tracing.telemetry import (
+from telemetry import (
     ACTIVITY_ATTEMPT_ATTRIBUTE,
     TEMPORAL_SCOPE_PREFIX,
     OpenInferenceEnrichmentProcessor,
 )
-from arize_tracing.ticket_triage.activities import (
+from tests.helpers import dump_spans
+from ticket_triage.activities import (
     AccountInfo,
     ApprovalDecision,
     Classification,
     DraftReplyInput,
     Ticket,
 )
-from arize_tracing.ticket_triage.workflows import TicketTriageWorkflow
-from tests.arize_tracing.helpers import dump_spans
+from ticket_triage.workflows import TicketTriageWorkflow
 
 TICKET = Ticket(
     ticket_id="T-1",

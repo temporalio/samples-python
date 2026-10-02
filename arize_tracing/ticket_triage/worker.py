@@ -9,14 +9,14 @@ from temporalio.contrib.opentelemetry import OpenTelemetryPlugin
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
-from arize_tracing.telemetry import force_flush, instrument_openai, setup_tracing
-from arize_tracing.ticket_triage import activities
-from arize_tracing.ticket_triage.activities import (
+from telemetry import force_flush, instrument_openai, setup_tracing
+from ticket_triage import activities
+from ticket_triage.activities import (
     classify_ticket,
     draft_reply,
     lookup_account,
 )
-from arize_tracing.ticket_triage.workflows import TicketTriageWorkflow
+from ticket_triage.workflows import TicketTriageWorkflow
 
 TASK_QUEUE = "arize-ticket-triage-task-queue"
 

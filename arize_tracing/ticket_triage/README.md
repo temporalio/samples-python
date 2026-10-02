@@ -22,28 +22,28 @@ With Phoenix up, dependencies synced, and the environment loaded (see
 [../README.md](../README.md)):
 
 ```bash
-uv run python -m arize_tracing.ticket_triage.worker
-uv run python -m arize_tracing.ticket_triage.starter
-uv run python -m arize_tracing.verify_trace --trace-id <printed trace id>
+uv run python -m ticket_triage.worker
+uv run python -m ticket_triage.starter
+uv run verify_trace.py --trace-id <printed trace id>
 ```
 
 Variants:
 
 ```bash
-uv run python -m arize_tracing.ticket_triage.starter --decline
-uv run python -m arize_tracing.verify_trace --trace-id <id> --expect declined
+uv run python -m ticket_triage.starter --decline
+uv run verify_trace.py --trace-id <id> --expect declined
 
 # Replay stress: every workflow task replays the workflow from history —
 # the Arize trace must come out identical.
-uv run python -m arize_tracing.ticket_triage.worker --replay-stress
+uv run python -m ticket_triage.worker --replay-stress
 
 # Durability demo: park the workflow awaiting approval for 20s, kill and
 # restart the worker meanwhile — one clean trace regardless.
-uv run python -m arize_tracing.ticket_triage.starter --pause-before-approval 20
+uv run python -m ticket_triage.starter --pause-before-approval 20
 
 # Retry demo: the first classify_ticket attempt fails; two RunActivity spans.
-uv run python -m arize_tracing.ticket_triage.worker --fail-first-attempt
-uv run python -m arize_tracing.verify_trace --trace-id <id> --expect-attempts classify_ticket=2
+uv run python -m ticket_triage.worker --fail-first-attempt
+uv run verify_trace.py --trace-id <id> --expect-attempts classify_ticket=2
 ```
 
 ## Expected trace

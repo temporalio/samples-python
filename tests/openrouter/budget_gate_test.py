@@ -555,3 +555,56 @@ async def test_top_up_during_an_in_flight_call_counts(
     assert [r.prompt for r in result.results] == ["a", "b"]
     assert result.skipped == []
     assert calls == {"a": 2, "b": 2}
+
+
+async def test_top_up_during_a_call_counts_even_after_the_deadline(
+    client: Client, task_queue: str
+) -> None:
+    release = asyncio.Event()
+    calls: dict[str, int] = {}
+
+    @activity.defn(name="call_openrouter")
+    async def flaky_credits(request: OpenRouterRequest) -> OpenRouterResult:
+        calls[request.prompt] = calls.get(request.prompt, 0) + 1
+        if calls[request.prompt] == 1:
+            await release.wait()
+            raise ApplicationError(
+                "OpenRouter returned HTTP 402: Insufficient credits",
+                type="OpenRouterOutOfCredits",
+                non_retryable=True,
+            )
+        return OpenRouterResult(
+            prompt=request.prompt,
+            model="m",
+            answer="ok",
+            cost_usd=COST_PER_CALL,
+            generation_id="gen",
+            cache_status="",
+        )
+
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[flaky_credits],
+    ):
+        handle = await start(
+            client,
+            task_queue,
+            BudgetGateInput(
+                batch=BatchInput(prompts=["a"]),
+                budget_usd=1.0,
+                estimated_cost_usd=COST_PER_CALL,
+                approval_timeout_seconds=0,
+            ),
+        )
+        for _ in range(100):
+            if calls.get("a") == 1:
+                break
+            await asyncio.sleep(0.05)
+        await handle.execute_update(BudgetGateWorkflow.raise_budget, 1.0)
+        release.set()
+        result = await handle.result()
+
+    assert [r.prompt for r in result.results] == ["a"]
+    assert calls == {"a": 2}

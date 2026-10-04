@@ -54,7 +54,7 @@ uv run --group openrouter openrouter/prompt_batch/run_workflow.py "Explain retri
 - **Retries are free when the first call succeeded.** The Activity sends `X-OpenRouter-Cache: true`, so if a Worker dies after OpenRouter answered but before Temporal recorded the result, the retried, byte-identical request is served from OpenRouter's response cache and billed at $0. Nothing per-attempt goes in the request body, so attempts stay identical.
 - **Heartbeats.** The Activity heartbeats so a dead Worker is detected after `heartbeat_timeout` (10s) rather than after the full `start_to_close_timeout`.
 
-Each result carries the concrete model OpenRouter chose, OpenRouter's reported `usage.cost` (or `None` if a response had none), the generation id, and the cache status. The batch's `reported_cost_usd` sums those final-attempt figures and `unknown_cost_count` says how many results had none; it is not a bill, since an attempt that was billed but whose response never reached Temporal is not in it.
+Each result carries the concrete model OpenRouter chose, OpenRouter's reported `usage.cost` (or `None` if a response had none), the generation id, and the cache status. The batch's `reported_cost_usd` sums those final-attempt figures; it is not a bill, since an attempt that was billed but whose response never reached Temporal is not in it. `unknown_cost_count` is how many of those results had no cost.
 
 ## What Temporal does and does not guarantee
 

@@ -33,6 +33,10 @@ async def test_prompt_batch_collects_results_and_skips_failures(
                 type="OpenRouterHTTP400",
                 non_retryable=True,
             )
+        if request.prompt == "costless":
+            result = fake_result(request)
+            result.cost_usd = None
+            return result
         return fake_result(request)
 
     task_queue = f"test-openrouter-{uuid.uuid4()}"
@@ -44,17 +48,19 @@ async def test_prompt_batch_collects_results_and_skips_failures(
     ):
         result = await client.execute_workflow(
             PromptBatchWorkflow.run,
-            BatchInput(prompts=["one", "bad", "two"], max_concurrency=2),
+            BatchInput(prompts=["one", "bad", "two", "costless"], max_concurrency=2),
             id=f"test-openrouter-{uuid.uuid4()}",
             task_queue=task_queue,
         )
 
-    assert [r.prompt for r in result.results] == ["one", "two"]
+    assert [r.prompt for r in result.results] == ["one", "two", "costless"]
     assert all(r.answer.startswith("Answer to:") for r in result.results)
     assert [(s.prompt, s.reason) for s in result.skipped] == [
         ("bad", "OpenRouterHTTP400")
     ]
+    # Subtotal of the known costs, with the unknown one counted separately.
     assert result.reported_cost_usd == 0.002
+    assert result.unknown_cost_count == 1
 
 
 async def test_cancellation_is_not_a_skipped_prompt(

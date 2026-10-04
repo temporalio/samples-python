@@ -254,6 +254,9 @@ class BudgetGateWorkflow:
         Survives Worker restarts and can wait for hours. Returns False when the
         deadline passed first.
         """
+        if until():
+            # Nothing to wait for (a top-up already landed during the call).
+            return True
         remaining = self._deadline - workflow.now()
         if remaining <= timedelta(0):
             return False

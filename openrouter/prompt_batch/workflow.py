@@ -52,6 +52,7 @@ class PromptBatchWorkflow:
             results=results,
             skipped=skipped,
             reported_cost_usd=round(sum(r.cost_usd or 0.0 for r in results), 6),
+            unknown_cost_count=sum(1 for r in results if r.cost_usd is None),
         )
 
     async def _answer(

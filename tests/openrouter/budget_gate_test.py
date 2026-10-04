@@ -438,6 +438,7 @@ async def test_unknown_cost_is_charged_at_the_estimate(
         )
 
     assert result.reported_cost_usd == pytest.approx(0.004)
+    assert result.unknown_cost_count == 2
     assert [r.cost_usd for r in result.results] == [None, None]
 
 
@@ -467,3 +468,90 @@ async def test_credits_never_arrive_skips_with_reason(
     assert [(s.prompt, s.reason) for s in result.skipped] == [
         ("a", "insufficient_credits")
     ]
+
+
+async def test_exact_budget_boundary_is_affordable(
+    client: Client, task_queue: str
+) -> None:
+    """Ten $0.001 calls must fit a $0.01 budget despite float accumulation."""
+    fake = FakeOpenRouter()
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[fake.call_openrouter],
+    ):
+        result = await client.execute_workflow(
+            BudgetGateWorkflow.run,
+            BudgetGateInput(
+                batch=BatchInput(
+                    prompts=[str(i) for i in range(10)], max_concurrency=1
+                ),
+                budget_usd=0.01,
+                estimated_cost_usd=COST_PER_CALL,
+                approval_timeout_seconds=0,
+            ),
+            id=f"test-openrouter-budget-{uuid.uuid4()}",
+            task_queue=task_queue,
+        )
+
+    assert len(result.results) == 10
+    assert result.skipped == []
+
+
+async def test_top_up_during_an_in_flight_call_counts(
+    client: Client, task_queue: str
+) -> None:
+    """A raise_budget that lands while a call is in flight must release that
+    prompt when the call then fails for lack of credits."""
+    release_b = asyncio.Event()
+    calls: dict[str, int] = {}
+
+    @activity.defn(name="call_openrouter")
+    async def flaky_credits(request: OpenRouterRequest) -> OpenRouterResult:
+        calls[request.prompt] = calls.get(request.prompt, 0) + 1
+        if calls[request.prompt] == 1:
+            if request.prompt == "b":
+                # Hold b's failure until the test has sent the top-up.
+                await release_b.wait()
+            raise ApplicationError(
+                "OpenRouter returned HTTP 402: Insufficient credits",
+                type="OpenRouterOutOfCredits",
+                non_retryable=True,
+            )
+        return OpenRouterResult(
+            prompt=request.prompt,
+            model="m",
+            answer="ok",
+            cost_usd=COST_PER_CALL,
+            generation_id=f"gen-{request.prompt}",
+            cache_status="",
+        )
+
+    async with Worker(
+        client,
+        task_queue=task_queue,
+        workflows=[BudgetGateWorkflow],
+        activities=[flaky_credits],
+    ):
+        handle = await start(
+            client,
+            task_queue,
+            BudgetGateInput(
+                batch=BatchInput(prompts=["a", "b"], max_concurrency=2),
+                budget_usd=1.0,
+                estimated_cost_usd=COST_PER_CALL,
+                approval_timeout_seconds=5,
+            ),
+        )
+        report = await wait_until_paused(handle, "insufficient_credits")
+        assert report.paused == {"a": "insufficient_credits"}
+        # The operator tops up while b's call is still in flight...
+        await handle.execute_update(BudgetGateWorkflow.raise_budget, 1.0)
+        # ...and only then does b's failure reach the Workflow.
+        release_b.set()
+        result = await handle.result()
+
+    assert [r.prompt for r in result.results] == ["a", "b"]
+    assert result.skipped == []
+    assert calls == {"a": 2, "b": 2}

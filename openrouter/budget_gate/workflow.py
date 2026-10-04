@@ -11,6 +11,7 @@ from temporalio.exceptions import ActivityError, ApplicationError, CancelledErro
 with workflow.unsafe.imports_passed_through():
     from openrouter.activities import OUT_OF_CREDITS, OpenRouterActivities
     from openrouter.shared import (
+        BUDGET_TOLERANCE_USD,
         MAX_APPROVAL_TIMEOUT_SECONDS,
         MAX_PROMPTS_PER_BATCH,
         OPENROUTER_RETRY_POLICY,
@@ -107,6 +108,7 @@ class BudgetGateWorkflow:
             results=results,
             skipped=skipped,
             reported_cost_usd=round(self._spent_usd, 6),
+            unknown_cost_count=sum(1 for e in self._ledger if not e.cost_known),
         )
 
     # @@@SNIPSTART python-openrouter-budget-gate-handlers
@@ -152,6 +154,11 @@ class BudgetGateWorkflow:
                 return SkippedPrompt(prompt=prompt, reason="soft_budget_exhausted")
             try:
                 while True:
+                    # Snapshot the budget version before the call, not after it
+                    # fails: a raise_budget that lands while this call is in
+                    # flight must count as the top-up this prompt is waiting
+                    # for, not as one it missed.
+                    seen_version = self._budget_version
                     try:
                         result = await workflow.execute_activity_method(
                             OpenRouterActivities.call_openrouter,
@@ -177,7 +184,7 @@ class BudgetGateWorkflow:
                         ):
                             # Out of credits at OpenRouter. Park until the
                             # operator tops up and sends raise_budget.
-                            if await self._wait_for_more_credits(prompt):
+                            if await self._wait_for_more_credits(prompt, seen_version):
                                 continue
                             return SkippedPrompt(
                                 prompt=prompt, reason="insufficient_credits"
@@ -219,7 +226,11 @@ class BudgetGateWorkflow:
         """Reserve `estimate` against the budget, parking until it fits."""
 
         def fits() -> bool:
-            return self._spent_usd + self._reserved_usd + estimate <= self._budget_usd
+            # Tolerance absorbs float accumulation; see BUDGET_TOLERANCE_USD.
+            return (
+                self._spent_usd + self._reserved_usd + estimate
+                <= self._budget_usd + BUDGET_TOLERANCE_USD
+            )
 
         # Loop rather than check once: when the budget is raised, every parked
         # prompt is woken before any of them runs, so each must re-check after
@@ -257,9 +268,14 @@ class BudgetGateWorkflow:
 
     # @@@SNIPEND
 
-    async def _wait_for_more_credits(self, prompt: str) -> bool:
-        seen = self._budget_version
+    async def _wait_for_more_credits(self, prompt: str, seen_version: int) -> bool:
+        """Park until a raise_budget newer than `seen_version` has arrived.
+
+        If one already has, this returns at once and the prompt is re-run.
+        """
         workflow.logger.info("OpenRouter says out of credits; pausing %r", prompt)
         return await self._park(
-            prompt, "insufficient_credits", lambda: self._budget_version > seen
+            prompt,
+            "insufficient_credits",
+            lambda: self._budget_version > seen_version,
         )

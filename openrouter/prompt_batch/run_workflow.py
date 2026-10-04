@@ -58,6 +58,8 @@ async def main() -> None:
         f"\nReported cost: ${result.reported_cost_usd:.6f} "
         "(what OpenRouter reported on each prompt's final attempt)"
     )
+    if result.unknown_cost_count:
+        print(f"  {result.unknown_cost_count} prompt(s) came back without a cost")
     print(f"Inspect: temporal workflow show -w {workflow_id}")
 
 

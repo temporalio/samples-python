@@ -22,6 +22,10 @@ MAX_PROMPTS_PER_BATCH = 100
 # A parked batch can wait at most this long (30 days) for a raise_budget.
 MAX_APPROVAL_TIMEOUT_SECONDS = 30 * 24 * 3600
 
+# Budget comparisons are done on floats that accumulate per-call costs, so
+# allow a hair of slack: ten calls at $0.001 must fit a $0.01 budget.
+BUDGET_TOLERANCE_USD = 1e-9
+
 # Temporal owns retries: 1s, 2s, 4s, ... capped at 60s, five attempts. The
 # Activity marks 4xx errors non-retryable and passes OpenRouter's Retry-After
 # through as the next retry delay, so this policy only governs the rest.
@@ -94,6 +98,10 @@ class BatchResult:
     # Worker crash after the response, say) are not in here; OpenRouter's
     # dashboard or /api/v1/key is the source of truth for spend.
     reported_cost_usd: float
+    # How many successful prompts came back without a cost. When this is not
+    # zero, reported_cost_usd is a subtotal of the known costs (prompt_batch)
+    # or includes the estimate for those prompts (budget_gate).
+    unknown_cost_count: int = 0
 
 
 @dataclass

@@ -37,6 +37,7 @@ export COLLECTOR_CONFIG_SECRET=temporal-otel-collector COLLECTOR_CONFIG_SECRET_V
 export WORKER_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/gcp-cloud-run:v1"
 export INSTANCE_COUNT=1
 
+# Steps 1-3 are one-time setup; re-run steps 4-5 to redeploy.
 # 1. Enable APIs, create the Artifact Registry repo and the runtime service account.
 gcloud services enable artifactregistry.googleapis.com cloudbuild.googleapis.com \
   monitoring.googleapis.com run.googleapis.com secretmanager.googleapis.com \

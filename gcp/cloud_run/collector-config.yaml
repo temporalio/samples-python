@@ -14,7 +14,7 @@ processors:
     check_interval: 1s
     limit_percentage: 65
     spike_limit_percentage: 20
-  resource_detection:
+  resourcedetection:
     detectors: [gcp]
     timeout: 10s
   # Rename Temporal datapoint labels that collide with the target labels Managed Service for Prometheus injects (e.g. namespace).
@@ -43,7 +43,7 @@ processors:
 
 exporters:
   googlemanagedprometheus:
-  otlp_grpc:
+  otlp:
     endpoint: telemetry.googleapis.com:443
     compression: none
     balancer_name: pick_first
@@ -60,11 +60,11 @@ service:
   pipelines:
     metrics:
       receivers: [otlp]
-      processors: [memory_limiter, resource_detection, transform/collision]
+      processors: [memory_limiter, resourcedetection, transform/collision]
       exporters: [googlemanagedprometheus]
     traces:
       receivers: [otlp]
       processors:
-        [memory_limiter, resource_detection, transform/set_project_id, batch/traces]
-      exporters: [otlp_grpc]
+        [memory_limiter, resourcedetection, transform/set_project_id, batch/traces]
+      exporters: [otlp]
 # @@@SNIPEND

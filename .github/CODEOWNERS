@@ -24,6 +24,7 @@
 /litellm_activity/        @temporalio/sdk @temporalio/ai-sdk
 /openai_agents/           @temporalio/sdk @temporalio/ai-sdk
 /strands_plugin/          @temporalio/sdk @temporalio/ai-sdk
+/temporal_mcp/            @temporalio/sdk @temporalio/ai-sdk
 /tests/deepagents_plugin/ @temporalio/sdk @temporalio/ai-sdk
 /tests/google_adk_agents/ @temporalio/sdk @temporalio/ai-sdk
 /tests/google_genai/      @temporalio/sdk @temporalio/ai-sdk

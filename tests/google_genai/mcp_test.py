@@ -17,11 +17,10 @@ from temporalio.contrib.google_genai.testing import (
 )
 from temporalio.worker import Worker
 
+import google_genai.mcp as google_genai_mcp
 from google_genai.mcp.workflow import McpWorkflow
 
-ECHO_SERVER = str(
-    Path(__file__).parents[2] / "google_genai" / "mcp" / "echo_mcp_server.py"
-)
+ECHO_SERVER = str(Path(google_genai_mcp.__file__).parent / "echo_mcp_server.py")
 
 
 @asynccontextmanager

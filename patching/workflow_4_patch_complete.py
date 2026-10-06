@@ -12,7 +12,7 @@ class MyWorkflow:
     async def run(self) -> None:
         self._result = await workflow.execute_activity(
             post_patch_activity,
-            schedule_to_close_timeout=timedelta(minutes=5),
+            start_to_close_timeout=timedelta(seconds=5),
         )
 
     @workflow.query

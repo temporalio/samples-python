@@ -11,7 +11,7 @@ import asyncio
 import json
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Awaitable, Optional, TypeVar
 
 from openai import AsyncOpenAI
 from temporalio import activity
@@ -103,6 +103,30 @@ def parse_classification(text: str) -> Classification:
 
 
 # @@@SNIPSTART python-arize-tracing-activity
+T = TypeVar("T")
+
+
+async def _heartbeating(awaitable: Awaitable[T], every: float = 2.0) -> T:
+    """Await ``awaitable`` while heartbeating every ``every`` seconds.
+
+    The workflow runs ``classify_ticket`` with a 10-second heartbeat timeout so
+    that a worker which dies mid-attempt is detected quickly. That timeout also
+    covers the LLM call, so the call has to keep heartbeating: otherwise a slow
+    response would be mistaken for a dead worker and retried while the first
+    request is still in flight.
+    """
+    task = asyncio.ensure_future(awaitable)
+    try:
+        while True:
+            done, _ = await asyncio.wait({task}, timeout=every)
+            if done:
+                return task.result()
+            activity.heartbeat()
+    except asyncio.CancelledError:
+        task.cancel()
+        raise
+
+
 @activity.defn
 async def classify_ticket(ticket: Ticket) -> Classification:
     if FAIL_FIRST_ATTEMPT and activity.info().attempt == 1:
@@ -112,18 +136,19 @@ async def classify_ticket(ticket: Ticket) -> Classification:
         raise ApplicationError(
             "Simulated transient LLM failure on attempt 1", type="SimulatedFailure"
         )
-    for _ in range(SLOW_CLASSIFY_SECONDS):
-        # Demo: a slow attempt you can kill the worker during. Heartbeats let
-        # Temporal detect the dead worker via the heartbeat timeout.
-        activity.heartbeat()
-        await asyncio.sleep(1)
-    response = await _openai_client().chat.completions.create(
-        model=os.environ.get("MODEL_CLASSIFY", "gpt-4o-mini"),
-        messages=[
-            {"role": "system", "content": CLASSIFY_PROMPT},
-            {"role": "user", "content": f"{ticket.subject}\n\n{ticket.body}"},
-        ],
-        timeout=30,
+    if SLOW_CLASSIFY_SECONDS:
+        # Demo: a slow attempt you can kill the worker during. The heartbeats
+        # stop with the worker, so Temporal retries after the heartbeat timeout.
+        await _heartbeating(asyncio.sleep(SLOW_CLASSIFY_SECONDS))
+    response = await _heartbeating(
+        _openai_client().chat.completions.create(
+            model=os.environ.get("MODEL_CLASSIFY", "gpt-4o-mini"),
+            messages=[
+                {"role": "system", "content": CLASSIFY_PROMPT},
+                {"role": "user", "content": f"{ticket.subject}\n\n{ticket.body}"},
+            ],
+            timeout=30,
+        )
     )
     return parse_classification(response.choices[0].message.content or "")
 

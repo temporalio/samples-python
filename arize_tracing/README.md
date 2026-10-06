@@ -22,7 +22,7 @@ Contents:
   Arize shows native AGENT, LLM, and TOOL spans.
 - **[verify_trace.py](verify_trace.py)** — checks a trace through the Phoenix
   REST API: whole-tree equality with span kinds, enrichment attributes, LLM
-  token usage, activity attempts, and no duplicates.
+  token usage, activity attempts, and that no span is missing its parent.
 - **[phoenix/docker-compose.yml](phoenix/docker-compose.yml)** — pinned
   self-hosted Phoenix, one container.
 - **[telemetry.py](telemetry.py)** — the OpenTelemetry wiring: replay-safe
@@ -220,7 +220,9 @@ and have not been exercised against an AX space here.
 - The workflow ID doubles as the Arize session ID. A fresh ID per run is the
   default; reuse one to group runs.
 - `OTEL_SDK_DISABLED=true` turns off export without code changes.
-- Ingestion is asynchronous; `verify_trace.py` polls until the trace is stable.
+- Ingestion is asynchronous; `verify_trace.py` waits until the root span has
+  arrived and the span count has stayed unchanged for a few seconds before it
+  checks anything.
 - The OpenAI Agents SDK bridge (`use_otel_instrumentation=True`) ships in the
   standalone `temporalio-openai-agents` package and is Public Preview. Use
   1.1.0 or later: earlier versions mis-parent the `temporal:startActivity`
@@ -234,6 +236,9 @@ and have not been exercised against an AX space here.
 exporter, a worker with the workflow cache disabled, whole-tree span
 assertions, enrichment and retry-attempt assertions, and a `Replayer` pass
 asserting that replaying the finished workflow's history emits zero new spans.
+That in-memory check is the authority on replay re-emission: Phoenix
+deduplicates by span ID on ingest, so `verify_trace.py` would only notice
+re-emitted spans that received new IDs, as extra rows in the tree.
 
 ```bash
 uv run poe test                                       # or: uv run pytest -v

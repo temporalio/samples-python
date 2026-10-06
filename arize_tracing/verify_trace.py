@@ -2,10 +2,15 @@
 
 Fetches every span of the trace, rebuilds the tree, and deep-compares it
 against the expected shape — including OpenInference span kinds — then checks
-that Temporal spans carry the enrichment attributes, that every LLM span has a
-model and token usage, and that no span was duplicated (running the worker
-with --replay-stress surfaces replay-caused duplicates here, if there were
-any).
+that every child has its parent in the trace, that Temporal spans carry the
+enrichment attributes, and that every LLM span has a model and token usage.
+
+Replay-caused re-emission is only partly visible here. Spans re-emitted under
+new IDs would show up as extra rows in the tree comparison, but Phoenix stores
+span IDs under a uniqueness constraint and drops conflicting inserts, so a
+re-export that reuses the same deterministic ID is absorbed on ingest. The
+offline tests under tests/ use an in-memory exporter and a Replayer to assert
+zero re-emission directly.
 
 Usage:
     uv run verify_trace.py --trace-id <hex trace id>
@@ -164,20 +169,30 @@ def _trace_ids_for_workflow(workflow_id: str, scenario: str) -> list[str]:
     return trace_ids
 
 
-def _poll_stable_trace(trace_id: str, timeout_seconds: int) -> list[dict[str, Any]]:
-    """Poll until the trace exists and its span count is stable.
+POLL_INTERVAL_SECONDS = 2
+QUIET_POLLS = 3  # consecutive polls with an unchanged span count before checking
 
-    Phoenix ingestion is asynchronous, so a freshly finished run may land
-    over a few seconds even though export already succeeded.
+
+def _poll_stable_trace(trace_id: str, timeout_seconds: int) -> list[dict[str, Any]]:
+    """Poll until the trace looks complete, then return its spans.
+
+    The starter and the worker export independently and Phoenix ingests
+    asynchronously, so spans of a finished run can keep arriving for a few
+    seconds. Two conditions must hold before the checks run: the root span is
+    present (the starter ends it last, after the workflow result), and the span
+    count has not changed for QUIET_POLLS consecutive polls. A trace that is
+    still incomplete fails the tree comparison rather than passing it.
     """
     deadline = time.monotonic() + timeout_seconds
-    previous_count = -1
+    previous_count, unchanged = -1, 0
     while time.monotonic() < deadline:
         spans = _spans({"trace_id": trace_id})
-        if spans and len(spans) == previous_count:
+        unchanged = unchanged + 1 if spans and len(spans) == previous_count else 0
+        has_root = any(not s.get("parent_id") for s in spans)
+        if has_root and unchanged >= QUIET_POLLS - 1:
             return spans
         previous_count = len(spans)
-        time.sleep(2)
+        time.sleep(POLL_INTERVAL_SECONDS)
     raise SystemExit(
         f"FAIL: trace {trace_id} not fully ingested within {timeout_seconds}s"
     )
@@ -246,11 +261,6 @@ def _verify_common(
     failures: list[str],
     args: argparse.Namespace,
 ) -> None:
-    # No duplicate spans (workflow replay must never re-emit spans).
-    all_ids = [s["context"]["span_id"] for s in spans]
-    if len(set(all_ids)) != len(all_ids):
-        failures.append("duplicate span ids present")
-
     # Every child points at a span that is part of the trace. A missing parent
     # means a span was exported with the wrong parent, which Arize renders as a
     # detached subtree.

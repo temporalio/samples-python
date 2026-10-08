@@ -1,12 +1,12 @@
 from datetime import timedelta
 
-import temporalio.contrib.google_adk_agents.workflow
+import temporalio.google_adk.workflow
 from google.adk import Agent
 from google.adk.runners import InMemoryRunner
 from google.adk.utils.context_utils import Aclosing
 from google.genai import types
 from temporalio import workflow
-from temporalio.contrib.google_adk_agents import TemporalModel
+from temporalio.google_adk import TemporalModel
 
 from google_adk_agents.tools.activities.weather_activity import get_weather
 
@@ -18,7 +18,7 @@ class WeatherAgentWorkflow:
     async def run(self, prompt: str) -> str:
         # activity_as_tool runs the tool call as a real Temporal activity, so it's
         # retryable and shows up in history.
-        weather_tool = temporalio.contrib.google_adk_agents.workflow.activity_as_tool(
+        weather_tool = temporalio.google_adk.workflow.activity_as_tool(
             get_weather, start_to_close_timeout=timedelta(seconds=60)
         )
 

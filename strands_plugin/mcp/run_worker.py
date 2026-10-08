@@ -14,7 +14,7 @@ from pathlib import Path
 from mcp import StdioServerParameters, stdio_client
 from strands.tools.mcp.mcp_client import MCPClient
 from temporalio.client import Client
-from temporalio.contrib.strands import StrandsPlugin
+from temporalio.strands_agents import StrandsPlugin
 from temporalio.worker import Worker
 
 from strands_plugin.mcp.workflow import MCPWorkflow

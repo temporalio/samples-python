@@ -18,7 +18,7 @@ from langchain.chat_models import init_chat_model
 from langgraph.graph import START, StateGraph
 from langsmith import traceable
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph as temporal_graph
+from temporalio.langgraph import graph as temporal_graph
 from typing_extensions import TypedDict
 
 

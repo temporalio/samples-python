@@ -15,8 +15,8 @@ from strands import tool
 from strands.types.tools import ToolUse
 from strands_tools import environment  # type: ignore[import-untyped]
 from temporalio import activity, workflow
-from temporalio.contrib.strands import TemporalAgent
-from temporalio.contrib.strands.workflow import activity_as_tool
+from temporalio.strands_agents import TemporalAgent
+from temporalio.strands_agents.workflow import activity_as_tool
 
 
 @tool

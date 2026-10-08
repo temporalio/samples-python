@@ -7,9 +7,9 @@ import uuid
 
 from langsmith import traceable
 from temporalio.client import Client
-from temporalio.contrib.langsmith import LangSmithPlugin
 from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.envconfig import ClientConfig
+from temporalio.langsmith import LangSmithPlugin
 
 from langsmith_tracing.chatbot.workflows import ChatbotWorkflow
 

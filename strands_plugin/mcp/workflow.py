@@ -10,7 +10,7 @@ options for each tool call.
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.contrib.strands import TemporalAgent, TemporalMCPClient
+from temporalio.strands_agents import TemporalAgent, TemporalMCPClient
 
 
 @workflow.defn

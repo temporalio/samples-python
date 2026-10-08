@@ -12,7 +12,7 @@ API keys).
 
 ## What This Sample Demonstrates
 
-- Composing `DeepAgentsPlugin` with `temporalio.contrib.langsmith.LangSmithPlugin`
+- Composing `DeepAgentsPlugin` with `temporalio.langsmith.LangSmithPlugin`
 - Order-independent plugin registration
 
 ## Running the Sample

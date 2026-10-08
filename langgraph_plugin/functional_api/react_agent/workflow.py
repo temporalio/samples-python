@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from langgraph.func import entrypoint, task
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
+from temporalio.langgraph import entrypoint as temporal_entrypoint
 
 
 @task

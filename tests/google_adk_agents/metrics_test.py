@@ -4,7 +4,7 @@ import pytest
 from google.adk.models import BaseLlm, LLMRegistry
 from opentelemetry.sdk.metrics.export import HistogramDataPoint, InMemoryMetricReader
 from temporalio.client import Client
-from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
+from temporalio.google_adk import GoogleAdkPlugin
 from temporalio.worker import Replayer, Worker
 
 from google_adk_agents.metrics.models.local_metrics_model import (

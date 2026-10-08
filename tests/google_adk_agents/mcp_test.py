@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 from temporalio.client import Client
-from temporalio.contrib.google_adk_agents import (
+from temporalio.google_adk import (
     GoogleAdkPlugin,
     TemporalMcpToolSetProvider,
 )

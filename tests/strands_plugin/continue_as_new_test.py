@@ -3,7 +3,7 @@ import uuid
 
 import pytest
 from temporalio.client import Client, WorkflowExecutionStatus
-from temporalio.contrib.strands import StrandsPlugin
+from temporalio.strands_agents import StrandsPlugin
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 

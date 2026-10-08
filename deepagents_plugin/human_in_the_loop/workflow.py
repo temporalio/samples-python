@@ -26,7 +26,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 from temporalio import workflow
-from temporalio.contrib.deepagents import tool_as_activity
+from temporalio.deepagents import tool_as_activity
 
 
 @workflow.defn

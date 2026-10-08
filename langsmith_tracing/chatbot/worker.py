@@ -5,9 +5,9 @@ import logging
 import sys
 
 from temporalio.client import Client
-from temporalio.contrib.langsmith import LangSmithPlugin
 from temporalio.contrib.pydantic import pydantic_data_converter
 from temporalio.envconfig import ClientConfig
+from temporalio.langsmith import LangSmithPlugin
 from temporalio.worker import Worker
 
 from langsmith_tracing.chatbot.activities import call_openai

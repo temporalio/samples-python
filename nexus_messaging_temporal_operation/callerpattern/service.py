@@ -1,7 +1,9 @@
 """
-Nexus service definition for the on-demand pattern. Every operation includes a userId
-so the caller controls which workflow instance is targeted. This also exposes a
-run_from_remote operation that starts a new GreetingWorkflow.
+Nexus service definition for the caller (entity) pattern. Shared between the handler and
+caller. The caller uses this to create a type-safe Nexus client; the handler implements
+the operations.
+
+Every operation includes a user_id so the handler knows which entity workflow to target.
 """
 
 from dataclasses import dataclass
@@ -18,11 +20,6 @@ class Language(IntEnum):
     HINDI = 5
     PORTUGUESE = 6
     SPANISH = 7
-
-
-@dataclass
-class RunFromRemoteInput:
-    user_id: str
 
 
 @dataclass
@@ -59,14 +56,12 @@ class ApproveOutput:
 
 
 @nexusrpc.service
-class NexusRemoteGreetingService:
-    # Starts a new GreetingWorkflow with the given workflow ID (asynchronous).
-    run_from_remote: nexusrpc.Operation[RunFromRemoteInput, str]
-    # Returns the languages supported by the specified workflow.
+class NexusGreetingService:
+    # Returns the languages supported by the greeting workflow.
     get_languages: nexusrpc.Operation[GetLanguagesInput, GetLanguagesOutput]
-    # Returns the currently active language of the specified workflow.
+    # Returns the currently active language.
     get_language: nexusrpc.Operation[GetLanguageInput, Language]
-    # Changes the active language on the specified workflow, returning the previous one.
+    # Changes the active language, returning the previous one.
     set_language: nexusrpc.Operation[SetLanguageInput, Language]
-    # Approves the specified workflow, allowing it to complete.
+    # Approves the workflow, allowing it to complete.
     approve: nexusrpc.Operation[ApproveInput, ApproveOutput]

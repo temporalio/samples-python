@@ -1,8 +1,7 @@
 """
-A long-running "entity" workflow that backs the NexusRemoteGreetingService Nexus
-operations. The workflow exposes queries, an update, and a signal. These are private
-implementation details of the Nexus service: the caller only interacts via Nexus
-operations.
+A long-running "entity" workflow that backs the NexusGreetingService Nexus operations.
+The workflow exposes queries, an update, and a signal. These are private implementation
+details of the Nexus service: the caller only interacts via Nexus operations.
 """
 
 import asyncio
@@ -11,8 +10,10 @@ from datetime import timedelta
 from temporalio import workflow
 from temporalio.exceptions import ApplicationError
 
-from nexus_messaging.ondemandpattern.handler.activities import call_greeting_service
-from nexus_messaging.ondemandpattern.service import (
+from nexus_messaging_temporal_operation.callerpattern.handler.activities import (
+    call_greeting_service,
+)
+from nexus_messaging_temporal_operation.callerpattern.service import (
     ApproveInput,
     GetLanguagesInput,
     GetLanguagesOutput,

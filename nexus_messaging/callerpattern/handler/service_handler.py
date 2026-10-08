@@ -1,15 +1,14 @@
 """
 Nexus operation handler implementation for the entity pattern. Each operation receives a
-user_id, which is mapped to a Workflow ID. The Query and Signal operations are synchronous
-because they complete quickly against a running Workflow; set_language is async because it
-is backed by a Workflow Update that may call an activity.
+user_id, which is mapped to a workflow ID. The operations are synchronous because queries
+and updates against a running workflow complete quickly.
 """
 
 from __future__ import annotations
 
 import nexusrpc
 from temporalio import nexus
-from temporalio.client import Client, WorkflowHandle
+from temporalio.client import WorkflowHandle
 
 from nexus_messaging.callerpattern.handler.workflows import GreetingWorkflow
 from nexus_messaging.callerpattern.service import (
@@ -39,59 +38,43 @@ def get_workflow_id(user_id: str) -> str:
 @nexusrpc.handler.service_handler(service=NexusGreetingService)
 class NexusGreetingServiceHandler:
     def _get_workflow_handle(
-        self, client: Client, user_id: str
+        self, user_id: str
     ) -> WorkflowHandle[GreetingWorkflow, str]:
-        return client.get_workflow_handle_for(
+        return nexus.client().get_workflow_handle_for(
             GreetingWorkflow.run, get_workflow_id(user_id)
         )
 
-    @nexus.temporal_operation
+    @nexusrpc.handler.sync_operation
     async def get_languages(
-        self,
-        _ctx: nexus.TemporalStartOperationContext,
-        client: nexus.TemporalNexusClient,
-        input: GetLanguagesInput,
-    ) -> nexus.TemporalOperationResult[GetLanguagesOutput]:
-        result = await self._get_workflow_handle(client.client, input.user_id).query(
+        self, ctx: nexusrpc.handler.StartOperationContext, input: GetLanguagesInput
+    ) -> GetLanguagesOutput:
+        return await self._get_workflow_handle(input.user_id).query(
             GreetingWorkflow.get_languages, input
         )
-        return nexus.TemporalOperationResult.sync(result)
 
-    @nexus.temporal_operation
+    @nexusrpc.handler.sync_operation
     async def get_language(
-        self,
-        _ctx: nexus.TemporalStartOperationContext,
-        client: nexus.TemporalNexusClient,
-        input: GetLanguageInput,
-    ) -> nexus.TemporalOperationResult[Language]:
-        result = await self._get_workflow_handle(client.client, input.user_id).query(
+        self, ctx: nexusrpc.handler.StartOperationContext, input: GetLanguageInput
+    ) -> Language:
+        return await self._get_workflow_handle(input.user_id).query(
             GreetingWorkflow.get_language
         )
-        return nexus.TemporalOperationResult.sync(result)
 
     # Routes to set_language_using_activity (not set_language) so that new languages not
     # already in the greetings map can be fetched via an activity.
-    @nexus.temporal_operation
+    @nexusrpc.handler.sync_operation
     async def set_language(
-        self,
-        _ctx: nexus.TemporalStartOperationContext,
-        client: nexus.TemporalNexusClient,
-        input: SetLanguageInput,
-    ) -> nexus.TemporalOperationResult[Language]:
-        return await client.start_workflow_update(
-            get_workflow_id(input.user_id),
-            GreetingWorkflow.set_language_using_activity,
-            input,
+        self, ctx: nexusrpc.handler.StartOperationContext, input: SetLanguageInput
+    ) -> Language:
+        return await self._get_workflow_handle(input.user_id).execute_update(
+            GreetingWorkflow.set_language_using_activity, input
         )
 
-    @nexus.temporal_operation
+    @nexusrpc.handler.sync_operation
     async def approve(
-        self,
-        _ctx: nexus.TemporalStartOperationContext,
-        client: nexus.TemporalNexusClient,
-        input: ApproveInput,
-    ) -> nexus.TemporalOperationResult[ApproveOutput]:
-        await self._get_workflow_handle(client.client, input.user_id).signal(
+        self, ctx: nexusrpc.handler.StartOperationContext, input: ApproveInput
+    ) -> ApproveOutput:
+        await self._get_workflow_handle(input.user_id).signal(
             GreetingWorkflow.approve, input
         )
-        return nexus.TemporalOperationResult.sync(ApproveOutput())
+        return ApproveOutput()

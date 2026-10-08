@@ -12,7 +12,7 @@ dev = [
     "ruff>=0.5.0,<0.6",
     "mypy>=1.4.1,<2",
     "poethepoet>=0.36.0",
-    "pytest>=7.1.2,<8",
+    "pytest>=9.0.3,<10",
 ]
 
 [tool.poe.tasks]

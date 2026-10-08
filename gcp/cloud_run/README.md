@@ -18,11 +18,12 @@ drop the `[tool.uv.sources]` override once it ships on PyPI.
 
 Prerequisites: a Temporal Cloud namespace and API key; a Google Cloud project
 with billing and an authenticated `gcloud` CLI; `envsubst` (`gettext` package).
-Worker pools bill continuously, so run scale-to-zero (step 6) after testing.
+Worker pools bill continuously, so scale to zero after testing (see below).
 
 ## Deploy
 
-Run from the repository root, with your own values:
+Run from the repository root. Set your own values (also used by the verify step
+below), then run the deploy script:
 
 ```bash
 export PROJECT_ID=your-project-id REGION=us-central1
@@ -37,39 +38,17 @@ export COLLECTOR_CONFIG_SECRET=temporal-otel-collector COLLECTOR_CONFIG_SECRET_V
 export WORKER_IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/gcp-cloud-run:v1"
 export INSTANCE_COUNT=1
 
-# Steps 1-3 are one-time setup; re-run steps 4-5 to redeploy.
-# 1. Enable APIs, create the Artifact Registry repo and the runtime service account.
-gcloud services enable artifactregistry.googleapis.com cloudbuild.googleapis.com \
-  monitoring.googleapis.com run.googleapis.com secretmanager.googleapis.com \
-  telemetry.googleapis.com --project "$PROJECT_ID"
-gcloud artifacts repositories create "$REPOSITORY" --location "$REGION" \
-  --repository-format docker --project "$PROJECT_ID"
+./gcp/cloud_run/deploy.sh
+```
 
-# 2. Grant the service account the collector's telemetry roles.
-for role in roles/logging.logWriter roles/monitoring.metricWriter roles/telemetry.tracesWriter; do
-  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-    --member "serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role "$role"
-done
+`deploy.sh` enables the required APIs; creates the Artifact Registry repo, the
+runtime service account, and the API key and collector-config secrets; grants the
+telemetry and secret-access roles; then builds the image and deploys the
+two-container worker pool. The create steps are one-time and re-run safely.
 
-# 3. Store the API key and collector config as secrets the service account can read.
-gcloud secrets create "$TEMPORAL_API_KEY_SECRET" --data-file "$TEMPORAL_API_KEY_FILE" --project "$PROJECT_ID"
-gcloud secrets create "$COLLECTOR_CONFIG_SECRET" \
-  --data-file gcp/cloud_run/collector-config.yaml --project "$PROJECT_ID"
-for secret in "$TEMPORAL_API_KEY_SECRET" "$COLLECTOR_CONFIG_SECRET"; do
-  gcloud secrets add-iam-policy-binding "$secret" \
-    --member "serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
-    --role roles/secretmanager.secretAccessor --project "$PROJECT_ID"
-done
+Worker pools bill continuously, so scale to zero when done testing:
 
-# 4. Build the image (build context is the sample dir, keeping credentials out).
-gcloud builds submit gcp/cloud_run --region "$REGION" \
-  --tag "$WORKER_IMAGE" --project "$PROJECT_ID"
-
-# 5. Render and deploy the two-container worker pool.
-envsubst < gcp/cloud_run/worker-pool.yaml > /tmp/worker-pool.yaml
-gcloud run worker-pools replace /tmp/worker-pool.yaml --project "$PROJECT_ID"
-
-# 6. Scale to zero when done to stop compute charges.
+```bash
 gcloud run worker-pools update "$WORKER_POOL" --instances 0 \
   --region "$REGION" --project "$PROJECT_ID"
 ```

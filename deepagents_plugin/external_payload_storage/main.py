@@ -14,8 +14,8 @@ from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
-from deepagents_plugin.external_storage.client import connect_client
-from deepagents_plugin.external_storage.workflow import (
+from deepagents_plugin.external_payload_storage.client import connect_client
+from deepagents_plugin.external_payload_storage.workflow import (
     PAYLOAD_BYTES,
     TASK_QUEUE,
     ExternalStorageAgent,

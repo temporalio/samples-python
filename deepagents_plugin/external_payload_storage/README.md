@@ -37,7 +37,7 @@ In a third terminal, run the demo. It starts a worker, executes one workflow,
 checks the result's integrity, and shuts down the worker:
 
 ```bash
-uv run deepagents_plugin/external_storage/main.py
+uv run deepagents_plugin/external_payload_storage/main.py
 ```
 
 The output includes:
@@ -66,13 +66,23 @@ through, so it can also read this sample's references.
 
 ## How the configuration works
 
-`client.py` opens an S3 client, creates an SDK `S3StorageDriver`, and passes a
-`DataConverter` with `ExternalStorage` directly to `Client.connect`. The standalone
-`temporalio-deepagents` plugin composes its LangChain payload converter with that
-converter, preserving the storage configuration. The worker uses the client's
-converter, and the sample keeps the S3 client open while the worker runs and the
-starter decodes results. No application code uploads or downloads payloads
-manually.
+`client.py` creates `ExternalStorage(drivers=[driver],
+payload_size_threshold=256 * 1024)` and adds it to the LangChain-aware converter
+provided by `DeepAgentsPlugin`:
+
+```python
+plugin = create_plugin()
+plugin.data_converter = replace(plugin.data_converter, external_storage=storage)
+
+client = await Client.connect(
+    "localhost:7233",
+    plugins=[plugin],
+)
+```
+
+The worker inherits the configured converter. The S3 client stays open while
+the worker runs and the starter decodes results. No application code uploads or
+downloads Temporal payloads manually.
 
 This demo deliberately uses **no compression codec**: repeated `x` characters
 would compress well below the storage threshold. It overrides the built-in
@@ -90,16 +100,17 @@ Native storage avoids transmitting the large bytes through either limit.
 For real S3, use an existing bucket and normal AWS credentials instead of this
 sample's local endpoint and mock credentials. Configure compatible storage
 drivers on every client, worker, and replayer that reads the history. Retain
-objects for as long as execution, reset, or replay may need them; Temporal does not delete stored payloads when an activity finishes.
+objects for as long as execution, reset, or replay may need them; Temporal does
+not delete stored payloads when an activity finishes.
 
 ## Tests
 
 The integration test starts an isolated mock S3 service and verifies the full
 result, both native references, activity routing, and replay with a new S3
-client after worker shutdown. No manually running S3 service or model credentials
-are required:
+client after worker shutdown.
+No manually running S3 service or model credentials are required:
 
 ```bash
 uv sync --python 3.13 --group deepagents --group external-storage --group dev
-uv run pytest tests/deepagents_plugin/external_storage_test.py
+uv run pytest tests/deepagents_plugin/external_payload_storage_test.py
 ```

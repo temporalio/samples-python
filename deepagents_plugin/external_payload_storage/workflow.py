@@ -37,7 +37,6 @@ async def read_file(file_path: str) -> str:
     return "x" * PAYLOAD_BYTES
 
 
-# @@@SNIPSTART python-deepagents-external-storage-workflow
 @workflow.defn
 class ExternalStorageAgent:
     @workflow.run
@@ -70,6 +69,3 @@ class ExternalStorageAgent:
             sha256=hashlib.sha256(data).hexdigest(),
             answer=answer,
         )
-
-
-# @@@SNIPEND

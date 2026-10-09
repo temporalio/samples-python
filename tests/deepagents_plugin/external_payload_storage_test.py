@@ -11,16 +11,16 @@ from moto.server import ThreadedMotoServer
 from temporalio.api.enums.v1 import EventType
 from temporalio.api.sdk.v1 import ExternalStorageReference
 from temporalio.client import Client
-from temporalio.converter import DataConverter
 from temporalio.deepagents import DeepAgentsPlugin
+from temporalio.converter import DataConverter
 from temporalio.worker import Replayer, Worker
 
-from deepagents_plugin.external_storage.client import (
+from deepagents_plugin.external_payload_storage.client import (
     S3_BUCKET,
     connect_client,
 )
-from deepagents_plugin.external_storage.main import create_plugin
-from deepagents_plugin.external_storage.workflow import (
+from deepagents_plugin.external_payload_storage.main import create_plugin
+from deepagents_plugin.external_payload_storage.workflow import (
     PAYLOAD_BYTES,
     AgentResult,
     ExternalStorageAgent,
@@ -108,11 +108,12 @@ async def test_external_storage(client: Client, s3_endpoint: str) -> None:
 
     # The original worker and S3 client are closed. Retrieve persisted claims
     # through a fresh client and driver, without executing the activities again.
+    replay_plugin = DeepAgentsPlugin()
     async with connect_client(
-        DeepAgentsPlugin(), target_host=target_host, s3_endpoint=s3_endpoint
+        replay_plugin, target_host=target_host, s3_endpoint=s3_endpoint
     ) as replay_client:
         await Replayer(
             workflows=[ExternalStorageAgent],
             data_converter=replay_client.data_converter,
-            plugins=[DeepAgentsPlugin()],
+            plugins=[replay_plugin],
         ).replay_workflow(history)

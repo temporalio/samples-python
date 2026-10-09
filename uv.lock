@@ -4658,6 +4658,9 @@ openai-agents = [
     { name = "requests" },
     { name = "temporalio-openai-agents" },
 ]
+openrouter = [
+    { name = "openai" },
+]
 pydantic-converter = [
     { name = "pydantic" },
 ]
@@ -4762,6 +4765,7 @@ openai-agents = [
     { name = "requests", specifier = ">=2.32.0,<3" },
     { name = "temporalio-openai-agents", specifier = ">=1.0.0" },
 ]
+openrouter = [{ name = "openai", specifier = ">=1.4.0,<3" }]
 pydantic-converter = [{ name = "pydantic", specifier = ">=2.10.6,<3" }]
 sentry = [{ name = "sentry-sdk", specifier = ">=2.13.0" }]
 strands-agents = [

@@ -1,0 +1,49 @@
+"""Configure native S3 External Storage for the Deep Agents plugin."""
+
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
+from dataclasses import replace
+
+import aioboto3
+from temporalio.client import Client
+from temporalio.contrib.aws.s3driver import S3StorageDriver
+from temporalio.contrib.aws.s3driver.aioboto3 import new_aioboto3_client
+from temporalio.converter import DataConverter, ExternalStorage
+from temporalio.deepagents import DeepAgentsPlugin
+from temporalio.envconfig import ClientConfig
+
+S3_ENDPOINT = "http://localhost:5000"
+S3_BUCKET = "temporal-payloads"
+
+
+@asynccontextmanager
+async def connect_client(
+    plugin_factory: Callable[[DataConverter], DeepAgentsPlugin],
+    *,
+    target_host: str | None = None,
+    s3_endpoint: str = S3_ENDPOINT,
+) -> AsyncIterator[Client]:
+    """Keep the S3 client alive while Temporal reads and writes payloads."""
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    if target_host is not None:
+        config["target_host"] = target_host
+
+    session = aioboto3.Session()
+    async with session.client(
+        "s3",
+        endpoint_url=s3_endpoint,
+        aws_access_key_id="test",
+        aws_secret_access_key="test",
+        region_name="us-east-1",
+    ) as s3_client:
+        driver = S3StorageDriver(
+            client=new_aioboto3_client(s3_client),
+            bucket=S3_BUCKET,
+        )
+        # Small on purpose: this demo also externalizes serialized conversation
+        # context, while the large tool result shows the same path at scale.
+        storage = ExternalStorage(drivers=[driver], payload_size_threshold=128)
+        data_converter = replace(DataConverter.default, external_storage=storage)
+        plugin = plugin_factory(data_converter)
+        yield await Client.connect(**config, plugins=[plugin])

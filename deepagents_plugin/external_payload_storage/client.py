@@ -8,8 +8,8 @@ import aioboto3
 from temporalio.client import Client
 from temporalio.contrib.aws.s3driver import S3StorageDriver
 from temporalio.contrib.aws.s3driver.aioboto3 import new_aioboto3_client
-from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.converter import DataConverter, ExternalStorage
+from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.envconfig import ClientConfig
 
 S3_ENDPOINT = "http://localhost:5000"

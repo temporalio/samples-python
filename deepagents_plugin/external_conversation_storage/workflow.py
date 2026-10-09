@@ -62,9 +62,10 @@ async def load_conversation_history(workflow_id: str, turn_index: int) -> list[T
 @activity.defn
 async def save_turn(workflow_id: str, turn_index: int, turn: Turn) -> None:
     """Append one exchange as its own immutable S3 object."""
-    import aioboto3
     import json
     from dataclasses import asdict
+
+    import aioboto3
 
     session = aioboto3.Session()
     async with session.client(
@@ -105,7 +106,9 @@ class StoredConversationAgent:
         last_answer = ""
 
         while True:
-            await workflow.wait_condition(lambda: self.pending_turns or self.finished)
+            await workflow.wait_condition(
+                lambda: bool(self.pending_turns) or self.finished
+            )
             if not self.pending_turns:
                 break
             question = self.pending_turns.pop(0)
@@ -117,8 +120,7 @@ class StoredConversationAgent:
                 retry_policy=RetryPolicy(maximum_attempts=1),
             )
             memory = "\n".join(
-                f"User: {turn.user}\nAssistant: {turn.assistant}"
-                for turn in history
+                f"User: {turn.user}\nAssistant: {turn.assistant}" for turn in history
             )
             system_prompt = (
                 "Answer the user's latest message. Use the full conversation "
@@ -136,7 +138,9 @@ class StoredConversationAgent:
             context_chars = len(system_prompt) + len(question)
             if turn_count == 0:
                 first_context_chars = context_chars
-            result = await agent.ainvoke({"messages": [{"role": "user", "content": question}]})
+            result = await agent.ainvoke(
+                {"messages": [{"role": "user", "content": question}]}
+            )
             answer = result["messages"][-1].content
             if not isinstance(answer, str):
                 raise TypeError("Expected a text response from the model")

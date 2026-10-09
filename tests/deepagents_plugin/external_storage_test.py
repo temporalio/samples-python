@@ -11,8 +11,8 @@ from moto.server import ThreadedMotoServer
 from temporalio.api.enums.v1 import EventType
 from temporalio.api.sdk.v1 import ExternalStorageReference
 from temporalio.client import Client
-from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.converter import DataConverter
+from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.worker import Replayer, Worker
 
 from deepagents_plugin.external_storage.client import (

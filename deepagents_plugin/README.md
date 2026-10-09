@@ -26,6 +26,7 @@ one side.
 | [subagents](subagents) | Durability propagates across the agent tree — sub-agent model calls become activities with no per-sub-agent wiring. |
 | [streaming](streaming) | Stream model chunks to external subscribers via `streaming_topic` + `WorkflowStream`, keeping the durable result identical. |
 | [langsmith_tracing](langsmith_tracing) | Compose `DeepAgentsPlugin` with `LangSmithPlugin` for durable execution + LLM tracing. |
+| [external_storage](external_storage) | Carry a 6 MiB tool result and the next model input through native S3 External Storage; scripted model, no API keys. |
 
 ## Prerequisites
 
@@ -45,8 +46,10 @@ one side.
    > Temporal 1.34.0 or later and Python >= 3.11 — on older interpreters the group resolves to nothing
    > and the samples are skipped.
 
-2. Configure a model provider. The samples use
-   `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key:
+2. Configure a model provider. Most samples use
+   `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key. The
+   [external_storage](external_storage) sample uses a scripted model and needs
+   no provider credentials:
 
    ```bash
    export ANTHROPIC_API_KEY=...
@@ -85,11 +88,13 @@ uv run deepagents_plugin/hello_world/run_worker.py
 uv run deepagents_plugin/hello_world/run_workflow.py
 ```
 
-The `langsmith_tracing` sample instead bundles the worker and starter into a
-single driver:
+The `langsmith_tracing` and `external_storage` samples instead bundle the worker
+and starter into a single driver. The storage sample also needs a mock S3 service;
+see its [setup instructions](external_storage):
 
 ```bash
 uv run deepagents_plugin/langsmith_tracing/main.py
+uv run deepagents_plugin/external_storage/main.py
 ```
 
 ## Key Features Demonstrated
@@ -109,6 +114,8 @@ uv run deepagents_plugin/langsmith_tracing/main.py
 - **Streaming** — forward model chunks to external subscribers while keeping the
   durable result unchanged.
 - **Observability** — compose with `LangSmithPlugin` for tracing.
+- **Large payload storage** — compose native `ExternalStorage` with the plugin's
+  data converter, keeping full tool results in S3 and small references in history.
 
 ## Related
 

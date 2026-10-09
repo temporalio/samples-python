@@ -1,9 +1,4 @@
-"""Run one Deep Agent with a 6 MiB tool result and native S3 storage.
-
-Both the worker and starter run in this process. The two model replies are
-scripted, so the demo needs no LLM credentials or provider context budget.
-The model and tool still run as real Temporal activities.
-"""
+"""Run one scripted conversation with native Temporal S3 External Storage."""
 
 import asyncio
 import hashlib
@@ -15,8 +10,8 @@ from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
-from deepagents_plugin.external_payload_storage.client import connect_client
-from deepagents_plugin.external_payload_storage.workflow import (
+from deepagents_plugin.external_storage.client import connect_client
+from deepagents_plugin.external_storage.workflow import (
     PAYLOAD_BYTES,
     TASK_QUEUE,
     ExternalStorageAgent,
@@ -24,7 +19,7 @@ from deepagents_plugin.external_payload_storage.workflow import (
 
 
 def create_plugin(data_converter: DataConverter) -> DeepAgentsPlugin:
-    """Script a tool request and acknowledgment for this single-workflow demo."""
+    """Script the model so the demo needs no LLM provider or API key."""
     return DeepAgentsPlugin(
         data_converter=data_converter,
         model_provider=mock_model_provider(
@@ -39,13 +34,24 @@ def create_plugin(data_converter: DataConverter) -> DeepAgentsPlugin:
                         }
                     ],
                 ),
-                AIMessage(content="Received the complete document."),
+                AIMessage(content="I received the complete document."),
+                AIMessage(content="The project is called Cedar."),
+                AIMessage(content="Cedar uses Python."),
+                AIMessage(content="Cedar is due Friday."),
+                AIMessage(content="Cedar is a Python project due Friday."),
             ]
         ),
     )
 
 
 async def main() -> None:
+    questions = [
+        "Read large-document.txt and acknowledge receiving it.",
+        "I am working on a project called Cedar.",
+        "The project uses Python.",
+        "It is due Friday.",
+        "Remind me of the project name, language, and deadline.",
+    ]
     async with connect_client(create_plugin) as client:
         async with Worker(
             client,
@@ -56,17 +62,19 @@ async def main() -> None:
             workflow_id = f"deepagents-external-storage-{uuid.uuid4()}"
             result = await client.execute_workflow(
                 ExternalStorageAgent.run,
-                "Read large-document.txt and acknowledge receiving it.",
+                questions,
                 id=workflow_id,
                 task_queue=TASK_QUEUE,
             )
 
-        assert result.result_bytes == PAYLOAD_BYTES
-        assert result.sha256 == hashlib.sha256(b"x" * PAYLOAD_BYTES).hexdigest()
-        print(f"Workflow: {workflow_id}")
-        print(f"Tool result: {result.result_bytes:,} bytes (6 MiB), integrity verified")
-        print(f"SHA-256: {result.sha256}")
-        print(f"Agent: {result.answer}")
+    assert result.tool_result_bytes == PAYLOAD_BYTES
+    assert result.tool_result_sha256 == hashlib.sha256(b"x" * PAYLOAD_BYTES).hexdigest()
+    print(f"Workflow: {workflow_id}")
+    print(
+        f"Tool result: {result.tool_result_bytes:,} bytes (6 MiB), integrity verified"
+    )
+    print(f"Conversation turns: {result.turns}")
+    print(f"Final answer: {result.last_answer}")
 
 
 if __name__ == "__main__":

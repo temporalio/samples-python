@@ -26,8 +26,7 @@ one side.
 | [subagents](subagents) | Durability propagates across the agent tree — sub-agent model calls become activities with no per-sub-agent wiring. |
 | [streaming](streaming) | Stream model chunks to external subscribers via `streaming_topic` + `WorkflowStream`, keeping the durable result identical. |
 | [langsmith_tracing](langsmith_tracing) | Compose `DeepAgentsPlugin` with `LangSmithPlugin` for durable execution + LLM tracing. |
-| [external_payload_storage](external_payload_storage) | Carry a 6 MiB tool result and the next model input through native S3 External Storage; scripted model, no API keys. |
-| [external_conversation_storage](external_conversation_storage) | Store each exchange in S3 and include the full conversation history in each model call; native External Storage also protects large Temporal payloads. |
+| [external_storage](external_storage) | Use the Temporal data converter's native S3 External Storage for a 6 MiB tool result and multi-turn conversation payloads; scripted model, no API keys. |
 
 ## Prerequisites
 
@@ -49,7 +48,7 @@ one side.
 
 2. Configure a model provider. Most samples use
    `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key. The
-   [external_payload_storage](external_payload_storage) sample uses a scripted model and needs
+   [external_storage](external_storage) sample uses a scripted model and needs
    no provider credentials:
 
    ```bash
@@ -89,15 +88,13 @@ uv run deepagents_plugin/hello_world/run_worker.py
 uv run deepagents_plugin/hello_world/run_workflow.py
 ```
 
-The `langsmith_tracing`, `external_payload_storage`, and
-`external_conversation_storage` samples instead bundle the worker
+The `langsmith_tracing` and `external_storage` samples instead bundle the worker
 and starter into a single driver. The storage sample also needs a mock S3 service;
 see their [setup instructions](../external_storage):
 
 ```bash
 uv run deepagents_plugin/langsmith_tracing/main.py
-uv run deepagents_plugin/external_payload_storage/main.py
-uv run deepagents_plugin/external_conversation_storage/main.py
+uv run deepagents_plugin/external_storage/main.py
 ```
 
 ## Key Features Demonstrated

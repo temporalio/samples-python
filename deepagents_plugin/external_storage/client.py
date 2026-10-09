@@ -1,4 +1,4 @@
-"""Connect a Deep Agents client with Temporal native S3 External Storage."""
+"""Configure native S3 External Storage for the Deep Agents plugin."""
 
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
@@ -41,10 +41,9 @@ async def connect_client(
             client=new_aioboto3_client(s3_client),
             bucket=S3_BUCKET,
         )
-        storage = ExternalStorage(drivers=[driver], payload_size_threshold=256 * 1024)
+        # Small on purpose: this demo also externalizes serialized conversation
+        # context, while the large tool result shows the same path at scale.
+        storage = ExternalStorage(drivers=[driver], payload_size_threshold=128)
         data_converter = replace(DataConverter.default, external_storage=storage)
         plugin = plugin_factory(data_converter)
-        yield await Client.connect(
-            **config,
-            plugins=[plugin],
-        )
+        yield await Client.connect(**config, plugins=[plugin])

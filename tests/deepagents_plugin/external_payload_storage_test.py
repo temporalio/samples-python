@@ -56,7 +56,7 @@ async def test_external_storage(client: Client, s3_endpoint: str) -> None:
     queue = f"deepagents-storage-{uuid.uuid4()}"
     target_host = client.service_client.config.target_host
     async with connect_client(
-        create_plugin(), target_host=target_host, s3_endpoint=s3_endpoint
+        create_plugin, target_host=target_host, s3_endpoint=s3_endpoint
     ) as stored_client:
         assert stored_client.data_converter.external_storage is not None
         async with Worker(
@@ -110,7 +110,9 @@ async def test_external_storage(client: Client, s3_endpoint: str) -> None:
     # through a fresh client and driver, without executing the activities again.
     replay_plugin = DeepAgentsPlugin()
     async with connect_client(
-        replay_plugin, target_host=target_host, s3_endpoint=s3_endpoint
+        lambda data_converter: DeepAgentsPlugin(data_converter=data_converter),
+        target_host=target_host,
+        s3_endpoint=s3_endpoint,
     ) as replay_client:
         await Replayer(
             workflows=[ExternalStorageAgent],

@@ -1,6 +1,6 @@
 """Compose native S3 storage with the Deep Agents data converter."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import replace
 
@@ -18,7 +18,7 @@ S3_BUCKET = "temporal-payloads"
 
 @asynccontextmanager
 async def connect_client(
-    plugin: DeepAgentsPlugin,
+    plugin_factory: Callable[[DataConverter], DeepAgentsPlugin],
     *,
     target_host: str | None = None,
     s3_endpoint: str = S3_ENDPOINT,
@@ -42,10 +42,8 @@ async def connect_client(
             bucket=S3_BUCKET,
         )
         storage = ExternalStorage(drivers=[driver], payload_size_threshold=256 * 1024)
-        plugin.data_converter = replace(
-            plugin.data_converter or DataConverter.default,
-            external_storage=storage,
-        )
+        data_converter = replace(DataConverter.default, external_storage=storage)
+        plugin = plugin_factory(data_converter)
         yield await Client.connect(
             **config,
             plugins=[plugin],

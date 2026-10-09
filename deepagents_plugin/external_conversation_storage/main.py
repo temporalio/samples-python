@@ -4,6 +4,7 @@ import asyncio
 import uuid
 
 from langchain_core.messages import AIMessage
+from temporalio.converter import DataConverter
 from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
@@ -17,9 +18,10 @@ from deepagents_plugin.external_conversation_storage.workflow import (
 )
 
 
-def create_plugin() -> DeepAgentsPlugin:
+def create_plugin(data_converter: DataConverter) -> DeepAgentsPlugin:
     """Script replies so the sample runs without an LLM provider or API key."""
     return DeepAgentsPlugin(
+        data_converter=data_converter,
         model_provider=mock_model_provider(
             [
                 AIMessage(content="The project name is Cedar."),
@@ -27,7 +29,7 @@ def create_plugin() -> DeepAgentsPlugin:
                 AIMessage(content="Cedar uses Python and is due Friday."),
                 AIMessage(content="Cedar is a Python project due Friday."),
             ]
-        )
+        ),
     )
 
 
@@ -38,7 +40,7 @@ async def main() -> None:
         "It is due Friday.",
         "Remind me of the project name, language, and deadline.",
     ]
-    async with connect_client(create_plugin()) as client:
+    async with connect_client(create_plugin) as client:
         async with Worker(
             client,
             task_queue=TASK_QUEUE,

@@ -67,18 +67,22 @@ through, so it can also read this sample's references.
 ## How the configuration works
 
 `client.py` creates `ExternalStorage(drivers=[driver],
-payload_size_threshold=256 * 1024)` and adds it to the LangChain-aware converter
-provided by `DeepAgentsPlugin`:
+payload_size_threshold=256 * 1024)`, adds it to the SDK's default converter with
+`dataclasses.replace`, and passes that converter into the Deep Agents plugin:
 
 ```python
-plugin = create_plugin()
-plugin.data_converter = replace(plugin.data_converter, external_storage=storage)
+data_converter = replace(DataConverter.default, external_storage=storage)
+plugin = DeepAgentsPlugin(data_converter=data_converter)
 
 client = await Client.connect(
     "localhost:7233",
     plugins=[plugin],
 )
 ```
+
+The plugin upgrades the default payload converter for LangChain types while
+preserving the converter's external-storage configuration. This uses the
+standalone plugin's supported `data_converter` constructor argument.
 
 The worker inherits the configured converter. The S3 client stays open while
 the worker runs and the starter decodes results. No application code uploads or

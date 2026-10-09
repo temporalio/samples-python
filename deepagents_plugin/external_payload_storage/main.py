@@ -10,6 +10,7 @@ import hashlib
 import uuid
 
 from langchain_core.messages import AIMessage
+from temporalio.converter import DataConverter
 from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
@@ -22,9 +23,10 @@ from deepagents_plugin.external_payload_storage.workflow import (
 )
 
 
-def create_plugin() -> DeepAgentsPlugin:
+def create_plugin(data_converter: DataConverter) -> DeepAgentsPlugin:
     """Script a tool request and acknowledgment for this single-workflow demo."""
     return DeepAgentsPlugin(
+        data_converter=data_converter,
         model_provider=mock_model_provider(
             [
                 AIMessage(
@@ -39,12 +41,12 @@ def create_plugin() -> DeepAgentsPlugin:
                 ),
                 AIMessage(content="Received the complete document."),
             ]
-        )
+        ),
     )
 
 
 async def main() -> None:
-    async with connect_client(create_plugin()) as client:
+    async with connect_client(create_plugin) as client:
         async with Worker(
             client,
             task_queue=TASK_QUEUE,

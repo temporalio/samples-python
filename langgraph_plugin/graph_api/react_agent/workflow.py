@@ -14,7 +14,7 @@ from typing import Annotated, Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph as temporal_graph
+from temporalio.langgraph import graph as temporal_graph
 
 
 class AgentState(TypedDict):

@@ -1,7 +1,7 @@
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.google_genai.testing import GeminiTestServer, text_response
+from temporalio.google_genai.testing import GeminiTestServer, text_response
 from temporalio.worker import Worker
 
 from google_genai.hello_world.workflow import HelloWorldWorkflow

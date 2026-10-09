@@ -4,8 +4,8 @@ import uuid
 import pytest
 from langchain_core.messages import AIMessage
 from temporalio.client import Client, WorkflowUpdateFailedError
-from temporalio.contrib.deepagents import DeepAgentsPlugin
-from temporalio.contrib.deepagents.testing import mock_model_provider
+from temporalio.deepagents import DeepAgentsPlugin
+from temporalio.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
 from deepagents_plugin.human_in_the_loop.workflow import HumanInTheLoopAgent

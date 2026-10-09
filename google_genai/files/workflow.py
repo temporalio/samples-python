@@ -9,7 +9,7 @@ from typing import cast
 
 from google.genai import types
 from temporalio import workflow
-from temporalio.contrib.google_genai import TemporalAsyncClient
+from temporalio.google_genai import TemporalAsyncClient
 
 
 # @@@SNIPSTART python-google-genai-files-workflow

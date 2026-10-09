@@ -16,7 +16,7 @@ from google import genai
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from temporalio.client import Client
-from temporalio.contrib.google_genai import GoogleGenAIPlugin
+from temporalio.google_genai import GoogleGenAIPlugin
 from temporalio.worker import Worker
 
 from google_genai.mcp.workflow import McpWorkflow

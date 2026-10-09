@@ -3,8 +3,8 @@ from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 from temporalio import workflow
-from temporalio.contrib.google_adk_agents import TemporalModel
 from temporalio.contrib.workflow_streams import WorkflowStream
+from temporalio.google_adk import TemporalModel
 
 
 # @@@SNIPSTART google-adk-agents-streaming-streaming-agent-workflow

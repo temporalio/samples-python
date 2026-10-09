@@ -4,7 +4,7 @@ from google.adk.sessions import InMemorySessionService
 from google.adk.utils.context_utils import Aclosing
 from google.genai import types
 from temporalio import workflow
-from temporalio.contrib.google_adk_agents import TemporalMcpToolSet, TemporalModel
+from temporalio.google_adk import TemporalMcpToolSet, TemporalModel
 
 from google_adk_agents.mcp.toolsets import echo_toolset
 

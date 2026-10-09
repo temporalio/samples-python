@@ -9,8 +9,8 @@ makes Gemini return matching JSON, which the SDK parses into the model on
 from google.genai import types
 from pydantic import BaseModel
 from temporalio import workflow
-from temporalio.contrib.google_genai import TemporalAsyncClient
 from temporalio.exceptions import ApplicationError
+from temporalio.google_genai import TemporalAsyncClient
 
 
 # @@@SNIPSTART python-google-genai-structured-output-workflow

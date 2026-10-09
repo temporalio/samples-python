@@ -13,7 +13,7 @@ from datetime import timedelta
 
 from google.genai import types
 from temporalio import activity, workflow
-from temporalio.contrib.google_genai import TemporalAsyncClient, activity_as_tool
+from temporalio.google_genai import TemporalAsyncClient, activity_as_tool
 from temporalio.workflow import ActivityConfig
 
 

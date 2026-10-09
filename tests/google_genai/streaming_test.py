@@ -3,8 +3,8 @@ from datetime import timedelta
 
 from google.genai import types
 from temporalio.client import Client
-from temporalio.contrib.google_genai.testing import GeminiTestServer, text_response
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
+from temporalio.google_genai.testing import GeminiTestServer, text_response
 from temporalio.worker import Worker
 
 from google_genai.streaming.workflow import StreamingWorkflow

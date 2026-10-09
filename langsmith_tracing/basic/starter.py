@@ -5,8 +5,8 @@ import sys
 
 from langsmith import traceable
 from temporalio.client import Client
-from temporalio.contrib.langsmith import LangSmithPlugin
 from temporalio.envconfig import ClientConfig
+from temporalio.langsmith import LangSmithPlugin
 
 from langsmith_tracing.basic.workflows import BasicLLMWorkflow
 

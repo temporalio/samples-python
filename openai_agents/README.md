@@ -5,7 +5,8 @@
 This directory contains samples demonstrating how to use the [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) with Temporal's durable execution engine.
 These samples are adapted from the [OpenAI Agents SDK examples](https://github.com/openai/openai-agents-python/tree/main/examples) and extended with Temporal's durability and orchestration capabilities.
 
-See the [module documentation](https://github.com/temporalio/sdk-python/blob/main/temporalio/contrib/openai_agents/README.md) for more information.
+The integration is installed as the standalone `temporalio-openai-agents` package.
+See the [module documentation](https://github.com/temporalio/ai-integrations/tree/main/python/openai_agents) for more information.
 
 ## Overview
 

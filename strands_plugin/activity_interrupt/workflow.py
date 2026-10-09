@@ -14,8 +14,8 @@ from datetime import timedelta
 from strands.interrupt import Interrupt, InterruptException
 from strands.types.interrupt import InterruptResponseContent
 from temporalio import activity, workflow
-from temporalio.contrib.strands import TemporalAgent
-from temporalio.contrib.strands.workflow import activity_as_tool
+from temporalio.strands_agents import TemporalAgent
+from temporalio.strands_agents.workflow import activity_as_tool
 
 # Tracks names that have been approved out-of-band. In a real system, this
 # would be a row in a policy database; the human reviewer flips a flag during

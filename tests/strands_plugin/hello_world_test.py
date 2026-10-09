@@ -2,7 +2,7 @@ import uuid
 
 import pytest
 from temporalio.client import Client
-from temporalio.contrib.strands import StrandsPlugin
+from temporalio.strands_agents import StrandsPlugin
 from temporalio.worker import Worker
 
 from strands_plugin.hello_world.workflow import HelloWorldWorkflow

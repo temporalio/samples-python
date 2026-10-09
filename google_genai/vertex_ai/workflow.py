@@ -8,7 +8,7 @@ workflow deterministic.
 """
 
 from temporalio import workflow
-from temporalio.contrib.google_genai import TemporalAsyncClient
+from temporalio.google_genai import TemporalAsyncClient
 
 
 # @@@SNIPSTART python-google-genai-vertex-ai-workflow

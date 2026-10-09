@@ -1,8 +1,8 @@
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.contrib.strands import TemporalAgent
-from temporalio.contrib.strands.workflow import activity_as_tool
+from temporalio.strands_agents import TemporalAgent
+from temporalio.strands_agents.workflow import activity_as_tool
 
 TASK_QUEUE = "agentcore-strands-task-queue"
 DEPLOYMENT_NAME = "agentcore-strands-agent-python"

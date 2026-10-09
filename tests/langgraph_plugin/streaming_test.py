@@ -3,8 +3,8 @@ from datetime import timedelta
 from typing import Any
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphPlugin
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
+from temporalio.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.streaming.workflow import (

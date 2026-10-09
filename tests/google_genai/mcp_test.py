@@ -10,8 +10,8 @@ from google.genai.types import HttpResponse as SdkHttpResponse
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from temporalio.client import Client
-from temporalio.contrib.google_genai import GoogleGenAIPlugin
-from temporalio.contrib.google_genai.testing import (
+from temporalio.google_genai import GoogleGenAIPlugin
+from temporalio.google_genai.testing import (
     function_call_response,
     text_response,
 )

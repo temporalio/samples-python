@@ -18,7 +18,7 @@ from langchain.chat_models import init_chat_model
 from langgraph.func import entrypoint, task
 from langsmith import traceable
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
+from temporalio.langgraph import entrypoint as temporal_entrypoint
 
 
 @traceable(name="format_prompt", run_type="prompt")

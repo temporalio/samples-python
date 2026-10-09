@@ -2,7 +2,7 @@ import uuid
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphPlugin
+from temporalio.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.continue_as_new.workflow import (

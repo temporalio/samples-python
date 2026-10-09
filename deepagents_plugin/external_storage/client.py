@@ -1,4 +1,4 @@
-"""Compose native S3 storage with the Deep Agents data converter."""
+"""Configure native S3 storage for the Deep Agents client."""
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -8,27 +8,15 @@ import aioboto3
 from temporalio.client import Client
 from temporalio.contrib.aws.s3driver import S3StorageDriver
 from temporalio.contrib.aws.s3driver.aioboto3 import new_aioboto3_client
-from temporalio.contrib.deepagents import DeepAgentsPlugin
 from temporalio.converter import DataConverter, ExternalStorage
 from temporalio.envconfig import ClientConfig
-from temporalio.plugin import SimplePlugin
+from temporalio.deepagents import DeepAgentsPlugin
 
 S3_ENDPOINT = "http://localhost:5000"
 S3_BUCKET = "temporal-payloads"
 
 
 # @@@SNIPSTART python-deepagents-external-storage-converter
-def storage_plugin(storage: ExternalStorage) -> SimplePlugin:
-    """Add storage after the agent plugin has installed its payload converter."""
-
-    def configure(converter: DataConverter | None) -> DataConverter:
-        return replace(converter or DataConverter.default, external_storage=storage)
-
-    # Applying this after DeepAgentsPlugin also supports older plugin versions
-    # that replace the converter rather than composing with the client's one.
-    return SimplePlugin("ExternalStorage", data_converter=configure)
-
-
 @asynccontextmanager
 async def connect_client(
     plugin: DeepAgentsPlugin,
@@ -55,9 +43,11 @@ async def connect_client(
             bucket=S3_BUCKET,
         )
         storage = ExternalStorage(drivers=[driver], payload_size_threshold=256 * 1024)
+        converter = replace(DataConverter.default, external_storage=storage)
         yield await Client.connect(
             **config,
-            plugins=[plugin, storage_plugin(storage)],
+            data_converter=converter,
+            plugins=[plugin],
         )
 
 

@@ -114,8 +114,8 @@ uv run deepagents_plugin/external_storage/main.py
 - **Streaming** — forward model chunks to external subscribers while keeping the
   durable result unchanged.
 - **Observability** — compose with `LangSmithPlugin` for tracing.
-- **Large payload storage** — compose native `ExternalStorage` with the plugin's
-  data converter, keeping full tool results in S3 and small references in history.
+- **Large payload storage** — configure native `ExternalStorage` on the client's
+  data converter; the standalone plugin composes it with its LangChain converter.
 
 ## Related
 

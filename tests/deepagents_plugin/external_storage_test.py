@@ -11,14 +11,13 @@ from moto.server import ThreadedMotoServer
 from temporalio.api.enums.v1 import EventType
 from temporalio.api.sdk.v1 import ExternalStorageReference
 from temporalio.client import Client
-from temporalio.contrib.deepagents import DeepAgentsPlugin
+from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.converter import DataConverter
 from temporalio.worker import Replayer, Worker
 
 from deepagents_plugin.external_storage.client import (
     S3_BUCKET,
     connect_client,
-    storage_plugin,
 )
 from deepagents_plugin.external_storage.main import create_plugin
 from deepagents_plugin.external_storage.workflow import (
@@ -112,14 +111,8 @@ async def test_external_storage(client: Client, s3_endpoint: str) -> None:
     async with connect_client(
         DeepAgentsPlugin(), target_host=target_host, s3_endpoint=s3_endpoint
     ) as replay_client:
-        storage = replay_client.data_converter.external_storage
-        assert storage is not None
         await Replayer(
             workflows=[ExternalStorageAgent],
             data_converter=replay_client.data_converter,
-            plugins=[
-                DeepAgentsPlugin(),
-                # Preserve storage after the older plugin's converter override.
-                storage_plugin(storage),
-            ],
+            plugins=[DeepAgentsPlugin()],
         ).replay_workflow(history)

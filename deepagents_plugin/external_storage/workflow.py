@@ -8,7 +8,7 @@ from langchain_core.messages import ToolMessage
 from langchain_core.tools import tool
 from temporalio import workflow
 from temporalio.common import RetryPolicy
-from temporalio.contrib.deepagents import (
+from temporalio.deepagents import (
     create_temporal_deep_agent,
     tool_as_activity,
 )

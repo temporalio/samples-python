@@ -84,6 +84,12 @@ openai-agents = [
 ]
 openrouter = ["openai>=1.4.0,<3"]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
+pydantic-ai = [
+    "beartype>=0.23.0,<0.24",
+    "logfire>=4.39,<5",
+    "mcp>=1.24,<2",
+    "pydantic-ai-slim[mcp,temporal]>=2.46.0,<3",
+]
 sentry = ["sentry-sdk>=2.13.0"]
 strands-agents = [
     "strands-agents>=1.39.0",

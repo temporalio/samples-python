@@ -1,0 +1,1 @@
+"""Logfire observability sample."""

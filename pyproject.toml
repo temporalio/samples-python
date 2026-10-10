@@ -29,11 +29,8 @@ dev = [
 ]
 bedrock = ["boto3>=1.34.92,<2"]
 deepagents = [
-    "deepagents>=0.6.12,<0.7 ; python_version >= '3.11'",
-    "langchain>=1.3.11,<2 ; python_version >= '3.11'",
-    "langchain-core>=1.4.8,<2 ; python_version >= '3.11'",
+    "temporalio[deepagents,langsmith]>=1.32.0 ; python_version >= '3.11'",
     "langchain-anthropic>=1.4.7,<2 ; python_version >= '3.11'",
-    "temporalio[langsmith]>=1.32.0 ; python_version >= '3.11'",
 ]
 dsl = ["pyyaml>=6.0.1,<7", "types-pyyaml>=6.0.12,<7", "dacite>=1.8.1,<2"]
 encryption = ["cryptography>=38.0.1,<39", "aiohttp>=3.13.3,<4"]
@@ -45,7 +42,12 @@ external-storage = [
 ]
 external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
-google-adk = ["temporalio[google-adk] >= 1.32.0", "google-adk>=2.2.0,<3"]
+google-adk = [
+    "temporalio[google-adk,opentelemetry]>=1.32.0,<2",
+    "google-adk>=2.2.0,<3",
+    "opentelemetry-exporter-prometheus>=0.48b0",
+    "prometheus-client>=0.21",
+]
 google-genai = [
     "mcp>=1.0.0",
     "temporalio[google-genai,pydantic]>=1.32.0",
@@ -77,9 +79,10 @@ open-telemetry = [
 ]
 openai-agents = [
     "openai-agents[litellm] >= 0.14.1",
-    "temporalio[openai-agents,opentelemetry] >= 1.32.0",
+    "temporalio-openai-agents >= 1.0.0",
     "requests>=2.32.0,<3",
 ]
+openrouter = ["openai>=1.4.0,<3"]
 pydantic-converter = ["pydantic>=2.10.6,<3"]
 pydantic-ai = [
     "beartype",
@@ -125,15 +128,15 @@ build-backend = "setuptools.build_meta"
 
 [tool.poe.tasks]
 format = [
-    { cmd = "uv run ruff check --select I --fix" },
-    { cmd = "uv run ruff format" },
+    { cmd = "uv run scripts/run_root_tool.py ruff check --select I --fix" },
+    { cmd = "uv run scripts/run_root_tool.py ruff format" },
 ]
 lint = [
-    { cmd = "uv run ruff check --select I" },
-    { cmd = "uv run ruff format --check" },
+    { cmd = "uv run scripts/run_root_tool.py ruff check --select I" },
+    { cmd = "uv run scripts/run_root_tool.py ruff format --check" },
     { ref = "lint-types" },
 ]
-lint-types = "uv run --all-groups --no-group cloud-export-to-parquet mypy --check-untyped-defs --namespace-packages ."
+lint-types = "uv run --all-groups --no-group cloud-export-to-parquet scripts/run_root_tool.py mypy --check-untyped-defs --namespace-packages ."
 test = "uv run --all-groups --no-group cloud-export-to-parquet pytest"
 
 [tool.pytest.ini_options]
@@ -141,15 +144,14 @@ asyncio_mode = "auto"
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+testpaths = ["tests"]
 
 [tool.ruff]
 target-version = "py310"
-extend-exclude = ["lambda_worker"]
 
 [tool.mypy]
 ignore_missing_imports = true
 namespace_packages = true
-exclude = ["lambda_worker/"]
 
 [[tool.mypy.overrides]]
 module = "aiohttp.*"

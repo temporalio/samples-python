@@ -1,0 +1,58 @@
+apiVersion: run.googleapis.com/v1
+kind: WorkerPool
+metadata:
+  annotations:
+    run.googleapis.com/manualInstanceCount: "${INSTANCE_COUNT}"
+    run.googleapis.com/scalingMode: manual
+  labels:
+    cloud.googleapis.com/location: "${REGION}"
+  name: "${WORKER_POOL}"
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/container-dependencies: '{"worker":["collector"]}'
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containerConcurrency: 0
+      containers:
+        - name: worker
+          image: "${WORKER_IMAGE}"
+          env:
+            - name: TEMPORAL_NAMESPACE
+              value: "${TEMPORAL_NAMESPACE}"
+            - name: TEMPORAL_ADDRESS
+              value: "${TEMPORAL_ADDRESS}"
+            - name: TEMPORAL_TASK_QUEUE
+              value: "${TEMPORAL_TASK_QUEUE}"
+            - name: TEMPORAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: "${TEMPORAL_API_KEY_SECRET_VERSION}"
+                  name: "${TEMPORAL_API_KEY_SECRET}"
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+        - name: collector
+          image: us-docker.pkg.dev/cloud-ops-agents-artifacts/google-cloud-opentelemetry-collector/otelcol-google:0.156.0
+          args:
+            - --config=env:OTELCOL_CONFIG
+          env:
+            - name: OTELCOL_CONFIG
+              valueFrom:
+                secretKeyRef:
+                  key: "${COLLECTOR_CONFIG_SECRET_VERSION}"
+                  name: "${COLLECTOR_CONFIG_SECRET}"
+          startupProbe:
+            httpGet:
+              path: /
+              port: 13133
+            timeoutSeconds: 1
+            periodSeconds: 2
+            failureThreshold: 30
+          resources:
+            limits:
+              cpu: "1"
+              memory: 512Mi
+      serviceAccountName: "${SERVICE_ACCOUNT_EMAIL}"

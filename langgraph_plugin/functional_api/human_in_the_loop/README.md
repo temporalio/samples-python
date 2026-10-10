@@ -22,12 +22,14 @@ Demonstrates pausing an entrypoint with LangGraph's `interrupt()` and waiting in
 Prerequisites: `uv sync --group langgraph` and a running Temporal dev server (`temporal server start-dev`).
 
 ```bash
-# Terminal 1
+# Terminal 1: start the worker
 uv run langgraph_plugin/functional_api/human_in_the_loop/run_worker.py
 
-# Terminal 2
+# Terminal 2: start the workflow (polls for the draft, then prompts you for feedback)
 uv run langgraph_plugin/functional_api/human_in_the_loop/run_workflow.py
 ```
+
+When the draft is ready, you'll be prompted at the terminal. Type `approve` to accept it as-is, or type revision feedback and the draft will be revised incorporating your notes.
 
 ## Files
 
@@ -35,4 +37,4 @@ uv run langgraph_plugin/functional_api/human_in_the_loop/run_workflow.py
 |------|-------------|
 | `workflow.py` | `@task` functions, `@entrypoint`, and `ChatbotFunctionalWorkflow` |
 | `run_worker.py` | Registers tasks and entrypoint with `LangGraphPlugin`, starts worker |
-| `run_workflow.py` | Starts workflow, polls draft via query, sends approval via signal |
+| `run_workflow.py` | Starts workflow, polls draft via query, prompts for human feedback, sends it via signal |

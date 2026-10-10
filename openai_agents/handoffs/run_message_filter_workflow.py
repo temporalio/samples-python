@@ -2,8 +2,8 @@ import asyncio
 import json
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
 from temporalio.envconfig import ClientConfig
+from temporalio.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.handoffs.workflows.message_filter_workflow import (
     MessageFilterWorkflow,

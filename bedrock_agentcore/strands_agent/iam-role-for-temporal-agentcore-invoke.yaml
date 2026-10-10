@@ -1,0 +1,99 @@
+# CloudFormation template for creating an IAM role that Temporal Cloud can assume to invoke AgentCore runtimes.
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Creates an IAM role that Temporal Cloud can assume to invoke Amazon Bedrock AgentCore runtimes for Serverless Workers.
+
+Parameters:
+  AssumeRoleExternalId:
+    Type: String
+    Description: The External ID provided by Temporal Cloud
+    AllowedPattern: "[a-zA-Z0-9_+=,.@-]*"
+    MinLength: 5
+    MaxLength: 45
+
+  AgentRuntimeARNs:
+    Type: CommaDelimitedList
+    Description: >-
+      Comma-separated list of AgentCore runtime ARNs to invoke (e.g.,
+      arn:aws:bedrock-agentcore:us-west-2:123456789012:runtime/temporal_worker-XXXXXXXXXX).
+      Append a wildcard (.../runtime/temporal_worker-XXXXXXXXXX*) to cover the
+      runtime's endpoints as well, which GetAgentRuntimeEndpoint is scoped to.
+
+  RoleName:
+    Type: String
+    Default: "Temporal-Cloud-Serverless-Worker"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: "Temporal Cloud Configuration"
+        Parameters:
+          - AssumeRoleExternalId
+      - Label:
+          default: "AgentCore Configuration"
+        Parameters:
+          - AgentRuntimeARNs
+          - RoleName
+    ParameterLabels:
+      AssumeRoleExternalId:
+        default: "External ID (provided by Temporal Cloud)"
+      AgentRuntimeARNs:
+        default: "AgentCore Runtime ARNs (comma-separated list)"
+      RoleName:
+        default: "IAM Role Name"
+
+Resources:
+  TemporalCloudServerlessWorker:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${RoleName}-${AWS::StackName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                [
+                  arn:aws:iam::902542641901:role/wci-lambda-invoke,
+                  arn:aws:iam::160190466495:role/wci-lambda-invoke,
+                  arn:aws:iam::819232936619:role/wci-lambda-invoke,
+                  arn:aws:iam::829909441867:role/wci-lambda-invoke,
+                  arn:aws:iam::354116250941:role/wci-lambda-invoke,
+                ]
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                "sts:ExternalId": [!Ref AssumeRoleExternalId]
+      Description: "The role Temporal Cloud uses to invoke AgentCore runtimes for Serverless Workers"
+      MaxSessionDuration: 3600 # 1 hour
+
+  TemporalCloudAgentCoreInvokePermissions:
+    Type: AWS::IAM::Policy
+    DependsOn: TemporalCloudServerlessWorker
+    Properties:
+      PolicyName: "Temporal-Cloud-AgentCore-Invoke-Permissions"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - bedrock-agentcore:InvokeAgentRuntime
+              - bedrock-agentcore:GetAgentRuntimeEndpoint
+            Resource: !Ref AgentRuntimeARNs
+      Roles:
+        - !Sub "${RoleName}-${AWS::StackName}"
+
+Outputs:
+  RoleARN:
+    Description: The ARN of the IAM role created for Temporal Cloud
+    Value: !GetAtt TemporalCloudServerlessWorker.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-RoleARN"
+
+  RoleName:
+    Description: The name of the IAM role
+    Value: !Ref RoleName
+
+  AgentRuntimeARNs:
+    Description: The AgentCore runtime ARNs that can be invoked
+    Value: !Join [", ", !Ref AgentRuntimeARNs]

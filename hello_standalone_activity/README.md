@@ -4,6 +4,8 @@ This sample shows how to execute Activities directly from a Temporal Client, wit
 
 For full documentation, see [Standalone Activities - Python SDK](https://docs.temporal.io/develop/python/standalone-activities).
 
+**Note: Temporal CLI support for Standalone Activities requires CLI version 1.9.1.** See setup guide: https://docs.temporal.io/cli/setup-cli
+
 ### Sample directory structure
 
 - [my_activity.py](./my_activity.py) - Activity definition with `@activity.defn`
@@ -76,8 +78,6 @@ Or use the Temporal CLI:
 ```bash
 temporal activity list --query "TaskQueue = 'my-standalone-activity-task-queue'"
 ```
-
-Note: `list` and `count` are only available in the [Standalone Activity prerelease CLI](https://github.com/temporalio/cli/releases/tag/v1.6.2-standalone-activity).
 
 **6. Count Standalone Activities**
 

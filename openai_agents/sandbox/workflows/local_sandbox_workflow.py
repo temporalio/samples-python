@@ -27,7 +27,7 @@ from agents.run import RunConfig
 from agents.sandbox import SandboxAgent, SandboxRunConfig
 from agents.sandbox.sandboxes.unix_local import UnixLocalSandboxClientOptions
 from temporalio import workflow
-from temporalio.contrib.openai_agents.workflow import temporal_sandbox_client
+from temporalio.openai_agents.workflow import temporal_sandbox_client
 
 from openai_agents.sandbox.shared import SANDBOX_PROVIDER
 

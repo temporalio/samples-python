@@ -6,7 +6,7 @@ import sys
 import tempfile
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.tools.workflows.image_generator_workflow import (
     ImageGeneratorWorkflow,

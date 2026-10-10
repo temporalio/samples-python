@@ -62,6 +62,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
+* [bedrock_agentcore/strands_agent](bedrock_agentcore/strands_agent) - Run a AWS Strands Agent with Temporal Plugin on AgentCore Worker.
 * [cloud_export_to_parquet](cloud_export_to_parquet) - Set up schedule workflow to process exported files on an hourly basis
 * [context_propagation](context_propagation) - Context propagation through workflows/activities via interceptor.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
@@ -89,15 +90,18 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.
 * [nexus_cancel](nexus_cancel) - Fan out concurrent Nexus operations, take the first result, and cancel the rest.
-* [Nexus Messaging](nexus_messaging): Demonstrates how send signal, update and query messages through Nexus.
+* [nexus_messaging](nexus_messaging): Demonstrates how to send signal, update and query messages through Nexus.
   This contains two samples, one sending messages to an existing workflow and a second that creates a workflow through Nexus
   and sends messages to it.
+* [nexus_messaging_temporal_operation](nexus_messaging_temporal_operation): Demonstrates how to send signal, update and query messages through Nexus.
+  This version uses `@nexus.temporal_operation` to allow Nexus operation handlers to either return a synchronous result or start a Workflow as the async backing operation.
 * [nexus_multiple_args](nexus_multiple_args) - Map a Nexus operation to a handler workflow that takes multiple arguments.
 * [nexus_standalone_activity](nexus_standalone_activity) - Back a Nexus operation with a standalone Activity.
 * [nexus_standalone_operations](nexus_standalone_operations) - Execute Nexus operations directly from client code,
 without wrapping them in a workflow.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [openai_agents](openai_agents) - Run OpenAI Agents SDK agents as durable Temporal workflows.
+* [openrouter](openrouter) - Call OpenRouter from Activities: fan out a prompt batch, and pause instead of failing when the budget or credits run out.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.

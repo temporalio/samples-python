@@ -4,7 +4,7 @@ import asyncio
 import os
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.reasoning_content.workflows.reasoning_content_workflow import (
     ReasoningContentWorkflow,

@@ -1,6 +1,6 @@
 # Streaming
 
-This sample uses the Workflow Streams support introduced by [pydantic-ai PR #6639](https://github.com/pydantic/pydantic-ai/pull/6639).
+This sample uses the Workflow Streams support released in [Pydantic AI 2.46.0](https://github.com/pydantic/pydantic-ai/releases/tag/v2.46.0).
 
 `TemporalDurability(event_stream_topic=...)` publishes typed agent events. `AgentEventStream` hosts the stream in the Workflow and keeps the Workflow alive until the terminal `AgentRunResultEvent` is acknowledged, bounded by `drain_timeout`. The consumer uses `durability.stream_agent_events(...)`; its iterator ends when the terminal event arrives and exposes an offset for reconnecting.
 

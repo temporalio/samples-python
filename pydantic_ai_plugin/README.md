@@ -22,7 +22,7 @@ uv sync --group pydantic-ai
 temporal server start-dev
 ```
 
-The dependency group pins `pydantic-ai-slim` to commit `2b45faa97e76461c60500e9755a130b158a2418d`, the head of [pydantic-ai PR #6639](https://github.com/pydantic/pydantic-ai/pull/6639), because the Workflow Streams API used by the streaming sample is not yet released.
+The dependency group uses released packages: Pydantic AI 2.46.0 or newer includes Workflow Streams support, and Beartype 0.23.0 or newer includes the Temporal Sandbox import-cycle fix.
 
 ## Run
 

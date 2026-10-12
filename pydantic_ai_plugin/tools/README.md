@@ -8,7 +8,7 @@ This sample puts two tools behind one durable agent:
 The model request is also an Activity. The test inspects Workflow history to verify the tool boundary.
 
 ```bash
-uv run pydantic_ai_plugin/tools/run_worker.py
+uv run --project pydantic_ai_plugin pydantic_ai_plugin/tools/run_worker.py
 temporal workflow execute --type ToolsWorkflow --task-queue pydantic-ai-tools --workflow-id pydantic-ai-tools-1 --input '{"prompt":"Check policy and inventory.","model":null}'
 ```
 
@@ -17,5 +17,5 @@ Use `"model":"gateway/openai:gpt-5.2"` for a live run.
 Expected offline result: `Both checks completed.`
 
 ```bash
-uv run --group pydantic-ai pytest tests/pydantic_ai_plugin/tools_test.py
+uv run --project pydantic_ai_plugin pytest pydantic_ai_plugin/tests/tools_test.py
 ```

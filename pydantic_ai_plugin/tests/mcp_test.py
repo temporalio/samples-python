@@ -4,7 +4,7 @@ from temporalio.client import Client
 from temporalio.worker import Worker
 
 from pydantic_ai_plugin.mcp.workflow import MCPInput, MCPWorkflow
-from tests.pydantic_ai_plugin.helpers import with_pydantic_ai
+from pydantic_ai_plugin.tests.helpers import with_pydantic_ai
 
 
 async def test_stateless_mcp_tool(client: Client) -> None:

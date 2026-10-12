@@ -17,12 +17,14 @@ The samples use Pydantic AI's credential-free `TestModel` by default. Pass an Op
 
 ## Install
 
+Run these commands from the repository root. These samples use a standalone environment because their OpenAI SDK dependency differs from the shared samples. The `openai` extra installs the provider needed by the live model commands.
+
 ```bash
-uv sync --group pydantic-ai
+uv sync --project pydantic_ai_plugin
 temporal server start-dev
 ```
 
-The dependency group uses released packages: Pydantic AI 2.46.0 or newer includes Workflow Streams support, and Beartype 0.23.0 or newer includes the Temporal Sandbox import-cycle fix.
+The standalone project uses released packages: Pydantic AI 2.46.0 or newer includes Workflow Streams support, and Beartype 0.23.0 or newer includes the Temporal Sandbox import-cycle fix.
 
 ## Run
 

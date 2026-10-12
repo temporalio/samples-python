@@ -7,8 +7,8 @@ This sample uses the Workflow Streams support released in [Pydantic AI 2.46.0](h
 The topic filters token-level `PartDeltaEvent` objects to limit Workflow state. The terminal event is always retained.
 
 ```bash
-uv run pydantic_ai_plugin/streaming/run_worker.py
-uv run pydantic_ai_plugin/streaming/run_workflow.py
+uv run --project pydantic_ai_plugin pydantic_ai_plugin/streaming/run_worker.py
+uv run --project pydantic_ai_plugin pydantic_ai_plugin/streaming/run_workflow.py
 ```
 
 The producer still completes if no subscriber connects after the drain timeout. Model events published from an Activity have at-least-once delivery, so production consumers should tolerate duplicates after Activity retries.
@@ -16,5 +16,5 @@ The producer still completes if no subscriber connects after the drain timeout. 
 The offline consumer prints typed event names, ending with `AgentRunResultEvent`, followed by `The durable response is complete.`
 
 ```bash
-uv run --group pydantic-ai pytest tests/pydantic_ai_plugin/streaming_test.py
+uv run --project pydantic_ai_plugin pytest pydantic_ai_plugin/tests/streaming_test.py
 ```

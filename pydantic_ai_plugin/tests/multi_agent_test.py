@@ -7,7 +7,7 @@ from pydantic_ai_plugin.multi_agent.workflow import (
     MultiAgentInput,
     MultiAgentWorkflow,
 )
-from tests.pydantic_ai_plugin.helpers import with_pydantic_ai
+from pydantic_ai_plugin.tests.helpers import with_pydantic_ai
 
 
 async def test_two_agents_run_durably(client: Client) -> None:

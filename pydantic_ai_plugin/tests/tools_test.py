@@ -3,8 +3,8 @@ import uuid
 from temporalio.client import Client
 from temporalio.worker import Worker
 
+from pydantic_ai_plugin.tests.helpers import with_pydantic_ai
 from pydantic_ai_plugin.tools.workflow import ToolsInput, ToolsWorkflow
-from tests.pydantic_ai_plugin.helpers import with_pydantic_ai
 
 
 async def test_tool_execution_boundaries(client: Client) -> None:

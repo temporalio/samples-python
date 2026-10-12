@@ -10,7 +10,7 @@ from pydantic_ai_plugin.streaming.workflow import (
     StreamingWorkflow,
     durability,
 )
-from tests.pydantic_ai_plugin.helpers import with_pydantic_ai
+from pydantic_ai_plugin.tests.helpers import with_pydantic_ai
 
 
 async def test_stream_ends_with_agent_result(client: Client) -> None:

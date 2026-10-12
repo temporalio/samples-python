@@ -60,33 +60,31 @@ class ApprovalWorkflow(PydanticAIWorkflow):
 
     @workflow.run
     async def run(self, input: ApprovalInput) -> str:
-        first = await agent.run(input.prompt, model=input.model)
-        if not isinstance(first.output, DeferredToolRequests):
-            return first.output
+        result = await agent.run(input.prompt, model=input.model)
+        while isinstance(result.output, DeferredToolRequests):
+            calls = result.output.approvals
+            self._pending = calls[0].tool_name if calls else None
+            await workflow.wait_condition(lambda: self._decision is not None)
+            decision = self._decision
+            self._decision = None
+            self._pending = None
 
-        calls = first.output.approvals
-        self._pending = calls[0].tool_name if calls else None
-        await workflow.wait_condition(lambda: self._decision is not None)
-        decision = self._decision
-        self._pending = None
+            if decision == "cancel":
+                return "Cancelled by the operator."
 
-        if decision == "cancel":
-            return "Cancelled by the operator."
-
-        approvals: dict[str, bool | ToolApproved | ToolDenied] = {
-            call.tool_call_id: (
-                True
-                if decision == "approve"
-                else ToolDenied(message="Rejected by the operator.")
+            approvals: dict[str, bool | ToolApproved | ToolDenied] = {
+                call.tool_call_id: (
+                    True
+                    if decision == "approve"
+                    else ToolDenied(message="Rejected by the operator.")
+                )
+                for call in calls
+            }
+            deferred_results = result.output.build_results(approvals=approvals)
+            result = await agent.run(
+                "Continue after the operator decision.",
+                message_history=result.all_messages(),
+                deferred_tool_results=deferred_results,
+                model=input.model,
             )
-            for call in calls
-        }
-        deferred_results = first.output.build_results(approvals=approvals)
-        resumed = await agent.run(
-            "Continue after the operator decision.",
-            message_history=first.all_messages(),
-            deferred_tool_results=deferred_results,
-            model=input.model,
-        )
-        assert isinstance(resumed.output, str)
-        return resumed.output
+        return result.output

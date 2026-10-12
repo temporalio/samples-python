@@ -8,7 +8,7 @@ from pydantic_ai_plugin.structured_output.workflow import (
     StructuredInput,
     StructuredOutputWorkflow,
 )
-from tests.pydantic_ai_plugin.helpers import with_pydantic_ai
+from pydantic_ai_plugin.tests.helpers import with_pydantic_ai
 
 
 async def test_structured_output_crosses_workflow_boundary(client: Client) -> None:

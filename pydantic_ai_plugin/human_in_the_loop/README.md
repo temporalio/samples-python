@@ -4,8 +4,10 @@ The `delete_record` tool requires approval. Pydantic AI ends the first run with 
 
 Approval resumes the agent with `DeferredToolResults`. Rejection sends `ToolDenied` back to the model. Cancellation ends the business operation without executing the tool.
 
+If the resumed agent requests more approvals, the Workflow exposes the next pending tool and waits for a fresh decision. Query and signal again for each round until the agent finishes.
+
 ```bash
-uv run pydantic_ai_plugin/human_in_the_loop/run_worker.py
+uv run --project pydantic_ai_plugin pydantic_ai_plugin/human_in_the_loop/run_worker.py
 
 temporal workflow start --type ApprovalWorkflow --task-queue pydantic-ai-approval --workflow-id pydantic-ai-approval-1 --input '{"prompt":"Delete record 42.","model":null}'
 temporal workflow query --workflow-id pydantic-ai-approval-1 --type pending_approval
@@ -18,5 +20,5 @@ Send `"reject"` or `"cancel"` to exercise the other paths. Use `"model":"gateway
 Expected offline result after approval or rejection: `The operator decision was applied.` Cancellation returns `Cancelled by the operator.`
 
 ```bash
-uv run --group pydantic-ai pytest tests/pydantic_ai_plugin/human_in_the_loop_test.py
+uv run --project pydantic_ai_plugin pytest pydantic_ai_plugin/tests/human_in_the_loop_test.py
 ```

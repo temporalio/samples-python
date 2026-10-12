@@ -24,8 +24,6 @@ uv sync --project pydantic_ai_plugin
 temporal server start-dev
 ```
 
-The standalone project uses released packages: Pydantic AI 2.46.0 or newer includes Workflow Streams support, and Beartype 0.23.0 or newer includes the Temporal Sandbox import-cycle fix.
-
 ## Run
 
 Start a category's Worker, then use the Temporal CLI command in that category's README. With no `model` value, the Workflow uses `TestModel` and needs no API key or network access. For a live run, set `model` to `gateway/openai:gpt-5.2` and export `PYDANTIC_AI_GATEWAY_API_KEY` in the Worker process.

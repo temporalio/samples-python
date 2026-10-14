@@ -1,13 +1,13 @@
 # Deep Agents Samples
 
-These samples demonstrate the [Temporal Deep Agents plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/deepagents),
+These samples demonstrate the [Temporal Deep Agents plugin](https://github.com/temporalio/ai-integrations/tree/main/python/deepagents),
 which makes [LangChain Deep Agents](https://github.com/langchain-ai/deepagents)
 durable. Build your agent with `create_deep_agent(...)` inside a
 `@workflow.defn` and add `DeepAgentsPlugin()` to your client — each LLM call and
 each I/O tool/backend operation becomes a Temporal Activity, while the agent's
 control loop runs (and deterministically replays) inside the Workflow.
 
-> **Experimental.** The `temporalio.contrib.deepagents` plugin is experimental
+> **Experimental.** The `temporalio.deepagents` plugin is experimental
 > and its API may change.
 
 `DeepAgentsPlugin` is a **client-level** plugin: add it to `Client.connect(...)`
@@ -40,9 +40,9 @@ one side.
    uv sync --group deepagents
    ```
 
-   > The group installs the `temporalio[deepagents]` extra (released in
-   > `temporalio` 1.32.0) plus the Anthropic provider package. Requires
-   > Python >= 3.11 — on older interpreters the group resolves to nothing
+   > The group installs the standalone `temporalio-deepagents` and
+   > `temporalio-langsmith` packages plus the Anthropic provider package. Requires
+   > Temporal 1.34.0 or later and Python >= 3.11 — on older interpreters the group resolves to nothing
    > and the samples are skipped.
 
 2. Configure a model provider. The samples use
@@ -112,6 +112,6 @@ uv run deepagents_plugin/langsmith_tracing/main.py
 
 ## Related
 
-- [Temporal Deep Agents plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/deepagents)
+- [Temporal Deep Agents plugin](https://github.com/temporalio/ai-integrations/tree/main/python/deepagents)
 - [LangChain Deep Agents](https://github.com/langchain-ai/deepagents)
 - [langgraph_plugin](../langgraph_plugin) — for agents built directly as LangGraph graphs

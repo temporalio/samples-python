@@ -11,7 +11,7 @@ async def main() -> None:
     from google.adk.models import LLMRegistry
     from prometheus_client import start_http_server
     from temporalio.client import Client
-    from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
+    from temporalio.google_adk import GoogleAdkPlugin
     from temporalio.worker import Worker
 
     from google_adk_agents.metrics.models.local_metrics_model import LocalMetricsModel

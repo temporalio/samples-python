@@ -13,8 +13,8 @@ import asyncio
 import os
 
 from temporalio.client import Client
-from temporalio.contrib.deepagents import DeepAgentsPlugin
-from temporalio.contrib.langsmith import LangSmithPlugin
+from temporalio.deepagents import DeepAgentsPlugin
+from temporalio.langsmith import LangSmithPlugin
 from temporalio.worker import Worker
 
 from deepagents_plugin.langsmith_tracing.workflow import TracedAgent

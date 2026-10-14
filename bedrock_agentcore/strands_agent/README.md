@@ -8,6 +8,7 @@ It combines three things:
 
 - The [Temporal Strands
   plugin](https://docs.temporal.io/develop/python/integrations/strands-agents),
+  installed as the standalone `temporalio-strands-agents` package (requires Temporal 1.34.0 or later),
   which runs the agent inside a Workflow and turns every model call into a
   Temporal Activity -- so model invocations get durable retries, timeouts, and
   crash recovery.

@@ -6,7 +6,7 @@ and no credentials ever enter the workflow.
 """
 
 from temporalio import workflow
-from temporalio.contrib.google_genai import TemporalAsyncClient
+from temporalio.google_genai import TemporalAsyncClient
 
 
 # @@@SNIPSTART python-google-genai-hello-world-workflow

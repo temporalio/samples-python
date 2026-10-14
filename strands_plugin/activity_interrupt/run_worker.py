@@ -5,7 +5,7 @@ import asyncio
 import os
 
 from temporalio.client import Client
-from temporalio.contrib.strands import StrandsPlugin
+from temporalio.strands_agents import StrandsPlugin
 from temporalio.worker import Worker
 
 from strands_plugin.activity_interrupt.workflow import (

@@ -20,7 +20,7 @@ from datetime import timedelta
 from deepagents import create_deep_agent
 from deepagents.backends import FilesystemBackend
 from temporalio import workflow
-from temporalio.contrib.deepagents import TemporalBackend
+from temporalio.deepagents import TemporalBackend
 
 
 @workflow.defn

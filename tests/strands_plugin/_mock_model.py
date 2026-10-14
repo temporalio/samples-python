@@ -11,7 +11,7 @@ import json
 from collections.abc import AsyncIterable
 from typing import Any
 
-import temporalio.contrib.strands._plugin as _plugin_module
+import temporalio.strands_agents._plugin as _plugin_module
 from strands.models import Model
 from strands.types.streaming import StreamEvent
 

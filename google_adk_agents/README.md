@@ -5,7 +5,7 @@ change prior to General Availability.
 
 This directory contains samples demonstrating how to run
 [Google ADK](https://google.github.io/adk-docs/) agents durably inside Temporal
-workflows using `temporalio.contrib.google_adk_agents`. Each scenario is a
+workflows using `temporalio.google_adk`. Each scenario is a
 self-contained subdirectory with its own worker, workflow starter, workflow and
 activity packages, and README.
 
@@ -27,7 +27,8 @@ model turn is durable and observable.
   ```
   temporal server start-dev
   ```
-- Dependencies installed via `uv sync --group google-adk`
+- Dependencies installed via `uv sync --group google-adk`, including the standalone
+  `temporalio-google-adk[mcp]` package (requires Temporal 1.34.0 or later)
 - Google API key set as an environment variable:
   `export GOOGLE_API_KEY=your_key_here`
 

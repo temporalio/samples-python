@@ -14,8 +14,6 @@ configured via the SDK's [environment configuration](https://docs.temporal.io/de
 support (`ClientConfig.load_client_connect_config()`), which reads `TEMPORAL_NAMESPACE`,
 `TEMPORAL_ADDRESS`, etc. from the environment (and optionally profiles from `temporal.toml`).
 
-Standalone Nexus operations require a server that supports this feature. For a local dev server, use [Temporal CLI v1.9.1 or later](https://github.com/temporalio/cli/releases/tag/v1.9.1) and enable SANO as shown below.
-
 ### Sample directory structure
 
 - [service.py](./service.py) - Nexus service definition with echo (sync) and hello (async) operations
@@ -24,6 +22,9 @@ Standalone Nexus operations require a server that supports this feature. For a l
 - [starter.py](./starter.py) - Client that executes standalone Nexus operations
 
 ## Run locally against a dev server
+
+> [!NOTE]
+> Standalone Nexus operations require a server that supports this feature. For a local dev server, use [Temporal CLI v1.9.1 or later](https://github.com/temporalio/cli/releases/tag/v1.9.1) and enable SANO as shown below.
 
 1. Start a [Temporal dev server](https://docs.temporal.io/cli/setup-cli) with SANO enabled and the required namespaces pre-created:
 

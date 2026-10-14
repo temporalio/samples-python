@@ -1,3 +1,9 @@
+# Standalone Nexus Operations
+
+> [!NOTE]
+> ✨ **Standalone Nexus Operations are now in [Public Preview](https://docs.temporal.io/evaluate/development-production-features/release-stages#public-preview).**
+> We aim to preserve backward compatibility and avoid breaking changes.
+
 This sample demonstrates how to execute Nexus operations directly from client code,
 without wrapping them in a workflow. It shows both synchronous and asynchronous
 (workflow-backed) operations, plus listing and counting operations.
@@ -7,11 +13,6 @@ namespace) — this mirrors how Nexus is typically used to cross namespace bound
 configured via the SDK's [environment configuration](https://docs.temporal.io/develop/environment-configuration)
 support (`ClientConfig.load_client_connect_config()`), which reads `TEMPORAL_NAMESPACE`,
 `TEMPORAL_ADDRESS`, etc. from the environment (and optionally profiles from `temporal.toml`).
-
-## Public Preview
-
-✨ **Standalone Nexus Operations are now in [Public Preview](https://docs.temporal.io/evaluate/development-production-features/release-stages#public-preview).**
-We aim to preserve backward compatibility and avoid breaking changes.
 
 Standalone Nexus operations require a server that supports this feature. For a local dev server, use [Temporal CLI v1.9.1 or later](https://github.com/temporalio/cli/releases/tag/v1.9.1) and enable SANO as shown below.
 

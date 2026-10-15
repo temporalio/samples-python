@@ -17,7 +17,10 @@ from temporalio.worker import Replayer, Worker
 
 from deepagents_plugin.external_storage import storage
 from deepagents_plugin.external_storage.client import S3_BUCKET, connect_client
-from deepagents_plugin.external_storage.storage import CONTEXT_MESSAGES
+from deepagents_plugin.external_storage.storage import (
+    CONTEXT_MESSAGES,
+    ConversationModel,
+)
 from deepagents_plugin.external_storage.workflow import (
     PAYLOAD_BYTES,
     ExternalStorageAgent,
@@ -163,9 +166,7 @@ async def test_external_storage(
             == messages
         )
         # Retry the first request after later turns: reuse the committed reply.
-        retry = await fresh_transcripts.model_provider("fake:conversation").ainvoke(
-            [messages[0]]
-        )
+        retry = await ConversationModel(store=fresh_transcripts).ainvoke([messages[0]])
         assert retry == messages[1]
         assert len(contexts) == len(questions) + 1
         await Replayer(

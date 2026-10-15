@@ -79,9 +79,6 @@ class TranscriptStore:
             raise ApplicationError("Transcript message is missing", non_retryable=True)
         return [message for message in messages if message is not None]
 
-    def model_provider(self, name: str) -> "ConversationModel":
-        return ConversationModel(store=self)
-
 
 class ConversationModel(BaseChatModel):
     """Worker-side wrapper; the plugin still runs every model call as an activity."""

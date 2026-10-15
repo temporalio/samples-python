@@ -12,7 +12,10 @@ from temporalio.converter import DataConverter, ExternalStorage
 from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.envconfig import ClientConfig
 
-from deepagents_plugin.external_storage.storage import TranscriptStore
+from deepagents_plugin.external_storage.storage import (
+    ConversationModel,
+    TranscriptStore,
+)
 
 S3_ENDPOINT = "http://localhost:5000"
 S3_BUCKET = "temporal-payloads"
@@ -46,7 +49,8 @@ async def connect_client(
         data_converter = replace(DataConverter.default, external_storage=storage)
         transcripts = TranscriptStore(s3_client, S3_BUCKET)
         plugin = DeepAgentsPlugin(
-            data_converter=data_converter, model_provider=transcripts.model_provider
+            data_converter=data_converter,
+            model_provider=lambda _: ConversationModel(store=transcripts),
         )
         client = await Client.connect(**config, plugins=[plugin])
         yield client, transcripts

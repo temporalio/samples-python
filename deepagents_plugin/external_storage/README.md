@@ -1,22 +1,38 @@
 # External Storage
 
-This sample combines two cases for Temporal's native `ExternalStorage` data
-converter:
+This sample uses S3 for two purposes:
 
 * A Deep Agent tool returns a **6 MiB** document. The tool result and the next
   model activity input are stored in S3, with small references in workflow
   history.
-* The workflow carries a multi-turn conversation. Each model call receives the
-  earlier turns as context. The same converter externalizes those activity
-  payloads when they exceed the configured threshold.
+* The complete conversation is retained as **one immutable JSON object per
+  message**, including assistant tool calls and the full tool result. Each new
+  user turn passes a conversation ID, message offset, and the new question;
+  earlier turns are loaded inside the model activity.
 
-The sample does not use a DeepAgents backend or manage conversation objects
-itself. Temporal's converter externalizes large serialized payloads; it is not
-a key-value conversation store. Small conversation state is reconstructed by
-workflow replay, while large activity payloads are stored by the configured
-S3 driver. The demo threshold is deliberately low (128 bytes) so conversation
-payloads also exercise the converter. In a real application, choose a threshold
-appropriate for your payloads.
+The workflow creates one agent and reuses it for every question. Each invocation
+puts the conversation ID and message offset in the user message's
+`additional_kwargs`. The plugin's `model_provider` returns the small worker-side
+wrapper in `storage.py`, which reads that reference inside the model activity.
+The agent loop stays in the workflow, and each model and tool call still runs as
+its own plugin activity. No custom activity or Deep Agents backend is needed.
+
+Transcript objects live under `conversations/<conversation-id>/<index>.json`.
+Conditional S3 writes preserve existing messages and let a retried model call
+reuse its committed reply, even after later turns have been added. One workflow
+owns each conversation. System instructions remain model configuration, rather
+than conversation messages.
+
+Only the latest **16 messages** are loaded as model context; older messages stay
+in S3. This keeps both transcript storage and cumulative context reads linear in
+the conversation's total bytes for this fixed window. Retaining every message
+does not require sending every message to every model call. A production agent
+can add token-based budgeting, summaries, or retrieval for older details.
+
+Temporal's separate `ExternalStorage` configuration uses its default 256 KiB
+threshold. It offloads the large tool result and the following model activity
+input. Ordinary conversation inputs stay small and inline, instead of saving a
+new full-transcript snapshot on every turn.
 
 The S3 driver uses the local mock service from the
 [general External Storage sample](../../external_storage). No AWS credentials,
@@ -50,8 +66,8 @@ Run the demo:
 uv run deepagents_plugin/external_storage/main.py
 ```
 
-The output includes the workflow ID, verified document size and SHA-256, number
-of conversation turns, and final answer. Inspect the workflow history with:
+The output includes the workflow ID, document size, transcript S3 prefix and
+message count, and final answer. Inspect the workflow history with:
 
 ```bash
 temporal workflow show --workflow-id <printed-workflow-id>
@@ -62,14 +78,8 @@ references. To view externally stored payloads in the UI, run the
 [storage-aware codec server](../../external_storage#5-optional-run-the-codec-server)
 and set the UI's Remote Codec Endpoint to `http://localhost:8081`.
 
-The client configures `ExternalStorage` on the SDK's default data converter and
-passes that converter to `DeepAgentsPlugin`. The worker inherits the converter;
-application code does not manually upload or download Temporal payloads. For
-real S3, use an existing bucket and normal AWS credentials. Configure compatible
-storage drivers on every client, worker, and replayer that reads the history,
-and retain objects for as long as execution, reset, or replay may need them.
-
-External Storage reduces bytes in Temporal history and transport. It does not
-reduce the number of history events, the model context size, or the total number
-of externally stored bytes. Carrying the full transcript into each model call
-still increases total conversation payload storage over time.
+For real S3, use an existing bucket and normal AWS credentials. Configure
+compatible storage drivers on every client, worker, and replayer that reads the
+history. Keep Temporal payload objects for as long as execution, reset, or replay
+may need them, and keep transcript objects for the application's conversation
+retention period. The local mock S3 service is in memory.

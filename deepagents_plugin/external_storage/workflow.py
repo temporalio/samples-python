@@ -1,32 +1,25 @@
 """Exercise native External Storage with a large tool result and a conversation."""
 
-import hashlib
 from dataclasses import dataclass
 from datetime import timedelta
 
-from langchain_core.messages import ToolMessage
+from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import tool
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.deepagents import create_temporal_deep_agent, tool_as_activity
 
 PAYLOAD_BYTES = 6 * 1024 * 1024
-MODEL = "fake:external-storage"
 TASK_QUEUE = "deepagents-external-storage"
-
-
-@dataclass
-class ConversationTurn:
-    user: str
-    assistant: str
 
 
 @dataclass
 class ExternalStorageResult:
     tool_result_bytes: int
-    tool_result_sha256: str
     turns: int
     last_answer: str
+    conversation_id: str
+    message_count: int
 
 
 @tool
@@ -45,28 +38,33 @@ class ExternalStorageAgent:
             start_to_close_timeout=timedelta(seconds=30),
             activity_options={"retry_policy": RetryPolicy(maximum_attempts=1)},
         )
-        turns: list[ConversationTurn] = []
-        tool_result: str | None = None
+        conversation_id = workflow.info().run_id
+        message_count = 0
+        tool_result_bytes = 0
         last_answer = ""
+        agent = create_temporal_deep_agent(
+            model="fake:conversation",
+            tools=[reader],
+            system_prompt=(
+                "Answer using the recent conversation. For the first request, "
+                "read the document and acknowledge receiving it."
+            ),
+            activity_options={"start_to_close_timeout": timedelta(seconds=30)},
+        )
 
         for index, question in enumerate(questions):
-            history = "\n".join(
-                f"User: {turn.user}\nAssistant: {turn.assistant}" for turn in turns
-            )
-            system_prompt = (
-                "Answer the latest message using the conversation history. "
-                "For the first request, read the requested document and acknowledge "
-                "receiving it.\n\n"
-                f"Conversation history:\n{history or '(no earlier turns)'}"
-            )
-            agent = create_temporal_deep_agent(
-                model=MODEL,
-                tools=[reader] if index == 0 else [],
-                system_prompt=system_prompt,
-                activity_options={"start_to_close_timeout": timedelta(seconds=30)},
-            )
             result = await agent.ainvoke(
-                {"messages": [{"role": "user", "content": question}]}
+                {
+                    "messages": [
+                        HumanMessage(
+                            content=question,
+                            additional_kwargs={
+                                "conversation_id": conversation_id,
+                                "message_offset": message_count,
+                            },
+                        )
+                    ]
+                }
             )
             if index == 0:
                 message = next(
@@ -76,20 +74,20 @@ class ExternalStorageAgent:
                 )
                 if not isinstance(message.content, str):
                     raise TypeError("Expected the document tool result to be text")
-                tool_result = message.content
+                tool_result_bytes = len(message.content.encode())
 
             answer = result["messages"][-1].content
             if not isinstance(answer, str):
                 raise TypeError("Expected a text response from the model")
-            turns.append(ConversationTurn(user=question, assistant=answer))
+            message_count += len(result["messages"])
             last_answer = answer
 
-        if tool_result is None:
+        if not questions:
             raise ValueError("At least one question is required")
-        tool_bytes = tool_result.encode()
         return ExternalStorageResult(
-            tool_result_bytes=len(tool_bytes),
-            tool_result_sha256=hashlib.sha256(tool_bytes).hexdigest(),
-            turns=len(turns),
+            tool_result_bytes=tool_result_bytes,
+            turns=len(questions),
             last_answer=last_answer,
+            conversation_id=conversation_id,
+            message_count=message_count,
         )

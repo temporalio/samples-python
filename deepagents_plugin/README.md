@@ -26,7 +26,7 @@ one side.
 | [subagents](subagents) | Durability propagates across the agent tree — sub-agent model calls become activities with no per-sub-agent wiring. |
 | [streaming](streaming) | Stream model chunks to external subscribers via `streaming_topic` + `WorkflowStream`, keeping the durable result identical. |
 | [langsmith_tracing](langsmith_tracing) | Compose `DeepAgentsPlugin` with `LangSmithPlugin` for durable execution + LLM tracing. |
-| [external_storage](external_storage) | Native External Storage for a 6 MiB tool result, plus an append-only S3 conversation transcript; scripted model, no API keys. |
+| [external_storage](external_storage) | Native External Storage for a 6 MiB tool result; scripted model, no API keys. |
 
 ## Prerequisites
 
@@ -90,7 +90,7 @@ uv run deepagents_plugin/hello_world/run_workflow.py
 
 The `langsmith_tracing` and `external_storage` samples instead bundle the worker
 and starter into a single driver. The storage sample also needs a mock S3 service;
-see their [setup instructions](../external_storage):
+see its [setup instructions](external_storage):
 
 ```bash
 uv run deepagents_plugin/langsmith_tracing/main.py
@@ -115,8 +115,7 @@ uv run deepagents_plugin/external_storage/main.py
   durable result unchanged.
 - **Observability** — compose with `LangSmithPlugin` for tracing.
 - **Large payload storage** — configure native `ExternalStorage` on the client's
-  data converter, and retain conversation messages once in S3 with bounded model
-  context.
+  data converter to offload a 6 MiB tool result and the following model input.
 
 ## Related
 

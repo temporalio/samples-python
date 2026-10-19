@@ -1,11 +1,12 @@
-"""Run an offline conversation with S3 transcripts and large tool payloads."""
+"""Run an offline agent with native External Storage for a 6 MiB tool result."""
 
 import asyncio
+import hashlib
 import uuid
 
 from temporalio.worker import Worker
 
-from deepagents_plugin.external_storage.client import S3_BUCKET, connect_client
+from deepagents_plugin.external_storage.client import connect_client
 from deepagents_plugin.external_storage.workflow import (
     PAYLOAD_BYTES,
     TASK_QUEUE,
@@ -15,14 +16,7 @@ from deepagents_plugin.external_storage.workflow import (
 
 async def main() -> None:
     workflow_id = f"deepagents-external-storage-{uuid.uuid4()}"
-    questions = [
-        "Read large-document.txt and acknowledge receiving it.",
-        "I am working on a project called Cedar.",
-        "The project uses Python.",
-        "It is due Friday.",
-        "Remind me of the project name, language, and deadline.",
-    ]
-    async with connect_client() as (client, _):
+    async with connect_client() as client:
         async with Worker(
             client,
             task_queue=TASK_QUEUE,
@@ -30,18 +24,16 @@ async def main() -> None:
         ):
             result = await client.execute_workflow(
                 ExternalStorageAgent.run,
-                questions,
+                "Read large-document.txt and acknowledge receiving it.",
                 id=workflow_id,
                 task_queue=TASK_QUEUE,
             )
 
     assert result.tool_result_bytes == PAYLOAD_BYTES
+    assert result.tool_result_sha256 == hashlib.sha256(b"x" * PAYLOAD_BYTES).hexdigest()
     print(f"Workflow: {workflow_id}")
     print(f"Tool result: {result.tool_result_bytes:,} bytes (6 MiB)")
-    print(
-        f"Transcript: s3://{S3_BUCKET}/conversations/"
-        f"{result.conversation_id}/ ({result.message_count} messages)"
-    )
+    print(f"SHA-256: {result.tool_result_sha256}")
     print(f"Final answer: {result.last_answer}")
 
 

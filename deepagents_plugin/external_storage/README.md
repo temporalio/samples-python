@@ -1,38 +1,17 @@
 # External Storage
 
-This sample uses S3 for two purposes:
+This sample runs a Deep Agent whose activity-backed `read_file` tool returns a
+**6 MiB** document. Temporal's native `ExternalStorage` stores the tool result
+and the following model activity input in S3, leaving small references in
+workflow history. The workflow returns only the document's byte count, SHA-256,
+and final answer.
 
-* A Deep Agent tool returns a **6 MiB** document. The tool result and the next
-  model activity input are stored in S3, with small references in workflow
-  history.
-* The complete conversation is retained as **one immutable JSON object per
-  message**, including assistant tool calls and the full tool result. Each new
-  user turn passes a conversation ID, message offset, and the new question;
-  earlier turns are loaded inside the model activity.
-
-The workflow creates one agent and reuses it for every question. Each invocation
-puts the conversation ID and message offset in the user message's
-`additional_kwargs`. The plugin's `model_provider` returns the small worker-side
-wrapper in `storage.py`, which reads that reference inside the model activity.
-The agent loop stays in the workflow, and each model and tool call still runs as
-its own plugin activity. No custom activity or Deep Agents backend is needed.
-
-Transcript objects live under `conversations/<conversation-id>/<index>.json`.
-Conditional S3 writes preserve existing messages and let a retried model call
-reuse its committed reply, even after later turns have been added. One workflow
-owns each conversation. System instructions remain model configuration, rather
-than conversation messages.
-
-Only the latest **16 messages** are loaded as model context; older messages stay
-in S3. This keeps both transcript storage and cumulative context reads linear in
-the conversation's total bytes for this fixed window. Retaining every message
-does not require sending every message to every model call. A production agent
-can add token-based budgeting, summaries, or retrieval for older details.
-
-Temporal's separate `ExternalStorage` configuration uses its default 256 KiB
-threshold. It offloads the large tool result and the following model activity
-input. Ordinary conversation inputs stay small and inline, instead of saving a
-new full-transcript snapshot on every turn.
+The client configures `ExternalStorage` on a data converter and passes it to
+`DeepAgentsPlugin`, which composes it with its LangChain-aware converter. The
+worker inherits that configuration. Payloads above the default **256 KiB**
+threshold are uploaded and downloaded automatically; the workflow input, first
+model input, and final result stay inline. The agent loop runs in the workflow,
+and each model and tool call runs as its own plugin activity.
 
 The S3 driver uses the local mock service from the
 [general External Storage sample](../../external_storage). No AWS credentials,
@@ -66,8 +45,8 @@ Run the demo:
 uv run deepagents_plugin/external_storage/main.py
 ```
 
-The output includes the workflow ID, document size, transcript S3 prefix and
-message count, and final answer. Inspect the workflow history with:
+The output includes the workflow ID, verified document size and SHA-256, and
+final answer. Inspect the workflow history with:
 
 ```bash
 temporal workflow show --workflow-id <printed-workflow-id>
@@ -80,6 +59,5 @@ and set the UI's Remote Codec Endpoint to `http://localhost:8081`.
 
 For real S3, use an existing bucket and normal AWS credentials. Configure
 compatible storage drivers on every client, worker, and replayer that reads the
-history. Keep Temporal payload objects for as long as execution, reset, or replay
-may need them, and keep transcript objects for the application's conversation
-retention period. The local mock S3 service is in memory.
+history. Keep payload objects for as long as execution, reset, or replay may
+need them. The local mock S3 service is in memory.

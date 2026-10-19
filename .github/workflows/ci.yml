@@ -46,7 +46,6 @@ jobs:
           echo "projects=$projects_json" >> "$GITHUB_OUTPUT"
 
   standalone-lint-test:
-    name: Standalone (${{ matrix.project }}, Python ${{ matrix.python }})
     needs: detect-standalone-changes
     if: needs.detect-standalone-changes.outputs.projects != '[]'
     strategy:
@@ -68,6 +67,31 @@ jobs:
         working-directory: ${{ matrix.project }}
       - run: uv run poe test
         working-directory: ${{ matrix.project }}
+
+  standalone-checks:
+    name: Standalone checks
+    needs: [detect-standalone-changes, standalone-lint-test]
+    # Always report a result so this can be required even when no projects changed.
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify standalone results
+        env:
+          DETECTION_RESULT: ${{ needs.detect-standalone-changes.result }}
+          PROJECTS: ${{ needs.detect-standalone-changes.outputs.projects }}
+          TEST_RESULT: ${{ needs.standalone-lint-test.result }}
+        run: |
+          if [[ "$DETECTION_RESULT" != "success" ]]; then
+            echo "Standalone project detection did not succeed: $DETECTION_RESULT"
+            exit 1
+          fi
+          if [[ "$PROJECTS" == "[]" && "$TEST_RESULT" == "skipped" ]]; then
+            echo "No standalone projects changed."
+          elif [[ "$TEST_RESULT" != "success" ]]; then
+            echo "Standalone lint and tests did not succeed: $TEST_RESULT"
+            exit 1
+          fi
 
   # Build and test the project
   build-lint-test:

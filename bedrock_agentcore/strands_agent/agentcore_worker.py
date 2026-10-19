@@ -25,7 +25,7 @@ from datetime import timedelta
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 from temporalio.client import Client
 from temporalio.common import VersioningBehavior
-from temporalio.contrib.strands import StrandsPlugin
+from temporalio.strands_agents import StrandsPlugin
 from temporalio.worker import (
     ActivityInboundInterceptor,
     ExecuteActivityInput,

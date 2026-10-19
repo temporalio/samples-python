@@ -10,8 +10,8 @@ time. Chunks are batched on the ``streaming_batch_interval`` (default 100ms).
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.contrib.strands import TemporalAgent
 from temporalio.contrib.workflow_streams import WorkflowStream
+from temporalio.strands_agents import TemporalAgent
 
 
 @workflow.defn

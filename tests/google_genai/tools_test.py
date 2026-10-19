@@ -1,7 +1,7 @@
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.google_genai.testing import (
+from temporalio.google_genai.testing import (
     GeminiTestServer,
     function_call_response,
     text_response,

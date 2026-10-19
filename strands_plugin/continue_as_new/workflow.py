@@ -13,7 +13,7 @@ from datetime import timedelta
 
 from strands.types.content import Messages
 from temporalio import workflow
-from temporalio.contrib.strands import TemporalAgent
+from temporalio.strands_agents import TemporalAgent
 
 
 @dataclass

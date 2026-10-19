@@ -2,7 +2,7 @@ import asyncio
 import os
 
 from temporalio.client import Client
-from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
+from temporalio.google_adk import GoogleAdkPlugin
 
 from google_adk_agents.tools.workflows.weather_workflow import WeatherAgentWorkflow
 

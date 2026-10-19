@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from langgraph.graph import START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph as temporal_graph
+from temporalio.langgraph import graph as temporal_graph
 from typing_extensions import TypedDict
 
 

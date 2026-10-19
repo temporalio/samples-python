@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from google.genai import types
 from temporalio import workflow
-from temporalio.contrib.google_genai import (
+from temporalio.google_genai import (
     TemporalAsyncClient,
     TemporalMcpClientSession,
 )

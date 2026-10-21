@@ -9,7 +9,6 @@ from temporalio.worker import Worker
 from deepagents_plugin.external_storage.client import connect_client
 from deepagents_plugin.external_storage.workflow import (
     PAYLOAD_BYTES,
-    TASK_QUEUE,
     ExternalStorageAgent,
 )
 
@@ -19,14 +18,14 @@ async def main() -> None:
     async with connect_client() as client:
         async with Worker(
             client,
-            task_queue=TASK_QUEUE,
+            task_queue=workflow_id,
             workflows=[ExternalStorageAgent],
         ):
             result = await client.execute_workflow(
                 ExternalStorageAgent.run,
                 "Read large-document.txt and acknowledge receiving it.",
                 id=workflow_id,
-                task_queue=TASK_QUEUE,
+                task_queue=workflow_id,
             )
 
     assert result.tool_result_bytes == PAYLOAD_BYTES

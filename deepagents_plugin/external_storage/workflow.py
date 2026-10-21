@@ -11,7 +11,6 @@ from temporalio.common import RetryPolicy
 from temporalio.deepagents import create_temporal_deep_agent, tool_as_activity
 
 PAYLOAD_BYTES = 6 * 1024 * 1024
-TASK_QUEUE = "deepagents-external-storage"
 
 
 @dataclass

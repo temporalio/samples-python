@@ -1,9 +1,11 @@
 """Verify a 6 MiB tool result uses native S3 External Storage."""
 
+import asyncio
 import hashlib
 import uuid
 from collections.abc import Iterator
 from datetime import timedelta
+from functools import partial
 
 import boto3
 import pytest
@@ -17,6 +19,7 @@ from temporalio.converter import DataConverter
 from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.worker import Replayer, Worker
 
+from deepagents_plugin.external_storage import main as demo
 from deepagents_plugin.external_storage.client import S3_BUCKET, connect_client
 from deepagents_plugin.external_storage.workflow import (
     PAYLOAD_BYTES,
@@ -137,3 +140,34 @@ async def test_external_storage(client: Client, s3_endpoint: str) -> None:
             data_converter=replay_client.data_converter,
             plugins=[DeepAgentsPlugin(data_converter=replay_client.data_converter)],
         ).replay_workflow(history)
+
+
+async def test_concurrent_demos(
+    client: Client,
+    s3_endpoint: str,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        demo,
+        "connect_client",
+        partial(
+            connect_client,
+            target_host=client.service_client.config.target_host,
+            s3_endpoint=s3_endpoint,
+        ),
+    )
+    # main() also verifies the full document's size and SHA-256 for each run.
+    await asyncio.wait_for(asyncio.gather(demo.main(), demo.main()), timeout=90)
+    output = capsys.readouterr().out
+    workflow_ids = {
+        line.removeprefix("Workflow: ")
+        for line in output.splitlines()
+        if line.startswith("Workflow: ")
+    }
+    assert len(workflow_ids) == 2
+    assert output.count("Final answer: I received the complete document.") == 2
+    for workflow_id in workflow_ids:
+        history = await client.get_workflow_handle(workflow_id).fetch_history()
+        started = history.events[0].workflow_execution_started_event_attributes
+        assert started.task_queue.name == workflow_id

@@ -1,45 +1,29 @@
-from temporalio.api.history.v1 import HistoryEvent, WorkflowTaskStartedEventAttributes
-from temporalio.client import WorkflowHistory
-
-from activity_sessions.models import StepResult, WorkerRegistration
-from activity_sessions.starter import print_comparison, summarize_workers
+from activity_sessions import StepResult
+from activity_sessions.starter import print_results
 
 
-def test_per_worker_report_includes_session_capability_and_idle_workers(capsys) -> None:
-    roster = [
-        WorkerRegistration("worker-1", True, 101, "queue"),
-        WorkerRegistration("worker-2", False, 102, "queue"),
-    ]
-    results = [
-        StepResult(1, "worker-1", True, False, 1, 1, "first-output"),
-        StepResult(2, "worker-1", True, True, 0, 1, "second-output"),
-    ]
-    summaries = summarize_workers(results, roster)
-    assert (summaries[0].steps, summaries[0].hits, summaries[0].misses) == (2, 1, 1)
-    assert (summaries[0].artifact_reads, summaries[0].artifact_writes) == (1, 2)
-    assert summaries[1].identity == "worker-2"
-    assert not summaries[1].session_enabled
-    assert summaries[1].steps == 0
-    history = WorkflowHistory(
-        "workflow",
+def test_report_includes_idle_worker_and_session_setting(capsys) -> None:
+    print_results(
+        True,
         [
-            HistoryEvent(
-                workflow_task_started_event_attributes=WorkflowTaskStartedEventAttributes(
-                    identity="worker-1"
-                )
-            )
+            StepResult(1, "worker-1", True, False),
+            StepResult(2, "worker-1", True, True),
+            StepResult(3, "worker-1", True, True),
         ],
+        {"worker-1"},
+        {"worker-1": True, "worker-2": False},
     )
-    print_comparison(True, "run-1", results, history, roster)
-    output = capsys.readouterr().out
-    assert "Session support" in output
-    assert "worker-2" in output
-    assert "OFF" in output
-    assert "Verified:" in output
+    lines = capsys.readouterr().out.splitlines()
+    assert any(line.split() == ["worker-1", "ON", "3", "2", "1"] for line in lines)
+    assert any(line.split() == ["worker-2", "OFF", "0", "0", "0"] for line in lines)
+    assert any("Verified:" in line for line in lines)
 
 
-def test_disabled_comparison_does_not_require_scattered_placement(capsys) -> None:
-    results = [StepResult(1, "worker-1", True, False, 1, 1, "output")]
-    history = WorkflowHistory("workflow", [])
-    print_comparison(False, "run-1", results, history, [])
-    assert "placement is not guaranteed" in capsys.readouterr().out
+def test_ordinary_routing_may_colocate_by_chance(capsys) -> None:
+    print_results(
+        False,
+        [StepResult(step, "worker-1", True, step != 1) for step in (1, 2, 3)],
+        {"worker-1"},
+        {"worker-1": True},
+    )
+    assert "may also colocate by chance" in capsys.readouterr().out

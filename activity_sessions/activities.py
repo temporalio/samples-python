@@ -1,69 +1,30 @@
-import asyncio
+from pathlib import Path
 
 from temporalio import activity
-from temporalio.exceptions import ApplicationError
 
-from activity_sessions.models import (
-    ACTIVITY_NAME,
-    ConversationContext,
-    StepInput,
-    StepResult,
-)
-from activity_sessions.storage import FileArtifactStore
+from activity_sessions import StepResult
 
 
 class ConversationActivities:
     def __init__(
-        self,
-        store: FileArtifactStore,
-        worker_identity: str,
-        session_enabled: bool,
+        self, worker_identity: str, session_enabled: bool, context_file: Path
     ) -> None:
-        self.store = store
         self.worker_identity = worker_identity
         self.session_enabled = session_enabled
-        self.cache: dict[tuple[str, str], ConversationContext] = {}
+        self.context_file = context_file
+        self.cache: dict[str, str] = {}
 
-    @activity.defn(name=ACTIVITY_NAME)
-    async def process_conversation_step(self, request: StepInput) -> StepResult:
+    @activity.defn
+    async def conversation_step(self, step: int) -> StepResult:
         run_id = activity.info().workflow_run_id
-        if run_id is None:
-            raise ApplicationError(
-                "This sample requires a workflow activity", non_retryable=True
-            )
-
-        cache_key = (run_id, request.input_ref)
-        context = self.cache.get(cache_key)
-        cache_hit = context is not None
-        artifact_reads = 0
-        if context is None:
-            context = await asyncio.to_thread(self.store.read, request.input_ref)
-            artifact_reads += 1
-            self.cache[cache_key] = context
-
-        output = ConversationContext(
-            messages=[
-                *context.messages,
-                f"Processed conversation step {request.step}.",
-            ],
-            completed_steps=[*context.completed_steps, request.step],
-        )
-        # Persist before advertising the reference: another worker must be able to recover on a miss.
-        output_ref = await asyncio.to_thread(self.store.write, output)
-        artifact_writes = 1
-        self.cache[(run_id, output_ref)] = output
+        assert run_id is not None
+        cache_hit = run_id in self.cache
+        if not cache_hit:
+            self.cache[run_id] = self.context_file.read_text()
+        context = self.cache[run_id]
         print(
-            f"[{self.worker_identity}] run={run_id} step={request.step} "
-            f"cache={'HIT' if cache_hit else 'MISS'} "
-            f"artifact_reads={artifact_reads} artifact_writes={artifact_writes}",
+            f"[{self.worker_identity}] step={step} "
+            f"cache={'HIT' if cache_hit else 'MISS'} context_size={len(context)}",
             flush=True,
         )
-        return StepResult(
-            step=request.step,
-            worker_identity=self.worker_identity,
-            session_enabled=self.session_enabled,
-            cache_hit=cache_hit,
-            artifact_reads=artifact_reads,
-            artifact_writes=artifact_writes,
-            output_ref=output_ref,
-        )
+        return StepResult(step, self.worker_identity, self.session_enabled, cache_hit)

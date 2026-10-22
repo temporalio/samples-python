@@ -10,7 +10,6 @@ from temporalio.api.taskqueue.v1 import TaskQueue, TaskQueueVersionSelection
 from temporalio.api.workflowservice.v1 import DescribeTaskQueueRequest
 from temporalio.client import Client
 
-from activity_sessions.storage import FileArtifactStore
 from tests.helpers import assert_eventually
 
 pytestmark = pytest.mark.skipif(
@@ -31,6 +30,8 @@ async def test_comparison_with_independent_worker_processes(
     if request.config.getoption("--workflow-environment") in ("local", "time-skipping"):
         pytest.fail("Use --workflow-environment host:port for the custom server")
     task_queue = f"session-cache-{uuid.uuid4()}"
+    context_file = tmp_path / "conversation.txt"
+    context_file.write_text("Conversation context")
     environment = {
         **os.environ,
         "TEMPORAL_ADDRESS": client.service_client.config.target_host,
@@ -55,8 +56,8 @@ async def test_comparison_with_independent_worker_processes(
                 identity,
                 "--task-queue",
                 task_queue,
-                "--store-dir",
-                str(tmp_path),
+                "--context-file",
+                str(context_file),
             ]
             if activity_only:
                 args.append("--activity-only")
@@ -71,9 +72,6 @@ async def test_comparison_with_independent_worker_processes(
                 assert process.returncode is None, "\n".join(
                     path.read_text() for path in tmp_path.glob("*.log")
                 )
-            assert len(FileArtifactStore(tmp_path).list_workers(task_queue)) == len(
-                worker_specs
-            )
             for kind, expected in [
                 (TaskQueueType.TASK_QUEUE_TYPE_WORKFLOW, {"worker-1", "worker-2"}),
                 (
@@ -105,8 +103,11 @@ async def test_comparison_with_independent_worker_processes(
             "activity_sessions.starter",
             "--task-queue",
             task_queue,
-            "--store-dir",
-            str(tmp_path),
+            "--session-workers",
+            "worker-1",
+            "worker-2",
+            "--activity-workers",
+            *[identity for identity, activity_only in worker_specs if activity_only],
             env=environment,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
@@ -127,4 +128,4 @@ async def test_comparison_with_independent_worker_processes(
                 await process.wait()
         for log in logs:
             log.close()
-    assert FileArtifactStore(tmp_path).list_workers(task_queue) == []
+    assert all(process.returncode == 0 for process in processes)

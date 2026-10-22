@@ -88,11 +88,11 @@ constraint-dependencies = [
 allow-direct-references = true
 
 [tool.hatch.build.targets.sdist]
-include = ["./**/*.py"]
+include = ["./**/*.py", "./activity_sessions/conversation.txt"]
 exclude = ["lambda_worker/**"]
 
 [tool.hatch.build.targets.wheel]
-include = ["./**/*.py"]
+include = ["./**/*.py", "./activity_sessions/conversation.txt"]
 exclude = ["lambda_worker/**"]
 packages = [
     "activity_sessions",

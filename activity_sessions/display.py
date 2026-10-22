@@ -21,7 +21,10 @@ WORKER_COLORS = [
     "bright_green",
     "bright_yellow",
 ]
-LEGEND = "● context load (miss)   ○ cache hit   ◌ loading   number/color = worker"
+LEGEND = (
+    "○2 worker 2 had every earlier turn   ●2(3) worker 2 fetched 3 missing turns   "
+    "◌ fetching"
+)
 
 
 @dataclass
@@ -40,6 +43,14 @@ class Batch:
         if event.workflow_id not in self.workflow_ids:
             raise ValueError(f"Event for unknown workflow {event.workflow_id}")
         self.steps.setdefault(event.workflow_id, {})[event.step] = event
+
+    def cached_turns(self, workflow_id: str) -> dict[str, int]:
+        """Turns each worker holds for a workflow: everything up to its latest step."""
+        held: dict[str, int] = {}
+        for event in self.steps.get(workflow_id, {}).values():
+            if event.finished:
+                held[event.worker] = max(held.get(event.worker, 0), event.step + 1)
+        return held
 
     def finished_steps(self) -> list[StepEvent]:
         return [
@@ -61,31 +72,36 @@ def worker_color(worker: str) -> str:
 def placement_strip(
     batch: Batch, steps: int, worker_count: int, show_pending: bool = False
 ) -> Table:
-    """One row per workflow and one cell per step: glyph = cache result, color = worker."""
-    width = len(str(worker_count)) + 1
+    """One row per workflow and one cell per step: glyph = fetches, color = worker."""
+    width = len(f"●{worker_count}({steps - 1})")
     table = Table(box=None, show_header=False, padding=(0, 1, 0, 0))
     table.add_column(style="dim")
     table.add_column()
     table.add_column(justify="right")
+    table.add_column(justify="right", style="dim")
     for index, workflow_id in enumerate(batch.workflow_ids, 1):
         events = batch.steps.get(workflow_id, {})
         if not events and not show_pending:
             continue
         cells = Text()
-        for step in range(1, steps + 1):
+        for step in range(steps):
             event = events.get(step)
             if event is None:
                 cells.append("·".ljust(width) + " ", style="dim")
                 continue
-            if event.cache_hit:
-                glyph = "○"
+            number = worker_number(event.worker)
+            if not event.fetched:
+                cell = f"○{number}"
             else:
-                glyph = "●" if event.finished else "◌"
-            cell = f"{glyph}{worker_number(event.worker)}".ljust(width) + " "
-            cells.append(cell, style=worker_color(event.worker))
+                cell = f"{'●' if event.finished else '◌'}{number}({event.fetched})"
+            cells.append(cell.ljust(width) + " ", style=worker_color(event.worker))
+        fetched = sum(event.fetched for event in events.values())
         duration = batch.durations.get(workflow_id)
         table.add_row(
-            f"wf-{index:02}", cells, f"{duration:.1f}s" if duration is not None else ""
+            f"wf-{index:02}",
+            cells,
+            f"{duration:.1f}s" if duration is not None else "",
+            f"{fetched} fetched" if events else "",
         )
     return table
 
@@ -110,18 +126,16 @@ def percentile(values: Sequence[float], fraction: float) -> float:
 
 
 def affinity_violations(batch: Batch) -> list[str]:
-    """Workflows that did not load once and then reuse the cache on a single worker."""
-    violations = []
-    for workflow_id in batch.workflow_ids:
-        events = sorted(batch.steps.get(workflow_id, {}).values(), key=lambda e: e.step)
-        workers = {event.worker for event in events}
-        hits = [event.cache_hit for event in events]
-        if len(workers) != 1 or hits != [False] + [True] * (len(hits) - 1):
-            violations.append(workflow_id)
-    return violations
+    """Workflows whose turns did not all run on one worker without fetching."""
+    return [
+        workflow_id
+        for workflow_id in batch.workflow_ids
+        if len(batch.cached_turns(workflow_id)) != 1
+        or any(event.fetched for event in batch.steps[workflow_id].values())
+    ]
 
 
-def comparison_table(batches: Sequence[Batch], load_seconds: float) -> Table:
+def comparison_table(batches: Sequence[Batch], fetch_seconds: float) -> Table:
     table = Table(title="Impact", box=box.SIMPLE_HEAD)
     table.add_column("")
     for batch in batches:
@@ -138,11 +152,22 @@ def comparison_table(batches: Sequence[Batch], load_seconds: float) -> Table:
             row.append(change or "")
         table.add_row(*row)
 
-    loads = [
-        float(sum(not event.cache_hit for event in batch.finished_steps()))
+    fetched = [
+        float(sum(event.fetched for event in batch.finished_steps()))
         for batch in batches
     ]
-    copies = [load / len(batch.workflow_ids) for load, batch in zip(loads, batches)]
+    fetching_steps = [
+        float(sum(bool(event.fetched) for event in batch.finished_steps()))
+        for batch in batches
+    ]
+    fleet_turns = [
+        sum(
+            sum(batch.cached_turns(workflow_id).values())
+            for workflow_id in batch.workflow_ids
+        )
+        / len(batch.workflow_ids)
+        for batch in batches
+    ]
     p50 = [percentile(list(batch.durations.values()), 0.5) for batch in batches]
     p95 = [percentile(list(batch.durations.values()), 0.95) for batch in batches]
     walls = [batch.wall_seconds for batch in batches]
@@ -157,9 +182,15 @@ def comparison_table(batches: Sequence[Batch], load_seconds: float) -> Table:
             return None
         return f"{values[0] / values[1]:.1f}x faster"
 
-    add("Context loads", loads, ".0f", fewer(loads))
-    add("Cache copies per workflow", copies, ".1f")
-    add("Time spent loading (s)", [load * load_seconds for load in loads], ".1f")
+    add("Turns fetched", fetched, ".0f", fewer(fetched))
+    add("Steps that had to fetch", fetching_steps, ".0f", fewer(fetching_steps))
+    add(
+        "Time spent fetching (s)",
+        [count * fetch_seconds for count in fetched],
+        ".1f",
+        fewer(fetched),
+    )
+    add("Cached turns across fleet per workflow", fleet_turns, ".1f")
     add("Workflow latency p50 (s)", p50, ".1f", faster(p50))
     add("Workflow latency p95 (s)", p95, ".1f", faster(p95))
     add("Batch wall time (s)", walls, ".1f", faster(walls))
@@ -167,7 +198,7 @@ def comparison_table(batches: Sequence[Batch], load_seconds: float) -> Table:
 
 
 def summary(
-    batches: Sequence[Batch], steps: int, worker_count: int, load_seconds: float
+    batches: Sequence[Batch], steps: int, worker_count: int, fetch_seconds: float
 ) -> RenderableType:
     strips = Table.grid(padding=(0, 4))
     for batch in batches:
@@ -177,7 +208,7 @@ def summary(
     parts: list[RenderableType] = [
         strips,
         Text(LEGEND, style="dim"),
-        comparison_table(batches, load_seconds),
+        comparison_table(batches, fetch_seconds),
     ]
     for batch in batches:
         if not batch.affinity_enabled:
@@ -193,8 +224,8 @@ def summary(
         else:
             parts.append(
                 Text(
-                    f"Verified: each of {len(batch.workflow_ids)} workflow(s) loaded "
-                    "its context once and reused it on a single worker.",
+                    f"Verified: each of {len(batch.workflow_ids)} workflow(s) ran "
+                    "every turn on one worker without fetching earlier turns.",
                     style="green",
                 )
             )

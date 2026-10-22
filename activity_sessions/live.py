@@ -40,23 +40,31 @@ class LiveView:
         self.live.update(self.render(batch), refresh=True)
 
     def render(self, batch: Batch) -> RenderableType:
-        labels = {workflow_id: i for i, workflow_id in enumerate(batch.workflow_ids, 1)}
+        held = {
+            workflow_id: batch.cached_turns(workflow_id)
+            for workflow_id in batch.workflow_ids
+        }
         events = [event for steps in batch.steps.values() for event in steps.values()]
         panels = []
         for worker, session_enabled in self.workers.items():
             mine = [event for event in events if event.worker == worker]
-            cached = sorted(
-                labels[event.workflow_id]
-                for event in mine
-                if not event.cache_hit and event.finished
-            )
-            loading = sum(not event.cache_hit and not event.finished for event in mine)
-            hits = sum(event.cache_hit for event in mine)
+            fetched = sum(event.fetched for event in mine if event.finished)
+            fetching = [event for event in mine if event.fetched and not event.finished]
             body = Text()
-            body.append(f"loads {len(cached) + loading}  hits {hits}\n")
-            body.append("◌ " * loading + "\n", style="yellow")
+            body.append(f"steps {len(mine)}  turns fetched {fetched}\n")
+            body.append(
+                " ".join(f"◌({event.fetched})" for event in fetching) + "\n",
+                style="yellow",
+            )
+            # wf:t means this worker holds the workflow's conversation through turn t.
             body.append("cache: ", style="dim")
-            body.append(" ".join(f"{label:02}" for label in cached))
+            body.append(
+                " ".join(
+                    f"{index:02}:t{turns[worker] - 1}"
+                    for index, turns in enumerate(held.values(), 1)
+                    if worker in turns
+                )
+            )
             title = worker if session_enabled else f"{worker} (activity only)"
             panels.append(
                 Panel(
@@ -65,11 +73,11 @@ class LiveView:
                     width=29,
                 )
             )
-        entries = sum(not event.cache_hit for event in events)
+        entries = sum(sum(turns.values()) for turns in held.values())
         started = len(batch.steps)
         fleet = Text(
-            f"Fleet: {entries} cache entries for {started} started workflow(s)"
-            + (f" ({entries / started:.1f} copies each)" if started else ""),
+            f"Fleet: {entries} cached turns for {started} started workflow(s)"
+            + (f" ({entries / started:.1f} per workflow)" if started else ""),
             style="bold",
         )
         return Group(

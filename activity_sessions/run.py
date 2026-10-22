@@ -92,13 +92,13 @@ async def main() -> None:
         "--workflows", type=int, default=20, help="Concurrent workflows per mode"
     )
     parser.add_argument(
-        "--steps", type=int, default=5, help="Sequential activities per workflow"
+        "--steps", type=int, default=6, help="Conversation turns per workflow"
     )
     parser.add_argument(
-        "--load-seconds",
+        "--fetch-seconds",
         type=float,
-        default=1.0,
-        help="Simulated latency of loading context on a cache miss",
+        default=0.5,
+        help="Simulated latency of fetching one missing conversation turn",
     )
     parser.add_argument(
         "--no-live", action="store_true", help="Only print the final summary"
@@ -132,7 +132,7 @@ async def main() -> None:
                 identity,
                 session_enabled,
                 args.task_queue,
-                args.load_seconds,
+                args.fetch_seconds,
                 events,
                 ready,
             ),
@@ -165,7 +165,7 @@ async def main() -> None:
         for process in processes:
             process.join()
 
-    console.print(summary(batches, args.steps, len(workers), args.load_seconds))
+    console.print(summary(batches, args.steps, len(workers), args.fetch_seconds))
     if any(affinity_violations(batch) for batch in batches if batch.affinity_enabled):
         raise SystemExit(1)
 

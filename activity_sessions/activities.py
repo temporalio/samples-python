@@ -13,24 +13,32 @@ class ConversationActivities:
     def __init__(
         self,
         worker_identity: str,
-        load_seconds: float,
+        fetch_seconds: float,
         emit: Callable[[StepEvent], None],
     ) -> None:
         self.worker_identity = worker_identity
-        self.load_seconds = load_seconds
+        self.fetch_seconds = fetch_seconds
         self.emit = emit
-        self.cache: dict[str, str] = {}
+        # Workflow Run ID -> conversation turns this worker holds, always a prefix.
+        self.cache: dict[str, list[str]] = {}
 
     @activity.defn
     async def conversation_step(self, step: int) -> None:
+        """Run turn `step`, which needs every earlier turn of the conversation."""
         info = activity.info()
         # Only standalone activities lack workflow IDs; this sample calls it from a workflow.
         workflow_id = cast(str, info.workflow_id)
         run_id = cast(str, info.workflow_run_id)
-        cache_hit = run_id in self.cache
-        self.emit(StepEvent(workflow_id, step, self.worker_identity, cache_hit, False))
-        if not cache_hit:
-            # Stands in for a slow fetch of conversation history from an external store.
-            await asyncio.sleep(self.load_seconds)
-            self.cache[run_id] = f"Conversation context for {workflow_id}"
-        self.emit(StepEvent(workflow_id, step, self.worker_identity, cache_hit, True))
+        turns = self.cache.setdefault(run_id, [])
+        missing = range(len(turns), step)
+        self.emit(
+            StepEvent(workflow_id, step, self.worker_identity, len(missing), False)
+        )
+        for turn in missing:
+            # Stands in for a slow fetch of one turn from an external conversation store.
+            await asyncio.sleep(self.fetch_seconds)
+            turns.append(f"Turn {turn} of {workflow_id}")
+        turns.append(f"Turn {step} of {workflow_id}")
+        self.emit(
+            StepEvent(workflow_id, step, self.worker_identity, len(missing), True)
+        )

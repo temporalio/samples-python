@@ -12,37 +12,55 @@ def environment(run_id: str) -> ActivityEnvironment:
     return env
 
 
-def finished_hits(events: list[StepEvent]) -> list[bool]:
-    return [event.cache_hit for event in events if event.finished]
+def fetched(events: list[StepEvent]) -> list[int]:
+    return [event.fetched for event in events if event.finished]
 
 
-async def test_same_worker_loads_context_once() -> None:
+async def test_first_turn_needs_no_fetch() -> None:
+    events: list[StepEvent] = []
+    activities = ConversationActivities("worker-1", 0, events.append)
+    await environment("run-1").run(activities.conversation_step, 0)
+    assert events == [
+        StepEvent("workflow-1", 0, "worker-1", 0, False),
+        StepEvent("workflow-1", 0, "worker-1", 0, True),
+    ]
+    assert activities.cache["run-1"] == ["Turn 0 of workflow-1"]
+
+
+async def test_same_worker_never_fetches_its_own_turns() -> None:
     events: list[StepEvent] = []
     activities = ConversationActivities("worker-1", 0, events.append)
     env = environment("run-1")
-    for step in (1, 2, 3):
+    for step in range(4):
         await env.run(activities.conversation_step, step)
-    assert finished_hits(events) == [False, True, True]
-    assert events[0] == StepEvent("workflow-1", 1, "worker-1", False, False)
-    assert list(activities.cache) == ["run-1"]
+    assert fetched(events) == [0, 0, 0, 0]
+    assert len(activities.cache["run-1"]) == 4
 
 
-async def test_other_worker_has_its_own_cache() -> None:
+async def test_stale_worker_fetches_only_missing_turns() -> None:
     events: list[StepEvent] = []
-    first_worker = ConversationActivities("worker-1", 0, events.append)
-    other_worker = ConversationActivities("worker-2", 0, events.append)
+    worker_a = ConversationActivities("worker-1", 0, events.append)
+    worker_b = ConversationActivities("worker-2", 0, events.append)
     env = environment("run-1")
-    await env.run(first_worker.conversation_step, 1)
-    await env.run(other_worker.conversation_step, 2)
-    await env.run(first_worker.conversation_step, 3)
-    assert finished_hits(events) == [False, False, True]
-    assert first_worker.cache is not other_worker.cache
-    assert "run-1" in other_worker.cache
+    await env.run(worker_a.conversation_step, 0)
+    await env.run(worker_b.conversation_step, 1)
+    await env.run(worker_a.conversation_step, 2)
+    # B lacks turn 0; A returns holding turn 0 but not turn 1.
+    assert fetched(events) == [0, 1, 1]
+    assert len(worker_a.cache["run-1"]) == 3
+    assert len(worker_b.cache["run-1"]) == 2
 
 
-async def test_new_run_starts_cold_on_same_worker() -> None:
+async def test_cold_worker_fetches_whole_history() -> None:
     events: list[StepEvent] = []
     activities = ConversationActivities("worker-1", 0, events.append)
-    await environment("run-1").run(activities.conversation_step, 1)
+    await environment("run-1").run(activities.conversation_step, 4)
+    assert fetched(events) == [4]
+
+
+async def test_new_run_starts_with_empty_history() -> None:
+    events: list[StepEvent] = []
+    activities = ConversationActivities("worker-1", 0, events.append)
+    await environment("run-1").run(activities.conversation_step, 0)
     await environment("run-2").run(activities.conversation_step, 1)
-    assert finished_hits(events) == [False, False]
+    assert fetched(events) == [0, 1]

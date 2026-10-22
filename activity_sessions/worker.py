@@ -16,14 +16,14 @@ async def run_worker(
     identity: str,
     session_enabled: bool,
     task_queue: str,
-    load_seconds: float,
+    fetch_seconds: float,
     events: "Queue[StepEvent]",
     ready: Barrier,
 ) -> None:
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config, identity=identity)
-    activities = ConversationActivities(identity, load_seconds, events.put)
+    activities = ConversationActivities(identity, fetch_seconds, events.put)
     worker = Worker(
         client,
         task_queue=task_queue,
@@ -43,12 +43,12 @@ def worker_process(
     identity: str,
     session_enabled: bool,
     task_queue: str,
-    load_seconds: float,
+    fetch_seconds: float,
     events: "Queue[StepEvent]",
     ready: Barrier,
 ) -> None:
     # The parent handles Ctrl+C and terminates every worker.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     asyncio.run(
-        run_worker(identity, session_enabled, task_queue, load_seconds, events, ready)
+        run_worker(identity, session_enabled, task_queue, fetch_seconds, events, ready)
     )

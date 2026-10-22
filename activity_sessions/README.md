@@ -1,19 +1,23 @@
 # Activity sessions and a worker-local cache
 
-This sample shows how activity affinity lets a workflow reuse conversation context
+This sample shows how activity affinity lets a workflow reuse conversation history
 cached in its worker's memory, without managing per-worker task queues.
 
-Each workflow calls `conversation_step` sequentially (five times by default). Each
-worker runs in a separate process with its own dictionary cache, keyed by workflow
-Run ID. A cache miss sleeps for `--load-seconds` (default 1s), standing in for a
-slow fetch of conversation history; a hit is instant. The context is
-**worker-local, not workflow state**, and can be reloaded if absent.
+Each workflow is a conversation: it calls `conversation_step(0)`,
+`conversation_step(1)`, ... sequentially (six turns by default). Turn `n` needs
+every earlier turn `0..n-1`, then produces turn `n`. Each worker runs in a
+separate process with its own dictionary cache of the turns it holds, keyed by
+workflow Run ID. Before running a turn, a worker fetches only the earlier turns it
+is missing, sleeping `--fetch-seconds` (default 0.5s) per turn to stand in for an
+external conversation store. Turn 0 needs no history. The history is
+**worker-local, not workflow state**, and can be refetched if absent.
 
 With affinity **on**, activities use
-`workflow.ActivitySessionOptions.workflow_session()`: each workflow loads its
-context once and every later step hits the cache on the same worker. With affinity
-**off**, steps spread across the pool, so the same context is loaded on several
-workers and workflows take several times longer. Steps may still colocate by
+`workflow.ActivitySessionOptions.workflow_session()`: the workflow's worker
+produced every earlier turn itself, so it never fetches. With affinity **off**,
+turns spread across the pool. A worker that ran turn 0 and then returns for turn 2
+must fetch turn 1, and a cold worker at turn `n` fetches all `n` earlier turns, so
+fetch time grows with how stale each worker is. Turns may still colocate by
 chance; ordinary routing does not guarantee either outcome.
 
 ## Prerequisites
@@ -46,29 +50,32 @@ From the **samples repository root**, run:
 This starts four session-capable worker processes, runs 20 concurrent workflows
 with affinity off and then 20 with affinity on, and shuts down the workers.
 
-While a batch runs, a live view shows each worker's cache filling up and a
-placement strip per workflow: `●` is a context load (miss), `○` a cache hit, `◌`
-a load in progress, and the number/color is the worker that ran the step. The
-final summary prints both batches side by side, followed by an impact table:
-context loads, cache copies per workflow, time spent loading, and workflow latency.
+While a batch runs, a live view shows how far each worker holds every
+conversation (`03:t4` means workflow 3 through turn 4) and a placement strip per
+workflow. In the strip, `○2` means worker 2 ran the turn with every earlier turn
+already cached, `●2(3)` means worker 2 first fetched 3 missing turns, and `◌` is
+a fetch in progress; color also identifies the worker. The final summary prints
+both batches side by side, followed by an impact table: turns fetched, steps that
+had to fetch, time spent fetching, cached turns across the fleet, and workflow
+latency.
 Pass `--no-live` (or redirect output) to print only the summary.
 
 Useful options (run with `--help` for all):
 
 ```bash
-# More workers and steps make ordinary placement scatter even more.
+# More workers and longer conversations make ordinary placement fetch even more.
 "$SDK_PYTHON" -m activity_sessions.run --session-workers 8 --steps 10
 
 # One session-capable worker plus three activity-only workers.
 "$SDK_PYTHON" -m activity_sessions.run --session-workers 1 --activity-workers 3
 
-# Run only one mode, with a faster simulated load.
-"$SDK_PYTHON" -m activity_sessions.run --affinity on --load-seconds 0.2
+# Run only one mode, with a faster simulated fetch.
+"$SDK_PYTHON" -m activity_sessions.run --affinity off --fetch-seconds 0.1
 ```
 
 `--workflows` is the concurrent workflow count **per mode**. Only session-capable
 workers register the workflow; activity-only workers never receive session
 activities. Workflows start only after every worker is polling, eager activity
 execution is disabled, and each invocation uses a unique task queue. The command
-exits non-zero if any affinity-on workflow did not load once and reuse its cache on
-a single worker.
+exits non-zero if any affinity-on workflow ran on more than one worker or fetched
+any turn.

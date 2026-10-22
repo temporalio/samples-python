@@ -37,8 +37,8 @@ async def test_demo_cli(
         "2",
         "--steps",
         "3",
-        "--load-seconds",
-        "0.2",
+        "--fetch-seconds",
+        "0.1",
         "--no-live",
         env={
             **os.environ,

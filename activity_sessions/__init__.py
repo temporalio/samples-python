@@ -10,5 +10,6 @@ class StepEvent:
     workflow_id: str
     step: int
     worker: str
-    cache_hit: bool
+    # Earlier conversation turns this worker had to fetch before running the step.
+    fetched: int
     finished: bool

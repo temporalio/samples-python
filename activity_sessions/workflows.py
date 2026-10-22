@@ -20,7 +20,7 @@ class ProcessConversation:
             if input.affinity_enabled
             else None
         )
-        for step in range(1, input.steps + 1):
+        for step in range(input.steps):
             await workflow.execute_activity(
                 "conversation_step",
                 step,

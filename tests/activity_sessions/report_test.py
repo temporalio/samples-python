@@ -14,6 +14,7 @@ def test_report_includes_idle_worker_and_session_setting(capsys) -> None:
         {"worker-1": True, "worker-2": False},
     )
     lines = capsys.readouterr().out.splitlines()
+    assert any(line.split() == ["1", "worker-1", "ON", "MISS"] for line in lines)
     assert any(line.split() == ["worker-1", "ON", "3", "2", "1"] for line in lines)
     assert any(line.split() == ["worker-2", "OFF", "0", "0", "0"] for line in lines)
     assert any("Verified:" in line for line in lines)

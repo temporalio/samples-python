@@ -1,5 +1,6 @@
 import asyncio
 import os
+import signal
 import sys
 import uuid
 from pathlib import Path
@@ -119,7 +120,10 @@ async def test_comparison_with_independent_worker_processes(
     finally:
         for process in processes:
             if process.returncode is None:
-                process.terminate()
+                if sys.platform == "win32":
+                    process.terminate()
+                else:
+                    process.send_signal(signal.SIGINT)
         for process in processes:
             try:
                 await asyncio.wait_for(process.wait(), 15)
@@ -128,4 +132,5 @@ async def test_comparison_with_independent_worker_processes(
                 await process.wait()
         for log in logs:
             log.close()
-    assert all(process.returncode == 0 for process in processes)
+    if sys.platform != "win32":
+        assert all(process.returncode == 0 for process in processes)

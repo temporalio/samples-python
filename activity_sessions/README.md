@@ -75,8 +75,9 @@ for zero-execution rows. Capabilities for workers that actually execute activiti
 come from their results; this table is not a worker health check or registry.
 Repeat the activity-only command with more unique identities for a larger pool.
 
-Ctrl+C or SIGTERM shuts down a worker. No per-worker queues, cache registry,
-artifact protocol, or external services are required. `--context-file` can select
+Ctrl+C stops a worker using the SDK's normal run/shutdown lifecycle. No per-worker
+queues, cache registry, artifact protocol, or external services are required.
+`--context-file` can select
 another shared context file. This demonstrates healthy-worker affinity and cache
 reuse, not lifetime isolation, failover, or physical queue provenance.
 

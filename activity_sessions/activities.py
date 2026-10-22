@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import cast
 
 from temporalio import activity
 
@@ -16,8 +17,7 @@ class ConversationActivities:
 
     @activity.defn
     async def conversation_step(self, step: int) -> StepResult:
-        run_id = activity.info().workflow_run_id
-        assert run_id is not None
+        run_id = cast(str, activity.info().workflow_run_id)
         cache_hit = run_id in self.cache
         if not cache_hit:
             self.cache[run_id] = self.context_file.read_text()

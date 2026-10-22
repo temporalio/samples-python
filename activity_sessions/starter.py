@@ -19,10 +19,11 @@ def print_results(
 ) -> None:
     print(f"\nActivity affinity: {'ON' if affinity_enabled else 'OFF'}")
     print(f"Workflow-task worker(s): {', '.join(sorted(workflow_workers))}")
-    print(f"{'Step':<6}{'Activity worker':<22}Cache")
+    print(f"{'Step':<6}{'Activity worker':<22}{'Session support':<18}Cache")
     for result in results:
         print(
             f"{result.step:<6}{result.worker_identity:<22}"
+            f"{'ON' if result.session_enabled else 'OFF':<18}"
             f"{'HIT' if result.cache_hit else 'MISS'}"
         )
     print(
@@ -57,7 +58,13 @@ async def run_comparison(
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config)
-    for affinity_enabled in [False, True] if mode == "compare" else [mode == "on"]:
+    if mode == "compare":
+        affinity_modes = [False, True]
+    elif mode == "on":
+        affinity_modes = [True]
+    else:
+        affinity_modes = [False]
+    for affinity_enabled in affinity_modes:
         handle = await client.start_workflow(
             ProcessConversation.run,
             affinity_enabled,

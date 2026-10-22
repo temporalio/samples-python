@@ -1,8 +1,6 @@
 import argparse
 import asyncio
 import os
-import signal
-from contextlib import suppress
 from pathlib import Path
 
 from temporalio.client import Client
@@ -22,11 +20,7 @@ async def run_worker(
     client = await Client.connect(**config, identity=identity)
     session_enabled = not activity_only
     activities = ConversationActivities(identity, session_enabled, context_file)
-    stop = asyncio.Event()
-    for signum in (signal.SIGINT, signal.SIGTERM):
-        with suppress(NotImplementedError):
-            asyncio.get_running_loop().add_signal_handler(signum, stop.set)
-    async with Worker(
+    worker = Worker(
         client,
         task_queue=task_queue,
         workflows=[ProcessConversation] if session_enabled else [],
@@ -35,13 +29,13 @@ async def run_worker(
         disable_eager_activity_execution=True,
         max_cached_workflows=100 if session_enabled else 0,
         max_concurrent_activities=2,
-    ):
-        print(
-            f"{identity} pid={os.getpid()} queue={task_queue} "
-            f"session_support={'ON' if session_enabled else 'OFF'}",
-            flush=True,
-        )
-        await stop.wait()
+    )
+    print(
+        f"{identity} pid={os.getpid()} queue={task_queue} "
+        f"session_support={'ON' if session_enabled else 'OFF'}",
+        flush=True,
+    )
+    await worker.run()
 
 
 def main() -> None:

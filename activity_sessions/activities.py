@@ -17,6 +17,7 @@ class ConversationActivities:
 
     @activity.defn
     async def conversation_step(self, step: int) -> StepResult:
+        # Only standalone activities lack a workflow Run ID; this sample calls it from a workflow.
         run_id = cast(str, activity.info().workflow_run_id)
         cache_hit = run_id in self.cache
         if not cache_hit:

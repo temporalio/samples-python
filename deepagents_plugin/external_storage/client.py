@@ -2,7 +2,6 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from dataclasses import replace
 
 import aioboto3
 from langchain_core.messages import AIMessage
@@ -43,7 +42,7 @@ async def connect_client(
             bucket=S3_BUCKET,
         )
         storage = ExternalStorage(drivers=[driver])
-        data_converter = replace(DataConverter.default, external_storage=storage)
+        data_converter = DataConverter(external_storage=storage)
         # Script the model so the demo needs no LLM provider or API key.
         plugin = DeepAgentsPlugin(
             data_converter=data_converter,

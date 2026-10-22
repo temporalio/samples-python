@@ -1,31 +1,36 @@
-from pathlib import Path
+import asyncio
+from collections.abc import Callable
 from typing import cast
 
 from temporalio import activity
 
-from activity_sessions import StepResult
+from activity_sessions import StepEvent
 
 
 class ConversationActivities:
+    """Activities sharing one worker-local cache; each worker process has its own."""
+
     def __init__(
-        self, worker_identity: str, session_enabled: bool, context_file: Path
+        self,
+        worker_identity: str,
+        load_seconds: float,
+        emit: Callable[[StepEvent], None],
     ) -> None:
         self.worker_identity = worker_identity
-        self.session_enabled = session_enabled
-        self.context_file = context_file
+        self.load_seconds = load_seconds
+        self.emit = emit
         self.cache: dict[str, str] = {}
 
     @activity.defn
-    async def conversation_step(self, step: int) -> StepResult:
-        # Only standalone activities lack a workflow Run ID; this sample calls it from a workflow.
-        run_id = cast(str, activity.info().workflow_run_id)
+    async def conversation_step(self, step: int) -> None:
+        info = activity.info()
+        # Only standalone activities lack workflow IDs; this sample calls it from a workflow.
+        workflow_id = cast(str, info.workflow_id)
+        run_id = cast(str, info.workflow_run_id)
         cache_hit = run_id in self.cache
+        self.emit(StepEvent(workflow_id, step, self.worker_identity, cache_hit, False))
         if not cache_hit:
-            self.cache[run_id] = self.context_file.read_text()
-        context = self.cache[run_id]
-        print(
-            f"[{self.worker_identity}] step={step} "
-            f"cache={'HIT' if cache_hit else 'MISS'} context_size={len(context)}",
-            flush=True,
-        )
-        return StepResult(step, self.worker_identity, self.session_enabled, cache_hit)
+            # Stands in for a slow fetch of conversation history from an external store.
+            await asyncio.sleep(self.load_seconds)
+            self.cache[run_id] = f"Conversation context for {workflow_id}"
+        self.emit(StepEvent(workflow_id, step, self.worker_identity, cache_hit, True))

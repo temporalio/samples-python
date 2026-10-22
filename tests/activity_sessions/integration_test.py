@@ -2,7 +2,6 @@ import asyncio
 import os
 import signal
 import sys
-from pathlib import Path
 
 import pytest
 from temporalio.client import Client
@@ -21,14 +20,11 @@ pytestmark = pytest.mark.skipif(
 async def test_demo_cli(
     client: Client,
     request: pytest.FixtureRequest,
-    tmp_path: Path,
     session_workers: int,
     activity_workers: int,
 ) -> None:
     if request.config.getoption("--workflow-environment") in ("local", "time-skipping"):
         pytest.fail("Use --workflow-environment host:port for the custom server")
-    context_file = tmp_path / "conversation.txt"
-    context_file.write_text("Conversation context")
     demo = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
@@ -39,8 +35,11 @@ async def test_demo_cli(
         str(activity_workers),
         "--workflows",
         "2",
-        "--context-file",
-        str(context_file),
+        "--steps",
+        "3",
+        "--load-seconds",
+        "0.2",
+        "--no-live",
         env={
             **os.environ,
             "TEMPORAL_ADDRESS": client.service_client.config.target_host,
@@ -52,7 +51,7 @@ async def test_demo_cli(
     try:
         output, _ = await asyncio.wait_for(demo.communicate(), 120)
         assert demo.returncode == 0, output.decode()
-        assert "Verified: 2 context load(s)" in output.decode()
+        assert "Verified: each of 2 workflow(s)" in output.decode()
         print(output.decode())
     finally:
         if demo.returncode is None:

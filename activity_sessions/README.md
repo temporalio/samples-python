@@ -3,21 +3,17 @@
 This sample shows how activity affinity lets a workflow reuse conversation context
 cached in its worker's memory, without managing per-worker task queues.
 
-Each workflow calls three regular activities sequentially:
-
-```text
-conversation_step(1) → conversation_step(2) → conversation_step(3)
-```
-
-Each worker runs in a separate process with its own dictionary cache, keyed by
-workflow Run ID. A cache miss loads `conversation.txt`, standing in for an external
-conversation source. The context is **worker-local, not workflow state**, and can
-be reloaded if absent.
+Each workflow calls `conversation_step` sequentially (five times by default). Each
+worker runs in a separate process with its own dictionary cache, keyed by workflow
+Run ID. A cache miss sleeps for `--load-seconds` (default 1s), standing in for a
+slow fetch of conversation history; a hit is instant. The context is
+**worker-local, not workflow state**, and can be reloaded if absent.
 
 With affinity **on**, activities use
-`workflow.ActivitySessionOptions.workflow_session()`: expect one MISS followed by
-two HITs on the workflow's worker. With affinity **off**, activities may execute
-on different workers and load the context separately. They may also colocate by
+`workflow.ActivitySessionOptions.workflow_session()`: each workflow loads its
+context once and every later step hits the cache on the same worker. With affinity
+**off**, steps spread across the pool, so the same context is loaded on several
+workers and workflows take several times longer. Steps may still colocate by
 chance; ordinary routing does not guarantee either outcome.
 
 ## Prerequisites
@@ -47,29 +43,32 @@ From the **samples repository root**, run:
 "$SDK_PYTHON" -m activity_sessions.run
 ```
 
-This starts two session-capable worker processes, runs one workflow with affinity
-off and another with affinity on, prints the results, and shuts down the workers.
-Ctrl+C also requests shutdown of all workers.
+This starts four session-capable worker processes, runs 20 concurrent workflows
+with affinity off and then 20 with affinity on, and shuts down the workers.
 
-For a larger pool, choose either:
+While a batch runs, a live view shows each worker's cache filling up and a
+placement strip per workflow: `●` is a context load (miss), `○` a cache hit, `◌`
+a load in progress, and the number/color is the worker that ran the step. The
+final summary prints both batches side by side, followed by an impact table:
+context loads, cache copies per workflow, time spent loading, and workflow latency.
+Pass `--no-live` (or redirect output) to print only the summary.
+
+Useful options (run with `--help` for all):
 
 ```bash
-# Ten session-capable workers; ten workflows per affinity mode.
-"$SDK_PYTHON" -m activity_sessions.run --session-workers 10 --workflows 10
+# More workers and steps make ordinary placement scatter even more.
+"$SDK_PYTHON" -m activity_sessions.run --session-workers 8 --steps 10
 
-# One session-capable worker plus nine ordinary activity-only workers.
-"$SDK_PYTHON" -m activity_sessions.run \
-  --session-workers 1 --activity-workers 9 --workflows 10
+# One session-capable worker plus three activity-only workers.
+"$SDK_PYTHON" -m activity_sessions.run --session-workers 1 --activity-workers 3
+
+# Run only one mode, with a faster simulated load.
+"$SDK_PYTHON" -m activity_sessions.run --affinity on --load-seconds 0.2
 ```
 
-`--workflows` is the concurrent workflow count **per mode**: the commands above
-run twenty workflows total. Use `--affinity on` or `--affinity off` to run just one
-mode. Workers stay unchanged between the two batches, and eager activity
-execution is disabled. Only session-capable workers register workflows.
-
-The tables show worker configuration, which worker executed each workflow/activity,
-cache HITs/MISSes, and per-worker totals including idle workers.
-
-Each invocation uses a unique shared task queue to avoid interference from other
-runs. Optional `--task-queue` and `--context-file` arguments override the defaults.
-Run with `--help` to see all options.
+`--workflows` is the concurrent workflow count **per mode**. Only session-capable
+workers register the workflow; activity-only workers never receive session
+activities. Workflows start only after every worker is polling, eager activity
+execution is disabled, and each invocation uses a unique task queue. The command
+exits non-zero if any affinity-on workflow did not load once and reuse its cache on
+a single worker.

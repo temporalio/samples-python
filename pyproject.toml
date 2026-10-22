@@ -112,9 +112,6 @@ constraint-dependencies = [
 [tool.setuptools.packages.find]
 exclude = ["lambda_worker*"]
 
-[tool.setuptools.package-data]
-activity_sessions = ["conversation.txt"]
-
 [build-system]
 requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"

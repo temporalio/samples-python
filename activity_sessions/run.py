@@ -1,55 +1,76 @@
 import argparse
 import asyncio
+import contextlib
 import multiprocessing
+import queue
+import time
 import uuid
 from datetime import timedelta
-from pathlib import Path
+from multiprocessing.queues import Queue
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from activity_sessions import TASK_QUEUE, worker_configuration
+from activity_sessions import TASK_QUEUE, StepEvent
 from activity_sessions.display import (
-    WorkflowResult,
-    print_results,
+    Batch,
+    affinity_violations,
     print_worker_configuration,
+    summary,
 )
 from activity_sessions.worker import worker_process
-from activity_sessions.workflows import ProcessConversation
+from activity_sessions.workflows import ConversationInput, ProcessConversation
+
+if TYPE_CHECKING:
+    from activity_sessions.live import LiveView
 
 
-async def run_workflows(
+async def run_batch(
     client: Client,
+    args: argparse.Namespace,
     affinity_enabled: bool,
-    task_queue: str,
-    known_workers: dict[str, bool],
-    workflows: int,
-) -> None:
-    async def run_workflow(index: int) -> WorkflowResult:
-        workflow_id = (
-            f"{'on' if affinity_enabled else 'off'}-{uuid.uuid4().hex[:8]}-{index}"
-        )
-        handle = await client.start_workflow(
-            ProcessConversation.run,
-            affinity_enabled,
-            id=workflow_id,
-            task_queue=task_queue,
-            execution_timeout=timedelta(minutes=1),
-        )
-        results = await handle.result()
-        history = await handle.fetch_history()
-        owners = {
-            event.workflow_task_started_event_attributes.identity
-            for event in history.events
-            if event.HasField("workflow_task_started_event_attributes")
-        }
-        return WorkflowResult(workflow_id, results, owners)
-
-    runs = await asyncio.gather(
-        *(run_workflow(index + 1) for index in range(workflows))
+    events: "Queue[StepEvent]",
+    view: "LiveView | None",
+) -> Batch:
+    prefix = f"{'on' if affinity_enabled else 'off'}-{uuid.uuid4().hex[:6]}"
+    batch = Batch(
+        affinity_enabled,
+        [f"{prefix}-{index:02}" for index in range(1, args.workflows + 1)],
     )
-    print_results(affinity_enabled, runs, known_workers)
+    started = time.monotonic()
+
+    async def run_workflow(workflow_id: str) -> None:
+        begin = time.monotonic()
+        await client.execute_workflow(
+            ProcessConversation.run,
+            ConversationInput(affinity_enabled, args.steps),
+            id=workflow_id,
+            task_queue=args.task_queue,
+            execution_timeout=timedelta(minutes=5),
+        )
+        batch.durations[workflow_id] = time.monotonic() - begin
+
+    pending = {asyncio.create_task(run_workflow(w)) for w in batch.workflow_ids}
+    expected_steps = args.workflows * args.steps
+    # Workflows can complete just before their activities' last events arrive.
+    while pending or len(batch.finished_steps()) < expected_steps:
+        if pending:
+            done, pending = await asyncio.wait(pending, timeout=0.1)
+            for task in done:
+                task.result()
+        else:
+            await asyncio.sleep(0.05)
+        while True:
+            try:
+                batch.record(events.get_nowait())
+            except queue.Empty:
+                break
+        if view:
+            view.show(batch)
+    batch.wall_seconds = time.monotonic() - started
+    return batch
 
 
 async def main() -> None:
@@ -60,71 +81,93 @@ async def main() -> None:
         "--affinity", choices=["compare", "on", "off"], default="compare"
     )
     parser.add_argument("--task-queue", default=f"{TASK_QUEUE}-{uuid.uuid4().hex[:8]}")
-    parser.add_argument("--session-workers", type=int, default=2)
-    parser.add_argument("--activity-workers", type=int, default=0)
+    parser.add_argument("--session-workers", type=int, default=4)
     parser.add_argument(
-        "--workflows",
+        "--activity-workers",
         type=int,
-        default=1,
-        help="Concurrent workflows per affinity mode",
+        default=0,
+        help="Additional activity-only workers without session support",
     )
     parser.add_argument(
-        "--context-file",
-        type=Path,
-        default=Path(__file__).with_name("conversation.txt"),
+        "--workflows", type=int, default=20, help="Concurrent workflows per mode"
+    )
+    parser.add_argument(
+        "--steps", type=int, default=5, help="Sequential activities per workflow"
+    )
+    parser.add_argument(
+        "--load-seconds",
+        type=float,
+        default=1.0,
+        help="Simulated latency of loading context on a cache miss",
+    )
+    parser.add_argument(
+        "--no-live", action="store_true", help="Only print the final summary"
     )
     args = parser.parse_args()
     if args.session_workers < 1:
         parser.error("The demo needs at least one session worker to run workflows")
-    if args.workflows < 1:
-        parser.error("At least one workflow per mode is required")
-    try:
-        workers = worker_configuration(args.session_workers, args.activity_workers)
-    except ValueError as error:
-        parser.error(str(error))
+    if args.activity_workers < 0:
+        parser.error("--activity-workers cannot be negative")
+    if args.workflows < 1 or args.steps < 1:
+        parser.error("--workflows and --steps must be at least 1")
 
+    workers = {
+        f"worker-{index}": index <= args.session_workers
+        for index in range(1, args.session_workers + args.activity_workers + 1)
+    }
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config)
-    print_worker_configuration(workers, Console())
+    console = Console()
+    print_worker_configuration(workers, console)
+
     # Spawn gives each worker a fresh interpreter, SDK runtime, and private cache.
     context = multiprocessing.get_context("spawn")
-    stop = context.Event()
-    processes = []
-    try:
-        for identity, session_enabled in workers.items():
-            process = context.Process(
-                target=worker_process,
-                args=(
-                    identity,
-                    session_enabled,
-                    args.task_queue,
-                    args.context_file,
-                    stop,
-                ),
-            )
-            process.start()
-            processes.append(process)
-
-        if args.affinity == "compare":
-            affinity_modes = [False, True]
-        else:
-            affinity_modes = [args.affinity == "on"]
-        for affinity_enabled in affinity_modes:
-            await run_workflows(
-                client,
-                affinity_enabled,
+    events: "Queue[StepEvent]" = context.Queue()
+    ready = context.Barrier(len(workers) + 1)
+    processes = [
+        context.Process(
+            target=worker_process,
+            args=(
+                identity,
+                session_enabled,
                 args.task_queue,
-                workers,
-                args.workflows,
-            )
-    finally:
-        stop.set()
-        await asyncio.gather(
-            *(asyncio.to_thread(process.join) for process in processes)
+                args.load_seconds,
+                events,
+                ready,
+            ),
+            daemon=True,
         )
+        for identity, session_enabled in workers.items()
+    ]
+    modes = [False, True] if args.affinity == "compare" else [args.affinity == "on"]
+    batches = []
+    try:
         for process in processes:
-            process.close()
+            process.start()
+        with console.status("Starting workers..."):
+            # Start workflows only once every worker polls, so none gets a head start.
+            await asyncio.to_thread(ready.wait, 60)
+        view = None
+        if not args.no_live and console.is_terminal:
+            from activity_sessions.live import LiveView
+
+            view = LiveView(workers, args.steps, console)
+        with view or contextlib.nullcontext():
+            for affinity_enabled in modes:
+                batches.append(
+                    await run_batch(client, args, affinity_enabled, events, view)
+                )
+    finally:
+        ready.abort()
+        for process in processes:
+            process.terminate()
+        for process in processes:
+            process.join()
+
+    console.print(summary(batches, args.steps, len(workers), args.load_seconds))
+    if any(affinity_violations(batch) for batch in batches if batch.affinity_enabled):
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

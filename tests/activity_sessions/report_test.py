@@ -3,80 +3,71 @@ import io
 import pytest
 from rich.console import Console
 
-from activity_sessions import StepResult, worker_configuration
+from activity_sessions import StepEvent
 from activity_sessions.display import (
-    WorkflowResult,
-    print_results,
+    Batch,
+    affinity_violations,
     print_worker_configuration,
+    summary,
 )
 
 
-def test_rich_report_separates_configuration_and_execution() -> None:
+def batch(affinity_enabled: bool, placements: dict[str, list[tuple[str, bool]]]):
+    result = Batch(affinity_enabled, list(placements))
+    for workflow_id, steps in placements.items():
+        for step, (worker, cache_hit) in enumerate(steps, 1):
+            result.record(StepEvent(workflow_id, step, worker, cache_hit, True))
+        result.durations[workflow_id] = sum(not hit for _, hit in steps) * 1.0
+    result.wall_seconds = max(result.durations.values())
+    return result
+
+
+def render(*batches: Batch) -> str:
     output = io.StringIO()
-    console = Console(file=output, width=140, color_system=None)
-    workers = worker_configuration(1, 1)
-    print_worker_configuration(workers, console)
-    print_results(
+    Console(file=output, width=140, color_system=None).print(
+        summary(batches, 3, 2, 1.0)
+    )
+    return output.getvalue()
+
+
+def test_comparison_reports_loads_and_speedup() -> None:
+    off = batch(
+        False, {"off-1": [("worker-1", False), ("worker-2", False), ("worker-1", True)]}
+    )
+    on = batch(
+        True, {"on-1": [("worker-2", False), ("worker-2", True), ("worker-2", True)]}
+    )
+    text = render(off, on)
+    assert "Affinity OFF" in text and "Affinity ON" in text
+    assert "●1" in text and "○2" in text
+    assert "50% fewer" in text
+    assert "2.0x faster" in text
+    assert "Verified: each of 1 workflow(s)" in text
+
+
+def test_affinity_violations_flag_split_or_repeated_loads() -> None:
+    result = batch(
         True,
-        [
-            WorkflowResult(
-                "workflow-1",
-                [StepResult(step, "worker-1", True, step != 1) for step in (1, 2, 3)],
-                {"worker-1"},
-            )
-        ],
-        workers,
-        console,
+        {
+            "good": [("worker-1", False), ("worker-1", True), ("worker-1", True)],
+            "split": [("worker-1", False), ("worker-2", False), ("worker-1", True)],
+        },
     )
-    text = output.getvalue()
-    assert "Worker configuration" in text
-    assert "Activity only" in text
-    assert "OFF" in text
-    assert "Workflow execution" in text
-    assert "workflow-1" in text
-    assert "Per-worker totals" in text
-    assert "MISS" in text and "HIT" in text
-    assert "Verified: 1 context load(s)" in text
+    assert affinity_violations(result) == ["split"]
+    assert "Affinity not observed for: split" in render(result)
 
 
-def test_batch_reports_each_workflows_owner_and_its_cold_cache() -> None:
-    output = io.StringIO()
-    runs = [
-        WorkflowResult(
-            f"workflow-{index}",
-            [
-                StepResult(step, f"worker-{index}", True, step != 1)
-                for step in (1, 2, 3)
-            ],
-            {f"worker-{index}"},
-        )
-        for index in (1, 2)
-    ]
-    print_results(
-        True, runs, worker_configuration(2, 0), Console(file=output, width=140)
-    )
-    assert "Verified: 2 context load(s)" in output.getvalue()
-
-
-def test_ordinary_routing_may_colocate_by_chance() -> None:
-    output = io.StringIO()
-    print_results(
-        False,
-        [
-            WorkflowResult(
-                "workflow-1", [StepResult(1, "worker-1", True, False)], {"worker-1"}
-            )
-        ],
-        worker_configuration(1, 0),
-        Console(file=output, width=140),
-    )
-    assert "may also colocate by chance" in output.getvalue()
-
-
-def test_worker_counts_define_the_two_requested_pool_shapes() -> None:
-    assert list(worker_configuration(10, 0).values()) == [True] * 10
-    assert list(worker_configuration(1, 9).values()) == [True] + [False] * 9
+def test_unknown_workflow_event_is_rejected() -> None:
+    result = Batch(True, ["known"])
     with pytest.raises(ValueError):
-        worker_configuration(0, 0)
-    with pytest.raises(ValueError):
-        worker_configuration(-1, 2)
+        result.record(StepEvent("other", 1, "worker-1", False, True))
+
+
+def test_worker_configuration_lists_roles() -> None:
+    output = io.StringIO()
+    print_worker_configuration(
+        {"worker-1": True, "worker-2": False},
+        Console(file=output, width=140, color_system=None),
+    )
+    assert "Workflow + activity" in output.getvalue()
+    assert "Activity only" in output.getvalue()

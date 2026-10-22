@@ -1,13 +1,13 @@
 import asyncio
-import os
 import signal
-from multiprocessing.synchronize import Event
-from pathlib import Path
+from multiprocessing.queues import Queue
+from multiprocessing.synchronize import Barrier
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker, WorkerSessionOptions
 
+from activity_sessions import StepEvent
 from activity_sessions.activities import ConversationActivities
 from activity_sessions.workflows import ProcessConversation
 
@@ -16,13 +16,14 @@ async def run_worker(
     identity: str,
     session_enabled: bool,
     task_queue: str,
-    context_file: Path,
-    stop: Event,
+    load_seconds: float,
+    events: "Queue[StepEvent]",
+    ready: Barrier,
 ) -> None:
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config, identity=identity)
-    activities = ConversationActivities(identity, session_enabled, context_file)
+    activities = ConversationActivities(identity, load_seconds, events.put)
     worker = Worker(
         client,
         task_queue=task_queue,
@@ -30,25 +31,24 @@ async def run_worker(
         activities=[activities.conversation_step],
         session_worker_options=WorkerSessionOptions() if session_enabled else None,
         disable_eager_activity_execution=True,
-        max_cached_workflows=100 if session_enabled else 0,
-        max_concurrent_activities=2,
-    )
-    print(
-        f"{identity} pid={os.getpid()} queue={task_queue} "
-        f"session_support={'ON' if session_enabled else 'OFF'}",
-        flush=True,
+        max_concurrent_activities=100,
     )
     async with worker:
-        await asyncio.to_thread(stop.wait)
+        await asyncio.to_thread(ready.wait)
+        # Run until the parent terminates this process.
+        await asyncio.Event().wait()
 
 
 def worker_process(
     identity: str,
     session_enabled: bool,
     task_queue: str,
-    context_file: Path,
-    stop: Event,
+    load_seconds: float,
+    events: "Queue[StepEvent]",
+    ready: Barrier,
 ) -> None:
-    # The parent handles Ctrl+C and releases all workers through the shared event.
+    # The parent handles Ctrl+C and terminates every worker.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    asyncio.run(run_worker(identity, session_enabled, task_queue, context_file, stop))
+    asyncio.run(
+        run_worker(identity, session_enabled, task_queue, load_seconds, events, ready)
+    )

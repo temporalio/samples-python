@@ -3,24 +3,12 @@ from dataclasses import dataclass
 TASK_QUEUE = "activity-session-cache"
 
 
-def worker_configuration(
-    session_workers: int, activity_workers: int
-) -> dict[str, bool]:
-    if (
-        session_workers < 0
-        or activity_workers < 0
-        or session_workers + activity_workers == 0
-    ):
-        raise ValueError("Worker counts must be nonnegative, with at least one worker")
-    return {
-        f"worker-{index + 1}": index < session_workers
-        for index in range(session_workers + activity_workers)
-    }
+@dataclass(frozen=True)
+class StepEvent:
+    """Sent by an activity when a step starts and again when it finishes."""
 
-
-@dataclass
-class StepResult:
+    workflow_id: str
     step: int
-    worker_identity: str
-    session_enabled: bool
+    worker: str
     cache_hit: bool
+    finished: bool

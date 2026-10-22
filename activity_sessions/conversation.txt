@@ -1,2 +1,0 @@
-Customer: I am planning a weekend trip and need help choosing a destination.
-Agent context: The customer prefers train travel, museums, and vegetarian food.

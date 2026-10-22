@@ -95,6 +95,7 @@ exclude = ["lambda_worker/**"]
 include = ["./**/*.py"]
 exclude = ["lambda_worker/**"]
 packages = [
+    "activity_sessions",
     "activity_worker",
     "bedrock",
     "cloud_export_to_parquet",

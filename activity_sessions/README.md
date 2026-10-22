@@ -43,51 +43,35 @@ Rich is also declared in this repository's `activity-sessions` dependency group.
 The existing SDK environment/profile configuration selects the server and
 namespace, defaulting to `localhost:7233` and `default`.
 
-## Launch a pool
+## Run the demo
 
-In one terminal, choose the worker counts:
+One command starts the workers, runs the workflows, prints the comparison, and
+shuts down the workers:
 
 ```bash
 # Ten session-capable workers, each able to run workflows and activities:
-"$SDK_PYTHON" -m activity_sessions.pool --session-workers 10
+"$SDK_PYTHON" -m activity_sessions.run --session-workers 10 --workflows 10
 
 # Alternatively, one session-capable worker and nine normal activity-only workers:
-"$SDK_PYTHON" -m activity_sessions.pool --session-workers 1 --activity-workers 9
+"$SDK_PYTHON" -m activity_sessions.run \
+  --session-workers 1 --activity-workers 9 --workflows 10
 ```
 
-Run only one of these commands at a time. Each child is a fresh Python process
+Each child is a fresh Python process
 with its own client, runtime, activity instance, and cache. Worker names are
 `worker-1` through `worker-N`; session workers come first. Ctrl+C stops the whole
-pool, and a child exiting unexpectedly stops the pool rather than silently
-leaving a smaller fleet.
+demo. The launcher waits for all worker contexts to start before submitting
+workflows. Startup and workflow execution have bounded timeouts.
 
 All workers use the same logical task queue. Session workers enable
 `WorkerSessionOptions()`; activity-only workers register no workflows. This
 prevents a workflow requiring session activities from landing on an unsupported
 worker. Eager activity execution is disabled.
 
-The default pool is two session workers. A single process can still be started
-manually:
-
-```bash
-"$SDK_PYTHON" -m activity_sessions.worker --identity worker-1
-```
-
-`--activity-only`, `--task-queue`, and `--context-file` are available on the worker.
-The pool also accepts `--task-queue` and `--context-file`.
-
-## Run workflows
-
-In another terminal, use the same worker counts:
-
-```bash
-# Match the ten-session-worker pool; run ten workflows concurrently per mode:
-"$SDK_PYTHON" -m activity_sessions.starter --session-workers 10 --workflows 10
-
-# Or match the one-session/nine-activity-worker pool:
-"$SDK_PYTHON" -m activity_sessions.starter \
-  --session-workers 1 --activity-workers 9 --workflows 10
-```
+Defaults are two session workers and one workflow per mode. `--context-file`
+selects the mock external context. By default each invocation uses a unique task
+queue so another demo's workers cannot affect placement; `--task-queue` overrides
+it.
 
 The default `--affinity compare` runs the ordinary batch first, then the session
 batch, without changing worker configuration. **`--workflows 10` means ten per
@@ -102,8 +86,8 @@ Rich renders:
    that worker's session support, and colored cache hit/miss.
 3. Per-worker batch totals, including idle workers.
 
-Configuration and idle rows come from the supplied counts, not a health check or
-registry. Executing workers' capabilities come from activity results.
+Configuration and idle rows describe the workers launched by this command.
+Executing workers' capabilities come from activity results.
 
 With affinity on, each workflow should miss once and hit twice on its owner.
 Ordinary routing can scatter activities, or colocate them by chance; the sample
@@ -134,7 +118,7 @@ isolation, failover, or physical queue provenance. Cache entries live for the
 worker process lifetime; production caches need resource limits and eviction.
 There are no per-worker queues, cache registry, or artifact protocol.
 
-Unit tests do not require a server. Opt-in tests run the actual pool/starter CLIs
+Unit tests do not require a server. Opt-in tests run the actual demo command
 with three workers, ten session workers, and one session/nine activity workers:
 
 ```bash

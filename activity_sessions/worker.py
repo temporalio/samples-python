@@ -1,24 +1,28 @@
-import argparse
 import asyncio
 import os
+import signal
+from multiprocessing.synchronize import Event
 from pathlib import Path
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker, WorkerSessionOptions
 
-from activity_sessions import TASK_QUEUE
 from activity_sessions.activities import ConversationActivities
 from activity_sessions.workflows import ProcessConversation
 
 
 async def run_worker(
-    identity: str, activity_only: bool, task_queue: str, context_file: Path
+    identity: str,
+    session_enabled: bool,
+    task_queue: str,
+    context_file: Path,
+    ready: Event,
+    stop: Event,
 ) -> None:
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     client = await Client.connect(**config, identity=identity)
-    session_enabled = not activity_only
     activities = ConversationActivities(identity, session_enabled, context_file)
     worker = Worker(
         client,
@@ -35,29 +39,21 @@ async def run_worker(
         f"session_support={'ON' if session_enabled else 'OFF'}",
         flush=True,
     )
-    await worker.run()
+    async with worker:
+        ready.set()
+        await asyncio.to_thread(stop.wait)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--identity", required=True)
-    parser.add_argument("--activity-only", action="store_true")
-    parser.add_argument("--task-queue", default=TASK_QUEUE)
-    parser.add_argument(
-        "--context-file",
-        type=Path,
-        default=Path(__file__).with_name("conversation.txt"),
+def worker_process(
+    identity: str,
+    session_enabled: bool,
+    task_queue: str,
+    context_file: Path,
+    ready: Event,
+    stop: Event,
+) -> None:
+    # The parent handles Ctrl+C and releases all workers through the shared event.
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    asyncio.run(
+        run_worker(identity, session_enabled, task_queue, context_file, ready, stop)
     )
-    args = parser.parse_args()
-    try:
-        asyncio.run(
-            run_worker(
-                args.identity, args.activity_only, args.task_queue, args.context_file
-            )
-        )
-    except KeyboardInterrupt:
-        pass
-
-
-if __name__ == "__main__":
-    main()

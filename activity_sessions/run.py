@@ -19,93 +19,40 @@ from activity_sessions.worker import worker_process
 from activity_sessions.workflows import ProcessConversation
 
 
-async def run_comparison(
+async def run_workflows(
     client: Client,
-    mode: str,
+    affinity_enabled: bool,
     task_queue: str,
     known_workers: dict[str, bool],
     workflows: int,
 ) -> None:
-    console = Console()
-    if mode == "compare":
-        affinity_modes = [False, True]
-    elif mode == "on":
-        affinity_modes = [True]
-    else:
-        affinity_modes = [False]
-    for affinity_enabled in affinity_modes:
-
-        async def run_workflow(index: int) -> WorkflowResult:
-            workflow_id = (
-                f"{'on' if affinity_enabled else 'off'}-{uuid.uuid4().hex[:8]}-{index}"
-            )
-            handle = await client.start_workflow(
-                ProcessConversation.run,
-                affinity_enabled,
-                id=workflow_id,
-                task_queue=task_queue,
-                execution_timeout=timedelta(minutes=1),
-            )
-            results = await handle.result()
-            history = await handle.fetch_history()
-            owners = {
-                event.workflow_task_started_event_attributes.identity
-                for event in history.events
-                if event.HasField("workflow_task_started_event_attributes")
-            }
-            return WorkflowResult(workflow_id, results, owners)
-
-        runs = await asyncio.gather(
-            *(run_workflow(index + 1) for index in range(workflows))
+    async def run_workflow(index: int) -> WorkflowResult:
+        workflow_id = (
+            f"{'on' if affinity_enabled else 'off'}-{uuid.uuid4().hex[:8]}-{index}"
         )
-        print_results(affinity_enabled, runs, known_workers, console)
-
-
-async def run_demo(
-    mode: str,
-    task_queue: str,
-    workers: dict[str, bool],
-    workflows: int,
-    context_file: Path,
-) -> None:
-    config = ClientConfig.load_client_connect_config()
-    config.setdefault("target_host", "localhost:7233")
-    client = await Client.connect(**config)
-    print_worker_configuration(workers, Console())
-    # Spawn gives each worker a fresh interpreter, SDK runtime, and private cache.
-    context = multiprocessing.get_context("spawn")
-    stop = context.Event()
-    processes = []
-    ready_events = []
-    try:
-        for identity, session_enabled in workers.items():
-            ready = context.Event()
-            process = context.Process(
-                target=worker_process,
-                args=(identity, session_enabled, task_queue, context_file, ready, stop),
-            )
-            process.start()
-            processes.append(process)
-            ready_events.append(ready)
-        started = await asyncio.gather(
-            *(asyncio.to_thread(ready.wait, 30) for ready in ready_events)
+        handle = await client.start_workflow(
+            ProcessConversation.run,
+            affinity_enabled,
+            id=workflow_id,
+            task_queue=task_queue,
+            execution_timeout=timedelta(minutes=1),
         )
-        if not all(started):
-            raise RuntimeError("A worker failed to start; see its output above")
-        await run_comparison(client, mode, task_queue, workers, workflows)
-    finally:
-        stop.set()
-        await asyncio.gather(
-            *(asyncio.to_thread(process.join, 15) for process in processes)
-        )
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
-                await asyncio.to_thread(process.join)
-            process.close()
+        results = await handle.result()
+        history = await handle.fetch_history()
+        owners = {
+            event.workflow_task_started_event_attributes.identity
+            for event in history.events
+            if event.HasField("workflow_task_started_event_attributes")
+        }
+        return WorkflowResult(workflow_id, results, owners)
+
+    runs = await asyncio.gather(
+        *(run_workflow(index + 1) for index in range(workflows))
+    )
+    print_results(affinity_enabled, runs, known_workers)
 
 
-def main() -> None:
+async def main() -> None:
     parser = argparse.ArgumentParser(
         description="Run a worker pool and compare activity affinity and cache reuse."
     )
@@ -135,19 +82,53 @@ def main() -> None:
         workers = worker_configuration(args.session_workers, args.activity_workers)
     except ValueError as error:
         parser.error(str(error))
+
+    config = ClientConfig.load_client_connect_config()
+    config.setdefault("target_host", "localhost:7233")
+    client = await Client.connect(**config)
+    print_worker_configuration(workers, Console())
+    # Spawn gives each worker a fresh interpreter, SDK runtime, and private cache.
+    context = multiprocessing.get_context("spawn")
+    stop = context.Event()
+    processes = []
     try:
-        asyncio.run(
-            run_demo(
-                args.affinity,
+        for identity, session_enabled in workers.items():
+            process = context.Process(
+                target=worker_process,
+                args=(
+                    identity,
+                    session_enabled,
+                    args.task_queue,
+                    args.context_file,
+                    stop,
+                ),
+            )
+            process.start()
+            processes.append(process)
+
+        if args.affinity == "compare":
+            affinity_modes = [False, True]
+        else:
+            affinity_modes = [args.affinity == "on"]
+        for affinity_enabled in affinity_modes:
+            await run_workflows(
+                client,
+                affinity_enabled,
                 args.task_queue,
                 workers,
                 args.workflows,
-                args.context_file,
             )
+    finally:
+        stop.set()
+        await asyncio.gather(
+            *(asyncio.to_thread(process.join) for process in processes)
         )
-    except KeyboardInterrupt:
-        pass
+        for process in processes:
+            process.close()
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

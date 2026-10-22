@@ -17,7 +17,6 @@ async def run_worker(
     session_enabled: bool,
     task_queue: str,
     context_file: Path,
-    ready: Event,
     stop: Event,
 ) -> None:
     config = ClientConfig.load_client_connect_config()
@@ -40,7 +39,6 @@ async def run_worker(
         flush=True,
     )
     async with worker:
-        ready.set()
         await asyncio.to_thread(stop.wait)
 
 
@@ -49,11 +47,8 @@ def worker_process(
     session_enabled: bool,
     task_queue: str,
     context_file: Path,
-    ready: Event,
     stop: Event,
 ) -> None:
     # The parent handles Ctrl+C and releases all workers through the shared event.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    asyncio.run(
-        run_worker(identity, session_enabled, task_queue, context_file, ready, stop)
-    )
+    asyncio.run(run_worker(identity, session_enabled, task_queue, context_file, stop))

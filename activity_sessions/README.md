@@ -1,131 +1,75 @@
 # Activity sessions and a worker-local cache
 
-This experimental sample needs the session SDK from
-[sdk-python#1979](https://github.com/temporalio/sdk-python/pull/1979) and the server
-from [temporal#12630](https://github.com/temporalio/temporal/pull/12630), with
-`system.enableStickyActivityExecution` enabled for your namespace.
+This sample shows how activity affinity lets a workflow reuse conversation context
+cached in its worker's memory, without managing per-worker task queues.
 
-The workflow remains simply:
+Each workflow calls three regular activities sequentially:
 
 ```text
 conversation_step(1) → conversation_step(2) → conversation_step(3)
 ```
 
-Each worker process owns one activity instance and dictionary cache, keyed by
-workflow Run ID. A miss reads `conversation.txt`, a stand-in for an external
-conversation source. Further activities on the same process reuse that context.
-The dictionary and context are not workflow state. A new execution starts cold,
-and a new process can reload the context from the file.
+Each worker runs in a separate process with its own dictionary cache, keyed by
+workflow Run ID. A cache miss loads `conversation.txt`, standing in for an external
+conversation source. The context is **worker-local, not workflow state**, and can
+be reloaded if absent.
 
-Only the activity option changes between the two runs:
+With affinity **on**, activities use
+`workflow.ActivitySessionOptions.workflow_session()`: expect one MISS followed by
+two HITs on the workflow's worker. With affinity **off**, activities may execute
+on different workers and load the context separately. They may also colocate by
+chance; ordinary routing does not guarantee either outcome.
 
-```python
-"session_options": (
-    workflow.ActivitySessionOptions.workflow_session()
-    if affinity_enabled
-    else None
-)
-```
+## Prerequisites
 
-## Setup
+1. Run the server from [temporal#12630](https://github.com/temporalio/temporal/pull/12630),
+   with the `default` namespace and `system.enableStickyActivityExecution` enabled.
+2. Build the SDK from [sdk-python#1979](https://github.com/temporalio/sdk-python/pull/1979)
+   by running `poe build-develop` in that SDK checkout.
+3. From the **samples repository root**, select the built SDK's interpreter and
+   install Rich for the result tables:
 
-Build the session SDK with `poe build-develop`. From the samples repository root,
-set `SDK_PYTHON` in each terminal to that SDK checkout's `.venv/bin/python`, then
-install the sample's Rich display dependency into that environment:
+   ```bash
+   export SDK_PYTHON=/absolute/path/to/sdk-python/.venv/bin/python
+   uv pip install --python "$SDK_PYTHON" 'rich>=13,<15'
+   ```
 
-```bash
-export SDK_PYTHON=/absolute/path/to/sdk-python/.venv/bin/python
-uv pip install --python "$SDK_PYTHON" 'rich>=13,<15'
-```
+Use this interpreter for the commands below; the released SDK does not provide
+the experimental session API. The sample connects to `localhost:7233`, namespace
+`default`, unless overridden by `TEMPORAL_ADDRESS` / `TEMPORAL_NAMESPACE` or SDK
+profile configuration.
 
-Use this interpreter rather than allowing `uv run` to select the released SDK.
-Rich is also declared in this repository's `activity-sessions` dependency group.
-The existing SDK environment/profile configuration selects the server and
-namespace, defaulting to `localhost:7233` and `default`.
+## Run
 
-## Run the demo
-
-One command starts the workers, runs the workflows, prints the comparison, and
-shuts down the workers:
+From the **samples repository root**, run:
 
 ```bash
-# Ten session-capable workers, each able to run workflows and activities:
+"$SDK_PYTHON" -m activity_sessions.run
+```
+
+This starts two session-capable worker processes, runs one workflow with affinity
+off and another with affinity on, prints the results, and shuts down the workers.
+Ctrl+C also requests shutdown of all workers.
+
+For a larger pool, choose either:
+
+```bash
+# Ten session-capable workers; ten workflows per affinity mode.
 "$SDK_PYTHON" -m activity_sessions.run --session-workers 10 --workflows 10
 
-# Alternatively, one session-capable worker and nine normal activity-only workers:
+# One session-capable worker plus nine ordinary activity-only workers.
 "$SDK_PYTHON" -m activity_sessions.run \
   --session-workers 1 --activity-workers 9 --workflows 10
 ```
 
-Each child is a fresh Python process
-with its own client, runtime, activity instance, and cache. Worker names are
-`worker-1` through `worker-N`; session workers come first. Ctrl+C stops the whole
-demo. The launcher waits for all worker contexts to start before submitting
-workflows. Startup and workflow execution have bounded timeouts.
+`--workflows` is the concurrent workflow count **per mode**: the commands above
+run twenty workflows total. Use `--affinity on` or `--affinity off` to run just one
+mode. Workers stay unchanged between the two batches, and eager activity
+execution is disabled. Only session-capable workers register workflows.
 
-All workers use the same logical task queue. Session workers enable
-`WorkerSessionOptions()`; activity-only workers register no workflows. This
-prevents a workflow requiring session activities from landing on an unsupported
-worker. Eager activity execution is disabled.
+The tables show worker configuration, which worker executed each workflow/activity,
+cache HITs/MISSes, and per-worker totals including idle workers.
 
-Defaults are two session workers and one workflow per mode. `--context-file`
-selects the mock external context. By default each invocation uses a unique task
-queue so another demo's workers cannot affect placement; `--task-queue` overrides
-it.
-
-The default `--affinity compare` runs the ordinary batch first, then the session
-batch, without changing worker configuration. **`--workflows 10` means ten per
-mode: twenty executions total in comparison mode.** `--affinity on` or `off`
-runs only that mode. Every workflow still executes exactly three activities
-sequentially.
-
-Rich renders:
-
-1. A worker-configuration table with roles and session support.
-2. An execution table showing workflow ID, workflow owner, step, activity worker,
-   that worker's session support, and colored cache hit/miss.
-3. Per-worker batch totals, including idle workers.
-
-Configuration and idle rows describe the workers launched by this command.
-Executing workers' capabilities come from activity results.
-
-With affinity on, each workflow should miss once and hit twice on its owner.
-Ordinary routing can scatter activities, or colocate them by chance; the sample
-reports the actual result rather than forcing alternation.
-
-## Observe in Temporal UI
-
-A standalone `temporal-server` does not start a UI. Its `7243` port is the HTTP
-API, not the UI. For a local server on macOS with Docker Desktop, a separate UI
-can be started with:
-
-```bash
-docker run --rm --name temporal-session-ui \
-  -p 127.0.0.1:8080:8080 \
-  -e TEMPORAL_ADDRESS=host.docker.internal:7233 \
-  temporalio/ui:latest
-```
-
-Open <http://localhost:8080>, select your namespace, and find the workflow IDs
-shown in the terminal. This container connects to the custom server; it does not
-launch a stock server. Linux Docker host connectivity may require different
-network configuration.
-
-## Scope and validation
-
-This demonstrates healthy-worker affinity and cache reuse, not lifetime
-isolation, failover, or physical queue provenance. Cache entries live for the
-worker process lifetime; production caches need resource limits and eviction.
-There are no per-worker queues, cache registry, or artifact protocol.
-
-Unit tests do not require a server. Opt-in tests run the actual demo command
-with three workers, ten session workers, and one session/nine activity workers:
-
-```bash
-"$SDK_PYTHON" -m pytest tests/activity_sessions -q
-TEMPORAL_TEST_ACTIVITY_SESSION_SAMPLE=1 "$SDK_PYTHON" -m pytest \
-  tests/activity_sessions -q -s --workflow-environment localhost:7233
-```
-
-The integration tests use the existing custom server; they do not start or
-reconfigure it.
+Each invocation uses a unique shared task queue to avoid interference from other
+runs. Optional `--task-queue` and `--context-file` arguments override the defaults.
+Run with `--help` to see all options.

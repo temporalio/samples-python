@@ -1,7 +1,7 @@
 import asyncio
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.tools.workflows.code_interpreter_workflow import (
     CodeInterpreterWorkflow,

@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
+from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
 
 from openai_agents.basic.activities.get_weather_activity import get_weather
@@ -34,6 +34,7 @@ from openai_agents.basic.workflows.tools_workflow import ToolsWorkflow
 
 async def main():
     # Create client connected to server at the given address
+    # @@@SNIPSTART python-openai-agents-hello-world-worker
     client = await Client.connect(
         "localhost:7233",
         plugins=[
@@ -44,6 +45,7 @@ async def main():
             ),
         ],
     )
+    # @@@SNIPEND
 
     worker = Worker(
         client,

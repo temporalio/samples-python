@@ -3,12 +3,13 @@ from __future__ import annotations
 from datetime import timedelta
 
 from agents import Agent, Runner
+from temporalio import openai_agents as temporal_agents
 from temporalio import workflow
-from temporalio.contrib import openai_agents as temporal_agents
 
 from openai_agents.basic.activities.get_weather_activity import get_weather
 
 
+# @@@SNIPSTART python-openai-agents-activity-tool-workflow
 @workflow.defn
 class ToolsWorkflow:
     @workflow.run
@@ -25,3 +26,6 @@ class ToolsWorkflow:
 
         result = await Runner.run(agent, input=question)
         return result.final_output
+
+
+# @@@SNIPEND

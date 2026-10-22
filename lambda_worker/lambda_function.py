@@ -1,7 +1,8 @@
-from activities import hello_activity
 from temporalio.common import WorkerDeploymentVersion
 from temporalio.contrib.aws.lambda_worker import LambdaWorkerConfig, run_worker
 from temporalio.contrib.aws.lambda_worker.otel import apply_defaults
+
+from activities import hello_activity
 from workflows import TASK_QUEUE, SampleWorkflow
 
 

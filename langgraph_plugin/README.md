@@ -1,6 +1,6 @@
 # LangGraph Plugin Samples
 
-These samples demonstrate the [Temporal LangGraph plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/langgraph), which runs LangGraph workflows as durable Temporal workflows. Each LangGraph graph node (Graph API) or `@task` (Functional API) executes directly inside a workflow or as a Temporal activity with automatic retries, timeouts, and crash recovery.
+These samples demonstrate the [Temporal LangGraph plugin](https://github.com/temporalio/ai-integrations/tree/main/python/langgraph), which runs LangGraph workflows as durable Temporal workflows. Each LangGraph graph node (Graph API) or `@task` (Functional API) executes directly inside a workflow or as a Temporal activity with automatic retries, timeouts, and crash recovery.
 
 Samples are organized by API style:
 
@@ -27,7 +27,9 @@ Samples are organized by API style:
    uv sync --group langgraph
    ```
 
-2. Start a [Temporal dev server](https://docs.temporal.io/cli#start-dev-server):
+   This installs the standalone `temporalio-langgraph` and `temporalio-langsmith` packages, which require Temporal 1.34.0 or later.
+
+2. Start a local dev server with the [Temporal CLI](https://docs.temporal.io/cli):
 
    ```bash
    temporal server start-dev
@@ -72,4 +74,4 @@ uv run langgraph_plugin/<api>/langsmith_tracing/main.py
 
 ## Related
 
-- [Temporal LangGraph plugin docs](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/langgraph)
+- [Temporal LangGraph plugin docs](https://github.com/temporalio/ai-integrations/tree/main/python/langgraph)

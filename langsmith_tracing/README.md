@@ -1,6 +1,6 @@
 # LangSmith Tracing
 
-This sample demonstrates [LangSmith](https://smith.langchain.com/) tracing integration with Temporal workflows using the [`LangSmithPlugin`](https://python.temporal.io/temporalio.contrib.langsmith.html).
+This sample demonstrates [LangSmith](https://smith.langchain.com/) tracing integration with Temporal workflows using the [`LangSmithPlugin`](https://github.com/temporalio/ai-integrations/tree/main/python/langsmith).
 
 Two examples are included:
 
@@ -14,6 +14,8 @@ Install dependencies:
 ```bash
 uv sync --group langsmith-tracing
 ```
+
+This installs the standalone `temporalio-langsmith` package, which requires Temporal 1.34.0 or later.
 
 Set environment variables:
 
@@ -44,6 +46,6 @@ Set `add_temporal_runs=True` to also create LangSmith runs for Temporal operatio
 ## Further Reading
 
 - [LangSmith documentation](https://docs.smith.langchain.com/)
-- [Temporal Python SDK LangSmith plugin](https://python.temporal.io/temporalio.contrib.langsmith.html)
+- [Temporal Python SDK LangSmith plugin](https://github.com/temporalio/ai-integrations/tree/main/python/langsmith)
 - [LangSmith `@traceable` guide](https://docs.smith.langchain.com/observability/how-to/annotate-code)
 - [LangSmith `wrap_openai` guide](https://docs.smith.langchain.com/observability/how-to/trace-with-openai)

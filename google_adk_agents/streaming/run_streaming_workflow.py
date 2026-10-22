@@ -1,10 +1,11 @@
 import asyncio
+import os
 from datetime import timedelta
 
 from google.adk.models.llm_response import LlmResponse
 from temporalio.client import Client
-from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
+from temporalio.google_adk import GoogleAdkPlugin
 
 from google_adk_agents.streaming.workflows.streaming_workflow import (
     StreamingAgentWorkflow,
@@ -14,7 +15,10 @@ WORKFLOW_ID = "google-adk-agents-streaming-workflow-id"
 
 
 async def main():
-    client = await Client.connect("localhost:7233", plugins=[GoogleAdkPlugin()])
+    client = await Client.connect(
+        os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"),
+        plugins=[GoogleAdkPlugin()],
+    )
 
     handle = await client.start_workflow(
         StreamingAgentWorkflow.run,

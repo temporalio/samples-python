@@ -2,7 +2,7 @@ import asyncio
 import os
 
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import OpenAIAgentsPlugin
+from temporalio.openai_agents import OpenAIAgentsPlugin
 
 from openai_agents.basic.workflows.local_image_workflow import LocalImageWorkflow
 

@@ -1,6 +1,6 @@
 # Continue-as-new
 
-A chat-style workflow accumulates history with every turn and will eventually hit Temporal's per-workflow history limit. `workflow.info().is_continue_as_new_suggested()` flips `True` once the server decides history has grown large enough; this sample checks it after each turn and hands off to a fresh run with `agent.messages` as input.
+A chat-style workflow accumulates history with every turn and will eventually hit Temporal's per-workflow history limit. `workflow.info().is_continue_as_new_suggested()` flips `True` once the server decides history has grown large enough; this sample waits on it — alongside the `end_chat` signal — with `workflow.wait_condition(...)`, then hands off to a fresh run with `agent.messages` as input.
 
 ## What This Sample Demonstrates
 

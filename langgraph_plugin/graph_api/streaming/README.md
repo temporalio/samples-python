@@ -1,6 +1,6 @@
 # Streaming (Graph API)
 
-Streams a LangGraph run to an external client while the workflow is still running, using Temporal's durable, offset-addressed [`WorkflowStream`](https://docs.temporal.io/). The graph writes a short story about a topic and emits both fine-grained tokens and node-completion progress on separate topics.
+Streams a LangGraph run to an external client while the workflow is still running, using Temporal's durable, offset-addressed [`WorkflowStream`](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/workflow_streams). The graph writes a short story about a topic and emits both fine-grained tokens and node-completion progress on separate topics.
 
 ## What This Sample Demonstrates
 

@@ -28,8 +28,11 @@ async def main() -> None:
 
     print(f"Draft for review: {draft}")
 
-    # Send approval via signal
-    await handle.signal(ChatbotFunctionalWorkflow.provide_feedback, "approve")
+    # Prompt for human feedback instead of auto-approving.
+    feedback = await asyncio.to_thread(
+        input, "Enter 'approve' to accept, or type revision feedback: "
+    )
+    await handle.signal(ChatbotFunctionalWorkflow.provide_feedback, feedback)
 
     result = await handle.result()
     print(f"Final response: {result}")

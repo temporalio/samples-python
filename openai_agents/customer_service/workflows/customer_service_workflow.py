@@ -56,6 +56,7 @@ class CustomerServiceWorkflow:
             customer_service_state.input_items if customer_service_state else []
         )
 
+    # @@@SNIPSTART python-openai-agents-continue-as-new-workflow
     @workflow.run
     async def run(
         self, customer_service_state: CustomerServiceWorkflowState | None = None
@@ -72,6 +73,8 @@ class CustomerServiceWorkflow:
                 input_items=self.input_items,
             )
         )
+
+    # @@@SNIPEND
 
     @workflow.query
     def get_chat_history(self) -> list[str]:

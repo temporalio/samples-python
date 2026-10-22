@@ -8,8 +8,8 @@ import asyncio
 import os
 
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphPlugin
-from temporalio.contrib.langsmith import LangSmithPlugin
+from temporalio.langgraph import LangGraphPlugin
+from temporalio.langsmith import LangSmithPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.graph_api.langsmith_tracing.workflow import (

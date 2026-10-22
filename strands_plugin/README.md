@@ -1,6 +1,6 @@
 # Strands Agents Samples
 
-These samples demonstrate the [Temporal Strands plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/strands), which runs [Strands Agents](https://strandsagents.com/) inside Temporal Workflows. Model invocations, tool calls, and MCP tool calls all execute as Temporal Activities, so you get durable execution, Temporal-managed retries, and timeouts.
+These samples demonstrate the [Temporal Strands plugin](https://github.com/temporalio/ai-integrations/tree/main/python/strands_agents), which runs [Strands Agents](https://strandsagents.com/) inside Temporal Workflows. Model invocations, tool calls, and MCP tool calls all execute as Temporal Activities, so you get durable execution, Temporal-managed retries, and timeouts.
 
 ## Samples
 
@@ -24,11 +24,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
    uv sync --group strands-agents
    ```
 
-   > The `strands` extra of `temporalio` is shipping in an upcoming release. Until then, install the SDK from the strands branch:
-   >
-   > ```bash
-   > uv pip install -e ../sdk-python --extra strands-agents --extra pydantic
-   > ```
+   This installs the standalone `temporalio-strands-agents` package, which requires Temporal 1.34.0 or later.
 
 2. Configure AWS credentials. The samples use the plugin's default `BedrockModel()`, which picks up the standard AWS SDK credential chain. Make sure the credentials grant access to a Bedrock model in your selected region (e.g., `us-west-2`).
 
@@ -39,7 +35,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
 
    You can pick a specific model by passing it to `BedrockModel(model_id="...")` in each sample's worker.
 
-3. Start a [Temporal dev server](https://docs.temporal.io/cli#start-dev-server):
+3. Start a local dev server with the [Temporal CLI](https://docs.temporal.io/cli):
 
    ```bash
    temporal server start-dev
@@ -80,5 +76,5 @@ uv run strands_plugin/tools/run_workflow.py
 
 ## Related
 
-- [Temporal Strands plugin docs](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/strands)
+- [Temporal Strands plugin docs](https://github.com/temporalio/ai-integrations/tree/main/python/strands_agents)
 - [Strands Agents](https://strandsagents.com/)

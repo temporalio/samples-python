@@ -4,7 +4,7 @@ import asyncio
 import os
 
 from temporalio.client import Client
-from temporalio.contrib.strands import StrandsPlugin
+from temporalio.strands_agents import StrandsPlugin
 
 from strands_plugin.continue_as_new.workflow import ChatInput, ChatWorkflow
 

@@ -6,12 +6,12 @@ from datetime import timedelta
 
 from agents.mcp import MCPServerStdio
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import (
+from temporalio.envconfig import ClientConfig
+from temporalio.openai_agents import (
     ModelActivityParameters,
     OpenAIAgentsPlugin,
     StatefulMCPServerProvider,
 )
-from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from openai_agents.mcp.workflows.memory_research_scratchpad_workflow import (
@@ -22,6 +22,7 @@ from openai_agents.mcp.workflows.memory_research_scratchpad_workflow import (
 async def main():
     logging.basicConfig(level=logging.INFO)
 
+    # @@@SNIPSTART python-openai-agents-stateful-mcp-worker
     memory_server_provider = StatefulMCPServerProvider(
         "MemoryServer",
         lambda _: MCPServerStdio(
@@ -47,6 +48,7 @@ async def main():
             ),
         ],
     )
+    # @@@SNIPEND
 
     worker = Worker(
         client,

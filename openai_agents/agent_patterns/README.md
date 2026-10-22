@@ -40,7 +40,7 @@ uv run openai_agents/agent_patterns/run_agents_as_tools_workflow.py
 ```
 
 ### Agent Routing and Handoffs
-Route requests to specialized agents based on content analysis (adapted for non-streaming):
+Route requests to specialized agents based on content analysis (adapted to consume the run's output in one piece; see [Streaming](../streaming/README.md) for streaming output to external subscribers):
 ```bash
 uv run openai_agents/agent_patterns/run_routing_workflow.py
 ```
@@ -94,4 +94,4 @@ This is really useful for latency: for example, you might have a very fast model
 
 The following patterns from the [reference repository](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns) are not included in this Temporal adaptation:
 
-- **Streaming Guardrails**: Requires streaming capabilities which are not yet available in the Temporal integration
+- **Streaming Guardrails**: The pattern interrupts generation by inspecting deltas from inside the run loop. The Temporal integration does support streaming (see [Streaming](../streaming/README.md)), but the model call runs in an activity and the workflow only sees its events once that activity returns, so there is no in-run delta to act on mid-response.

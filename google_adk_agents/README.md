@@ -5,7 +5,7 @@ change prior to General Availability.
 
 This directory contains samples demonstrating how to run
 [Google ADK](https://google.github.io/adk-docs/) agents durably inside Temporal
-workflows using `temporalio.contrib.google_adk_agents`. Each scenario is a
+workflows using `temporalio.google_adk`. Each scenario is a
 self-contained subdirectory with its own worker, workflow starter, workflow and
 activity packages, and README.
 
@@ -23,8 +23,12 @@ model turn is durable and observable.
 
 ## Prerequisites
 
-- Temporal server [running locally](https://docs.temporal.io/cli/server#start-dev)
-- Dependencies installed via `uv sync --group google-adk`
+- [Temporal CLI](https://docs.temporal.io/cli) with a local dev server running:
+  ```
+  temporal server start-dev
+  ```
+- Dependencies installed via `uv sync --group google-adk`, including the standalone
+  `temporalio-google-adk[mcp]` package (requires Temporal 1.34.0 or later)
 - Google API key set as an environment variable:
   `export GOOGLE_API_KEY=your_key_here`
 
@@ -40,15 +44,16 @@ Each directory contains a complete example with its own README:
 | --- | --- |
 | [basic](./basic/README.md) | A single ADK agent with `TemporalModel` and one model call — no tools. The minimal end-to-end example. |
 | [chatbot](./chatbot/README.md) | A multi-turn conversation over one persisted ADK session, with each turn driven by a workflow Update handler that returns the assistant's reply. |
-| [tools](./tools/README.md) | A Temporal activity wrapped as an ADK tool with `activity_tool`, so tool calls run as their own activities. |
+| [tools](./tools/README.md) | A Temporal activity wrapped as an ADK tool with `activity_as_tool`, so tool calls run as their own activities. |
 | [agent_patterns](./agent_patterns/README.md) | A coordinator `LlmAgent` with `sub_agents`, each a `TemporalModel` with a per-agent activity summary. |
 | [mcp](./mcp/README.md) | A local echo MCP toolset via `TemporalMcpToolSet` / `TemporalMcpToolSetProvider`, running MCP tools as activities. Self-contained, no Node required. |
 | [streaming](./streaming/README.md) | Token streaming via `TemporalModel(streaming_topic=...)` + `WorkflowStream`, consumed by a starter with `WorkflowStreamClient`. |
+| [metrics](./metrics/README.md) | Google ADK OpenTelemetry metrics exported to a local Prometheus endpoint, with replay suppression through `ReplaySafeMeterProvider`. |
 
 To run any scenario, start its worker in one terminal and its workflow starter
 in another:
 
 ```bash
-uv run python -m google_adk_agents.<scenario>.run_worker
-uv run python -m google_adk_agents.<scenario>.run_<name>_workflow
+uv run google_adk_agents/<scenario>/run_worker.py
+uv run google_adk_agents/<scenario>/run_<name>_workflow.py
 ```

@@ -3,7 +3,7 @@ import uuid
 
 import pytest
 from temporalio.client import Client
-from temporalio.contrib.langgraph import LangGraphPlugin
+from temporalio.langgraph import LangGraphPlugin
 from temporalio.worker import Worker
 
 from langgraph_plugin.functional_api.control_flow.workflow import (

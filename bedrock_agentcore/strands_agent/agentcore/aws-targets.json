@@ -1,0 +1,8 @@
+[
+  {
+    "name": "default",
+    "description": "Replace with the AWS account and region to deploy the runtime into",
+    "account": "000000000000",
+    "region": "us-west-2"
+  }
+]

@@ -7,12 +7,12 @@ from datetime import timedelta
 
 from agents.mcp import MCPServerStdio
 from temporalio.client import Client
-from temporalio.contrib.openai_agents import (
+from temporalio.envconfig import ClientConfig
+from temporalio.openai_agents import (
     ModelActivityParameters,
     OpenAIAgentsPlugin,
     StatelessMCPServerProvider,
 )
-from temporalio.envconfig import ClientConfig
 from temporalio.worker import Worker
 
 from openai_agents.mcp.workflows.file_system_workflow import FileSystemWorkflow
@@ -23,6 +23,7 @@ async def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
     samples_dir = os.path.join(current_dir, "sample_files")
 
+    # @@@SNIPSTART python-openai-agents-stateless-mcp-worker
     file_system_server = StatelessMCPServerProvider(
         "FileSystemServer",
         lambda: MCPServerStdio(
@@ -48,6 +49,7 @@ async def main():
             ),
         ],
     )
+    # @@@SNIPEND
 
     worker = Worker(
         client,

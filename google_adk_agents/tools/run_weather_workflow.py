@@ -1,13 +1,17 @@
 import asyncio
+import os
 
 from temporalio.client import Client
-from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
+from temporalio.google_adk import GoogleAdkPlugin
 
 from google_adk_agents.tools.workflows.weather_workflow import WeatherAgentWorkflow
 
 
 async def main():
-    client = await Client.connect("localhost:7233", plugins=[GoogleAdkPlugin()])
+    client = await Client.connect(
+        os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"),
+        plugins=[GoogleAdkPlugin()],
+    )
 
     result = await client.execute_workflow(
         WeatherAgentWorkflow.run,

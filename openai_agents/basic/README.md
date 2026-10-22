@@ -76,4 +76,5 @@ uv run openai_agents/basic/run_previous_response_id_workflow.py
 The following examples from the [reference repository](https://github.com/openai/openai-agents-python/tree/main/examples/basic) are not included in this Temporal adaptation:
 
 - **Session** - Stores state in local SQLite database, not appropriate for distributed workflows
-- **Stream Items/Stream Text** - Streaming is not supported in Temporal OpenAI Agents SDK integration
+
+**Stream Items/Stream Text** are adapted in [`../streaming/`](../streaming/README.md) rather than here. They need `streaming_topic` set on the plugin's `ModelActivityParameters`, so they run on their own worker instead of sharing this directory's.

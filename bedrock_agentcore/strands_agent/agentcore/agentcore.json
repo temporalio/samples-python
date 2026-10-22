@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "TemporalStrandsAgent",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {
+    "agentcore:project-name": "TemporalStrandsAgent"
+  },
+  "runtimes": [
+    {
+      "name": "temporal_strands_worker",
+      "description": "Strands agent on a scale-to-zero Temporal worker",
+      "build": "CodeZip",
+      "entrypoint": "agentcore_worker.py",
+      "codeLocation": ".",
+      "runtimeVersion": "PYTHON_3_12",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "authorizerType": "AWS_IAM",
+      "envVars": [
+        {
+          "name": "TEMPORAL_ADDRESS",
+          "value": "<your-namespace>.<account>.tmprl.cloud:7233"
+        },
+        {
+          "name": "TEMPORAL_NAMESPACE",
+          "value": "<your-namespace>.<account>"
+        },
+        {
+          "name": "TEMPORAL_API_KEY",
+          "value": "<your-api-key>"
+        },
+        {
+          "name": "TEMPORAL_TASK_QUEUE",
+          "value": "agentcore-strands-task-queue"
+        },
+        {
+          "name": "TEMPORAL_DEPLOYMENT_NAME",
+          "value": "agentcore-strands-agent-python"
+        },
+        {
+          "name": "TEMPORAL_BUILD_ID",
+          "value": "1.0.0"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "us-west-2"
+        },
+        {
+          "name": "AGENTCORE_DEBOUNCE_SECONDS",
+          "value": "60"
+        }
+      ],
+      "lifecycleConfiguration": {
+        "idleRuntimeSessionTimeout": 900,
+        "maxLifetime": 28800
+      },
+      "endpoints": {
+        "temporal": {
+          "version": 1,
+          "description": "Invoked by Temporal Cloud Serverless Workers"
+        }
+      },
+      "additionalPolicies": [
+        "code-interpreter-policy.json"
+      ]
+    }
+  ],
+  "memories": [],
+  "knowledgeBases": [],
+  "credentials": [],
+  "evaluators": [],
+  "onlineEvalConfigs": [],
+  "agentCoreGateways": [],
+  "policyEngines": [],
+  "configBundles": [],
+  "abTests": [],
+  "harnesses": [],
+  "datasets": [],
+  "payments": []
+}

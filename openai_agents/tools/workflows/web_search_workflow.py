@@ -4,6 +4,7 @@ from agents import Agent, Runner, WebSearchTool
 from temporalio import workflow
 
 
+# @@@SNIPSTART python-openai-agents-hosted-tool-workflow
 @workflow.defn
 class WebSearchWorkflow:
     @workflow.run
@@ -18,3 +19,6 @@ class WebSearchWorkflow:
 
         result = await Runner.run(agent, question)
         return result.final_output
+
+
+# @@@SNIPEND

@@ -34,4 +34,4 @@ uv run openai_agents/reasoning_content/run_reasoning_content_workflow.py
 
 ## Note on Streaming
 
-The original OpenAI Agents SDK example includes streaming capabilities, but since Temporal workflows do not support streaming yet, this example contains only the non-streaming approach.
+The original OpenAI Agents SDK example includes a streaming variant. This example keeps only the non-streaming approach for brevity; the integration does support streaming model output to external subscribers, which is covered in [Streaming](../streaming/README.md).

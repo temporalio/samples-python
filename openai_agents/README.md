@@ -5,7 +5,8 @@
 This directory contains samples demonstrating how to use the [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) with Temporal's durable execution engine.
 These samples are adapted from the [OpenAI Agents SDK examples](https://github.com/openai/openai-agents-python/tree/main/examples) and extended with Temporal's durability and orchestration capabilities.
 
-See the [module documentation](https://github.com/temporalio/sdk-python/blob/main/temporalio/contrib/openai_agents/README.md) for more information.
+The integration is installed as the standalone `temporalio-openai-agents` package.
+See the [module documentation](https://github.com/temporalio/ai-integrations/tree/main/python/openai_agents) for more information.
 
 ## Overview
 
@@ -17,7 +18,10 @@ This approach ensures that AI agent workflows are durable, observable, and can h
 
 ## Prerequisites
 
-- Temporal server [running locally](https://docs.temporal.io/cli/server#start-dev)
+- [Temporal CLI](https://docs.temporal.io/cli) with a local dev server running:
+  ```
+  temporal server start-dev
+  ```
 - Required dependencies installed via `uv sync --group openai-agents`
 - OpenAI API key set as environment variable: `export OPENAI_API_KEY=your_key_here`
 
@@ -30,9 +34,12 @@ Each directory contains a complete example with its own README for detailed inst
 - **[Tools](./tools/README.md)** - Demonstrates available tools such as file search, image generation, and others.
 - **[Handoffs](./handoffs/README.md)** - Agents collaborating via handoffs.
 - **[Hosted MCP](./hosted_mcp/README.md)** - Using the MCP client functionality of the OpenAI Responses API.
-- **[MCP](./mcp/README.md)** - Local MCP servers (filesystem/stdio, streamable HTTP, SSE, prompt server) integrated with Temporal workflows.
+- **[MCP v2](./mcp_v2/README.md)** - MCP SDK v2 using named server factories and durable workflow proxies.
+- **[MCP](./mcp/README.md)** - Legacy MCP provider examples retained for compatibility.
 - **[Model Providers](./model_providers/README.md)** - Using custom LLM providers (e.g., Anthropic via LiteLLM).
 - **[Research Bot](./research_bot/README.md)** - Multi-agent research system with specialized roles: a planner agent, search agent, and writer agent working together to conduct comprehensive research.
 - **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 - **[Reasoning Content](./reasoning_content/README.md)** - Example of how to retrieve the thought process of reasoning models.
 - **[Financial Research Agent](./financial_research_agent/README.md)** - Multi-agent financial research system with planner, search, analyst, writer, and verifier agents collaborating.
+- **[Sandbox](./sandbox/README.md)** - `SandboxAgent` with a shell and filesystem, where every sandbox operation runs as a Temporal activity. **Pre-release.**
+- **[Streaming](./streaming/README.md)** - `Runner.run_streamed` with buffered token streaming to external subscribers via `temporalio.contrib.workflow_streams`. **Experimental.**

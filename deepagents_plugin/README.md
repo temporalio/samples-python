@@ -1,0 +1,124 @@
+# Deep Agents Samples
+
+These samples demonstrate the [Temporal Deep Agents plugin](https://github.com/temporalio/ai-integrations/tree/main/python/deepagents),
+which makes [LangChain Deep Agents](https://github.com/langchain-ai/deepagents)
+durable. Build your agent with `create_deep_agent(...)` inside a
+`@workflow.defn` and add `DeepAgentsPlugin()` to your client — each LLM call and
+each I/O tool/backend operation becomes a Temporal Activity, while the agent's
+control loop runs (and deterministically replays) inside the Workflow.
+
+> **Experimental.** The `temporalio.deepagents` plugin is experimental
+> and its API may change.
+
+`DeepAgentsPlugin` is a **client-level** plugin: add it to `Client.connect(...)`
+and the SDK propagates it to any Worker built from that client. Add it on exactly
+one side.
+
+## Samples
+
+| Sample | Description |
+|--------|-------------|
+| [hello_world](hello_world) | Minimal single-shot Deep Agent; a bare `model=` string auto-routed through the model activity. Start here. |
+| [react_agent](react_agent) | Tool-calling loop showing the explicit per-tool choice: `activity_as_tool` for an existing activity, `tool_as_activity` for an I/O tool, plus per-agent `activity_options` via `create_temporal_deep_agent`. |
+| [human_in_the_loop](human_in_the_loop) | Pause on `interrupt_on` and resume via the native LangGraph protocol, mapped to a Temporal Query + Update. |
+| [continue_as_new](continue_as_new) | Long-running agent that carries messages and the model/tool result cache across continue-as-new via `run_deep_agent`. |
+| [filesystem_backend](filesystem_backend) | Durable real filesystem I/O by wrapping a `FilesystemBackend` in `TemporalBackend`. |
+| [subagents](subagents) | Durability propagates across the agent tree — sub-agent model calls become activities with no per-sub-agent wiring. |
+| [streaming](streaming) | Stream model chunks to external subscribers via `streaming_topic` + `WorkflowStream`, keeping the durable result identical. |
+| [langsmith_tracing](langsmith_tracing) | Compose `DeepAgentsPlugin` with `LangSmithPlugin` for durable execution + LLM tracing. |
+| [external_storage](external_storage) | Native External Storage for a 6 MiB tool result; scripted model, no API keys. |
+
+## Prerequisites
+
+> **Python ≥ 3.11 required.** `deepagents` (and therefore the plugin) does not
+> support older interpreters. On Python 3.10 the `deepagents` dependency group
+> resolves to nothing, so `uv sync` silently installs none of the dependencies
+> below.
+
+1. Install dependencies:
+
+   ```bash
+   uv sync --group deepagents
+   ```
+
+   > The group installs the standalone `temporalio-deepagents` and
+   > `temporalio-langsmith` packages plus the Anthropic provider package. Requires
+   > Temporal 1.34.0 or later and Python >= 3.11 — on older interpreters the group resolves to nothing
+   > and the samples are skipped.
+
+2. Configure a model provider. Most samples use
+   `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key. The
+   [external_storage](external_storage) sample uses a scripted model and needs
+   no provider credentials:
+
+   ```bash
+   export ANTHROPIC_API_KEY=...
+   ```
+
+   To use a different provider, change the `model=` string in the sample's
+   `workflow.py` and set that provider's credentials (the plugin resolves the
+   model worker-side via LangChain's `init_chat_model`).
+
+3. Start a [Temporal dev server](https://docs.temporal.io/cli#start-dev-server):
+
+   ```bash
+   temporal server start-dev
+   ```
+
+## Running a Sample
+
+Most samples have two scripts. Start the Worker first, then the Workflow starter
+in a separate terminal:
+
+```bash
+# Terminal 1: start the Worker
+uv run deepagents_plugin/<sample>/run_worker.py
+
+# Terminal 2: start the Workflow
+uv run deepagents_plugin/<sample>/run_workflow.py
+```
+
+For example, to run the hello world sample:
+
+```bash
+# Terminal 1
+uv run deepagents_plugin/hello_world/run_worker.py
+
+# Terminal 2
+uv run deepagents_plugin/hello_world/run_workflow.py
+```
+
+The `langsmith_tracing` and `external_storage` samples instead bundle the worker
+and starter into a single driver. The storage sample also needs a mock S3 service;
+see its [setup instructions](external_storage):
+
+```bash
+uv run deepagents_plugin/langsmith_tracing/main.py
+uv run deepagents_plugin/external_storage/main.py
+```
+
+## Key Features Demonstrated
+
+- **Durable model invocation** — every LLM call runs in an `invoke_model`
+  activity with configurable timeouts and retries; a bare `model=` string is
+  auto-routed, or use `create_temporal_deep_agent(..., activity_options=...)`
+  to scope model-call options per agent (recommended).
+- **Explicit Workflow-vs-Activity tool choice** — `activity_as_tool`,
+  `tool_as_activity`, and `TemporalBackend` move I/O out of workflow code.
+- **Human-in-the-loop** — the native LangGraph `interrupt_on` return value
+  mapped to a Temporal Query and Update.
+- **Long-lived agents** — `run_deep_agent(...)` carries messages and the result
+  cache across server-suggested (or explicitly thresholded) continue-as-new.
+- **Sub-agent durability** — sub-agents inherit the durable model object with no
+  extra wiring.
+- **Streaming** — forward model chunks to external subscribers while keeping the
+  durable result unchanged.
+- **Observability** — compose with `LangSmithPlugin` for tracing.
+- **Large payload storage** — configure native `ExternalStorage` on the client's
+  data converter to offload a 6 MiB tool result and the following model input.
+
+## Related
+
+- [Temporal Deep Agents plugin](https://github.com/temporalio/ai-integrations/tree/main/python/deepagents)
+- [LangChain Deep Agents](https://github.com/langchain-ai/deepagents)
+- [langgraph_plugin](../langgraph_plugin) — for agents built directly as LangGraph graphs

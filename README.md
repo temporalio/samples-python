@@ -7,8 +7,10 @@ This is a collection of samples showing how to use the [Python SDK](https://gith
 Prerequisites:
 
 * [uv](https://docs.astral.sh/uv/)
-* [Temporal CLI installed](https://docs.temporal.io/cli#install)
-* [Local Temporal server running](https://docs.temporal.io/cli/server#start-dev)
+* [Temporal CLI](https://docs.temporal.io/cli) with a local dev server running:
+  ```
+  temporal server start-dev
+  ```
 
 The SDK requires Python >= 3.10. You can install Python using uv. For example,
 
@@ -61,11 +63,13 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
+* [bedrock_agentcore/strands_agent](bedrock_agentcore/strands_agent) - Run a AWS Strands Agent with Temporal Plugin on AgentCore Worker.
 * [cloud_export_to_parquet](cloud_export_to_parquet) - Set up schedule workflow to process exported files on an hourly basis
 * [context_propagation](context_propagation) - Context propagation through workflows/activities via interceptor.
 * [custom_converter](custom_converter) - Use a custom payload converter to handle custom types.
 * [custom_decorator](custom_decorator) - Custom decorator to auto-heartbeat a long-running activity.
 * [custom_metric](custom_metric) - Custom metric to record the workflow type in the activity schedule to start latency.
+* [deepagents_plugin](deepagents_plugin) - Make LangChain Deep Agents durable: each LLM/tool/backend call becomes a Temporal Activity while the agent loop replays in the Workflow.
 * [dsl](dsl) - DSL workflow that executes steps defined in a YAML file.
 * [eager_wf_start](eager_wf_start) - Run a workflow using Eager Workflow Start
 * [encryption](encryption) - Apply end-to-end encryption for all input/output.
@@ -74,24 +78,31 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [external_storage_redis](external_storage_redis) - Redis driver for external storage
 * [gevent_async](gevent_async) - Combine gevent and Temporal.
 * [google_adk_agents](google_adk_agents) - Run Google ADK agents as durable Temporal workflows (model calls, tools, multi-agent, MCP, streaming).
+* [google_genai](google_genai) - Run the Google Gemini SDK inside durable Temporal workflows.
 * [hello_nexus](hello_nexus) - Define a Nexus service, implement operation handlers, and call them from a workflow.
 * [hello_standalone_nexus](hello_standalone_nexus) - Use Nexus Operations without using a workflow.
 * [hello_standalone_activity](hello_standalone_activity) - Use activities without using a workflow.
 * [lambda_worker](lambda_worker) - Run a Temporal Worker inside an AWS Lambda function.
+* [langfuse_tracing](langfuse_tracing) - Trace Temporal workflows in Langfuse with the OpenTelemetry plugin and OTLP export.
 * [langgraph_plugin](langgraph_plugin) - Run LangGraph workflows as durable Temporal workflows (Graph API and Functional API).
 * [langsmith_tracing](langsmith_tracing) - Trace Temporal workflows with LangSmith via the LangSmith plugin.
+* [litellm_activity](litellm_activity) - Call LLM providers through LiteLLM from a Temporal Activity.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.
 * [nexus_cancel](nexus_cancel) - Fan out concurrent Nexus operations, take the first result, and cancel the rest.
-* [Nexus Messaging](nexus_messaging): Demonstrates how send signal, update and query messages through Nexus.
+* [nexus_messaging](nexus_messaging): Demonstrates how to send signal, update and query messages through Nexus.
   This contains two samples, one sending messages to an existing workflow and a second that creates a workflow through Nexus
   and sends messages to it.
+* [nexus_messaging_temporal_operation](nexus_messaging_temporal_operation): Demonstrates how to send signal, update and query messages through Nexus.
+  This version uses `@nexus.temporal_operation` to allow Nexus operation handlers to either return a synchronous result or start a Workflow as the async backing operation.
 * [nexus_multiple_args](nexus_multiple_args) - Map a Nexus operation to a handler workflow that takes multiple arguments.
+* [nexus_standalone_activity](nexus_standalone_activity) - Back a Nexus operation with a standalone Activity.
 * [nexus_standalone_operations](nexus_standalone_operations) - Execute Nexus operations directly from client code,
 without wrapping them in a workflow.
 * [open_telemetry](open_telemetry) - Trace workflows with OpenTelemetry.
 * [openai_agents](openai_agents) - Run OpenAI Agents SDK agents as durable Temporal workflows.
+* [openrouter](openrouter) - Call OpenRouter from Activities: fan out a prompt batch, and pause instead of failing when the budget or credits run out.
 * [patching](patching) - Alter workflows safely with `patch` and `deprecate_patch`.
 * [polling](polling) - Recommended implementation of an activity that needs to periodically poll an external resource waiting its successful completion.
 * [prometheus](prometheus) - Configure Prometheus metrics on clients/workers.

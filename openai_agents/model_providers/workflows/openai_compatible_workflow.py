@@ -1,14 +1,24 @@
 from __future__ import annotations
 
-from agents import Agent, ModelSettings, Runner, function_tool
+from dataclasses import dataclass
+
+from agents import Agent, Runner, function_tool
 from temporalio import workflow
 
 
 # @@@SNIPSTART python-openai-agents-openai-compatible-workflow
+@dataclass
+class OpenAICompatibleAgentInput:
+    prompt: str
+    # "<provider>/<model>", such as "together/openai/gpt-oss-120b". The Worker's
+    # model provider routes the agent's model calls to that provider.
+    model: str
+
+
 @workflow.defn
 class OpenAICompatibleAgentWorkflow:
     @workflow.run
-    async def run(self, prompt: str) -> str:
+    async def run(self, input: OpenAICompatibleAgentInput) -> str:
         # Tools that run inside the Workflow must be async: the Agents SDK runs
         # sync tools in a thread, which the Workflow sandbox does not allow.
         @function_tool
@@ -16,19 +26,14 @@ class OpenAICompatibleAgentWorkflow:
             workflow.logger.debug(f"Getting weather for {city}")
             return f"The weather in {city} is sunny."
 
-        # No model is named here, so the Worker's model provider supplies its
-        # default. Set model= to any model the provider serves to override it.
-        # Start from empty model settings: an agent that names no model gets
-        # the Agents SDK's defaults for OpenAI's default model (a reasoning
-        # effort and `verbosity`), which other providers reject.
         agent = Agent(
             name="Assistant",
             instructions="You only respond in haikus. When asked about the weather always use the tool to get the current weather.",
-            model_settings=ModelSettings(),
+            model=input.model,
             tools=[get_weather],
         )
 
-        result = await Runner.run(agent, prompt)
+        result = await Runner.run(agent, input.prompt)
         return result.final_output
 
 

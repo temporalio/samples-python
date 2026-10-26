@@ -1,8 +1,8 @@
-"""Worker that runs the agent on Baseten, Fireworks AI, or Together AI."""
+"""Worker that serves Baseten, Fireworks AI, and Together AI from one process."""
 
-import argparse
 import asyncio
 import logging
+import sys
 from datetime import timedelta
 
 from agents import set_tracing_disabled
@@ -19,7 +19,7 @@ from openai_agents.model_providers.workflows.openai_compatible_workflow import (
 )
 
 
-async def main(provider_name: str) -> None:
+async def main() -> None:
     # Disable Agents SDK tracing: the default exporter sends traces to OpenAI's
     # backend, which needs an OpenAI API key that this sample does not have.
     set_tracing_disabled(disabled=True)
@@ -28,6 +28,14 @@ async def main(provider_name: str) -> None:
     logging.getLogger("temporalio.workflow").setLevel(logging.DEBUG)
 
     # @@@SNIPSTART python-openai-agents-openai-compatible-worker
+    # One provider for every endpoint whose API key is set. The model name on
+    # each Workflow's agent selects the endpoint.
+    model_provider = OpenAICompatibleModelProvider(PROVIDERS.values())
+    if not model_provider.configured:
+        env_vars = ", ".join(provider.api_key_env for provider in PROVIDERS.values())
+        sys.exit(f"No provider API key is set; export at least one of {env_vars}.")
+    print(f"Serving providers: {', '.join(model_provider.configured)}", flush=True)
+
     client = await Client.connect(
         "localhost:7233",
         plugins=[
@@ -40,7 +48,7 @@ async def main(provider_name: str) -> None:
                     # noticed in seconds rather than after the full timeout.
                     heartbeat_timeout=timedelta(seconds=10),
                 ),
-                model_provider=OpenAICompatibleModelProvider(PROVIDERS[provider_name]),
+                model_provider=model_provider,
             ),
         ],
     )
@@ -55,12 +63,4 @@ async def main(provider_name: str) -> None:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--provider",
-        choices=sorted(PROVIDERS),
-        required=True,
-        help="which provider serves the model",
-    )
-    args = parser.parse_args()
-    asyncio.run(main(args.provider))
+    asyncio.run(main())

@@ -48,27 +48,27 @@ uv run openai_agents/model_providers/run_openrouter_workflow.py
 The workflow uses `openrouter/auto`, so OpenRouter picks a model per request; change `OPENROUTER_MODEL` in [workflows/openrouter_workflow.py](workflows/openrouter_workflow.py) to pin any OpenRouter model slug. Tools that run inside the Workflow must be `async`: the Agents SDK runs sync tools in a thread, which the Workflow sandbox does not allow. See the [openrouter](../../openrouter) sample for calling OpenRouter directly from Activities with cost tracking and budgets.
 
 #### Open-weight models on Baseten, Fireworks AI, and Together AI
-[Baseten](https://www.baseten.co/), [Fireworks AI](https://fireworks.ai/), and [Together AI](https://www.together.ai/) serve open-weight models behind the OpenAI Chat Completions API, so one Worker script covers all three. It points the OpenAI client at the provider's base URL and supplies a default model; the Workflow names no model, so the same Workflow runs on whichever provider the Worker was started with.
+[Baseten](https://www.baseten.co/), [Fireworks AI](https://fireworks.ai/), and [Together AI](https://www.together.ai/) serve open-weight models behind the OpenAI Chat Completions API. One Worker serves all three: it builds a client for each provider whose API key is set, and each Workflow picks a provider through the model name it gives its agent, `<provider>/<model>`. Workflows on different providers run side by side on the same Worker.
 
-| Provider | API key | Default model |
+| Provider | API key | Example model name |
 |---|---|---|
-| Baseten | `BASETEN_API_KEY` | `openai/gpt-oss-120b` |
-| Fireworks AI | `FIREWORKS_API_KEY` | `accounts/fireworks/models/gpt-oss-120b` |
-| Together AI | `TOGETHER_API_KEY` | `openai/gpt-oss-120b` |
+| Baseten | `BASETEN_API_KEY` | `baseten/openai/gpt-oss-120b` |
+| Fireworks AI | `FIREWORKS_API_KEY` | `fireworks/accounts/fireworks/models/gpt-oss-120b` |
+| Together AI | `TOGETHER_API_KEY` | `together/openai/gpt-oss-120b` |
 
-Start the worker for one provider (`baseten`, `fireworks`, or `together`):
+Export the keys you have and start the worker:
 ```bash
 export TOGETHER_API_KEY="your_together_api_key"
 
-uv run openai_agents/model_providers/run_openai_compatible_worker.py --provider together
+uv run openai_agents/model_providers/run_openai_compatible_worker.py
 ```
 
-Then run the example in a separate terminal:
+Then run the example in a separate terminal. Pass `--model` once per Workflow to start; with no `--model`, it starts one Workflow per provider whose key is set in that shell:
 ```bash
-uv run openai_agents/model_providers/run_openai_compatible_workflow.py
+uv run openai_agents/model_providers/run_openai_compatible_workflow.py --model together/openai/gpt-oss-120b
 ```
 
-The providers are defined in [openai_compatible_providers.py](openai_compatible_providers.py). Add another OpenAI-compatible endpoint by appending to `PROVIDERS`, or run an agent on a different model by setting `model=` on the `Agent`. Tools that run inside the Workflow must be `async`: the Agents SDK runs sync tools in a thread, which the Workflow sandbox does not allow. The Temporal docs have a page per provider: [Baseten](https://docs.temporal.io/develop/python/integrations/baseten), [Fireworks AI](https://docs.temporal.io/develop/python/integrations/fireworks-ai), and [Together AI](https://docs.temporal.io/develop/python/integrations/together-ai).
+Any model the provider serves works with its prefix. A model name for a provider without a key, or with an unknown prefix, fails its Workflow without retrying. The providers are defined in [openai_compatible_providers.py](openai_compatible_providers.py); add another OpenAI-compatible endpoint by appending to `PROVIDERS`. Tools that run inside the Workflow must be `async`: the Agents SDK runs sync tools in a thread, which the Workflow sandbox does not allow. The Temporal docs have a page per provider: [Baseten](https://docs.temporal.io/develop/python/integrations/baseten), [Fireworks AI](https://docs.temporal.io/develop/python/integrations/fireworks-ai), and [Together AI](https://docs.temporal.io/develop/python/integrations/together-ai).
 
 ### Extra
 

@@ -36,7 +36,7 @@ Each directory contains a complete example with its own README for detailed inst
 - **[Hosted MCP](./hosted_mcp/README.md)** - Using the MCP client functionality of the OpenAI Responses API.
 - **[MCP v2](./mcp_v2/README.md)** - MCP SDK v2 using named server factories and durable workflow proxies.
 - **[MCP](./mcp/README.md)** - Legacy MCP provider examples retained for compatibility.
-- **[Model Providers](./model_providers/README.md)** - Using custom LLM providers (e.g., Anthropic via LiteLLM).
+- **[Model Providers](./model_providers/README.md)** - Using custom LLM providers: Anthropic via LiteLLM, OpenRouter, a local gpt-oss with Ollama, and open-weight models on Baseten, Fireworks AI, and Together AI.
 - **[Research Bot](./research_bot/README.md)** - Multi-agent research system with specialized roles: a planner agent, search agent, and writer agent working together to conduct comprehensive research.
 - **[Customer Service](./customer_service/README.md)** - Interactive customer service agent with escalation capabilities, demonstrating conversational workflows.
 - **[Reasoning Content](./reasoning_content/README.md)** - Example of how to retrieve the thought process of reasoning models.

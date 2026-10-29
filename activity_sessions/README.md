@@ -100,4 +100,7 @@ the turns so the phases are easy to follow.
 
 ```bash
 "$SDK_PYTHON" -m pytest tests/activity_sessions
+# Also run both entrypoints end to end against a session-capable server:
+TEMPORAL_TEST_ACTIVITY_SESSION_SAMPLE=1 "$SDK_PYTHON" -m pytest tests/activity_sessions \
+  --workflow-environment localhost:7233
 ```

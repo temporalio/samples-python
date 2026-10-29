@@ -15,6 +15,7 @@ from claude_agent_sdk_plugin.offline import scripted_api
 from claude_agent_sdk_plugin.plugin_with_custom_transport.connector import (
     PROXY_MANAGED_KEY,
     SandboxConnector,
+    find_saved_turn,
 )
 from claude_agent_sdk_plugin.plugin_with_custom_transport.run_worker import (
     HAIKU,
@@ -30,7 +31,7 @@ from claude_agent_sdk_plugin.plugin_with_custom_transport.workflow import (
 SECRET = "sk-ant-test-secret-never-in-history"
 
 FAKE_SBX = """#!{python}
-import json, os, shutil, signal, sys
+import json, os, sys
 
 ROOT = {root!r}
 BIN = {bin!r}
@@ -48,15 +49,6 @@ elif command == "secret":
     name = args[args.index("--sandbox") + 1]
     with open(os.path.join(ROOT, "secrets.jsonl"), "a") as secrets:
         secrets.write(json.dumps([name, sys.stdin.read().strip()]) + "\\n")
-elif command == "rm":
-    sandbox = os.path.join(sandboxes, args[-1])
-    with open(os.path.join(sandbox, "groups")) as groups:
-        for group in groups.read().split():
-            try:
-                os.killpg(int(group), signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-    shutil.rmtree(sandbox)
 elif command == "exec":
     rest = args[1:]
     env = {{"PATH": BIN + ":/usr/bin:/bin"}}
@@ -143,6 +135,7 @@ async def test_plugin_skill_and_mcp_server_run_from_the_copy_in_the_sandbox(
             client,
             task_queue=task_queue,
             workflows=[PluginWithCustomTransportWorkflow],
+            activities=[find_saved_turn],
             plugins=[
                 ClaudeAgentSDKPlugin(
                     connector=SandboxConnector(uploads={PLUGIN_DIR: LOCAL_PLUGIN_DIR})
@@ -193,9 +186,9 @@ async def test_plugin_skill_and_mcp_server_run_from_the_copy_in_the_sandbox(
     secrets = [json.loads(line) for line in (fake_sbx / "secrets.jsonl").open()]
     assert [name, SECRET] in secrets
 
-    # Closing Claude Code removed the sandbox.
-    assert calls[-1] == ["rm", "--force", name]
-    assert not (fake_sbx / "sandboxes" / name).exists()
+    # The sandbox outlives the Workflow, for the user to remove.
+    assert (fake_sbx / "sandboxes" / name).exists()
+    assert not any(call[0] == "rm" for call in calls)
 
     history = await handle.fetch_history()
     assert SECRET not in history.to_json()

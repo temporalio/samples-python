@@ -19,7 +19,7 @@ haiku-writer/
 
 - **Your plugins work as they do in Claude Code.** Pass the plugin through `ClaudeAgentOptions.plugins`, and Claude picks up its skills and starts its MCP servers. The Workflow only has to allow the MCP tool, which Claude Code names `mcp__plugin_haiku-writer_syllables__count_syllables`.
 - **Bring your own runtime.** A connector decides where Claude Code runs. `SandboxConnector` puts it in a Docker Sandbox, and the Workflow code doesn't change: it still uses a plain `TemporalTransport(options)`.
-- **The connector owns the host's lifecycle.** `SandboxConnector` creates a sandbox for each Workflow, copies the plugin in before Claude Code starts, and removes the sandbox when Claude Code closes. The Workflow only names the plugin's path in the sandbox.
+- **The sandbox outlives the Worker.** `SandboxConnector` creates a sandbox for each Workflow and copies the plugin in before Claude Code starts. The Workflow names the plugin's path in the sandbox. You manage the sandbox's lifecycle: it stays until you remove it.
 - **The API key stays out of history and out of the sandbox.** The Worker hands the key to the sandbox's proxy, and Claude Code only ever sees a placeholder.
 
 ## Prerequisites
@@ -71,13 +71,21 @@ Offline, the model's replies are scripted, but the skill and the MCP server run 
 
 Live, the wording is Claude's, and the signature shows Claude followed the skill.
 
-While the Workflow runs, `sbx ls` shows its `claude-sandbox-...` sandbox. Once the Workflow completes, the sandbox is gone.
+The sandbox outlives the Worker. If the Worker stops mid-turn, Claude Code stops with it, and the Workflow continues the turn in the same sandbox, with its workspace files intact. Output Claude Code wrote after the Worker's last read is lost, so the Workflow first reads the session's transcript in the sandbox with the `find_saved_turn` Activity. If Claude Code had finished the turn, the final answer is there, and no result is lost.
+
+## Clean up
+
+The sandbox stays after the Workflow completes, so you can look at its workspace. `sbx ls` lists it as `claude-sandbox-...`. Remove it with:
+
+```bash
+sbx rm --force claude-sandbox-...
+```
 
 ## Files
 
 | File | Description |
 |------|-------------|
 | `haiku-writer/` | The plugin: the `haiku` skill and the `syllables` MCP server |
-| `connector.py` | `SandboxConnector`, which copies uploads into a sandbox and runs Claude Code there through `sbx` |
-| `workflow.py` | `PluginWithCustomTransportWorkflow`: `ClaudeSDKClient` with the plugin |
-| `run_worker.py` | Registers `ClaudeAgentSDKPlugin(connector=SandboxConnector(uploads=...))` and the offline answers |
+| `connector.py` | `SandboxConnector`, which copies uploads into a sandbox and runs Claude Code there through `sbx`, and the `find_saved_turn` Activity |
+| `workflow.py` | `PluginWithCustomTransportWorkflow`: `ClaudeSDKClient` with the plugin, which finishes the turn across Worker restarts |
+| `run_worker.py` | Registers `ClaudeAgentSDKPlugin(connector=SandboxConnector(uploads=...))`, the Activities, and the offline answers |

@@ -6,6 +6,7 @@ from claude_agent_sdk import (
     ClaudeSDKClient,
     CLIConnectionError,
     ResultMessage,
+    SystemMessage,
     create_sdk_mcp_server,
     tool,
 )
@@ -38,29 +39,13 @@ async def get_weather(args: dict[str, Any]) -> dict[str, Any]:
 
 @workflow.defn
 class ToolsWorkflow:
-    @workflow.init
-    def __init__(self, prompt: str) -> None:
-        # Chosen here, so the Workflow can resume the session even mid-turn.
-        self.session_id = str(workflow.uuid4())
-        self.client = self.new_client(session_id=self.session_id)
-
     @workflow.run
     async def run(self, prompt: str) -> str:
-        await self.client.connect()
-        try:
-            await self.client.query(prompt)
-            result = await self.reply()
-        except CLIConnectionError:
-            result = await self.resume()
+        return await self.ask(prompt)
 
-        await self.client.disconnect()
-        return result
-
-    def new_client(
-        self, *, session_id: str | None = None, resume: str | None = None
-    ) -> ClaudeSDKClient:
-        """A client that creates the session with session_id, or continues it with resume."""
-        options = ClaudeAgentOptions(
+    def options(self, *, resume: str | None = None) -> ClaudeAgentOptions:
+        """Options that start a new session, or continue the one given by resume."""
+        return ClaudeAgentOptions(
             tools=[],
             mcp_servers={
                 "demo": create_sdk_mcp_server("demo", tools=[count_letter, get_weather])
@@ -68,24 +53,36 @@ class ToolsWorkflow:
             allowed_tools=["mcp__demo__count_letter", "mcp__demo__get_weather"],
             setting_sources=[],
             env={"CLAUDE_CODE_RESUME_INTERRUPTED_TURN": "1"},
-            session_id=session_id,
             resume=resume,
         )
-        return ClaudeSDKClient(options=options, transport=TemporalTransport(options))
 
-    async def resume(self) -> str:
-        """Resume the session until Claude Code finishes the cut-off turn."""
+    async def ask(self, prompt: str) -> str:
+        """Answer the prompt, resuming the session if the connection is lost."""
+        session_id = None  # Claude Code's, once it has the prompt
+
         while True:
-            await self.client.disconnect()
-            self.client = self.new_client(resume=self.session_id)
             try:
-                await self.client.connect()
-                return await self.reply()
-            except CLIConnectionError:
-                continue
+                options = self.options(resume=session_id)
+                transport = TemporalTransport(options)
+                async with ClaudeSDKClient(
+                    options=options, transport=transport
+                ) as client:
+                    # Keep sending the prompt until Claude Code reports a session, which
+                    # means it received it. After that, a resume finishes the turn.
+                    if session_id is None:
+                        await client.query(prompt)
 
-    async def reply(self) -> str:
-        async for message in self.client.receive_response():
-            if isinstance(message, ResultMessage):
-                return message.result or "\n".join(message.errors or [])
-        return ""
+                    async for message in client.receive_response():
+                        if (
+                            isinstance(message, SystemMessage)
+                            and message.subtype == "init"
+                        ):
+                            session_id = message.data["session_id"]
+                        elif isinstance(message, ResultMessage):
+                            return message.result or "\n".join(message.errors or [])
+
+                raise RuntimeError("Claude Code ended the turn without a result")
+
+            except CLIConnectionError:
+                # Resume the session if Claude Code started it, or start again.
+                pass

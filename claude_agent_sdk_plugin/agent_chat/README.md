@@ -7,6 +7,7 @@ A multi-turn chat with Claude that lives in one Workflow. Each message is a `sen
 - **A chat is just a Workflow.** You write ordinary `ClaudeSDKClient` code, and each message becomes a durable Update with Claude's reply as the result.
 - **Chats can run forever.** The Workflow continues as new every few turns, so its history stays small no matter how long the conversation gets.
 - **Claude doesn't forget.** Only the session ID crosses to the next run. Claude Code reloads the full conversation from its own session file, so nothing is lost and nothing large is stored in Temporal.
+- **A Worker restart loses no message.** If the Worker stops mid-reply, the restarted Worker resumes the session. Claude Code finishes the cut-off reply itself, so the Workflow sends the message again only if Claude Code never got it. Each message gets exactly one reply.
 
 ## Run it
 
@@ -45,7 +46,11 @@ temporal workflow update execute \
   --input '"Hi, my name is Ada."'
 ```
 
-Each command prints Claude's reply. Send four messages to cross into a new run, then check that Claude remembers:
+Each command prints Claude's reply. Send four messages to cross into a new run, then check that Claude remembers.
+
+Each run takes three messages. After the third reply the run is full and hands off to the next one. A message sent in that moment is rejected with `The chat is continuing as new. Send it again.`, so if your fourth message fails, send it again.
+
+Once the fourth reply arrives, check:
 
 - **Live:** ask "What is my name?" and Claude still knows it.
 - **Offline:** the fourth reply is `"Offline reply 4 in this conversation."`. The scripted model only counts the earlier replies in the request Claude Code sends, so the 4 shows Claude Code reloaded them in the new run.

@@ -9,6 +9,7 @@ from claude_agent_sdk import (
     PermissionResultAllow,
     PermissionResultDeny,
     ResultMessage,
+    SystemMessage,
     ToolPermissionContext,
 )
 from temporalio import workflow
@@ -30,58 +31,56 @@ class Decision:
 
 @workflow.defn
 class HumanInTheLoopWorkflow:
-    @workflow.init
-    def __init__(self, task: str) -> None:
-        # Chosen here, so the Workflow can resume the session even mid-turn.
-        self.session_id = str(workflow.uuid4())
+    def __init__(self) -> None:
         self.pending: dict[str, ToolRequest] = {}
         self.decisions: dict[str, bool] = {}
-        self.client = self.new_client(session_id=self.session_id)
 
     @workflow.run
     async def run(self, task: str) -> str:
-        await self.client.connect()
-        try:
-            await self.client.query(task)
-            result = await self.reply()
-        except CLIConnectionError:
-            result = await self.resume()
+        return await self.ask(task)
 
-        await self.client.disconnect()
-        return result
-
-    def new_client(
-        self, *, session_id: str | None = None, resume: str | None = None
-    ) -> ClaudeSDKClient:
-        """A client that creates the session with session_id, or continues it with resume."""
-        options = ClaudeAgentOptions(
+    def options(self, *, resume: str | None = None) -> ClaudeAgentOptions:
+        """Options that start a new session, or continue the one given by resume."""
+        return ClaudeAgentOptions(
             # With permission_mode="default", every Bash command asks can_use_tool.
             tools=["Bash"],
             permission_mode="default",
             can_use_tool=self.ask_human,
             setting_sources=[],
             env={"CLAUDE_CODE_RESUME_INTERRUPTED_TURN": "1"},
-            session_id=session_id,
             resume=resume,
         )
-        return ClaudeSDKClient(options=options, transport=TemporalTransport(options))
 
-    async def resume(self) -> str:
-        """Resume the session until Claude Code finishes the cut-off turn."""
+    async def ask(self, prompt: str) -> str:
+        """Answer the prompt, resuming the session if the connection is lost."""
+        session_id = None  # Claude Code's, once it has the prompt
+
         while True:
-            await self.client.disconnect()
-            self.client = self.new_client(resume=self.session_id)
             try:
-                await self.client.connect()
-                return await self.reply()
-            except CLIConnectionError:
-                continue
+                options = self.options(resume=session_id)
+                transport = TemporalTransport(options)
+                async with ClaudeSDKClient(
+                    options=options, transport=transport
+                ) as client:
+                    # Keep sending the prompt until Claude Code reports a session, which
+                    # means it received it. After that, a resume finishes the turn.
+                    if session_id is None:
+                        await client.query(prompt)
 
-    async def reply(self) -> str:
-        async for message in self.client.receive_response():
-            if isinstance(message, ResultMessage):
-                return message.result or ""
-        return ""
+                    async for message in client.receive_response():
+                        if (
+                            isinstance(message, SystemMessage)
+                            and message.subtype == "init"
+                        ):
+                            session_id = message.data["session_id"]
+                        elif isinstance(message, ResultMessage):
+                            return message.result or ""
+
+                raise RuntimeError("Claude Code ended the turn without a result")
+
+            except CLIConnectionError:
+                # Resume the session if Claude Code started it, or start again.
+                pass
 
     async def ask_human(
         self, tool_name: str, tool_input: dict[str, Any], context: ToolPermissionContext

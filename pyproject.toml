@@ -30,7 +30,8 @@ dev = [
 bedrock = ["boto3>=1.34.92,<2"]
 claude-agent-sdk = [
     "temporalio-claude-agent-sdk>=0.0.0",
-    "temporalio[pydantic]>=1.34.0,<2",
+    "temporalio[opentelemetry,pydantic]>=1.35.0,<2",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.30.0,<2",
 ]
 deepagents = [
     "temporalio-deepagents>=0.0.1 ; python_version >= '3.11'",
@@ -106,7 +107,7 @@ cloud-export-to-parquet = [
 ]
 
 [tool.uv.sources]
-temporalio-claude-agent-sdk = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/claude_agent_sdk", rev = "348ba4ff358bd8e9a285860f682e62a72733b9b7" }
+temporalio-claude-agent-sdk = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/claude_agent_sdk", rev = "177fb623f874b85db519401c4be496eeb19da8f5" }
 
 [tool.uv]
 constraint-dependencies = [

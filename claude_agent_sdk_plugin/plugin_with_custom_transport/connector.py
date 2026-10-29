@@ -1,12 +1,19 @@
 import asyncio
 import io
+import json
 import os
 import re
 import tarfile
 import uuid
 from collections.abc import Mapping
+from dataclasses import dataclass
 
-from claude_agent_sdk import CLIConnectionError
+from claude_agent_sdk import (
+    CLIConnectionError,
+    InMemorySessionStore,
+    get_session_messages_from_store,
+    project_key_for_directory,
+)
 from temporalio import activity
 from temporalio.claude_agent_sdk import (
     ClaudeCodeProcess,
@@ -43,8 +50,10 @@ async def sbx(*args: str, input: bytes | None = None) -> bytes:
     return stdout
 
 
-async def sandbox_exists(name: str) -> bool:
-    return name in (await sbx("ls", "-q")).decode().split()
+def sandbox_name() -> str:
+    """The sandbox of the Workflow that runs this Activity."""
+    workflow_id = uuid.uuid5(uuid.NAMESPACE_URL, str(activity.info().workflow_id))
+    return f"claude-sandbox-{workflow_id}"
 
 
 def sandbox_env(request_env: dict[str, str]) -> dict[str, str]:
@@ -58,7 +67,11 @@ def sandbox_env(request_env: dict[str, str]) -> dict[str, str]:
 
     # Claude Code needs a key to start, so it gets a placeholder. The sandbox's
     # proxy swaps in the real key on requests to Anthropic.
-    return {"ANTHROPIC_API_KEY": PROXY_MANAGED_KEY, **forwarded, **request_env}
+    return {
+        "ANTHROPIC_API_KEY": PROXY_MANAGED_KEY,
+        **forwarded,
+        **request_env,
+    }
 
 
 def tar(directory: str) -> bytes:
@@ -83,15 +96,15 @@ class SandboxConnector:
         if request.user is not None:
             raise CLIConnectionError("Claude Code runs as the sandbox's agent user")
 
-        # One sandbox per Workflow, so a retried launch, or a client that resumes
-        # the session after its Worker went away, finds the session's files in it.
+        # One sandbox per Workflow, outliving the Worker and the Workflow, so a retried launch, or
+        # a client that resumes the session after its Worker went away, finds the
+        # session and the workspace in it.
         # sbx keeps sandboxes on the machine that runs it, so a resume only finds
         # it on the same machine. With Workers on several machines, pass
         # activity_options={"connect": {"task_queue": ...}} with a task queue
         # only one machine polls.
-        workflow_id = uuid.uuid5(uuid.NAMESPACE_URL, str(activity.info().workflow_id))
-        name = f"claude-sandbox-{workflow_id}"
-        if not await sandbox_exists(name):
+        name = sandbox_name()
+        if name not in (await sbx("ls", "-q")).decode().split():
             await sbx("create", "--name", name, "--no-progress", "claude")
 
         # "**" also reaches every port on the Worker's host through
@@ -147,7 +160,7 @@ class SandboxConnector:
 
 
 class SandboxProcess:
-    """Claude Code in a sandbox, reached through ``sbx exec``. Closing it removes the sandbox."""
+    """Claude Code in a sandbox, reached through ``sbx exec``."""
 
     def __init__(self, name: str, process: ClaudeCodeProcess) -> None:
         self.name = name
@@ -164,5 +177,43 @@ class SandboxProcess:
 
     async def close(self) -> None:
         await self.process.close()
-        if await sandbox_exists(self.name):
-            await sbx("rm", "--force", self.name)
+
+    async def terminate(self) -> None:
+        # The Worker connected to this sandbox is shutting down. Stop Claude Code
+        # as SIGTERM does, so a resumed session continues its turn.
+        await sbx("exec", self.name, "pkill", "-TERM", "-x", "claude")
+
+
+@dataclass
+class SavedTurn:
+    started: bool  # Claude Code saved the prompt
+    result: str | None  # the final answer, once the turn finished
+
+
+@activity.defn
+async def find_saved_turn(session_id: str) -> SavedTurn:
+    """Read how far the session's turn got from its transcript in the sandbox."""
+    script = 'cat "$HOME"/.claude/projects/*/"$1".jsonl 2>/dev/null || true'
+    transcript = await sbx("exec", sandbox_name(), "sh", "-c", script, "sh", session_id)
+
+    # Give the transcript to the Claude Agent SDK through an in-memory store.
+    # Nothing is written to the sandbox.
+    store = InMemorySessionStore()
+    await store.append(
+        {
+            "project_key": project_key_for_directory(WORKSPACE),
+            "session_id": session_id,
+        },
+        [json.loads(line) for line in transcript.splitlines()],
+    )
+    messages = await get_session_messages_from_store(store, session_id, WORKSPACE)
+    if not messages:
+        return SavedTurn(started=False, result=None)
+
+    last = messages[-1].message
+    result = (
+        "".join(block["text"] for block in last["content"] if block["type"] == "text")
+        if last.get("stop_reason") == "end_turn"
+        else None
+    )
+    return SavedTurn(started=True, result=result)

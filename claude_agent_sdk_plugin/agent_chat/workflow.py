@@ -6,6 +6,7 @@ from claude_agent_sdk import (
     ClaudeSDKClient,
     CLIConnectionError,
     ResultMessage,
+    SystemMessage,
 )
 from temporalio import workflow
 from temporalio.claude_agent_sdk import TemporalTransport
@@ -22,8 +23,7 @@ class ChatInput:
 class ChatWorkflow:
     @workflow.init
     def __init__(self, input: ChatInput) -> None:
-        self.existing_session_id = input.session_id
-        self.new_session_id = None if input.session_id else str(workflow.uuid4())
+        self.session_id = input.session_id
         self.turns_per_run = input.turns_per_run
         self.turns = 0
         self.ended = False
@@ -33,9 +33,6 @@ class ChatWorkflow:
 
     @workflow.run
     async def run(self, input: ChatInput) -> None:
-        await self.client.connect()
-        self.connected = True
-
         await workflow.wait_condition(self.run_is_done)
 
         await self.client.disconnect()
@@ -43,22 +40,15 @@ class ChatWorkflow:
         if self.ended:
             return
 
-        workflow.continue_as_new(
-            ChatInput(self.existing_session_id, self.turns_per_run)
-        )
+        workflow.continue_as_new(ChatInput(self.session_id, self.turns_per_run))
 
     def new_client(self) -> ClaudeSDKClient:
         """A client that starts Claude Code with a new session, or resumes the session."""
         options = ClaudeAgentOptions(
             setting_sources=[],
             env={"CLAUDE_CODE_RESUME_INTERRUPTED_TURN": "1"},
-            session_id=self.new_session_id,  # Creates a new session.
-            resume=self.existing_session_id,  # Continues an existing one.
+            resume=self.session_id,  # None starts a new session.
         )
-
-        # From now on, new clients resume the session just created.
-        if self.new_session_id is not None:
-            self.existing_session_id, self.new_session_id = self.new_session_id, None
 
         # The default SubprocessConnector keeps session files on the Worker host,
         # so only that host can resume. With Workers on several hosts, pass
@@ -68,34 +58,41 @@ class ChatWorkflow:
 
     @workflow.update
     async def send_message(self, message: str) -> str:
+        """Answer the message in the session, resuming it if the connection is lost."""
         self.turns += 1
-
-        await workflow.wait_condition(lambda: self.connected)
 
         # One turn at a time, so each message gets its own reply.
         async with self.lock:
-            try:
-                await self.client.query(message)
-                return await self.reply()
-            except CLIConnectionError:
-                return await self.resume()
+            sent = False
 
-    async def resume(self) -> str:
-        """Resume the session until Claude Code finishes the cut-off turn."""
-        while True:
-            await self.client.disconnect()
-            self.client = self.new_client()
-            try:
-                await self.client.connect()
-                return await self.reply()
-            except CLIConnectionError:
-                continue
+            while True:
+                try:
+                    # Claude Code starts on the first message, and again after a resume.
+                    if not self.connected:
+                        await self.client.connect()
+                        self.connected = True
 
-    async def reply(self) -> str:
-        async for response in self.client.receive_response():
-            if isinstance(response, ResultMessage):
-                return response.result or "\n".join(response.errors or [])
-        return ""
+                    # Keep sending the message until Claude Code has received it in a
+                    # session it reported. After that, a resume finishes the turn.
+                    if not sent or self.session_id is None:
+                        await self.client.query(message)
+                        sent = True
+
+                    async for response in self.client.receive_response():
+                        if (
+                            isinstance(response, SystemMessage)
+                            and response.subtype == "init"
+                        ):
+                            self.session_id = response.data["session_id"]
+                        elif isinstance(response, ResultMessage):
+                            return response.result or "\n".join(response.errors or [])
+
+                    raise RuntimeError("Claude Code ended the turn without a result")
+
+                except CLIConnectionError:
+                    await self.client.disconnect()
+                    self.connected = False
+                    self.client = self.new_client()
 
     @send_message.validator
     def validate_send_message(self, message: str) -> None:

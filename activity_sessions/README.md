@@ -58,6 +58,30 @@ The command exits non-zero if `affinity` or `single-session` workflows run on mo
 than one worker or fetch, or if a `single-session` worker serves more than one
 workflow.
 
+## Single session across a fleet loss
+
+```bash
+"$SDK_PYTHON" -m activity_sessions.single_session
+```
+
+This shows both sides of single-session binding with `--workflows` N (default 6)
+workflows and `--workers` M (default 3) single-session workers, in four phases:
+
+1. **Bind.** Start N workflows and M workers. Each worker binds to one workflow;
+   the other N - M workflows get no worker, because a bound worker takes no
+   further work.
+2. **Kill the fleet.** Kill every worker (SIGKILL). Every workflow stalls.
+3. **New identities.** Start N - M workers with new stable identities. They run
+   the N - M unbound workflows; the server does not hand them the bound ones,
+   which stay stalled.
+4. **Rebind.** Restart the original M workers with their stable identities. Each
+   resumes its own workflow. Its new process starts with an empty cache, so its
+   first turn fetches the history once.
+
+Each phase advances once its condition is observed, and records a check; the
+command exits non-zero if any check fails. `--turn-seconds` (default 0.3) paces
+the turns so the phases are easy to follow.
+
 ## Tests
 
 ```bash

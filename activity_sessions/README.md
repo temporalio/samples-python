@@ -32,6 +32,12 @@ a session and how workers are configured changes:
    export SDK_PYTHON=/absolute/path/to/sdk-python/.venv/bin/python
    ```
 
+3. Install Rich, used for the live view and the summary:
+
+   ```bash
+   uv pip install --python "$SDK_PYTHON" 'rich>=13,<15'
+   ```
+
 The released SDK does not provide the experimental session API. The sample
 connects to `localhost:7233`, namespace `default`, unless overridden by
 `TEMPORAL_ADDRESS` / `TEMPORAL_NAMESPACE` or SDK profile configuration. Run the
@@ -53,6 +59,11 @@ most workflows any one worker served:
 - `affinity`: every turn runs on the workflow's worker, which already holds the
   earlier turns, so nothing is fetched. Workers serve many workflows.
 - `single-session`: the same reuse, with each worker serving exactly one workflow.
+
+A live view shows each running batch as a grid: one row per workflow, one cell per
+turn. `w2` means worker `w2` ran the turn; `w2+3` means it first fetched 3 missing
+turns, and the cell's shade deepens with the number fetched. The summary shows a
+tile of headline numbers per mode, each mode's grid, and the checks. Pass `--no-live` to print only the summary.
 
 The command exits non-zero if `affinity` or `single-session` workflows run on more
 than one worker or fetch, or if a `single-session` worker serves more than one
@@ -79,7 +90,10 @@ workflows and `--workers` M (default 3) single-session workers, in four phases:
    first turn fetches the history once.
 
 Each phase advances once its condition is observed, and records a check; the
-command exits non-zero if any check fails. `--turn-seconds` (default 0.3) paces
+command exits non-zero if any check fails. A live view shows the phase, each
+workflow's state (`… waiting`, `▶ running`, `⏸ stalled`, `✓ done`) and the
+identity it is bound to, each worker's process (`● alive`, `✖ killed`) and the
+workflow it serves, and the turn grid. `--turn-seconds` (default 0.3) paces
 the turns so the phases are easy to follow.
 
 ## Tests

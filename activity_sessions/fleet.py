@@ -120,3 +120,6 @@ def add_common_args(
         default=turn_seconds,
         help="Simulated work per turn",
     )
+    parser.add_argument(
+        "--no-live", action="store_true", help="Only print the final summary"
+    )

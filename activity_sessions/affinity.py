@@ -9,9 +9,12 @@ from dataclasses import dataclass, field
 from multiprocessing.queues import Queue
 from typing import Literal, get_args
 
+from rich.console import Console, Group, RenderableType
+from rich.text import Text
 from temporalio.client import Client
 
 from activity_sessions import StepEvent
+from activity_sessions.display import GRID_LEGEND, check_list, stat_tiles, turn_grid
 from activity_sessions.fleet import (
     Fleet,
     Turns,
@@ -20,6 +23,7 @@ from activity_sessions.fleet import (
     new_event_queue,
     start_conversations,
 )
+from activity_sessions.live import run_live
 from activity_sessions.worker import WorkerSpec
 
 # none: ordinary task-queue routing. affinity: activities join the workflow's
@@ -114,14 +118,20 @@ async def run_mode(
     return run
 
 
-def report(runs: Sequence[ModeRun], fetch_seconds: float) -> None:
-    columns = [metrics(run, fetch_seconds) for run in runs]
-    print(f"\n{'':<30}" + "".join(f"{LABELS[run.mode]:>16}" for run in runs))
-    for label in columns[0]:
-        print(f"{label:<30}" + "".join(f"{column[label]:>16}" for column in columns))
-    for run in runs:
-        for ok, message in checks(run):
-            print(f"{'ok' if ok else 'FAIL'} - {message}")
+def grid(run: ModeRun, steps: int) -> Group:
+    return Group(
+        Text(LABELS[run.mode], style="bold"),
+        turn_grid(run.workflow_ids, run.turns, steps),
+    )
+
+
+def report(runs: Sequence[ModeRun], steps: int, fetch_seconds: float) -> Group:
+    return Group(
+        stat_tiles({LABELS[run.mode]: metrics(run, fetch_seconds) for run in runs}),
+        *(grid(run, steps) for run in runs),
+        Text(GRID_LEGEND, style="bright_black"),
+        check_list([check for run in runs for check in checks(run)]),
+    )
 
 
 async def main() -> None:
@@ -145,11 +155,23 @@ async def main() -> None:
 
     client = await connect()
     events = new_event_queue()
-    runs = []
-    for mode in args.modes:
-        print(f"Running {LABELS[mode]}...")
-        runs.append(await run_mode(client, args, mode, events, lambda _: None))
-    report(runs, args.fetch_seconds)
+    console = Console()
+    current: list[ModeRun] = []
+
+    async def work(refresh: Callable[[], None]) -> list[ModeRun]:
+        def on_progress(run: ModeRun) -> None:
+            current[:] = [run]
+            refresh()
+
+        return [
+            await run_mode(client, args, mode, events, on_progress)
+            for mode in args.modes
+        ]
+
+    runs = await run_live(
+        console, args.no_live, lambda: grid(current[0], args.steps), work
+    )
+    console.print(report(runs, args.steps, args.fetch_seconds))
     if not all(ok for run in runs for ok, _ in checks(run)):
         raise SystemExit(1)
 

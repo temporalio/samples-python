@@ -8,6 +8,20 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
+from rich.console import Console, Group, RenderableType
+from rich.text import Text
+
+from activity_sessions.display import (
+    GRID_LEGEND,
+    WorkerRow,
+    WorkflowRow,
+    WorkflowState,
+    check_list,
+    phase_banner,
+    turn_grid,
+    worker_table,
+    workflow_table,
+)
 from activity_sessions.fleet import (
     Fleet,
     Turns,
@@ -16,6 +30,7 @@ from activity_sessions.fleet import (
     new_event_queue,
     start_conversations,
 )
+from activity_sessions.live import run_live
 from activity_sessions.worker import WorkerSpec
 
 PHASES = ["Bind", "Kill the fleet", "New identities", "Rebind"]
@@ -40,6 +55,35 @@ class Lifecycle:
         """The worker identity a workflow is bound to, once it has run a turn."""
         turns = self.turns.of(workflow_id)
         return turns[-1].worker if turns else None
+
+    def state(self, workflow_id: str) -> WorkflowState:
+        worker = self.worker_of(workflow_id)
+        if worker is None:
+            return "waiting"
+        if self.progress()[workflow_id] == self.steps:
+            return "done"
+        return "running" if self.alive[worker] else "stalled"
+
+    def render(self) -> RenderableType:
+        labels = {w: f"wf-{i:02}" for i, w in enumerate(self.workflow_ids, 1)}
+        serving = {
+            worker: labels[min(ids)]
+            for worker, ids in self.turns.workflows_by_worker().items()
+        }
+        return Group(
+            phase_banner(self.phase, PHASES),
+            workflow_table(
+                [
+                    WorkflowRow(w, self.state(w), self.worker_of(w), n, self.steps)
+                    for w, n in self.progress().items()
+                ]
+            ),
+            worker_table(
+                [WorkerRow(w, alive, serving.get(w)) for w, alive in self.alive.items()]
+            ),
+            turn_grid(self.workflow_ids, self.turns, self.steps),
+            Text(GRID_LEGEND, style="bright_black"),
+        )
 
 
 async def run_lifecycle(
@@ -157,16 +201,14 @@ async def main() -> None:
     life = Lifecycle(
         [f"{prefix}-{i:02}" for i in range(1, args.workflows + 1)], args.steps
     )
-    shown: list[int] = []
-
-    def refresh() -> None:
-        if life.phase not in shown:
-            shown.append(life.phase)
-            print(f"Phase {life.phase + 1}/{len(PHASES)}: {PHASES[life.phase]}")
-
-    await run_lifecycle(args, life, refresh)
-    for ok, message in life.checks:
-        print(f"{'ok' if ok else 'FAIL'} - {message}")
+    console = Console()
+    await run_live(
+        console,
+        args.no_live,
+        life.render,
+        lambda refresh: run_lifecycle(args, life, refresh),
+    )
+    console.print(life.render(), check_list(life.checks))
     if not all(ok for ok, _ in life.checks):
         raise SystemExit(1)
 

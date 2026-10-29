@@ -28,6 +28,10 @@ dev = [
     "poethepoet>=0.36.0",
 ]
 bedrock = ["boto3>=1.34.92,<2"]
+claude-agent-sdk = [
+    "temporalio-claude-agent-sdk>=0.0.0",
+    "temporalio[pydantic]>=1.34.0,<2",
+]
 deepagents = [
     "temporalio-deepagents>=0.0.1 ; python_version >= '3.11'",
     "temporalio-langsmith>=0.1.0 ; python_version >= '3.11'",
@@ -100,6 +104,9 @@ cloud-export-to-parquet = [
     "boto3>=1.34.89,<2",
     "pyarrow>=19.0.1",
 ]
+
+[tool.uv.sources]
+temporalio-claude-agent-sdk = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/claude_agent_sdk", rev = "348ba4ff358bd8e9a285860f682e62a72733b9b7" }
 
 [tool.uv]
 constraint-dependencies = [

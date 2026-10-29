@@ -1,0 +1,5 @@
+{
+  "name": "haiku-writer",
+  "description": "Answers in haiku form, with a tool that checks syllable counts",
+  "version": "1.0.0"
+}

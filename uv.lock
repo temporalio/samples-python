@@ -653,6 +653,26 @@ wheels = [
 ]
 
 [[package]]
+name = "claude-agent-sdk"
+version = "0.2.165"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "jsonschema" },
+    { name = "mcp" },
+    { name = "sniffio" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7f/45/10f00a408b480926b5e340e3507562ede1e30d4ce5b73eea9ccc3468a9e6/claude_agent_sdk-0.2.165.tar.gz", hash = "sha256:1bfa8e7a6bb36e82de9a12324c9bcfa6eebd4f96ee5890f0c656d50445240ff8", size = 365169, upload-time = "2026-10-08T18:18:49.528Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e4/a7/a7226ae5e7fa3f225d99a0acf12ee354c4af9c953661f66bbcd424e48853/claude_agent_sdk-0.2.165-py3-none-macosx_11_0_arm64.whl", hash = "sha256:7f7017bb59eaf77b9a7c7ce3b9ed2c8a397b8201c8630f011bb1b955290f06e4", size = 97973182, upload-time = "2026-10-08T18:18:56.039Z" },
+    { url = "https://files.pythonhosted.org/packages/5c/9d/1eaa82f8dbafa63a3fb26aabc088be307c4977438269cc6cb10056a32e99/claude_agent_sdk-0.2.165-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:f4b5c6f536062e3af72357b1235f05ad4513230a32a3c639341a91a607d2df1e", size = 102479136, upload-time = "2026-10-08T18:19:01.908Z" },
+    { url = "https://files.pythonhosted.org/packages/40/4a/93fe172811bcd7704c4c4776d5eed1bb1881ba440d86e0f8e5cbbec0dca9/claude_agent_sdk-0.2.165-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:46a47e1e1075a8f2b7976f6bd5aa06c5610cb322c47cdc5b728fb25d02691164", size = 107447420, upload-time = "2026-10-08T18:19:09.571Z" },
+    { url = "https://files.pythonhosted.org/packages/57/81/a0d3ff04ae7045218566b36d1c78729c3fc7550877e154697f263ac5122e/claude_agent_sdk-0.2.165-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:9dbee4bfc69f0bb27ee455afdc19d78f958540a99217d2e28831fb9b7d496f08", size = 107800988, upload-time = "2026-10-08T18:19:16.24Z" },
+    { url = "https://files.pythonhosted.org/packages/7f/d8/1685e8fc14bae5b9cbcfd6f4f6ca8b7ae8fd497a8bbf9c108978dd98620b/claude_agent_sdk-0.2.165-py3-none-win_amd64.whl", hash = "sha256:cf41dc1b1019bc7321b695d621fc94e6d8982c095cfb7d433d5c293e356a2404", size = 110401968, upload-time = "2026-10-08T18:19:24.136Z" },
+]
+
+[[package]]
 name = "click"
 version = "8.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4623,6 +4643,15 @@ pydantic = [
 ]
 
 [[package]]
+name = "temporalio-claude-agent-sdk"
+version = "0.0.0"
+source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fclaude_agent_sdk&rev=348ba4ff358bd8e9a285860f682e62a72733b9b7#348ba4ff358bd8e9a285860f682e62a72733b9b7" }
+dependencies = [
+    { name = "claude-agent-sdk" },
+    { name = "temporalio" },
+]
+
+[[package]]
 name = "temporalio-deepagents"
 version = "0.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4744,6 +4773,10 @@ dependencies = [
 [package.dev-dependencies]
 bedrock = [
     { name = "boto3" },
+]
+claude-agent-sdk = [
+    { name = "temporalio", extra = ["pydantic"] },
+    { name = "temporalio-claude-agent-sdk" },
 ]
 cloud-export-to-parquet = [
     { name = "boto3" },
@@ -4867,6 +4900,10 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
+claude-agent-sdk = [
+    { name = "temporalio", extras = ["pydantic"], specifier = ">=1.34.0,<2" },
+    { name = "temporalio-claude-agent-sdk", git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fclaude_agent_sdk&rev=348ba4ff358bd8e9a285860f682e62a72733b9b7" },
+]
 cloud-export-to-parquet = [
     { name = "boto3", specifier = ">=1.34.89,<2" },
     { name = "numpy", marker = "python_full_version >= '3.10' and python_full_version < '3.13'", specifier = ">=1.26.0,<2" },

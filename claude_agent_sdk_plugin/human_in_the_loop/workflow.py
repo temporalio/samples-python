@@ -104,7 +104,8 @@ class HumanInTheLoopWorkflow:
             await workflow.wait_condition(lambda: tool_use_id in self.decisions)
         finally:
             del self.pending[tool_use_id]
-        if self.decisions[tool_use_id]:
+        # Consumed, so a redone turn asks again.
+        if self.decisions.pop(tool_use_id):
             return PermissionResultAllow()
         return PermissionResultDeny(message="A person denied this tool call")
 

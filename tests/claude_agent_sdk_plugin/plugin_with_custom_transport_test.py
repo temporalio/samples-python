@@ -15,7 +15,6 @@ from claude_agent_sdk_plugin.offline import scripted_api
 from claude_agent_sdk_plugin.plugin_with_custom_transport.connector import (
     PROXY_MANAGED_KEY,
     SandboxConnector,
-    find_saved_turn,
 )
 from claude_agent_sdk_plugin.plugin_with_custom_transport.run_worker import (
     HAIKU,
@@ -135,7 +134,6 @@ async def test_plugin_skill_and_mcp_server_run_from_the_copy_in_the_sandbox(
             client,
             task_queue=task_queue,
             workflows=[PluginWithCustomTransportWorkflow],
-            activities=[find_saved_turn],
             plugins=[
                 ClaudeAgentSDKPlugin(
                     connector=SandboxConnector(uploads={PLUGIN_DIR: LOCAL_PLUGIN_DIR})

@@ -107,7 +107,7 @@ cloud-export-to-parquet = [
 ]
 
 [tool.uv.sources]
-temporalio-claude-agent-sdk = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/claude_agent_sdk", rev = "177fb623f874b85db519401c4be496eeb19da8f5" }
+temporalio-claude-agent-sdk = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/claude_agent_sdk", rev = "0f8943a047dc365d9718a00377058b672c79bb60" }
 
 [tool.uv]
 constraint-dependencies = [

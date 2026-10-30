@@ -7,6 +7,7 @@ from claude_agent_sdk import (
     CLIConnectionError,
     ResultMessage,
     SystemMessage,
+    UserMessage,
     create_sdk_mcp_server,
     tool,
 )
@@ -37,14 +38,20 @@ async def get_weather(args: dict[str, Any]) -> dict[str, Any]:
     return {"content": [{"type": "text", "text": weather}]}
 
 
+# The text Claude Code sends itself to continue an interrupted turn.
+CONTINUE = "Continue from where you left off."
+
+
 @workflow.defn
 class ToolsWorkflow:
     @workflow.run
     async def run(self, prompt: str) -> str:
         return await self.ask(prompt)
 
-    def options(self, *, resume: str | None = None) -> ClaudeAgentOptions:
-        """Options that start a new session, or continue the one given by resume."""
+    def options(
+        self, session_id: str | None = None, prompt_id: str | None = None
+    ) -> ClaudeAgentOptions:
+        """Options that start a new session, or redo the turn from prompt_id in session_id."""
         return ClaudeAgentOptions(
             tools=[],
             mcp_servers={
@@ -52,25 +59,25 @@ class ToolsWorkflow:
             },
             allowed_tools=["mcp__demo__count_letter", "mcp__demo__get_weather"],
             setting_sources=[],
-            env={"CLAUDE_CODE_RESUME_INTERRUPTED_TURN": "1"},
-            resume=resume,
+            # Required to receive the prompt's UUID in the response stream.
+            extra_args={"replay-user-messages": None},
+            resume=session_id if prompt_id else None,
+            resume_session_at=prompt_id,
         )
 
     async def ask(self, prompt: str) -> str:
-        """Answer the prompt, resuming the session if the connection is lost."""
-        session_id = None  # Claude Code's, once it has the prompt
+        """Answer the prompt, redoing the turn if the connection is lost."""
+        session_id = None  # Claude Code's, once it started
+        prompt_id = None  # The prompt's, once Claude Code saved it
 
         while True:
             try:
-                options = self.options(resume=session_id)
+                options = self.options(session_id, prompt_id)
                 transport = TemporalTransport(options)
                 async with ClaudeSDKClient(
                     options=options, transport=transport
                 ) as client:
-                    # Keep sending the prompt until Claude Code reports a session, which
-                    # means it received it. After that, a resume finishes the turn.
-                    if session_id is None:
-                        await client.query(prompt)
+                    await client.query(CONTINUE if prompt_id else prompt)
 
                     async for message in client.receive_response():
                         if (
@@ -78,11 +85,17 @@ class ToolsWorkflow:
                             and message.subtype == "init"
                         ):
                             session_id = message.data["session_id"]
+                        elif (
+                            isinstance(message, UserMessage)
+                            and message.uuid
+                            and not prompt_id
+                        ):
+                            prompt_id = message.uuid
                         elif isinstance(message, ResultMessage):
                             return message.result or "\n".join(message.errors or [])
 
                 raise RuntimeError("Claude Code ended the turn without a result")
 
             except CLIConnectionError:
-                # Resume the session if Claude Code started it, or start again.
+                # Redo the turn from the prompt if Claude Code saved it, or start again.
                 pass

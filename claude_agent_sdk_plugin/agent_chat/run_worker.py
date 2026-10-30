@@ -1,6 +1,5 @@
 import asyncio
 import os
-import signal
 from typing import Any
 
 from temporalio.claude_agent_sdk import ClaudeAgentSDKPlugin
@@ -22,20 +21,14 @@ OFFLINE_ANSWERS: dict[str, Answer] = {"": offline_reply}
 async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
 
-    # Shut the Worker down on SIGTERM, so the plugin stops Claude Code and a
-    # restarted Worker can resume its session.
-    stop = asyncio.Event()
-    asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, stop.set)
-
     with offline_api_without_key(OFFLINE_ANSWERS):
-        async with Worker(
+        worker = Worker(
             client,
             task_queue="claude-agent-sdk-agent-chat",
             workflows=[ChatWorkflow],
             plugins=[ClaudeAgentSDKPlugin()],
-        ):
-            print(f"Worker started. To stop it gracefully: kill {os.getpid()}")
-            await stop.wait()
+        )
+        await worker.run()
 
 
 if __name__ == "__main__":

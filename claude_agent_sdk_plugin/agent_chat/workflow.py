@@ -7,10 +7,14 @@ from claude_agent_sdk import (
     CLIConnectionError,
     ResultMessage,
     SystemMessage,
+    UserMessage,
 )
 from temporalio import workflow
 from temporalio.claude_agent_sdk import TemporalTransport
 from temporalio.exceptions import ApplicationError
+
+# The text Claude Code sends itself to continue an interrupted turn.
+CONTINUE = "Continue from where you left off."
 
 
 @dataclass
@@ -42,12 +46,14 @@ class ChatWorkflow:
 
         workflow.continue_as_new(ChatInput(self.session_id, self.turns_per_run))
 
-    def new_client(self) -> ClaudeSDKClient:
-        """A client that starts Claude Code with a new session, or resumes the session."""
+    def new_client(self, prompt_id: str | None = None) -> ClaudeSDKClient:
+        """A client that starts Claude Code with a new session, or resumes the session, from prompt_id if given."""
         options = ClaudeAgentOptions(
             setting_sources=[],
-            env={"CLAUDE_CODE_RESUME_INTERRUPTED_TURN": "1"},
+            # Required to receive each message's UUID in the response stream.
+            extra_args={"replay-user-messages": None},
             resume=self.session_id,  # None starts a new session.
+            resume_session_at=prompt_id,
         )
 
         # The default SubprocessConnector keeps session files on the Worker host,
@@ -58,25 +64,21 @@ class ChatWorkflow:
 
     @workflow.update
     async def send_message(self, message: str) -> str:
-        """Answer the message in the session, resuming it if the connection is lost."""
+        """Answer the message in the session, redoing the turn if the connection is lost."""
         self.turns += 1
 
         # One turn at a time, so each message gets its own reply.
         async with self.lock:
-            sent = False
+            prompt_id = None  # The message's, once Claude Code saved it
 
             while True:
                 try:
-                    # Claude Code starts on the first message, and again after a resume.
+                    # Claude Code starts on the first message, and again after a redo.
                     if not self.connected:
                         await self.client.connect()
                         self.connected = True
 
-                    # Keep sending the message until Claude Code has received it in a
-                    # session it reported. After that, a resume finishes the turn.
-                    if not sent or self.session_id is None:
-                        await self.client.query(message)
-                        sent = True
+                    await self.client.query(CONTINUE if prompt_id else message)
 
                     async for response in self.client.receive_response():
                         if (
@@ -84,6 +86,12 @@ class ChatWorkflow:
                             and response.subtype == "init"
                         ):
                             self.session_id = response.data["session_id"]
+                        elif (
+                            isinstance(response, UserMessage)
+                            and response.uuid
+                            and not prompt_id
+                        ):
+                            prompt_id = response.uuid
                         elif isinstance(response, ResultMessage):
                             return response.result or "\n".join(response.errors or [])
 
@@ -92,7 +100,8 @@ class ChatWorkflow:
                 except CLIConnectionError:
                     await self.client.disconnect()
                     self.connected = False
-                    self.client = self.new_client()
+                    # Redo the turn from the message if Claude Code saved it, or send it again.
+                    self.client = self.new_client(prompt_id)
 
     @send_message.validator
     def validate_send_message(self, message: str) -> None:

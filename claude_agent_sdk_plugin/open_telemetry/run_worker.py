@@ -1,6 +1,5 @@
 import asyncio
 import os
-import signal
 
 from temporalio.claude_agent_sdk import ClaudeAgentSDKPlugin
 from temporalio.client import Client
@@ -32,21 +31,15 @@ async def main() -> None:
         plugins=[OpenTelemetryPlugin(add_temporal_spans=True)],
     )
 
-    # Shut the Worker down on SIGTERM, so the plugin stops Claude Code and a
-    # restarted Worker can resume its session.
-    stop = asyncio.Event()
-    asyncio.get_running_loop().add_signal_handler(signal.SIGTERM, stop.set)
-
     with offline_api_without_key(OFFLINE_ANSWERS):
         os.environ.update(CLAUDE_CODE_TRACING)
-        async with Worker(
+        worker = Worker(
             client,
             task_queue="claude-agent-sdk-open-telemetry",
             workflows=[OpenTelemetryWorkflow],
             plugins=[ClaudeAgentSDKPlugin()],
-        ):
-            print(f"Worker started. To stop it gracefully: kill {os.getpid()}")
-            await stop.wait()
+        )
+        await worker.run()
 
 
 if __name__ == "__main__":

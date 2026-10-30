@@ -39,5 +39,3 @@ temporal workflow execute \
 The result has the final briefing and, under `messages_by_agent`, what each of `coordinator`, `researcher`, and `writer` said. The Workflow also logs each message with its role.
 
 Offline, the researcher returns three facts, the writer one sentence, and the coordinator `Final briefing: Temporal keeps your code running through failures.` The script answers the researcher and writer only when it sees their prompts, so those replies show Claude Code really ran each subagent. The grouping by role comes from Claude Code's real messages.
-
-If the Worker restarts mid-run, the Workflow resumes the session on the restarted Worker. Claude Code finishes the cut-off turn.

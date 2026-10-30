@@ -1,5 +1,4 @@
-import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 
 from claude_agent_sdk import (
     AgentDefinition,
@@ -11,6 +10,7 @@ from claude_agent_sdk import (
     SystemMessage,
     TextBlock,
     ToolUseBlock,
+    UserMessage,
 )
 from temporalio import workflow
 from temporalio.claude_agent_sdk import TemporalTransport
@@ -29,11 +29,6 @@ AGENTS = {
         tools=[],
     ),
 }
-# The same agents, as the Claude Agent SDK sends them to Claude Code.
-AGENTS_JSON = {
-    name: {key: value for key, value in asdict(agent).items() if value is not None}
-    for name, agent in AGENTS.items()
-}
 
 
 @dataclass
@@ -42,10 +37,13 @@ class Briefing:
     messages_by_agent: dict[str, list[str]] = field(default_factory=dict)
 
 
+# The text Claude Code sends itself to continue an interrupted turn.
+CONTINUE = "Continue from where you left off."
+
+
 @workflow.defn
 class MultiAgentWorkflow:
     def __init__(self) -> None:
-        # Kept across resumes, so a resumed session adds to them.
         self.roles: dict[str, str] = {}
         self.messages_by_agent: dict[str, list[str]] = {}
 
@@ -59,17 +57,14 @@ class MultiAgentWorkflow:
         )
         return await self.ask(prompt)
 
-    def options(self, resume: str | None = None) -> ClaudeAgentOptions:
-        """Options that start a new session, or resume the one with this ID."""
+    def options(
+        self, session_id: str | None = None, prompt_id: str | None = None
+    ) -> ClaudeAgentOptions:
+        """Options that start a new session, or redo the turn from prompt_id in session_id."""
         return ClaudeAgentOptions(
             agents=AGENTS,
-            # A resumed Claude Code finishes the cut-off turn before it reads the
-            # agents above or the forward_subagent_text request, so give both on
-            # the command line too.
-            extra_args={
-                "agents": json.dumps(AGENTS_JSON),
-                "forward-subagent-text": None,
-            },
+            # Required to receive the prompt's UUID in the response stream.
+            extra_args={"replay-user-messages": None},
             # A subagent's tools must also be listed here. "Agent" is the delegation
             # tool in this Claude Code version.
             tools=["Agent", "WebSearch", "WebFetch"],
@@ -78,25 +73,25 @@ class MultiAgentWorkflow:
             # Forward the subagents' text, not only their tool calls.
             forward_subagent_text=True,
             setting_sources=[],
-            env={"CLAUDE_CODE_RESUME_INTERRUPTED_TURN": "1"},
-            resume=resume,
+            resume=session_id if prompt_id else None,
+            resume_session_at=prompt_id,
         )
 
     async def ask(self, prompt: str) -> Briefing:
-        """Answer the prompt in a session, resuming it if the connection is lost."""
-        session_id = None  # Claude Code's, once it has the prompt
+        """Answer the prompt, redoing the turn if the connection is lost."""
+        session_id = None  # Claude Code's, once it started
+        prompt_id = None  # The prompt's, once Claude Code saved it
 
         while True:
+            # The turn starts over, so record only its messages.
+            self.roles, self.messages_by_agent = {}, {}
             try:
-                options = self.options(resume=session_id)
+                options = self.options(session_id, prompt_id)
                 transport = TemporalTransport(options)
                 async with ClaudeSDKClient(
                     options=options, transport=transport
                 ) as client:
-                    # Keep sending the prompt until Claude Code reports a session, which
-                    # means it received it. After that, a resume finishes the turn.
-                    if session_id is None:
-                        await client.query(prompt)
+                    await client.query(CONTINUE if prompt_id else prompt)
 
                     async for message in client.receive_response():
                         if (
@@ -104,6 +99,12 @@ class MultiAgentWorkflow:
                             and message.subtype == "init"
                         ):
                             session_id = message.data["session_id"]
+                        elif (
+                            isinstance(message, UserMessage)
+                            and message.uuid
+                            and not prompt_id
+                        ):
+                            prompt_id = message.uuid
                         elif isinstance(message, AssistantMessage):
                             self.record(message)
                         elif isinstance(message, ResultMessage):
@@ -114,7 +115,7 @@ class MultiAgentWorkflow:
                 raise RuntimeError("Claude Code ended the turn without a result")
 
             except CLIConnectionError:
-                # Resume the session if Claude Code started it, or start again.
+                # Redo the turn from the prompt if Claude Code saved it, or start again.
                 pass
 
     def record(self, message: AssistantMessage) -> None:

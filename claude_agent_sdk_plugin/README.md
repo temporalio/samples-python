@@ -20,6 +20,12 @@ These samples demonstrate the [Temporal Claude Agent SDK integration](https://gi
 
 Most samples run Claude Code as a subprocess of the Worker. `plugin_with_custom_transport` runs it in a Docker Sandbox instead.
 
+## Worker restarts
+
+Every sample finishes its turn if its Worker stops mid-turn. The Workflow resumes the session at the turn's prompt and sends "Continue from where you left off.", the message Claude Code itself sends to continue an interrupted turn. Claude Code then redoes the turn, so a pending tool approval is asked again.
+
+The next Worker needs the session. The subprocess samples keep it on the Worker's host, and `plugin_with_custom_transport` keeps it in its sandbox.
+
 ## Prerequisites
 
 Install the [Temporal CLI](https://docs.temporal.io/cli), then the dependencies:
@@ -29,23 +35,6 @@ uv sync --group claude-agent-sdk
 ```
 
 The `claude-agent-sdk` package bundles Claude Code, so you don't need to install it separately. Each sample's README has the commands to run it.
-
-## Stopping a Worker
-
-To see a Worker fail mid-turn and the restarted Worker pick up where it left off, stop the Worker with SIGTERM, as process managers do. For example, while the human-in-the-loop sample waits for an approval:
-
-```bash
-pkill -f claude_agent_sdk_plugin/human_in_the_loop/run_worker.py
-```
-
-The Worker shuts down and stops Claude Code, leaving the turn for the restarted Worker to resume, so a pending tool approval is asked again.
-
-Stopping a Worker mid-turn these ways isn't recommended:
-
-- `kill -9` on the Worker process alone. Claude Code outlives it, sees its stdin close, and records a pending tool approval as failed.
-- Ctrl+C in the Worker's terminal. Claude Code gets the Ctrl+C too, and records a pending tool approval as rejected.
-
-Either way, the resumed session continues as if the call failed or was denied, instead of asking again.
 
 ## Tests
 

@@ -1,24 +1,18 @@
 import asyncio
 import io
-import json
 import os
 import re
 import tarfile
 import uuid
 from collections.abc import Mapping
-from dataclasses import dataclass
 
 from claude_agent_sdk import (
     CLIConnectionError,
-    InMemorySessionStore,
-    get_session_messages_from_store,
-    project_key_for_directory,
 )
 from temporalio import activity
 from temporalio.claude_agent_sdk import (
     ClaudeCodeProcess,
     ConnectActivityInput,
-    Output,
     SubprocessConnector,
 )
 
@@ -139,7 +133,7 @@ class SandboxConnector:
             for flag in ("-e", f"{key}={value}")
         ]
 
-        process = await SubprocessConnector().connect(
+        return await SubprocessConnector().connect(
             ConnectActivityInput(
                 cli_path="sbx",
                 args=[
@@ -156,64 +150,3 @@ class SandboxConnector:
                 max_buffer_size=request.max_buffer_size,
             )
         )
-        return SandboxProcess(name, process)
-
-
-class SandboxProcess:
-    """Claude Code in a sandbox, reached through ``sbx exec``."""
-
-    def __init__(self, name: str, process: ClaudeCodeProcess) -> None:
-        self.name = name
-        self.process = process
-
-    async def write(self, data: str) -> None:
-        await self.process.write(data)
-
-    async def end_input(self) -> None:
-        await self.process.end_input()
-
-    async def read(self) -> list[Output]:
-        return await self.process.read()
-
-    async def close(self) -> None:
-        await self.process.close()
-
-    async def terminate(self) -> None:
-        # The Worker connected to this sandbox is shutting down. Stop Claude Code
-        # as SIGTERM does, so a resumed session continues its turn.
-        await sbx("exec", self.name, "pkill", "-TERM", "-x", "claude")
-
-
-@dataclass
-class SavedTurn:
-    started: bool  # Claude Code saved the prompt
-    result: str | None  # the final answer, once the turn finished
-
-
-@activity.defn
-async def find_saved_turn(session_id: str) -> SavedTurn:
-    """Read how far the session's turn got from its transcript in the sandbox."""
-    script = 'cat "$HOME"/.claude/projects/*/"$1".jsonl 2>/dev/null || true'
-    transcript = await sbx("exec", sandbox_name(), "sh", "-c", script, "sh", session_id)
-
-    # Give the transcript to the Claude Agent SDK through an in-memory store.
-    # Nothing is written to the sandbox.
-    store = InMemorySessionStore()
-    await store.append(
-        {
-            "project_key": project_key_for_directory(WORKSPACE),
-            "session_id": session_id,
-        },
-        [json.loads(line) for line in transcript.splitlines()],
-    )
-    messages = await get_session_messages_from_store(store, session_id, WORKSPACE)
-    if not messages:
-        return SavedTurn(started=False, result=None)
-
-    last = messages[-1].message
-    result = (
-        "".join(block["text"] for block in last["content"] if block["type"] == "text")
-        if last.get("stop_reason") == "end_turn"
-        else None
-    )
-    return SavedTurn(started=True, result=result)

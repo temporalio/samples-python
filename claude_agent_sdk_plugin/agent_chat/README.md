@@ -7,7 +7,6 @@ A multi-turn chat with Claude that lives in one Workflow. Each message is a `sen
 - **A chat is just a Workflow.** You write ordinary `ClaudeSDKClient` code, and each message becomes a durable Update with Claude's reply as the result.
 - **Chats can run forever.** The Workflow continues as new every few turns, so its history stays small no matter how long the conversation gets.
 - **Claude doesn't forget.** Only the session ID crosses to the next run. Claude Code reloads the full conversation from its own session file, so nothing is lost and nothing large is stored in Temporal.
-- **A Worker restart loses no message.** If the Worker stops mid-reply, the restarted Worker resumes the session. Claude Code finishes the cut-off reply itself, so the Workflow sends the message again only if Claude Code never got it. Each message gets exactly one reply.
 
 ## Run it
 

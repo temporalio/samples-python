@@ -71,8 +71,6 @@ Offline, the model's replies are scripted, but the skill and the MCP server run 
 
 Live, the wording is Claude's, and the signature shows Claude followed the skill.
 
-The sandbox outlives the Worker. If the Worker stops mid-turn, Claude Code stops with it, and the Workflow continues the turn in the same sandbox, with its workspace files intact. Output Claude Code wrote after the Worker's last read is lost, so the Workflow first reads the session's transcript in the sandbox with the `find_saved_turn` Activity. If Claude Code had finished the turn, the final answer is there, and no result is lost.
-
 ## Clean up
 
 The sandbox stays after the Workflow completes, so you can look at its workspace. `sbx ls` lists it as `claude-sandbox-...`. Remove it with:
@@ -86,6 +84,6 @@ sbx rm --force claude-sandbox-...
 | File | Description |
 |------|-------------|
 | `haiku-writer/` | The plugin: the `haiku` skill and the `syllables` MCP server |
-| `connector.py` | `SandboxConnector`, which copies uploads into a sandbox and runs Claude Code there through `sbx`, and the `find_saved_turn` Activity |
-| `workflow.py` | `PluginWithCustomTransportWorkflow`: `ClaudeSDKClient` with the plugin, which finishes the turn across Worker restarts |
-| `run_worker.py` | Registers `ClaudeAgentSDKPlugin(connector=SandboxConnector(uploads=...))`, the Activities, and the offline answers |
+| `connector.py` | `SandboxConnector`, which copies uploads into a sandbox and runs Claude Code there through `sbx` |
+| `workflow.py` | `PluginWithCustomTransportWorkflow`: `ClaudeSDKClient` with the plugin, which redoes the turn after a Worker restart |
+| `run_worker.py` | Registers `ClaudeAgentSDKPlugin(connector=SandboxConnector(uploads=...))` and the offline answers |

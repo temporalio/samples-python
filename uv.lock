@@ -4644,15 +4644,15 @@ pydantic = [
 
 [[package]]
 name = "temporalio-claude-agent-sdk"
-version = "0.0.1"
+version = "0.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "claude-agent-sdk" },
     { name = "temporalio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/34/00/b4016ecde08b9fe3c479b2e564f7a3a2781bcdffb13183072dce049b9bde/temporalio_claude_agent_sdk-0.0.1.tar.gz", hash = "sha256:79cfe10ebb8acfe32e9986141861863b1b705c4e12b64a4db77d04f355269858", size = 19674, upload-time = "2026-10-30T21:25:07.141Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/42/fa66877170d08857365f49e10a6ec2e1b8a035a7ff338097b503b35053d3/temporalio_claude_agent_sdk-0.0.2.tar.gz", hash = "sha256:412aa8ca9ff06db3979ea830dab1199e99537a57a81be7223d8ff22478609009", size = 19731, upload-time = "2026-10-30T21:54:58.605Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/25/45fb0b917df9e39328c12dd689d0aca77274eab9f71feb6067471a9a5d4f/temporalio_claude_agent_sdk-0.0.1-py3-none-any.whl", hash = "sha256:728dd779a28afb21cb7bb6ed7c39efd28786c143e9d00e7f291052e0842b650f", size = 23270, upload-time = "2026-10-30T21:25:05.97Z" },
+    { url = "https://files.pythonhosted.org/packages/4a/1b/c9ed5a311f57a44b4c85ae78df251fb6584d0de78a9cb341229ea6d02833/temporalio_claude_agent_sdk-0.0.2-py3-none-any.whl", hash = "sha256:3662d7a53d2a933a055df12aeb2d7fe3cabf2d5080399902d86daa7bc76c77ce", size = 23322, upload-time = "2026-10-30T21:54:57.053Z" },
 ]
 
 [[package]]
@@ -4908,7 +4908,7 @@ bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
 claude-agent-sdk = [
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.30.0,<2" },
     { name = "temporalio", extras = ["opentelemetry", "pydantic"], specifier = ">=1.35.0,<2" },
-    { name = "temporalio-claude-agent-sdk", specifier = ">=0.0.1" },
+    { name = "temporalio-claude-agent-sdk", specifier = ">=0.0.2" },
 ]
 cloud-export-to-parquet = [
     { name = "boto3", specifier = ">=1.34.89,<2" },

@@ -24,12 +24,13 @@ support (`ClientConfig.load_client_connect_config()`), which reads `TEMPORAL_NAM
 ## Run locally against a dev server
 
 > [!NOTE]
-> Standalone Nexus operations require a server that supports this feature. For local development, use a Temporal CLI release that enables SANO in its dev server.
+> Standalone Nexus operations require a server that supports this feature. For local development, use Temporal CLI v1.9.1 or later and enable SANO as shown below.
 
 1. Start a [Temporal dev server](https://docs.temporal.io/cli/setup-cli) with the required namespaces pre-created:
 
    ```bash
    temporal server start-dev \
+     --dynamic-config-value "nexusoperation.enableStandalone=true" \
      --namespace my-caller-namespace \
      --namespace my-handler-namespace
    ```
@@ -73,6 +74,18 @@ Total Nexus operations: 2
 
 If you run the starter code multiple times, you should see additional operations in the listing results, as more operations are run.
 The same goes for the total number of operations.
+
+## Use a self-hosted cluster
+
+For a self-hosted cluster, use Temporal Server v1.32.0 or later and enable SANO for the caller namespace in the
+server's [dynamic configuration](https://docs.temporal.io/references/dynamic-configuration):
+
+```yaml
+nexusoperation.enableStandalone:
+  - value: true
+    constraints:
+      namespace: my-caller-namespace
+```
 
 ## Run against Temporal Cloud
 

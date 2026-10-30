@@ -24,8 +24,6 @@ Prerequisites: Python >= 3.11 with the [suite setup](../README.md#prerequisites)
 applied, an `ANTHROPIC_API_KEY` in your
 environment, and a running Temporal dev server (`temporal server start-dev`).
 
-> The experimental plugin is not in the `deepagents` group — install it as shown
-
 ```bash
 # Terminal 1
 uv run deepagents_plugin/subagents/run_worker.py

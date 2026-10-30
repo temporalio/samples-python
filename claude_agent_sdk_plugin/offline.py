@@ -16,12 +16,6 @@ OFFLINE_CONFIG_DIR = os.path.join(tempfile.gettempdir(), "claude-agent-sdk-sampl
 Answer = Union[str, list[str], dict[str, Any], Callable[[dict[str, Any]], Any]]
 
 
-def is_online() -> bool:
-    return bool(
-        os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
-    )
-
-
 def tool_use(id: str, name: str, **tool_input: Any) -> dict[str, Any]:
     return {"type": "tool_use", "id": id, "name": name, "input": tool_input}
 
@@ -100,7 +94,7 @@ def scripted_api(answers: Mapping[str, Answer]) -> Iterator[ScriptedApi]:
 
 @contextlib.contextmanager
 def offline_api_without_key(answers: Mapping[str, Answer]) -> Iterator[None]:
-    if is_online():
+    if os.environ.get("ANTHROPIC_API_KEY"):
         yield
         return
 

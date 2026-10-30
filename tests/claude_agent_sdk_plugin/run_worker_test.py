@@ -76,7 +76,6 @@ async def running_main(
     Worker to finish shutting down.
     """
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    monkeypatch.delenv("CLAUDE_CODE_OAUTH_TOKEN", raising=False)
     monkeypatch.setenv("TEMPORAL_ADDRESS", client.service_client.config.target_host)
     run_worker = importlib.import_module(
         f"claude_agent_sdk_plugin.{scenario}.run_worker"

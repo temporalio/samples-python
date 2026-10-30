@@ -40,7 +40,7 @@ Start the Worker in another terminal:
 uv run --group claude-agent-sdk claude_agent_sdk_plugin/plugin_with_custom_transport/run_worker.py
 ```
 
-The Worker runs offline: everything runs for real, including the sandbox and the plugin's MCP server, except the model, which follows a script. To use the real model, put `ANTHROPIC_API_KEY=...` in front of the command. This sample needs an API key: the sandbox's proxy doesn't take a `CLAUDE_CODE_OAUTH_TOKEN`.
+The Worker runs offline: everything runs for real, including the sandbox and the plugin's MCP server, except the model, which follows a script. To use the real model, put `ANTHROPIC_API_KEY=...` in front of the command.
 
 Ask for a haiku from a third terminal:
 

@@ -7,8 +7,8 @@ durable. Build your agent with `create_deep_agent(...)` inside a
 each I/O tool/backend operation becomes a Temporal Activity, while the agent's
 control loop runs (and deterministically replays) inside the Workflow.
 
-> **Experimental.** The `temporalio.deepagents` plugin is experimental
-> and its API may change.
+> **Public Preview.** The `temporalio.deepagents` plugin is in
+> [Public Preview](https://docs.temporal.io/develop/python/integrations/deepagents).
 
 `DeepAgentsPlugin` is a **client-level** plugin: add it to `Client.connect(...)`
 and the SDK propagates it to any Worker built from that client. Add it on exactly

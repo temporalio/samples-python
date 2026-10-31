@@ -1,7 +1,5 @@
 # Temporal OpenAI Agents SDK Integration
 
-⚠️ **Public Preview** - This integration is experimental and its interfaces may change prior to General Availability.
-
 This directory contains samples demonstrating how to use the [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) with Temporal's durable execution engine.
 These samples are adapted from the [OpenAI Agents SDK examples](https://github.com/openai/openai-agents-python/tree/main/examples) and extended with Temporal's durability and orchestration capabilities.
 

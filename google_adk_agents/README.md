@@ -1,8 +1,5 @@
 # Temporal Google ADK Integration
 
-⚠️ **Experimental** — This integration is experimental and its interfaces may
-change prior to General Availability.
-
 This directory contains samples demonstrating how to run
 [Google ADK](https://google.github.io/adk-docs/) agents durably inside Temporal
 workflows using `temporalio.google_adk`. Each scenario is a

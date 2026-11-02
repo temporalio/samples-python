@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import nexusrpc
 from temporalio import nexus
-from temporalio.client import Client, WorkflowHandle
+from temporalio.client import Client, WorkflowHandle, WorkflowUpdateStage
 
 from nexus_messaging_temporal_operation.callerpattern.handler.workflows import (
     GreetingWorkflow,
@@ -84,6 +84,7 @@ class NexusGreetingServiceHandler:
             get_workflow_id(input.user_id),
             GreetingWorkflow.set_language_using_activity,
             input,
+            wait_for_stage=WorkflowUpdateStage.ACCEPTED,
         )
 
     @nexus.temporal_operation

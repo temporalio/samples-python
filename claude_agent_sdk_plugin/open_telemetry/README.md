@@ -4,6 +4,8 @@ Trace a Workflow and the Claude Code it runs as one OpenTelemetry trace: the cal
 
 ## What this shows
 
+Register `OpenTelemetryPlugin` before `ClaudeAgentSDKPlugin`. This sample registers both on the Client, so the Worker inherits them in that order.
+
 - **One trace across processes.** `OpenTelemetryPlugin` carries the trace from the starter into the Workflow and its Activities. The plugin passes it on to Claude Code in `TRACEPARENT`, so Claude Code's spans join the same trace.
 - **Claude Code's own spans.** Each turn is a `claude_code.interaction` span, with a `claude_code.llm_request` span for each model call and a `claude_code.tool` span for each tool call.
 - **Replay-safe Workflow spans.** `create_tracer_provider()` gives Workflow spans IDs that stay the same on replay, and exports them once.

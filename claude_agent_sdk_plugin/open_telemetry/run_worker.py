@@ -26,9 +26,10 @@ OFFLINE_ANSWERS: dict[str, Answer] = {
 
 async def main() -> None:
     install_tracer_provider("claude-agent-sdk-worker")
+    # Workers inherit Client plugins in this order.
     client = await Client.connect(
         os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"),
-        plugins=[OpenTelemetryPlugin(add_temporal_spans=True)],
+        plugins=[OpenTelemetryPlugin(add_temporal_spans=True), ClaudeAgentSDKPlugin()],
     )
 
     with offline_api_without_key(OFFLINE_ANSWERS):
@@ -37,7 +38,6 @@ async def main() -> None:
             client,
             task_queue="claude-agent-sdk-open-telemetry",
             workflows=[OpenTelemetryWorkflow],
-            plugins=[ClaudeAgentSDKPlugin()],
         )
         await worker.run()
 

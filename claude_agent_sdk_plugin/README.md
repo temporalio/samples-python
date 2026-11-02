@@ -11,6 +11,7 @@ These samples demonstrate the [Temporal Claude Agent SDK integration](https://gi
 | Agent Chat | [agent_chat](agent_chat) | A multi-turn chat driven by Updates, with Continue-As-New that resumes Claude's session in the next run. Start here. |
 | Tools | [tools](tools) | One custom tool computed in the Workflow and one that runs an Activity, both via `@tool` and `create_sdk_mcp_server`. |
 | Streaming | [streaming](streaming) | Token-by-token output through a Workflow Stream, with or without a subscriber. |
+| Hooks | [hooks](hooks) | A `PreToolUse` hook that blocks Bash commands that delete files and records each one through an Activity. |
 | Human in the Loop | [human_in_the_loop](human_in_the_loop) | `can_use_tool` waits durably for a person's Update: approve, deny, or cancel. |
 | Structured Output | [structured_output](structured_output) | A JSON-schema result validated as a Pydantic model at the Workflow boundary. |
 | Fork Session | [fork_session](fork_session) | One conversation forked with `fork_session` into parallel branches, each with a session ID from Claude Code. |
@@ -22,9 +23,9 @@ Most samples run Claude Code as a subprocess of the Worker. `plugin_with_custom_
 
 ## Worker restarts
 
-Every sample finishes its turn if its Worker stops mid-turn. The Workflow resumes the session at the turn's prompt and sends "Continue from where you left off.", the message Claude Code itself sends to continue an interrupted turn. Claude Code then redoes the turn, so a pending tool approval is asked again.
+Every sample finishes its turn if its Worker stops mid-turn. The Workflow resumes the session at the turn's prompt and sends "Continue from where you left off.", the message Claude Code itself sends to continue an interrupted turn. Claude Code then redoes the turn. `human_in_the_loop` remembers each decision, so the redone turn doesn't ask again for a tool call a person already decided.
 
-The next Worker needs the session. The subprocess samples keep it on the Worker's host, and `plugin_with_custom_transport` keeps it in its sandbox.
+The next Worker needs the session. The subprocess samples keep it on the Worker's host, and `plugin_with_custom_transport` keeps it in its sandbox on the Worker's machine.
 
 ## Prerequisites
 

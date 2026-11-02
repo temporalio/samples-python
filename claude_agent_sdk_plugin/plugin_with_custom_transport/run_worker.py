@@ -32,15 +32,16 @@ async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
 
     with offline_api_without_key(OFFLINE_ANSWERS):
+        # @@@SNIPSTART python-claude-agent-sdk-custom-connector-worker
+        plugin = ClaudeAgentSDKPlugin(
+            connector=SandboxConnector(uploads={PLUGIN_DIR: LOCAL_PLUGIN_DIR})
+        )
+        # @@@SNIPEND
         worker = Worker(
             client,
             task_queue="claude-agent-sdk-plugin-with-custom-transport",
             workflows=[PluginWithCustomTransportWorkflow],
-            plugins=[
-                ClaudeAgentSDKPlugin(
-                    connector=SandboxConnector(uploads={PLUGIN_DIR: LOCAL_PLUGIN_DIR})
-                )
-            ],
+            plugins=[plugin],
         )
         await worker.run()
 

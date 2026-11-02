@@ -11,7 +11,6 @@ from temporalio.client import (
     Client,
     WorkflowFailureError,
     WorkflowHandle,
-    WorkflowUpdateFailedError,
 )
 from temporalio.exceptions import CancelledError
 from temporalio.worker import Replayer, Worker
@@ -22,7 +21,6 @@ from claude_agent_sdk_plugin.human_in_the_loop.run_worker import (
     tool_result,
 )
 from claude_agent_sdk_plugin.human_in_the_loop.workflow import (
-    Decision,
     HumanInTheLoopWorkflow,
     ToolRequest,
 )
@@ -54,7 +52,7 @@ async def started(
 
 async def wait_for_request(
     handle: WorkflowHandle[HumanInTheLoopWorkflow, str],
-) -> list[ToolRequest]:
+) -> ToolRequest:
     for _ in range(300):
         pending = await handle.query(HumanInTheLoopWorkflow.pending_tool_calls)
         if pending:
@@ -71,7 +69,7 @@ async def assert_replays(handle: WorkflowHandle[HumanInTheLoopWorkflow, str]) ->
 
 async def test_approved_tool_call_runs(client: Client, workspace: Path) -> None:
     async with started(client) as (handle, _):
-        [request] = await wait_for_request(handle)
+        request = await wait_for_request(handle)
         assert request == ToolRequest(
             TOOL_USE_ID,
             "Bash",
@@ -79,9 +77,7 @@ async def test_approved_tool_call_runs(client: Client, workspace: Path) -> None:
         )
         assert not (workspace / "hello.txt").exists()
 
-        await handle.execute_update(
-            HumanInTheLoopWorkflow.decide, Decision(TOOL_USE_ID, approved=True)
-        )
+        await handle.execute_update(HumanInTheLoopWorkflow.decide, True)
 
         assert await handle.result() == "Created hello.txt."
     assert (workspace / "hello.txt").read_text() == "Hello from Claude Code\n"
@@ -94,9 +90,7 @@ async def test_denied_tool_call_reaches_the_model(
     async with started(client) as (handle, api):
         await wait_for_request(handle)
 
-        await handle.execute_update(
-            HumanInTheLoopWorkflow.decide, Decision(TOOL_USE_ID, approved=False)
-        )
+        await handle.execute_update(HumanInTheLoopWorkflow.decide, False)
 
         assert await handle.result() == "Understood. I did not create hello.txt."
     assert not (workspace / "hello.txt").exists()
@@ -104,22 +98,6 @@ async def test_denied_tool_call_reaches_the_model(
     assert result["is_error"] is True
     assert "A person denied this tool call" in str(result["content"])
     await assert_replays(handle)
-
-
-async def test_decision_for_unknown_tool_call_is_rejected(client: Client) -> None:
-    async with started(client) as (handle, _):
-        await wait_for_request(handle)
-
-        with pytest.raises(WorkflowUpdateFailedError) as rejected:
-            await handle.execute_update(
-                HumanInTheLoopWorkflow.decide, Decision("toolu_other", approved=True)
-            )
-        assert "No pending tool call toolu_other" in str(rejected.value.cause)
-
-        await handle.execute_update(
-            HumanInTheLoopWorkflow.decide, Decision(TOOL_USE_ID, approved=False)
-        )
-        await handle.result()
 
 
 async def test_cancel_while_waiting_ends_the_workflow(
@@ -140,4 +118,43 @@ async def test_cancel_while_waiting_ends_the_workflow(
         == EventType.EVENT_TYPE_WORKFLOW_EXECUTION_CANCELED
     )
     assert not (workspace / "hello.txt").exists()
+    await assert_replays(handle)
+
+
+async def test_decision_survives_a_worker_restart(
+    client: Client, workspace: Path
+) -> None:
+    task_queue = f"claude-agent-sdk-human-in-the-loop-{uuid.uuid4()}"
+
+    def worker() -> Worker:
+        return Worker(
+            client,
+            task_queue=task_queue,
+            workflows=[HumanInTheLoopWorkflow],
+            plugins=[ClaudeAgentSDKPlugin()],
+        )
+
+    with scripted_api(OFFLINE_ANSWERS) as api:
+        async with worker():
+            handle = await client.start_workflow(
+                HumanInTheLoopWorkflow.run,
+                TASK,
+                id=f"human-in-the-loop-{uuid.uuid4()}",
+                task_queue=task_queue,
+            )
+            await wait_for_request(handle)
+
+        decision = asyncio.create_task(
+            handle.execute_update(HumanInTheLoopWorkflow.decide, True)
+        )
+        async with worker():
+            await decision
+            result = asyncio.create_task(handle.result())
+            while not result.done():
+                pending = await handle.query(HumanInTheLoopWorkflow.pending_tool_calls)
+                assert pending is None
+                await asyncio.sleep(0.2)
+            assert await result == "Created hello.txt."
+    assert (workspace / "hello.txt").read_text() == "Hello from Claude Code\n"
+    assert api.asked.count("hello.txt") == 2
     await assert_replays(handle)

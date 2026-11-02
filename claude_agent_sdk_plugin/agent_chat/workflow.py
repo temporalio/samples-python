@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass
 
 from claude_agent_sdk import (
+    AssistantMessage,
     ClaudeAgentOptions,
     ClaudeSDKClient,
     CLIConnectionError,
@@ -21,6 +22,7 @@ CONTINUE = "Continue from where you left off."
 class ChatInput:
     session_id: str | None = None
     turns_per_run: int = 3
+    reply_id: str | None = None  # The session's last message, to redo a turn from
 
 
 @workflow.defn
@@ -29,6 +31,7 @@ class ChatWorkflow:
     def __init__(self, input: ChatInput) -> None:
         self.session_id = input.session_id
         self.turns_per_run = input.turns_per_run
+        self.reply_id = input.reply_id
         self.turns = 0
         self.ended = False
         self.client = self.new_client()
@@ -44,7 +47,9 @@ class ChatWorkflow:
         if self.ended:
             return
 
-        workflow.continue_as_new(ChatInput(self.session_id, self.turns_per_run))
+        workflow.continue_as_new(
+            ChatInput(self.session_id, self.turns_per_run, self.reply_id)
+        )
 
     def new_client(self, prompt_id: str | None = None) -> ClaudeSDKClient:
         """A client that starts Claude Code with a new session, or resumes the session, from prompt_id if given."""
@@ -70,6 +75,7 @@ class ChatWorkflow:
         # One turn at a time, so each message gets its own reply.
         async with self.lock:
             prompt_id = None  # The message's, once Claude Code saved it
+            reply_id = None  # The latest reply's in this turn
 
             while True:
                 try:
@@ -92,7 +98,10 @@ class ChatWorkflow:
                             and not prompt_id
                         ):
                             prompt_id = response.uuid
+                        elif isinstance(response, AssistantMessage):
+                            reply_id = response.uuid
                         elif isinstance(response, ResultMessage):
+                            self.reply_id = reply_id
                             return response.result or "\n".join(response.errors or [])
 
                     raise RuntimeError("Claude Code ended the turn without a result")
@@ -100,8 +109,12 @@ class ChatWorkflow:
                 except CLIConnectionError:
                     await self.client.disconnect()
                     self.connected = False
-                    # Redo the turn from the message if Claude Code saved it, or send it again.
-                    self.client = self.new_client(prompt_id)
+                    # Redo the turn from the message if Claude Code saved it. Otherwise
+                    # send it again from the last reply, or in a new session, so a
+                    # copy Claude Code saved without telling us is dropped.
+                    if not prompt_id and not self.reply_id:
+                        self.session_id = None
+                    self.client = self.new_client(prompt_id or self.reply_id)
 
     @send_message.validator
     def validate_send_message(self, message: str) -> None:

@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from typing import Any
 
@@ -24,12 +25,6 @@ class ToolRequest:
     tool_input: dict[str, Any]
 
 
-@dataclass
-class Decision:
-    tool_use_id: str
-    approved: bool
-
-
 # The text Claude Code sends itself to continue an interrupted turn.
 CONTINUE = "Continue from where you left off."
 
@@ -37,7 +32,8 @@ CONTINUE = "Continue from where you left off."
 @workflow.defn
 class HumanInTheLoopWorkflow:
     def __init__(self) -> None:
-        self.pending: dict[str, ToolRequest] = {}
+        self.pending: ToolRequest | None = None
+        self.approved: bool | None = None
         self.decisions: dict[str, bool] = {}
 
     @workflow.run
@@ -52,7 +48,9 @@ class HumanInTheLoopWorkflow:
             # With permission_mode="default", every Bash command asks can_use_tool.
             tools=["Bash"],
             permission_mode="default",
+            # @@@SNIPSTART python-claude-agent-sdk-human-in-the-loop-options
             can_use_tool=self.ask_human,
+            # @@@SNIPEND
             setting_sources=[],
             # Required to receive the prompt's UUID in the response stream.
             extra_args={"replay-user-messages": None},
@@ -95,29 +93,38 @@ class HumanInTheLoopWorkflow:
                 # Redo the turn from the prompt if Claude Code saved it, or start again.
                 pass
 
+    # @@@SNIPSTART python-claude-agent-sdk-human-in-the-loop-approval
     async def ask_human(
         self, tool_name: str, tool_input: dict[str, Any], context: ToolPermissionContext
     ) -> PermissionResult:
-        tool_use_id = context.tool_use_id or ""
-        self.pending[tool_use_id] = ToolRequest(tool_use_id, tool_name, tool_input)
-        try:
-            await workflow.wait_condition(lambda: tool_use_id in self.decisions)
-        finally:
-            del self.pending[tool_use_id]
-        # Consumed, so a redone turn asks again.
-        if self.decisions.pop(tool_use_id):
+        # A turn redone after a Worker restart asks again, so reuse the decision.
+        call = json.dumps([tool_name, tool_input], sort_keys=True)
+        if call not in self.decisions:
+            self.pending = ToolRequest(context.tool_use_id or "", tool_name, tool_input)
+            try:
+                await workflow.wait_condition(lambda: self.approved is not None)
+                self.decisions[call] = self.approved is True
+            finally:
+                self.pending = None
+                self.approved = None
+        if self.decisions[call]:
             return PermissionResultAllow()
         return PermissionResultDeny(message="A person denied this tool call")
 
-    @workflow.query
-    def pending_tool_calls(self) -> list[ToolRequest]:
-        return list(self.pending.values())
+    # @@@SNIPEND
 
+    @workflow.query
+    def pending_tool_calls(self) -> ToolRequest | None:
+        return self.pending
+
+    # @@@SNIPSTART python-claude-agent-sdk-human-in-the-loop-decision
     @workflow.update
-    def decide(self, decision: Decision) -> None:
-        self.decisions[decision.tool_use_id] = decision.approved
+    def decide(self, approved: bool) -> None:
+        self.approved = approved
+
+    # @@@SNIPEND
 
     @decide.validator
-    def validate_decide(self, decision: Decision) -> None:
-        if decision.tool_use_id not in self.pending:
-            raise ValueError(f"No pending tool call {decision.tool_use_id}")
+    def validate_decide(self, approved: bool) -> None:
+        if self.pending is None or self.approved is not None:
+            raise ValueError("No tool call is waiting for a decision")

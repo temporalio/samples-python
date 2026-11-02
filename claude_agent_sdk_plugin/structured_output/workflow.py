@@ -55,11 +55,14 @@ class TriageTicketWorkflow:
         while True:
             try:
                 options = self.options(session_id, prompt_id)
+                query_prompt = CONTINUE if prompt_id else prompt
+                # @@@SNIPSTART python-claude-agent-sdk-structured-output-transport
                 transport = TemporalTransport(options)
                 async with ClaudeSDKClient(
                     options=options, transport=transport
                 ) as client:
-                    await client.query(CONTINUE if prompt_id else prompt)
+                    await client.query(query_prompt)
+                    # @@@SNIPEND
 
                     async for message in client.receive_response():
                         if (

@@ -19,8 +19,8 @@ from temporalio.client import Client, WorkflowContinuedAsNewError, WorkflowHandl
 from temporalio.contrib.pydantic import pydantic_data_converter
 
 from claude_agent_sdk_plugin.agent_chat.workflow import ChatWorkflow
+from claude_agent_sdk_plugin.hooks.workflow import HooksWorkflow
 from claude_agent_sdk_plugin.human_in_the_loop.workflow import (
-    Decision,
     HumanInTheLoopWorkflow,
 )
 from claude_agent_sdk_plugin.multi_agent.run_worker import (
@@ -112,9 +112,9 @@ async def pending_call(
 ) -> Any:
     async def poll() -> Any:
         while True:
-            for call in await handle.query(query):
-                if call.tool_use_id == tool_use_id:
-                    return call
+            call = await handle.query(query)
+            if call is not None and call.tool_use_id == tool_use_id:
+                return call
             await asyncio.sleep(0.2)
 
     return await until(poll())
@@ -128,6 +128,12 @@ async def pending_call(
             ToolsWorkflow.run,
             "Count the r letters in strawberry, then get the weather in Paris.",
             "There are 3 r's in strawberry. It is 21 C and sunny in Paris.",
+        ),
+        (
+            "hooks",
+            HooksWorkflow.run,
+            "Run echo hello, then delete hello.txt.",
+            "The command that deletes hello.txt was blocked.",
         ),
         (
             "structured_output",
@@ -252,11 +258,7 @@ async def test_human_in_the_loop(
         assert request.tool_input == {
             "command": "echo 'Hello from Claude Code' > hello.txt"
         }
-        await until(
-            handle.execute_update(
-                HumanInTheLoopWorkflow.decide, Decision("toolu_hello", approved)
-            )
-        )
+        await until(handle.execute_update(HumanInTheLoopWorkflow.decide, approved))
         result = await until(handle.result())
     assert result == expected
     assert (workspace / "hello.txt").exists() is creates_file

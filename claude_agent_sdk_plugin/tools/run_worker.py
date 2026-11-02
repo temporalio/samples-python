@@ -29,6 +29,7 @@ async def main() -> None:
     client = await Client.connect(os.environ.get("TEMPORAL_ADDRESS", "localhost:7233"))
 
     with offline_api_without_key(OFFLINE_ANSWERS):
+        # @@@SNIPSTART python-claude-agent-sdk-tools-worker
         worker = Worker(
             client,
             task_queue="claude-agent-sdk-tools",
@@ -36,6 +37,7 @@ async def main() -> None:
             activities=[fetch_weather],
             plugins=[ClaudeAgentSDKPlugin()],
         )
+        # @@@SNIPEND
         await worker.run()
 
 

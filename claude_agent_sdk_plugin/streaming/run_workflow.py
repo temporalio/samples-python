@@ -21,11 +21,13 @@ async def main() -> None:
         task_queue="claude-agent-sdk-streaming",
     )
 
+    # @@@SNIPSTART python-claude-agent-sdk-streaming-subscriber
     stream = WorkflowStreamClient.create(client, workflow_id)
     async for item in stream.subscribe(["events"]):
         delta = item.data["event"].get("delta", {})
         if delta.get("type") == "text_delta":
             print(delta["text"], end="", flush=True)
+    # @@@SNIPEND
 
     print(f"\nFinal result: {await handle.result()}")
 

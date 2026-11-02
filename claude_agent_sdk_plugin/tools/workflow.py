@@ -15,11 +15,6 @@ from temporalio import activity, workflow
 from temporalio.claude_agent_sdk import TemporalTransport
 
 
-@activity.defn
-async def fetch_weather(city: str) -> str:
-    return f"It is 21 C and sunny in {city}."
-
-
 @tool(
     "count_letter",
     "Count how often a letter appears in a word",
@@ -30,6 +25,12 @@ async def count_letter(args: dict[str, Any]) -> dict[str, Any]:
     return {"content": [{"type": "text", "text": str(count)}]}
 
 
+# @@@SNIPSTART python-claude-agent-sdk-tools-definitions
+@activity.defn
+async def fetch_weather(city: str) -> str:
+    return f"It is 21 C and sunny in {city}."
+
+
 @tool("get_weather", "Get the current weather in a city", {"city": str})
 async def get_weather(args: dict[str, Any]) -> dict[str, Any]:
     weather = await workflow.execute_activity(
@@ -38,8 +39,7 @@ async def get_weather(args: dict[str, Any]) -> dict[str, Any]:
     return {"content": [{"type": "text", "text": weather}]}
 
 
-# The text Claude Code sends itself to continue an interrupted turn.
-CONTINUE = "Continue from where you left off."
+# @@@SNIPEND
 
 
 @workflow.defn
@@ -54,19 +54,24 @@ class ToolsWorkflow:
         """Options that start a new session, or redo the turn from prompt_id in session_id."""
         return ClaudeAgentOptions(
             tools=[],
+            # @@@SNIPSTART python-claude-agent-sdk-tools-mcp-config
             mcp_servers={
-                "demo": create_sdk_mcp_server("demo", tools=[count_letter, get_weather])
+                "demo": create_sdk_mcp_server("demo", tools=[get_weather, count_letter])
             },
-            allowed_tools=["mcp__demo__count_letter", "mcp__demo__get_weather"],
+            allowed_tools=["mcp__demo__get_weather", "mcp__demo__count_letter"],
+            # @@@SNIPEND
             setting_sources=[],
-            # Required to receive the prompt's UUID in the response stream.
+            # @@@SNIPSTART python-claude-agent-sdk-session-options
             extra_args={"replay-user-messages": None},
             resume=session_id if prompt_id else None,
             resume_session_at=prompt_id,
+            # @@@SNIPEND
         )
 
+    # @@@SNIPSTART python-claude-agent-sdk-tools-ask
     async def ask(self, prompt: str) -> str:
         """Answer the prompt, redoing the turn if the connection is lost."""
+        CONTINUE = "Continue from where you left off."
         session_id = None  # Claude Code's, once it started
         prompt_id = None  # The prompt's, once Claude Code saved it
 
@@ -99,3 +104,5 @@ class ToolsWorkflow:
             except CLIConnectionError:
                 # Redo the turn from the prompt if Claude Code saved it, or start again.
                 pass
+
+    # @@@SNIPEND

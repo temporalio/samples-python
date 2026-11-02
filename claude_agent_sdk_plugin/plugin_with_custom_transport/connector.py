@@ -76,6 +76,7 @@ def tar(directory: str) -> bytes:
     return archive.getvalue()
 
 
+# @@@SNIPSTART python-claude-agent-sdk-custom-connector-class
 class SandboxConnector:
     def __init__(self, uploads: Mapping[str, str] | None = None) -> None:
         """Run Claude Code in a Docker Sandbox.
@@ -89,6 +90,7 @@ class SandboxConnector:
     async def connect(self, request: ConnectActivityInput) -> ClaudeCodeProcess:
         if request.user is not None:
             raise CLIConnectionError("Claude Code runs as the sandbox's agent user")
+        # @@@SNIPEND
 
         # One sandbox per Workflow, outliving the Worker and the Workflow, so a retried launch, or
         # a client that resumes the session after its Worker went away, finds the
@@ -110,6 +112,7 @@ class SandboxConnector:
         # sandbox's egress proxy injects it into outbound requests to Anthropic's
         # API hosts, so the key never enters the sandbox. Requests to any other
         # host, such as a custom ANTHROPIC_BASE_URL, go out without it.
+        # @@@SNIPSTART python-claude-agent-sdk-custom-connector-secret
         if key := os.environ.get("ANTHROPIC_API_KEY"):
             await sbx(
                 "secret",
@@ -120,13 +123,17 @@ class SandboxConnector:
                 "--force",
                 input=key.encode(),
             )
+        # @@@SNIPEND
 
+        # @@@SNIPSTART python-claude-agent-sdk-custom-connector-uploads
         for path, directory in self.uploads.items():
             script = 'mkdir -p "$1" && tar -x -C "$1"'
             await sbx(
                 "exec", "-i", name, "sh", "-c", script, "sh", path, input=tar(directory)
             )
+        # @@@SNIPEND
 
+        # @@@SNIPSTART python-claude-agent-sdk-custom-connector-launch
         env_flags = [
             flag
             for key, value in sandbox_env(request.env).items()
@@ -150,3 +157,4 @@ class SandboxConnector:
                 max_buffer_size=request.max_buffer_size,
             )
         )
+        # @@@SNIPEND

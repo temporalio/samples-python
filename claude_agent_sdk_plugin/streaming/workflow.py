@@ -18,9 +18,12 @@ CONTINUE = "Continue from where you left off."
 
 @workflow.defn
 class StreamingWorkflow:
+    # @@@SNIPSTART python-claude-agent-sdk-streaming-topic
     @workflow.init
     def __init__(self, prompt: str) -> None:
         self.events = WorkflowStream().topic("events")
+
+    # @@@SNIPEND
 
     @workflow.run
     async def run(self, prompt: str) -> str:
@@ -52,7 +55,9 @@ class StreamingWorkflow:
         while True:
             try:
                 options = self.options(session_id, prompt_id)
+                # @@@SNIPSTART python-claude-agent-sdk-streaming-transport
                 transport = TemporalTransport(options, stream=self.events)
+                # @@@SNIPEND
                 async with ClaudeSDKClient(
                     options=options, transport=transport
                 ) as client:

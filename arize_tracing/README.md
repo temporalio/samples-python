@@ -188,7 +188,8 @@ span ID and silently drops the reapplied `HandleUpdate`; Arize AX keeps both
 spans, so the original run's activity subtree appears twice and the original
 `RunWorkflow` node is labeled `HandleUpdate`. All other spans of the reset run
 get fresh IDs. This is an SDK issue, not something the sample can configure
-around; it is tracked in the Temporal Python SDK.
+around; it is tracked as
+[temporalio/sdk-python#2070](https://github.com/temporalio/sdk-python/issues/2070).
 
 ![Activity retry attempts in Phoenix](phoenix-retry-attempts.png)
 

@@ -1,6 +1,6 @@
 # Strands Agents Samples
 
-These samples demonstrate the [Temporal Strands plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/strands), which runs [Strands Agents](https://strandsagents.com/) inside Temporal Workflows. Model invocations, tool calls, and MCP tool calls all execute as Temporal Activities, so you get durable execution, Temporal-managed retries, and timeouts.
+These samples demonstrate the [Temporal Strands plugin](https://github.com/temporalio/ai-integrations/tree/main/python/strands_agents), which runs [Strands Agents](https://strandsagents.com/) inside Temporal Workflows. Model invocations, tool calls, and MCP tool calls all execute as Temporal Activities, so you get durable execution, Temporal-managed retries, and timeouts.
 
 ## Samples
 
@@ -23,6 +23,8 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
    ```bash
    uv sync --group strands-agents
    ```
+
+   This installs the standalone `temporalio-strands-agents` package, which requires Temporal 1.34.0 or later.
 
 2. Configure AWS credentials. The samples use the plugin's default `BedrockModel()`, which picks up the standard AWS SDK credential chain. Make sure the credentials grant access to a Bedrock model in your selected region (e.g., `us-west-2`).
 
@@ -74,5 +76,5 @@ uv run strands_plugin/tools/run_workflow.py
 
 ## Related
 
-- [Temporal Strands plugin docs](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/strands)
+- [Temporal Strands plugin docs](https://github.com/temporalio/ai-integrations/tree/main/python/strands_agents)
 - [Strands Agents](https://strandsagents.com/)

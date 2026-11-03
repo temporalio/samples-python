@@ -23,7 +23,7 @@ from datetime import timedelta
 
 from langchain_core.tools import tool
 from temporalio import activity, workflow
-from temporalio.contrib.deepagents import (
+from temporalio.deepagents import (
     activity_as_tool,
     create_temporal_deep_agent,
     tool_as_activity,

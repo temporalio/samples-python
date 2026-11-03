@@ -11,8 +11,8 @@ import asyncio
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.contrib.google_genai import TemporalAsyncClient
 from temporalio.contrib.workflow_streams import WorkflowStream
+from temporalio.google_genai import TemporalAsyncClient
 
 # A subscriber that crashes before signaling should not pin the workflow open.
 FINISH_TIMEOUT = timedelta(minutes=5)

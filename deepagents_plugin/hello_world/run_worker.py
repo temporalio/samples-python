@@ -11,7 +11,7 @@ import asyncio
 import os
 
 from temporalio.client import Client
-from temporalio.contrib.deepagents import DeepAgentsPlugin
+from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.worker import Worker
 
 from deepagents_plugin.hello_world.workflow import HelloWorldAgent

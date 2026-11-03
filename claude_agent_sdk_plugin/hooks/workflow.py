@@ -1,0 +1,117 @@
+from datetime import timedelta
+
+from claude_agent_sdk import (
+    ClaudeAgentOptions,
+    ClaudeSDKClient,
+    CLIConnectionError,
+    HookContext,
+    HookInput,
+    HookJSONOutput,
+    HookMatcher,
+    ResultMessage,
+    SystemMessage,
+    UserMessage,
+)
+from temporalio import activity, workflow
+from temporalio.claude_agent_sdk import TemporalTransport
+
+
+# @@@SNIPSTART python-claude-agent-sdk-hooks-callback
+@activity.defn
+async def audit_command(command: str) -> None:
+    activity.logger.info("Blocked Bash command: %s", command)
+
+
+async def check_command(
+    input_data: HookInput, tool_use_id: str | None, context: HookContext
+) -> HookJSONOutput:
+    if input_data["hook_event_name"] != "PreToolUse":
+        return {}
+
+    command = input_data["tool_input"].get("command", "")
+    if "rm " not in command:
+        return {}
+
+    await workflow.execute_activity(
+        audit_command, command, start_to_close_timeout=timedelta(seconds=30)
+    )
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason": "Commands that delete files are blocked",
+        }
+    }
+
+
+# @@@SNIPEND
+
+
+# The text Claude Code sends itself to continue an interrupted turn.
+CONTINUE = "Continue from where you left off."
+
+
+@workflow.defn
+class HooksWorkflow:
+    @workflow.run
+    async def run(self, task: str) -> str:
+        return await self.ask(task)
+
+    def options(
+        self, session_id: str | None = None, prompt_id: str | None = None
+    ) -> ClaudeAgentOptions:
+        """Options that start a new session, or redo the turn from prompt_id in session_id."""
+        return ClaudeAgentOptions(
+            tools=["Bash"],
+            allowed_tools=["Bash"],
+            # @@@SNIPSTART python-claude-agent-sdk-hooks-registration
+            hooks={"PreToolUse": [HookMatcher(matcher="Bash", hooks=[check_command])]},
+            # @@@SNIPEND
+            setting_sources=[],
+            # Required to receive the prompt's UUID in the response stream.
+            extra_args={"replay-user-messages": None},
+            resume=session_id if prompt_id else None,
+            resume_session_at=prompt_id,
+        )
+
+    async def ask(self, prompt: str) -> str:
+        """Answer the prompt, redoing the turn if the connection is lost."""
+        session_id = None  # Claude Code's, once it started
+        prompt_id = None  # The prompt's, once Claude Code saved it
+
+        while True:
+            try:
+                options = self.options(session_id, prompt_id)
+                # @@@SNIPSTART python-claude-agent-sdk-hooks-activity-options
+                transport = TemporalTransport(
+                    options,
+                    activity_options={
+                        "read": {"schedule_to_start_timeout": timedelta(seconds=60)}
+                    },
+                )
+                # @@@SNIPEND
+                async with ClaudeSDKClient(
+                    options=options, transport=transport
+                ) as client:
+                    await client.query(CONTINUE if prompt_id else prompt)
+
+                    async for message in client.receive_response():
+                        if (
+                            isinstance(message, SystemMessage)
+                            and message.subtype == "init"
+                        ):
+                            session_id = message.data["session_id"]
+                        elif (
+                            isinstance(message, UserMessage)
+                            and message.uuid
+                            and not prompt_id
+                        ):
+                            prompt_id = message.uuid
+                        elif isinstance(message, ResultMessage):
+                            return message.result or ""
+
+                raise RuntimeError("Claude Code ended the turn without a result")
+
+            except CLIConnectionError:
+                # Redo the turn from the prompt if Claude Code saved it, or start again.
+                pass

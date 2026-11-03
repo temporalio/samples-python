@@ -4,7 +4,7 @@
 from datetime import timedelta
 
 from temporalio import workflow
-from temporalio.contrib.strands import TemporalAgent
+from temporalio.strands_agents import TemporalAgent
 
 
 @workflow.defn

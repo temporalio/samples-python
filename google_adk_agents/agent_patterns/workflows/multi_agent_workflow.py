@@ -5,7 +5,7 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from temporalio import workflow
-from temporalio.contrib.google_adk_agents import TemporalModel
+from temporalio.google_adk import TemporalModel
 from temporalio.workflow import ActivityConfig
 
 

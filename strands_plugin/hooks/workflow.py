@@ -15,8 +15,8 @@ from strands import tool
 from strands.hooks import HookProvider, HookRegistry
 from strands.hooks.events import AfterToolCallEvent
 from temporalio import activity, workflow
-from temporalio.contrib.strands import TemporalAgent
-from temporalio.contrib.strands.workflow import activity_as_hook
+from temporalio.strands_agents import TemporalAgent
+from temporalio.strands_agents.workflow import activity_as_hook
 
 
 # @@@SNIPSTART python-strands-hooks-activity

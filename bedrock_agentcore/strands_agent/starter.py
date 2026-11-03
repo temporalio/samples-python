@@ -2,8 +2,8 @@ import asyncio
 import sys
 
 from temporalio.client import Client
-from temporalio.contrib.strands import StrandsPlugin
 from temporalio.envconfig import ClientConfig
+from temporalio.strands_agents import StrandsPlugin
 
 from workflows import TASK_QUEUE, StrandsAgentWorkflow
 

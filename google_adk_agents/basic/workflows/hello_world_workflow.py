@@ -3,7 +3,7 @@ from google.adk.runners import InMemoryRunner
 from google.adk.utils.context_utils import Aclosing
 from google.genai import types
 from temporalio import workflow
-from temporalio.contrib.google_adk_agents import TemporalModel
+from temporalio.google_adk import TemporalModel
 
 
 # @@@SNIPSTART google-adk-agents-basic-hello-world-agent-workflow

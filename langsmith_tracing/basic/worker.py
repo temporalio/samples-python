@@ -5,8 +5,8 @@ import logging
 import sys
 
 from temporalio.client import Client
-from temporalio.contrib.langsmith import LangSmithPlugin
 from temporalio.envconfig import ClientConfig
+from temporalio.langsmith import LangSmithPlugin
 from temporalio.worker import Worker
 
 from langsmith_tracing.basic.activities import call_openai

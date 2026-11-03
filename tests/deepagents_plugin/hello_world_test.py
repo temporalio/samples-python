@@ -1,8 +1,8 @@
 import uuid
 
 from temporalio.client import Client
-from temporalio.contrib.deepagents import DeepAgentsPlugin
-from temporalio.contrib.deepagents.testing import mock_model_provider
+from temporalio.deepagents import DeepAgentsPlugin
+from temporalio.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
 from deepagents_plugin.hello_world.workflow import HelloWorldAgent

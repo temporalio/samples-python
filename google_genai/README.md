@@ -1,6 +1,6 @@
 # Google GenAI Samples
 
-These samples demonstrate the [Temporal Google GenAI plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/google_genai), which runs the [Google Gemini SDK](https://googleapis.github.io/python-genai/) inside Temporal Workflows. Workflows construct a `TemporalAsyncClient`, and every Gemini API call — `generate_content`, tool calls, streaming, files, interactions, agents — runs as a Temporal Activity. You get durable execution, Temporal-managed retries and timeouts, and your credentials never enter the workflow or its event history.
+These samples demonstrate the [Temporal Google GenAI plugin](https://github.com/temporalio/ai-integrations/tree/main/python/google_genai), which runs the [Google Gemini SDK](https://googleapis.github.io/python-genai/) inside Temporal Workflows. Workflows construct a `TemporalAsyncClient`, and every Gemini API call — `generate_content`, tool calls, streaming, files, interactions, agents — runs as a Temporal Activity. You get durable execution, Temporal-managed retries and timeouts, and your credentials never enter the workflow or its event history.
 
 ## Samples
 
@@ -24,6 +24,8 @@ These samples demonstrate the [Temporal Google GenAI plugin](https://github.com/
    ```bash
    uv sync --group google-genai
    ```
+
+   This installs the standalone `temporalio-google-genai[mcp]` package, which requires Temporal 1.34.0 or later.
 
 2. Configure credentials. Most samples use the Gemini Developer API and read an API key from the environment:
 
@@ -72,5 +74,5 @@ uv run google_genai/tools/run_workflow.py
 
 ## Related
 
-- [Temporal Google GenAI plugin docs](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/google_genai)
+- [Temporal Google GenAI plugin docs](https://github.com/temporalio/ai-integrations/tree/main/python/google_genai)
 - [Google Gemini SDK (`google-genai`)](https://googleapis.github.io/python-genai/)

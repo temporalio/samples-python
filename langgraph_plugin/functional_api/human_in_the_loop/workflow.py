@@ -13,7 +13,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.func import entrypoint, task
 from langgraph.types import Command, interrupt
 from temporalio import workflow
-from temporalio.contrib.langgraph import entrypoint as temporal_entrypoint
+from temporalio.langgraph import entrypoint as temporal_entrypoint
 
 
 @task

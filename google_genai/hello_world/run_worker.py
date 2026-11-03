@@ -6,7 +6,7 @@ import os
 
 from google import genai
 from temporalio.client import Client
-from temporalio.contrib.google_genai import GoogleGenAIPlugin
+from temporalio.google_genai import GoogleGenAIPlugin
 from temporalio.worker import Worker
 
 from google_genai.hello_world.workflow import HelloWorldWorkflow

@@ -20,8 +20,8 @@ from datetime import timedelta
 from langgraph.config import get_stream_writer
 from langgraph.graph import START, StateGraph
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph as temporal_graph
 from temporalio.contrib.workflow_streams import WorkflowStream
+from temporalio.langgraph import graph as temporal_graph
 from typing_extensions import TypedDict
 
 

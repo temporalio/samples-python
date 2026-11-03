@@ -5,8 +5,8 @@ from datetime import timedelta
 import pytest
 from strands.types.streaming import StreamEvent
 from temporalio.client import Client
-from temporalio.contrib.strands import StrandsPlugin
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
+from temporalio.strands_agents import StrandsPlugin
 from temporalio.worker import Worker
 
 from strands_plugin.streaming.workflow import StreamingWorkflow

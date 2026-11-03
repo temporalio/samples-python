@@ -11,7 +11,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
 from langgraph.types import Command, interrupt
 from temporalio import workflow
-from temporalio.contrib.langgraph import graph as temporal_graph
+from temporalio.langgraph import graph as temporal_graph
 from typing_extensions import TypedDict
 
 

@@ -11,7 +11,7 @@ from datetime import timedelta
 
 from pydantic import BaseModel, Field
 from temporalio import workflow
-from temporalio.contrib.strands import TemporalAgent
+from temporalio.strands_agents import TemporalAgent
 
 
 class PersonInfo(BaseModel):

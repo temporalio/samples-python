@@ -25,7 +25,7 @@ from typing import Any
 
 from deepagents import create_deep_agent
 from temporalio import workflow
-from temporalio.contrib.deepagents import run_deep_agent
+from temporalio.deepagents import run_deep_agent
 
 
 @workflow.defn

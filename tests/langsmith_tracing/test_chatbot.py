@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from temporalio import activity
 from temporalio.client import Client
-from temporalio.contrib.langsmith import LangSmithPlugin
+from temporalio.langsmith import LangSmithPlugin
 from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 

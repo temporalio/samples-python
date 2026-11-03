@@ -4,8 +4,8 @@ from datetime import timedelta
 
 from google.adk.models.llm_response import LlmResponse
 from temporalio.client import Client
-from temporalio.contrib.google_adk_agents import GoogleAdkPlugin
 from temporalio.contrib.workflow_streams import WorkflowStreamClient
+from temporalio.google_adk import GoogleAdkPlugin
 
 from google_adk_agents.streaming.workflows.streaming_workflow import (
     StreamingAgentWorkflow,

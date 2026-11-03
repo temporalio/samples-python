@@ -1,14 +1,14 @@
 # Deep Agents Samples
 
-These samples demonstrate the [Temporal Deep Agents plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/deepagents),
+These samples demonstrate the [Temporal Deep Agents plugin](https://github.com/temporalio/ai-integrations/tree/main/python/deepagents),
 which makes [LangChain Deep Agents](https://github.com/langchain-ai/deepagents)
 durable. Build your agent with `create_deep_agent(...)` inside a
 `@workflow.defn` and add `DeepAgentsPlugin()` to your client — each LLM call and
 each I/O tool/backend operation becomes a Temporal Activity, while the agent's
 control loop runs (and deterministically replays) inside the Workflow.
 
-> **Experimental.** The `temporalio.contrib.deepagents` plugin is experimental
-> and its API may change.
+> **Public Preview.** The `temporalio.deepagents` plugin is in
+> [Public Preview](https://docs.temporal.io/develop/python/integrations/deepagents).
 
 `DeepAgentsPlugin` is a **client-level** plugin: add it to `Client.connect(...)`
 and the SDK propagates it to any Worker built from that client. Add it on exactly
@@ -26,6 +26,7 @@ one side.
 | [subagents](subagents) | Durability propagates across the agent tree — sub-agent model calls become activities with no per-sub-agent wiring. |
 | [streaming](streaming) | Stream model chunks to external subscribers via `streaming_topic` + `WorkflowStream`, keeping the durable result identical. |
 | [langsmith_tracing](langsmith_tracing) | Compose `DeepAgentsPlugin` with `LangSmithPlugin` for durable execution + LLM tracing. |
+| [external_storage](external_storage) | Native External Storage for a 6 MiB tool result; scripted model, no API keys. |
 
 ## Prerequisites
 
@@ -40,13 +41,15 @@ one side.
    uv sync --group deepagents
    ```
 
-   > The group installs the `temporalio[deepagents]` extra (released in
-   > `temporalio` 1.32.0) plus the Anthropic provider package. Requires
-   > Python >= 3.11 — on older interpreters the group resolves to nothing
+   > The group installs the standalone `temporalio-deepagents` and
+   > `temporalio-langsmith` packages plus the Anthropic provider package. Requires
+   > Temporal 1.34.0 or later and Python >= 3.11 — on older interpreters the group resolves to nothing
    > and the samples are skipped.
 
-2. Configure a model provider. The samples use
-   `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key:
+2. Configure a model provider. Most samples use
+   `anthropic:claude-sonnet-4-5`, which needs an Anthropic API key. The
+   [external_storage](external_storage) sample uses a scripted model and needs
+   no provider credentials:
 
    ```bash
    export ANTHROPIC_API_KEY=...
@@ -85,11 +88,13 @@ uv run deepagents_plugin/hello_world/run_worker.py
 uv run deepagents_plugin/hello_world/run_workflow.py
 ```
 
-The `langsmith_tracing` sample instead bundles the worker and starter into a
-single driver:
+The `langsmith_tracing` and `external_storage` samples instead bundle the worker
+and starter into a single driver. The storage sample also needs a mock S3 service;
+see its [setup instructions](external_storage):
 
 ```bash
 uv run deepagents_plugin/langsmith_tracing/main.py
+uv run deepagents_plugin/external_storage/main.py
 ```
 
 ## Key Features Demonstrated
@@ -109,9 +114,11 @@ uv run deepagents_plugin/langsmith_tracing/main.py
 - **Streaming** — forward model chunks to external subscribers while keeping the
   durable result unchanged.
 - **Observability** — compose with `LangSmithPlugin` for tracing.
+- **Large payload storage** — configure native `ExternalStorage` on the client's
+  data converter to offload a 6 MiB tool result and the following model input.
 
 ## Related
 
-- [Temporal Deep Agents plugin](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/deepagents)
+- [Temporal Deep Agents plugin](https://github.com/temporalio/ai-integrations/tree/main/python/deepagents)
 - [LangChain Deep Agents](https://github.com/langchain-ai/deepagents)
 - [langgraph_plugin](../langgraph_plugin) — for agents built directly as LangGraph graphs

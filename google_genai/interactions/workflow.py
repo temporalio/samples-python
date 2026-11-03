@@ -9,7 +9,7 @@ automatic function calling.
 from typing import Any
 
 from temporalio import workflow
-from temporalio.contrib.google_genai import TemporalAsyncClient
+from temporalio.google_genai import TemporalAsyncClient
 
 
 # @@@SNIPSTART python-google-genai-interactions-workflow

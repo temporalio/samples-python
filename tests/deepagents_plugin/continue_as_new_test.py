@@ -3,8 +3,8 @@ from typing import Any
 
 from temporalio import workflow
 from temporalio.client import Client, WorkflowExecutionStatus
-from temporalio.contrib.deepagents import DeepAgentsPlugin, run_deep_agent
-from temporalio.contrib.deepagents.testing import mock_model_provider
+from temporalio.deepagents import DeepAgentsPlugin, run_deep_agent
+from temporalio.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
 from deepagents_plugin.continue_as_new.workflow import LongResearchAgent

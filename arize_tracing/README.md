@@ -128,11 +128,11 @@ replay, but it does record every activity attempt).
 | What happened | Temporal Web UI | Arize |
 |---|---|---|
 | Workflow replayed (worker restart, cache eviction, `--replay-stress`) | Nothing: Event History is unchanged | Nothing: spans re-created during replay have the same deterministic IDs and are never exported again |
-| Activity retried | Pending Activities shows attempt N and the last failure | One `RunActivity` span per attempt under one `StartActivity`, failed attempts with error status, `temporal.activity.attempt` = 1, 2, ... |
+| Activity retried | Pending Activities shows attempt N and the last failure | One `RunActivity` span per attempt under one `StartActivity`, failed attempts with error status, `temporal.activity.attempt` = 1, 2, ... Arize AX lists the whole trace as an error when any attempt failed, even though the workflow completed |
 | Worker died while the workflow waited | Workers tab / Workflow Task timeouts | The `RunWorkflow` span exports once, when the workflow finishes on another worker; its duration covers the outage |
 | Worker died mid-activity | The attempt is not recorded; the next attempt is | The attempt's span was never ended, so it does not appear; the next attempt does |
 | Workflow Task failed (bug, non-determinism) | `WorkflowTaskFailed` events | Spans that ended inside the failed task are exported again with the same span ID; Phoenix deduplicates by span ID and keeps one copy |
-| Reset or retried workflow (new run) | New run under the same Workflow Id | Another `RunWorkflow` span with its own `temporalRunID`, same trace; the session (workflow ID) groups them |
+| Reset or retried workflow (new run) | New run under the same Workflow Id | Another `RunWorkflow` span with its own `temporalRunID`, same trace; the session (workflow ID) groups them. See the reset note below: a reapplied update's `HandleUpdate` span reuses a span ID from the original run |
 | Continue-As-New | New run under the same Workflow Id | The new run's `RunWorkflow` span nests under the previous run's, same trace |
 
 Reproduce each case with the flags below; every run must still verify cleanly:
@@ -150,6 +150,9 @@ uv run verify_trace.py --trace-id <printed trace id>
 # watch the workflow (and its trace) complete cleanly.
 uv run python -m ticket_triage.starter --pause-before-approval 20
 #   ... after ~5s, ctrl+c the worker, then start it again in another terminal
+#   (the stopping worker logs "Failed to detach context" with a traceback and
+#   "Shutdown called, ignoring Span": its open RunWorkflow span was attached in
+#   a workflow task that no longer exists; the trace is unaffected)
 uv run verify_trace.py --trace-id <printed trace id>
 
 # Activity retry: classify_ticket fails on its first attempt. Arize shows two
@@ -164,14 +167,28 @@ uv run verify_trace.py --trace-id <id> --expect-attempts classify_ticket=2
 # attempt 2 after the heartbeat timeout.
 uv run python -m ticket_triage.worker --slow-classify 30
 uv run python -m ticket_triage.starter
-uv run verify_trace.py --trace-id <id> --expect-attempt classify_ticket=2
+uv run verify_trace.py --trace-id <id> --surviving-attempt classify_ticket=2
 
 # Reset: rerun a finished workflow from its first workflow task. The reset
 # reapplies the original approval update, and the new run shares the trace as
-# a second RunWorkflow span with its own run ID.
+# a second RunWorkflow span with its own run ID. Known issue: the reapplied
+# update's HandleUpdate span reuses the original run's RunWorkflow span ID
+# (see below), so verify_trace.py warns that the new run's HandleUpdate is
+# missing from Phoenix.
 temporal workflow reset --workflow-id <workflow id> --type FirstWorkflowTask --reason demo
 uv run verify_trace.py --workflow-id <workflow id> --expect-runs 2
 ```
+
+**Reset and reapplied updates.** The Python SDK draws deterministic span IDs
+from the workflow's random seed, and a reset run keeps the original run's seed
+until the SDK reseeds it at the reset point. A reapplied update (or signal) is
+handled before that reseed, so its `HandleUpdate` span gets the first ID the
+original run drew: the original `RunWorkflow` span's. Phoenix deduplicates by
+span ID and silently drops the reapplied `HandleUpdate`; Arize AX keeps both
+spans, so the original run's activity subtree appears twice and the original
+`RunWorkflow` node is labeled `HandleUpdate`. All other spans of the reset run
+get fresh IDs. This is an SDK issue, not something the sample can configure
+around; it is tracked in the Temporal Python SDK.
 
 ![Activity retry attempts in Phoenix](phoenix-retry-attempts.png)
 
@@ -206,10 +223,11 @@ Set `ARIZE_SPACE_ID` and `ARIZE_API_KEY` (and `ARIZE_OTLP_ENDPOINT` for the EU
 region) and `telemetry.py` exports to `https://otlp.arize.com/v1/traces` with
 the same spans and attributes; `ARIZE_PROJECT_NAME` selects the project.
 `verify_trace.py` reads Phoenix's REST API and does not apply to Arize AX; use
-the AX UI or the `ax` CLI there. This sample was validated against Phoenix;
-the Arize AX exporter settings follow
-[Arize's Temporal guide](https://arize.com/docs/ax/integrations/python-agent-frameworks/temporal/temporal-tracing)
-and have not been exercised against an AX space here.
+the AX UI or the `ax` CLI there. Arize ran this sample against an Arize AX
+space (October 2026): the trace trees, sessions, replay, restart, and retry
+cases matched this README, with the reset caveat above. The exporter settings
+follow
+[Arize's Temporal guide](https://arize.com/docs/ax/integrations/python-agent-frameworks/temporal/temporal-tracing).
 
 ## Operational notes
 

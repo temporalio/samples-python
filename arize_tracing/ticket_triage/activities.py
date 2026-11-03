@@ -78,17 +78,36 @@ DRAFT_PROMPT = (
 )
 
 
+_openai: Optional[AsyncOpenAI] = None
+
+
 def _openai_client() -> AsyncOpenAI:
-    # Configuration comes from the environment, never from activity inputs
-    # (activity inputs are recorded in workflow history and shown in the UI).
-    # max_retries=0 disables the OpenAI client's built-in retries — Temporal's
-    # activity retry policy owns retries, with full visibility in the UI and,
-    # through this sample, one RunActivity span per attempt in Arize.
-    return AsyncOpenAI(
-        base_url=os.environ.get("OPENAI_BASE_URL"),
-        api_key=os.environ.get("OPENAI_API_KEY"),
-        max_retries=0,
-    )
+    """One OpenAI client per worker process, created on first use.
+
+    Created lazily rather than at import so that importing this module (the
+    tests do, with these activities mocked) does not require OPENAI_API_KEY.
+    Configuration comes from the environment, never from activity inputs
+    (activity inputs are recorded in workflow history and shown in the UI).
+    max_retries=0 disables the OpenAI client's built-in retries: Temporal's
+    activity retry policy owns retries, with full visibility in the UI and,
+    through this sample, one RunActivity span per attempt in Arize.
+    """
+    global _openai
+    if _openai is None:
+        _openai = AsyncOpenAI(
+            base_url=os.environ.get("OPENAI_BASE_URL"),
+            api_key=os.environ.get("OPENAI_API_KEY"),
+            max_retries=0,
+        )
+    return _openai
+
+
+async def close_openai_client() -> None:
+    """Close the shared client; the worker calls this on shutdown."""
+    global _openai
+    if _openai is not None:
+        await _openai.close()
+        _openai = None
 
 
 def parse_classification(text: str) -> Classification:

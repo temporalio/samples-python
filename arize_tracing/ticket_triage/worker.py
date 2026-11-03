@@ -13,6 +13,7 @@ from telemetry import force_flush, instrument_openai, setup_tracing
 from ticket_triage import activities
 from ticket_triage.activities import (
     classify_ticket,
+    close_openai_client,
     draft_reply,
     lookup_account,
 )
@@ -81,6 +82,7 @@ async def main() -> None:
     try:
         await worker.run()
     finally:
+        await close_openai_client()
         force_flush()
 
 

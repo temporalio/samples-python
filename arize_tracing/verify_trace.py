@@ -26,6 +26,8 @@ PHOENIX_API_KEY, and ARIZE_PROJECT_NAME / PHOENIX_PROJECT_NAME.
 """
 
 import argparse
+import contextlib
+import io
 import json
 import os
 import sys
@@ -173,29 +175,47 @@ POLL_INTERVAL_SECONDS = 2
 QUIET_POLLS = 3  # consecutive polls with an unchanged span count before checking
 
 
-def _poll_stable_trace(trace_id: str, timeout_seconds: int) -> list[dict[str, Any]]:
+def _run_span_name(scenario: str) -> str:
+    # The span a worker exports when a run finishes: its presence means that
+    # run completed.
+    return (
+        "RunWorkflow:TicketTriageWorkflow"
+        if scenario == "ticket-triage"
+        else "temporal:executeWorkflow"
+    )
+
+
+def _looks_complete(spans: list[dict[str, Any]], args: argparse.Namespace) -> bool:
+    has_root = any(not s.get("parent_id") for s in spans)
+    runs = [s for s in spans if s["name"] == _run_span_name(args.scenario)]
+    return has_root and len(runs) >= args.expect_runs
+
+
+def _poll_trace(
+    trace_id: str, deadline: float, args: argparse.Namespace
+) -> list[dict[str, Any]]:
     """Poll until the trace looks complete, then return its spans.
 
     The starter and the worker export independently and Phoenix ingests
     asynchronously, so spans of a finished run can keep arriving for a few
-    seconds. Two conditions must hold before the checks run: the root span is
-    present (the starter ends it last, after the workflow result), and the span
-    count has not changed for QUIET_POLLS consecutive polls. A trace that is
-    still incomplete fails the tree comparison rather than passing it.
+    seconds. Three conditions must hold before the checks run: the root span
+    is present (the starter ends it last, after the workflow result), one
+    completed-run span per expected run is present (after a reset the original
+    run's spans are already there while the new run is still executing), and
+    the span count has not changed for QUIET_POLLS consecutive polls. If the
+    checks then fail, main() polls and checks again until the deadline, so a
+    span that arrives late cannot produce a false failure.
     """
-    deadline = time.monotonic() + timeout_seconds
     previous_count, unchanged = -1, 0
-    while time.monotonic() < deadline:
+    while True:
         spans = _spans({"trace_id": trace_id})
         unchanged = unchanged + 1 if spans and len(spans) == previous_count else 0
-        has_root = any(not s.get("parent_id") for s in spans)
-        if has_root and unchanged >= QUIET_POLLS - 1:
+        if (_looks_complete(spans, args) and unchanged >= QUIET_POLLS - 1) or (
+            time.monotonic() >= deadline
+        ):
             return spans
         previous_count = len(spans)
         time.sleep(POLL_INTERVAL_SECONDS)
-    raise SystemExit(
-        f"FAIL: trace {trace_id} not fully ingested within {timeout_seconds}s"
-    )
 
 
 def _normalized_name(span: dict[str, Any]) -> str:
@@ -332,6 +352,16 @@ def _verify_ticket_triage(
                 f"expected {args.expect_runs} RunWorkflow spans with distinct run ids, "
                 f"found {len(run_workflow_spans)} ({len(run_ids)} run ids)"
             )
+        # A reset reapplies the approval update, but the reapplied HandleUpdate
+        # span reuses the original run's RunWorkflow span ID (an SDK issue, see
+        # the README), so Phoenix drops it. Report it rather than fail on it.
+        handled = [s for s in spans if s["name"] == "HandleUpdate:approve"]
+        if len(handled) < args.expect_runs:
+            print(
+                f"  WARNING: {len(handled)} HandleUpdate:approve span(s) for "
+                f"{args.expect_runs} runs; the reapplied update's span reused a span "
+                "ID from the original run and Phoenix dropped it (known SDK issue)"
+            )
     if args.expect_runs == 1 and len(run_workflow_spans) != 1:
         failures.append(
             f"expected exactly one RunWorkflow span, found {len(run_workflow_spans)}"
@@ -382,7 +412,7 @@ def _verify_ticket_triage(
 
     # A worker that died mid-attempt never ended that attempt's span, so only
     # the later attempt is present, carrying its attempt number.
-    for activity_name, attempt in args.expect_attempt.items():
+    for activity_name, attempt in args.surviving_attempt.items():
         runs = [s for s in spans if s["name"] == f"RunActivity:{activity_name}"]
         attempts = [_attrs(s).get("temporal.activity.attempt") for s in runs]
         if attempts != [attempt]:
@@ -417,6 +447,13 @@ def _verify_agents(
     return failures
 
 
+def _activity_count(value: str) -> tuple[str, int]:
+    name, sep, count = value.partition("=")
+    if not sep or not name or not count.isdigit():
+        raise argparse.ArgumentTypeError(f"expected ACTIVITY=N, got {value!r}")
+    return name, int(count)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -434,17 +471,19 @@ def main() -> int:
     parser.add_argument(
         "--expect-attempts",
         action="append",
+        type=_activity_count,
         default=[],
         metavar="ACTIVITY=N",
         help="Expect N RunActivity spans (attempts) for ACTIVITY, for example classify_ticket=2",
     )
     parser.add_argument(
-        "--expect-attempt",
+        "--surviving-attempt",
         action="append",
+        type=_activity_count,
         default=[],
         metavar="ACTIVITY=N",
-        help="Expect the single surviving RunActivity span for ACTIVITY to carry attempt N "
-        "(earlier attempts died with a killed worker and were never exported)",
+        help="Expect a single RunActivity span for ACTIVITY carrying attempt N: earlier "
+        "attempts died with a killed worker and were never exported",
     )
     parser.add_argument(
         "--expect-runs",
@@ -456,14 +495,8 @@ def main() -> int:
     args = parser.parse_args()
     if not args.trace_id and not args.workflow_id:
         parser.error("one of --trace-id or --workflow-id is required")
-    args.expect_attempts = {
-        item.split("=", 1)[0]: int(item.split("=", 1)[1])
-        for item in args.expect_attempts
-    }
-    args.expect_attempt = {
-        item.split("=", 1)[0]: int(item.split("=", 1)[1])
-        for item in args.expect_attempt
-    }
+    args.expect_attempts = dict(args.expect_attempts)
+    args.surviving_attempt = dict(args.surviving_attempt)
 
     trace_id = args.trace_id
     if not trace_id:
@@ -477,9 +510,20 @@ def main() -> int:
             )
         trace_id = trace_ids[0]
 
-    spans = _poll_stable_trace(trace_id, args.timeout)
     verify = _verify_agents if args.scenario == "agents" else _verify_ticket_triage
-    failures = verify(args, trace_id, spans)
+    deadline = time.monotonic() + args.timeout
+    while True:
+        spans = _poll_trace(trace_id, deadline, args)
+        if not spans:
+            print(f"FAIL: no spans for trace {trace_id} within {args.timeout}s")
+            return 1
+        # Retry failed checks until the deadline; print only the final attempt.
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            failures = verify(args, trace_id, spans)
+        if not failures or time.monotonic() >= deadline:
+            print(output.getvalue(), end="")
+            break
+        time.sleep(POLL_INTERVAL_SECONDS)
     print(f"Phoenix: {_trace_url(trace_id)}")
     if failures:
         for failure in failures:

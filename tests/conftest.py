@@ -52,7 +52,7 @@ async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
                 "--dynamic-config-value",
                 "history.enableSignalWithStartFromWorkflow=true",
             ],
-            dev_server_download_version="v1.7.4-standalone-nexus-operations",
+            dev_server_download_version="v1.10.0",
         )
     elif env_type == "time-skipping":
         env = await WorkflowEnvironment.start_time_skipping()

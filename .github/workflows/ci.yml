@@ -35,7 +35,8 @@ jobs:
             for project in \
               bedrock_agentcore/strands_agent \
               lambda_worker \
-              openai_agents/mcp_v2
+              openai_agents/mcp_v2 \
+              pydantic_ai_plugin
             do
               if grep -q "^${project}/" <<< "$changed_files"; then
                 printf '%s\n' "$project"

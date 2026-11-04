@@ -1,0 +1,54 @@
+[project]
+name = "temporalio-samples-pydantic-ai"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "beartype>=0.23.0,<0.24",
+    "logfire>=4.39,<5",
+    "mcp>=1.24,<2",
+    "pydantic-ai-slim[mcp,openai,temporal]>=2.46.0,<3",
+    "temporalio>=1.32.0,<2",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0,<0.6",
+    "mypy>=1.4.1,<2",
+    "poethepoet>=0.36.0",
+    "pytest>=7.1.2,<8",
+    "pytest-asyncio>=0.18.3,<0.19",
+]
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = [".."]
+include = ["pydantic_ai_plugin*"]
+
+[tool.poe.tasks]
+format = [
+    { cmd = "uv run ruff check --select I --fix" },
+    { cmd = "uv run ruff format" },
+]
+lint = [
+    { cmd = "uv run ruff check --select I" },
+    { cmd = "uv run ruff format --check" },
+    { ref = "lint-types" },
+]
+lint-types = "uv run --directory .. --project pydantic_ai_plugin mypy --config-file pydantic_ai_plugin/pyproject.toml --check-untyped-defs --namespace-packages pydantic_ai_plugin"
+test = "uv run --directory .. --project pydantic_ai_plugin pytest pydantic_ai_plugin/tests"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = [".."]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+src = [".."]
+
+[tool.mypy]
+ignore_missing_imports = true
+namespace_packages = true

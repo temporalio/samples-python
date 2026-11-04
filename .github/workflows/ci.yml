@@ -33,6 +33,7 @@ jobs:
 
           projects_json="$({
             for project in \
+              arize_tracing \
               bedrock_agentcore/strands_agent \
               lambda_worker \
               openai_agents/mcp_v2

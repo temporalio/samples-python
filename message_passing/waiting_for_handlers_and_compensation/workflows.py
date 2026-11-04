@@ -77,7 +77,6 @@ class WaitingForHandlersAndCompensationWorkflow:
             activity_executed_to_perform_workflow_compensation,
             start_to_close_timeout=timedelta(seconds=10),
         )
-        self._update_compensation_done = True
 
     @workflow.update
     async def my_update(self) -> str:

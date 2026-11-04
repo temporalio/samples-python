@@ -57,6 +57,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_search_attributes](hello/hello_search_attributes.py) - Start workflow with search attributes then change
     while running.
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
+  * [hello_sync_client](hello/hello_sync_client.py) - Call the async Temporal client from synchronous Python code.
   * [hello update](hello/hello_update.py) - Send a request to and a response from a client to a workflow execution.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.

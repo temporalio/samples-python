@@ -34,7 +34,8 @@ async def main() -> None:
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     # The plugin registers the model-call activity itself.
-    client = await Client.connect(**config, plugins=[agents_plugin()])
+    config["plugins"] = [agents_plugin()]
+    client = await Client.connect(**config)
 
     worker = Worker(
         client,

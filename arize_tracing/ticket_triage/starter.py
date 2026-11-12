@@ -61,10 +61,8 @@ async def main() -> None:
 
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
-    client = await Client.connect(
-        **config,
-        plugins=[OpenTelemetryPlugin(add_temporal_spans=True)],
-    )
+    config["plugins"] = [OpenTelemetryPlugin(add_temporal_spans=True)]
+    client = await Client.connect(**config)
 
     # The workflow ID doubles as the Arize session ID, so all traces of one
     # Workflow Execution group together in the Sessions view. A fresh ID per

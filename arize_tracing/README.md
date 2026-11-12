@@ -31,8 +31,8 @@ Contents:
 
 ## Prerequisites
 
-- Docker (for Phoenix) or `uvx`, a local Temporal server
-  (`temporal server start-dev`), and `uv`.
+- Python 3.11 or newer, `uv`, Docker (for Phoenix) or `uvx`, and a local
+  Temporal server (`temporal server start-dev`).
 - An OpenAI-compatible LLM endpoint: either a real `OPENAI_API_KEY`, or any
   OpenAI-compatible gateway via `OPENAI_BASE_URL`.
 
@@ -132,7 +132,7 @@ replay, but it does record every activity attempt).
 | Worker died while the workflow waited | Workers tab / Workflow Task timeouts | The `RunWorkflow` span exports once, when the workflow finishes on another worker; its duration covers the outage |
 | Worker died mid-activity | The attempt is not recorded; the next attempt is | The attempt's span was never ended, so it does not appear; the next attempt does |
 | Workflow Task failed (bug, non-determinism) | `WorkflowTaskFailed` events | Spans that ended inside the failed task are exported again with the same span ID; Phoenix deduplicates by span ID and keeps one copy |
-| Reset or retried workflow (new run) | New run under the same Workflow Id | Another `RunWorkflow` span with its own `temporalRunID`, same trace; the session (workflow ID) groups them. See the reset note below: a reapplied update's `HandleUpdate` span reuses a span ID from the original run |
+| Reset or retried workflow (new run) | New run under the same Workflow Id | Another `RunWorkflow` span with its own `temporalRunID`, same trace; the session (workflow ID) groups them. A reapplied update gets its own `HandleUpdate` span under the new run |
 | Continue-As-New | New run under the same Workflow Id | The new run's `RunWorkflow` span nests under the previous run's, same trace |
 
 Reproduce each case with the flags below; every run must still verify cleanly:
@@ -171,25 +171,19 @@ uv run verify_trace.py --trace-id <id> --surviving-attempt classify_ticket=2
 
 # Reset: rerun a finished workflow from its first workflow task. The reset
 # reapplies the original approval update, and the new run shares the trace as
-# a second RunWorkflow span with its own run ID. Known issue: the reapplied
-# update's HandleUpdate span reuses the original run's RunWorkflow span ID
-# (see below), so verify_trace.py warns that the new run's HandleUpdate is
-# missing from Phoenix.
+# a second RunWorkflow span with its own run ID and its own HandleUpdate span.
 temporal workflow reset --workflow-id <workflow id> --type FirstWorkflowTask --reason demo
 uv run verify_trace.py --workflow-id <workflow id> --expect-runs 2
 ```
 
-**Reset and reapplied updates.** The Python SDK draws deterministic span IDs
-from the workflow's random seed, and a reset run keeps the original run's seed
-until the SDK reseeds it at the reset point. A reapplied update (or signal) is
-handled before that reseed, so its `HandleUpdate` span gets the first ID the
-original run drew: the original `RunWorkflow` span's. Phoenix deduplicates by
-span ID and silently drops the reapplied `HandleUpdate`; Arize AX keeps both
-spans, so the original run's activity subtree appears twice and the original
-`RunWorkflow` node is labeled `HandleUpdate`. All other spans of the reset run
-get fresh IDs. This is an SDK issue, not something the sample can configure
-around; it is tracked as
-[temporalio/sdk-python#2070](https://github.com/temporalio/sdk-python/issues/2070).
+**Reset and reapplied updates need temporalio 1.36.0 or later.** Earlier
+SDK versions handled a reapplied update (or signal) before reseeding the reset
+run's random generator, so its `HandleUpdate` span reused the original run's
+`RunWorkflow` span ID; Phoenix dropped the duplicate and Arize AX showed the
+original run's activity subtree twice. Since 1.36.0 every job in a workflow
+task is applied before handlers run
+([temporalio/sdk-python#2081](https://github.com/temporalio/sdk-python/pull/2081)),
+so every span of the reset run gets a fresh ID.
 
 ![Activity retry attempts in Phoenix](phoenix-retry-attempts.png)
 
@@ -226,7 +220,8 @@ the same spans and attributes; `ARIZE_PROJECT_NAME` selects the project.
 `verify_trace.py` reads Phoenix's REST API and does not apply to Arize AX; use
 the AX UI or the `ax` CLI there. Arize ran this sample against an Arize AX
 space (October 2026): the trace trees, sessions, replay, restart, and retry
-cases matched this README, with the reset caveat above. The exporter settings
+cases matched this README; the reset defect they found is fixed in temporalio
+1.36.0 (see above). The exporter settings
 follow
 [Arize's Temporal guide](https://arize.com/docs/ax/integrations/python-agent-frameworks/temporal/temporal-tracing).
 

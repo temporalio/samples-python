@@ -57,7 +57,8 @@ async def main() -> None:
 
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
-    client = await Client.connect(**config, plugins=[plugin])
+    config["plugins"] = [plugin]
+    client = await Client.connect(**config)
 
     workflow_id = args.workflow_id or f"ticket-triage-agents-{uuid.uuid4().hex[:8]}"
     ticket = Ticket(

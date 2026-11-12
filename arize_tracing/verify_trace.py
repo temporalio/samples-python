@@ -352,15 +352,12 @@ def _verify_ticket_triage(
                 f"expected {args.expect_runs} RunWorkflow spans with distinct run ids, "
                 f"found {len(run_workflow_spans)} ({len(run_ids)} run ids)"
             )
-        # A reset reapplies the approval update, but the reapplied HandleUpdate
-        # span reuses the original run's RunWorkflow span ID (an SDK issue, see
-        # the README), so Phoenix drops it. Report it rather than fail on it.
+        # A reset reapplies the approval update, so each run handles it once.
         handled = [s for s in spans if s["name"] == "HandleUpdate:approve"]
-        if len(handled) < args.expect_runs:
-            print(
-                f"  WARNING: {len(handled)} HandleUpdate:approve span(s) for "
-                f"{args.expect_runs} runs; the reapplied update's span reused a span "
-                "ID from the original run and Phoenix dropped it (known SDK issue)"
+        if len(handled) != args.expect_runs:
+            failures.append(
+                f"expected {args.expect_runs} HandleUpdate:approve spans, "
+                f"found {len(handled)}"
             )
     if args.expect_runs == 1 and len(run_workflow_spans) != 1:
         failures.append(

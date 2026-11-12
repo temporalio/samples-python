@@ -14,6 +14,7 @@ from claude_agent_sdk import (
 )
 from temporalio import workflow
 from temporalio.claude_agent_sdk import TemporalTransport
+from temporalio.exceptions import ApplicationError
 
 COORDINATOR = "coordinator"
 
@@ -108,6 +109,12 @@ class MultiAgentWorkflow:
                         elif isinstance(message, AssistantMessage):
                             self.record(message)
                         elif isinstance(message, ResultMessage):
+                            if message.is_error:
+                                # A failed turn, such as a bad API key, also ends here.
+                                reason = message.result or "; ".join(
+                                    message.errors or []
+                                )
+                                raise ApplicationError(f"Claude Code failed: {reason}")
                             return Briefing(
                                 message.result or "", self.messages_by_agent
                             )

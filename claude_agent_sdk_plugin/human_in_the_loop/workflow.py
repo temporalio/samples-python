@@ -16,6 +16,7 @@ from claude_agent_sdk import (
 )
 from temporalio import workflow
 from temporalio.claude_agent_sdk import TemporalTransport
+from temporalio.exceptions import ApplicationError
 
 
 @dataclass
@@ -85,6 +86,12 @@ class HumanInTheLoopWorkflow:
                         ):
                             prompt_id = message.uuid
                         elif isinstance(message, ResultMessage):
+                            if message.is_error:
+                                # A failed turn, such as a bad API key, also ends here.
+                                reason = message.result or "; ".join(
+                                    message.errors or []
+                                )
+                                raise ApplicationError(f"Claude Code failed: {reason}")
                             return message.result or ""
 
                 raise RuntimeError("Claude Code ended the turn without a result")

@@ -13,6 +13,7 @@ dev = [
     "mypy>=1.4.1,<2",
     "poethepoet>=0.36.0",
     "pytest>=9.0.3,<10",
+    "pytest-timeout>=2.2,<3",
 ]
 
 [tool.poe.tasks]
@@ -35,5 +36,7 @@ target-version = "py310"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
+# Fail a test that hangs, with a stack dump, instead of stalling the job.
+timeout = 300
 pythonpath = ["."]
 testpaths = ["tests"]

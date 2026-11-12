@@ -20,6 +20,7 @@ dev = [
     "mypy>=1.4.1,<2",
     "pytest>=7.1.2,<8",
     "pytest-asyncio>=0.18.3,<0.19",
+    "pytest-timeout>=2.2,<3",
     "fakeredis>=2,<3",
     "frozenlist>=1.4.0,<2",
     "pyright>=1.1.394",
@@ -135,6 +136,8 @@ test = "uv run --all-groups --no-group cloud-export-to-parquet pytest"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# Fail a test that hangs, with a stack dump, instead of stalling the job.
+timeout = 300
 log_cli = true
 log_cli_level = "INFO"
 log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"

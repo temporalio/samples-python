@@ -15,6 +15,7 @@ dev = [
     "poethepoet>=0.36.0",
     "pytest>=7.1.2,<8",
     "pytest-asyncio>=0.18.3,<0.19",
+    "pytest-timeout>=2.2,<3",
 ]
 
 [build-system]
@@ -42,6 +43,8 @@ test = "uv run pytest"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# Fail a test that hangs, with a stack dump, instead of stalling the job.
+timeout = 300
 
 [tool.ruff]
 target-version = "py310"

@@ -110,6 +110,11 @@ jobs:
             runsOn: macos-15-intel
           - os: macos-arm
             runsOn: macos-latest
+          # ubuntu-latest became Ubuntu 26.04 in November 2026, and the Python
+          # 3.10 test run stalls there between tests on most runs (see #365).
+          # Keep the job name, but run it on 24.04 until that is understood.
+          - os: ubuntu-latest
+            runsOn: ubuntu-24.04
     runs-on: ${{ matrix.runsOn || matrix.os }}
     # Normal matrix jobs finish in 7-14 minutes; without an explicit limit a
     # hung test run burns GitHub's 6-hour default before failing.

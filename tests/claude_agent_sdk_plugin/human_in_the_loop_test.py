@@ -1,4 +1,5 @@
 import asyncio
+import json
 import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -65,6 +66,23 @@ async def assert_replays(handle: WorkflowHandle[HumanInTheLoopWorkflow, str]) ->
     await Replayer(
         workflows=[HumanInTheLoopWorkflow], plugins=[ClaudeAgentSDKPlugin()]
     ).replay_workflow(await handle.fetch_history())
+
+
+@pytest.mark.parametrize("approved", [True, False])
+def test_decided_tool_call_is_not_pending(approved: bool) -> None:
+    instance = HumanInTheLoopWorkflow()
+    request = ToolRequest(TOOL_USE_ID, "Bash", {"command": "echo hello"})
+    instance.pending = request
+    assert instance.pending_tool_calls() == request
+
+    # Simulate a query after the update, before the waiting callback resumes.
+    HumanInTheLoopWorkflow.decide(instance, approved)
+
+    assert instance.pending_tool_calls() is None
+    call = json.dumps([request.tool_name, request.tool_input], sort_keys=True)
+    assert instance.decisions[call] is approved
+    with pytest.raises(ValueError, match="No tool call is waiting for a decision"):
+        instance.validate_decide(approved)
 
 
 async def test_approved_tool_call_runs(client: Client, workspace: Path) -> None:

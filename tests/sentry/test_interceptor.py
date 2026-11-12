@@ -1,5 +1,6 @@
 import sys
 import unittest.mock
+import uuid
 from collections import abc
 
 import pytest
@@ -34,14 +35,18 @@ def transport() -> FakeSentryTransport:
 
 
 @pytest.fixture(autouse=True)
-def sentry_init(transport: FakeSentryTransport) -> None:
-    """Initialize Sentry for testing."""
-    sentry_sdk.init(
-        transport=transport,
-        integrations=[
-            AsyncioIntegration(),
-        ],
-    )
+def sentry_init(transport: FakeSentryTransport) -> abc.Iterator[None]:
+    """Give each test its own Sentry client and empty scopes, so nothing an
+    earlier test captured or left as a breadcrumb leaks into this one."""
+    for scope in (
+        sentry_sdk.get_global_scope(),
+        sentry_sdk.get_isolation_scope(),
+        sentry_sdk.get_current_scope(),
+    ):
+        scope.clear()
+    sentry_sdk.init(transport=transport, integrations=[AsyncioIntegration()])
+    yield
+    sentry_sdk.get_client().close()
 
 
 @pytest.fixture
@@ -49,7 +54,7 @@ async def worker(client: Client) -> abc.AsyncIterator[Worker]:
     """Fixture to provide a worker for testing."""
     async with Worker(
         client,
-        task_queue="sentry-task-queue",
+        task_queue=f"sentry-{uuid.uuid4()}",
         workflows=[SentryExampleWorkflow],
         activities=[broken_activity, working_activity],
         interceptors=[SentryInterceptor()],
@@ -71,7 +76,7 @@ async def test_sentry_interceptor_reports_no_errors_when_workflow_succeeds(
         await client.execute_workflow(
             SentryExampleWorkflow.run,
             SentryExampleWorkflowInput(option="working"),
-            id="sentry-workflow-id",
+            id=f"sentry-workflow-{uuid.uuid4()}",
             task_queue=worker.task_queue,
         )
     except Exception:
@@ -85,12 +90,13 @@ async def test_sentry_interceptor_captures_errors(
     client: Client, worker: Worker, transport: FakeSentryTransport
 ) -> None:
     """Test that errors are captured with correct Sentry metadata."""
+    workflow_id = f"sentry-workflow-{uuid.uuid4()}"
     # WHEN
     try:
         await client.execute_workflow(
             SentryExampleWorkflow.run,
             SentryExampleWorkflowInput(option="broken"),
-            id="sentry-workflow-id",
+            id=workflow_id,
             task_queue=worker.task_queue,
         )
         pytest.fail("Workflow should raise an exception")
@@ -114,10 +120,10 @@ async def test_sentry_interceptor_captures_errors(
         "temporal.execution_type": "activity",
         "module": "sentry.activity.broken_activity",
         "temporal.workflow.type": "SentryExampleWorkflow",
-        "temporal.workflow.id": "sentry-workflow-id",
+        "temporal.workflow.id": workflow_id,
         "temporal.activity.id": "1",
         "temporal.activity.type": "broken_activity",
-        "temporal.activity.task_queue": "sentry-task-queue",
+        "temporal.activity.task_queue": worker.task_queue,
         "temporal.workflow.namespace": "default",
         "temporal.workflow.run_id": unittest.mock.ANY,
     }
@@ -146,8 +152,8 @@ async def test_sentry_interceptor_captures_errors(
         "temporal.execution_type": "workflow",
         "module": "sentry.workflow.SentryExampleWorkflow.run",
         "temporal.workflow.type": "SentryExampleWorkflow",
-        "temporal.workflow.id": "sentry-workflow-id",
-        "temporal.workflow.task_queue": "sentry-task-queue",
+        "temporal.workflow.id": workflow_id,
+        "temporal.workflow.task_queue": worker.task_queue,
         "temporal.workflow.namespace": "default",
         "temporal.workflow.run_id": unittest.mock.ANY,
     }

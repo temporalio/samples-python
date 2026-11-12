@@ -96,7 +96,8 @@ jobs:
   # Build and test the project
   build-lint-test:
     strategy:
-      fail-fast: true
+      # Let every matrix job finish so one flaky job does not hide the others.
+      fail-fast: false
       matrix:
         python: ["3.10", "3.14"]
         os: [ubuntu-latest, macos-intel, macos-arm, windows-latest]

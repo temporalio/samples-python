@@ -23,7 +23,7 @@ workflows kick off.
 
 - A [Temporal Cloud](https://temporal.io/cloud) namespace (or a self-hosted
   Temporal cluster reachable from AgentCore)
-- Python 3.10+ and [uv](https://docs.astral.sh/uv/)
+- Python 3.11+ and [uv](https://docs.astral.sh/uv/)
 - Node.js 20+ -- the [AgentCore CLI](https://github.com/aws/agentcore-cli) is an
   npm package: `npm install -g @aws/agentcore`
 - AWS CLI configured, and the [AWS

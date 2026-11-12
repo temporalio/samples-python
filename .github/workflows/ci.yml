@@ -51,7 +51,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.10", "3.14"]
+        python: ["3.11", "3.14"]
         project: ${{ fromJSON(needs.detect-standalone-changes.outputs.projects) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -98,7 +98,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python: ["3.10", "3.14"]
+        python: ["3.11", "3.14"]
         os: [ubuntu-latest, macos-intel, macos-arm, windows-latest]
         include:
           - os: macos-intel

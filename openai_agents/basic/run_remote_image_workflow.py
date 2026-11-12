@@ -11,10 +11,8 @@ async def main():
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
 
-    client = await Client.connect(
-        **config,
-        plugins=[OpenAIAgentsPlugin()],
-    )
+    config["plugins"] = [*config.get("plugins", []), OpenAIAgentsPlugin()]
+    client = await Client.connect(**config)
 
     # Use the URL from the original example
     image_url = (

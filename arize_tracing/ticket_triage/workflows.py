@@ -1,10 +1,8 @@
 """Ticket triage workflow with Arize tracing via OpenTelemetry.
 
-The workflow is fully deterministic and runs inside Temporal's standard
-workflow sandbox. With ``OpenTelemetryPlugin`` registered on the client,
-plain OpenTelemetry APIs work in workflow code: the ``triage`` span below is
-created with the regular tracer, gets a deterministic span ID, and is never
-re-exported on replay.
+The workflow runs in the standard sandbox. With ``OpenTelemetryPlugin`` on the
+client, plain OpenTelemetry APIs work in workflow code: the ``triage`` span
+below gets a deterministic span ID and is never re-exported on replay.
 """
 
 from datetime import timedelta
@@ -13,9 +11,10 @@ from typing import Optional
 from temporalio import workflow
 from temporalio.common import RetryPolicy
 
-# Bounded retries for the LLM activities so that a misconfigured endpoint or
-# API key fails fast instead of retrying forever. Each retry attempt records
-# its own RunActivity span in the trace (see --fail-first-attempt on the worker).
+TASK_QUEUE = "arize-ticket-triage-task-queue"
+
+# Bounded retries so a misconfigured endpoint fails fast. Each attempt records
+# its own RunActivity span (see --fail-first-attempt on the worker).
 LLM_RETRY_POLICY = RetryPolicy(
     maximum_attempts=3, initial_interval=timedelta(seconds=1)
 )
@@ -47,10 +46,8 @@ class TicketTriageWorkflow:
 
     @workflow.run
     async def run(self, ticket: Ticket) -> TriageResult:
-        # A custom span grouping the two triage activities. Under the
-        # OpenTelemetryPlugin this is replay-safe; the activity spans (and the
-        # LLM spans inside them) nest underneath it. The OpenInference span
-        # kind tells Arize how to render it.
+        # A custom span grouping the two triage activities; replay-safe under
+        # the plugin. The OpenInference kind tells Arize how to render it.
         with trace.get_tracer(__name__).start_as_current_span(
             "triage",
             attributes={
@@ -61,8 +58,7 @@ class TicketTriageWorkflow:
                 classify_ticket,
                 ticket,
                 start_to_close_timeout=timedelta(seconds=60),
-                # Heartbeats let Temporal detect a worker that died mid-attempt
-                # quickly, so the retry (and its new span) starts sooner.
+                # Heartbeats let Temporal notice a worker that died mid-attempt.
                 heartbeat_timeout=timedelta(seconds=10),
                 retry_policy=LLM_RETRY_POLICY,
             )

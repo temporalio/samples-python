@@ -1,71 +1,65 @@
 # Arize Tracing
 
-This sample shows the recommended way to get Temporal workflow traces into
-[Arize](https://arize.com/) — the open-source [Arize Phoenix](https://arize.com/docs/phoenix)
-or the [Arize AX](https://arize.com/docs/ax) platform — using Temporal's
-[`OpenTelemetryPlugin`](https://python.temporal.io/temporalio.contrib.opentelemetry.OpenTelemetryPlugin.html)
-plus a standard OTLP/HTTP exporter and the
-[OpenInference](https://github.com/Arize-ai/openinference) semantic conventions
-that Arize reads. No Arize SDK or Arize-specific plugin is involved, workflow
-code stays deterministic and sandboxed, and traces are correctly nested,
-correctly typed, and duplicate-free across replay and worker restarts.
+Send Temporal workflow traces to [Arize Phoenix](https://arize.com/docs/phoenix)
+(open source) or [Arize AX](https://arize.com/docs/ax) with Temporal's
+[`OpenTelemetryPlugin`](https://python.temporal.io/temporalio.contrib.opentelemetry.OpenTelemetryPlugin.html),
+a standard OTLP/HTTP exporter, and the
+[OpenInference](https://github.com/Arize-ai/openinference) conventions Arize
+renders. No Arize SDK is involved, workflow code stays deterministic and
+sandboxed, and traces come out correctly nested, typed, and duplicate-free
+across replay and worker restarts.
 
-Contents:
-
-- **[ticket_triage/](ticket_triage/)** — the framework-agnostic pattern: an LLM
-  ticket-triage workflow (two LLM activities, one plain activity, one human
-  approval delivered as a workflow update). LLM calls run in activities and are
-  captured by the OpenInference OpenAI instrumentation.
-- **[ticket_triage_agents/](ticket_triage_agents/)** — the same workflow built
-  with the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)
-  through Temporal's `OpenAIAgentsPlugin(use_otel_instrumentation=True)`, so
-  Arize shows native AGENT, LLM, and TOOL spans.
-- **[verify_trace.py](verify_trace.py)** — checks a trace through the Phoenix
-  REST API: whole-tree equality with span kinds, enrichment attributes, LLM
-  token usage, activity attempts, and that no span is missing its parent.
-- **[phoenix/docker-compose.yml](phoenix/docker-compose.yml)** — pinned
-  self-hosted Phoenix, one container.
-- **[telemetry.py](telemetry.py)** — the OpenTelemetry wiring: replay-safe
-  tracer provider, Phoenix/Arize AX exporter, the OpenInference enrichment
-  processor, and LLM instrumentation.
+- **[ticket_triage/](ticket_triage/)**: the framework-agnostic pattern. Two LLM
+  activities, one plain activity, and a human approval delivered as a workflow
+  update; LLM calls are captured by the OpenInference OpenAI instrumentation.
+- **[ticket_triage_agents/](ticket_triage_agents/)**: the same flow on the
+  [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) through
+  `OpenAIAgentsPlugin(use_otel_instrumentation=True)`, so Arize shows native
+  AGENT, LLM, and TOOL spans.
+- **[telemetry.py](telemetry.py)**: the replay-safe tracer provider, the
+  Phoenix/Arize AX exporter, and the OpenInference enrichment processor.
+- **[verify_trace.py](verify_trace.py)**: checks a trace through the Phoenix
+  REST API: tree shape with span kinds, enrichment attributes, LLM token
+  usage, activity attempts, and that no span is missing its parent.
 
 ## Prerequisites
 
 - Python 3.11 or newer, `uv`, Docker (for Phoenix) or `uvx`, and a local
   Temporal server (`temporal server start-dev`).
-- An OpenAI-compatible LLM endpoint: either a real `OPENAI_API_KEY`, or any
-  OpenAI-compatible gateway via `OPENAI_BASE_URL`.
+- An OpenAI API key, or any OpenAI-compatible endpoint via `OPENAI_BASE_URL`.
 
 ## Run it
 
-The sample has its own uv project because the repository's root lock still
-pins `openai` 2.x for the LiteLLM samples, while `temporalio-openai-agents`
-1.1.0 needs `openai` 3. Run everything from this directory:
+The sample is its own uv project because `temporalio-openai-agents` needs
+`openai` 3 while the repository's root lock stays on 2. Run everything from
+this directory:
 
 ```bash
 cd arize_tracing
 
 # 1. Start Phoenix (UI, REST API, and OTLP collector on port 6006)
 docker compose -f phoenix/docker-compose.yml up -d
-curl -sf http://localhost:6006/healthz && echo ok
 #    ...or without Docker: uvx --from "arize-phoenix==20.16.0" phoenix serve
 
-# 2. Install dependencies and set environment
+# 2. Install dependencies and set the environment
 uv sync
 cp .env.example .env   # edit the LLM settings
 set -a; source .env; set +a
 
 # 3. Run the sample (two terminals, same environment)
 uv run python -m ticket_triage.worker
-uv run python -m ticket_triage.starter
+uv run python -m ticket_triage.starter     # add --decline to reject the ticket
 
-# 4. Verify the trace through the Phoenix API (uses the printed trace ID)
-uv run verify_trace.py --trace-id <printed trace id>
+# 4. Verify the trace through the Phoenix API
+uv run verify_trace.py --trace-id <printed trace id>   # add --expect declined
 ```
 
-The starter prints a direct link to the trace in Phoenix (project
-`temporal-ticket-triage`). You should see one trace shaped like this, with the
-OpenInference kinds Arize renders:
+The sample is self-contained: copy this directory, keep its `pyproject.toml`
+(or merge its dependencies into yours), and run the same commands.
+
+The starter prints a link to the trace in Phoenix (project
+`temporal-ticket-triage`). It is shaped like this, with the OpenInference
+kinds Arize renders:
 
 ```
 ticket-triage                                    CHAIN  (root; session = workflow id, user, input, output, tags)
@@ -84,9 +78,8 @@ ticket-triage                                    CHAIN  (root; session = workflo
 
 ![Ticket triage trace in Phoenix](phoenix-ticket-triage.png)
 
-The Sessions tab groups traces by Temporal workflow ID (`session.id`), so all
-interactions with one workflow execution appear as one session. Start the
-starter with `--workflow-id <id>` more than once to see several traces in a
+The Sessions tab groups traces by workflow ID (`session.id`). Start the
+starter with `--workflow-id <id>` more than once to see several traces in one
 session.
 
 ### With the OpenAI Agents SDK
@@ -97,8 +90,12 @@ uv run python -m ticket_triage_agents.starter
 uv run verify_trace.py --trace-id <printed trace id> --scenario agents
 ```
 
-Here the Agents SDK trace itself becomes the root, and the plugin's
-OpenTelemetry bridge produces the OpenInference kinds directly:
+Here the Agents SDK trace is the root AGENT span, and the plugin creates the
+`temporal:*` CHAIN spans itself, so `OpenTelemetryPlugin` is not added as
+well. `setup_tracing()` must run before the plugin is constructed, because the
+plugin checks that the global tracer provider is Temporal's replay-safe one.
+The plugin propagates trace context but not baggage, so `session.id` and
+`user.id` live on the root span, which is enough for Phoenix's Sessions view.
 
 ```
 Ticket triage agents                             AGENT  (root; session, user, input, output)
@@ -119,11 +116,9 @@ Ticket triage agents                             AGENT  (root; session, user, in
 
 ## How replay, retries, and restarts show up
 
-Durable execution means workflow code re-executes (replays) on worker
-restarts and cache evictions, and activities retry. The rule this sample
-demonstrates: **replay produces no spans, real re-executions do**, which is
-exactly what the Temporal Web UI shows too (Event History records nothing for a
-replay, but it does record every activity attempt).
+Workflow code re-executes (replays) on worker restarts and cache evictions,
+and activities retry. The rule: **replay produces no spans, real
+re-executions do**, which matches what the Temporal Web UI shows.
 
 | What happened | Temporal Web UI | Arize |
 |---|---|---|
@@ -144,15 +139,12 @@ uv run python -m ticket_triage.worker --replay-stress
 uv run python -m ticket_triage.starter
 uv run verify_trace.py --trace-id <printed trace id>
 
-# Worker restart mid-workflow: the starter waits 20s before sending the
-# approval. Give the triage activities a few seconds to finish, then kill the
-# worker while the workflow durably awaits approval; start a new worker and
-# watch the workflow (and its trace) complete cleanly.
+# Worker restart mid-workflow: the starter waits 20s before approving. After
+# the triage activities finish, ctrl+c the worker and start it again; the
+# workflow (and its trace) completes cleanly. The stopping worker logs
+# "Failed to detach context" and "Shutdown called, ignoring Span": its open
+# RunWorkflow span belonged to a workflow task that no longer exists.
 uv run python -m ticket_triage.starter --pause-before-approval 20
-#   ... after ~5s, ctrl+c the worker, then start it again in another terminal
-#   (the stopping worker logs "Failed to detach context" with a traceback and
-#   "Shutdown called, ignoring Span": its open RunWorkflow span was attached in
-#   a workflow task that no longer exists; the trace is unaffected)
 uv run verify_trace.py --trace-id <printed trace id>
 
 # Activity retry: classify_ticket fails on its first attempt. Arize shows two
@@ -161,29 +153,25 @@ uv run python -m ticket_triage.worker --fail-first-attempt
 uv run python -m ticket_triage.starter
 uv run verify_trace.py --trace-id <id> --expect-attempts classify_ticket=2
 
-# Worker crash mid-activity: classify_ticket heartbeats for 30s first. Kill
-# the worker hard (kill -9) during that time and start a new one. The first
-# attempt's span was never ended, so it is absent; the retry appears with
-# attempt 2 after the heartbeat timeout.
+# Worker crash mid-activity: classify_ticket heartbeats for 30s first. kill -9
+# the worker during that time and start a new one. The first attempt's span
+# was never ended, so it is absent; attempt 2 appears after the heartbeat
+# timeout.
 uv run python -m ticket_triage.worker --slow-classify 30
 uv run python -m ticket_triage.starter
 uv run verify_trace.py --trace-id <id> --surviving-attempt classify_ticket=2
 
 # Reset: rerun a finished workflow from its first workflow task. The reset
-# reapplies the original approval update, and the new run shares the trace as
-# a second RunWorkflow span with its own run ID and its own HandleUpdate span.
+# reapplies the approval update, and the new run shares the trace as a second
+# RunWorkflow span with its own run ID and its own HandleUpdate span.
 temporal workflow reset --workflow-id <workflow id> --type FirstWorkflowTask --reason demo
 uv run verify_trace.py --workflow-id <workflow id> --expect-runs 2
 ```
 
-**Reset and reapplied updates need temporalio 1.36.0 or later.** Earlier
-SDK versions handled a reapplied update (or signal) before reseeding the reset
-run's random generator, so its `HandleUpdate` span reused the original run's
-`RunWorkflow` span ID; Phoenix dropped the duplicate and Arize AX showed the
-original run's activity subtree twice. Since 1.36.0 every job in a workflow
-task is applied before handlers run
-([temporalio/sdk-python#2081](https://github.com/temporalio/sdk-python/pull/2081)),
-so every span of the reset run gets a fresh ID.
+The reset case needs temporalio 1.36.0 or later. Earlier releases ran the
+reapplied update before reseeding the new run, so its `HandleUpdate` span
+reused the original `RunWorkflow` span's ID
+([temporalio/sdk-python#2081](https://github.com/temporalio/sdk-python/pull/2081)).
 
 ![Activity retry attempts in Phoenix](phoenix-retry-attempts.png)
 
@@ -191,7 +179,7 @@ so every span of the reset run gets a fresh ID.
 
 | Span | Emitted by | Where it runs |
 |---|---|---|
-| `ticket-triage` (root) + OpenInference session/user/input/output | starter code | starter |
+| `ticket-triage` (root) with the OpenInference session/user/input/output | starter code | starter |
 | `StartWorkflow:*`, `StartWorkflowUpdate:*` | `OpenTelemetryPlugin` | starter (client side) |
 | `RunWorkflow:*`, `StartActivity:*`, `ValidateUpdate:*`, `HandleUpdate:*` | `OpenTelemetryPlugin` | worker (workflow) |
 | `triage` | plain OpenTelemetry API in workflow code | worker (workflow) |
@@ -199,45 +187,32 @@ so every span of the reset run gets a fresh ID.
 | `ChatCompletion` LLM spans | `openinference-instrumentation-openai` | worker (activity) |
 | `openinference.span.kind`, `session.id`, `metadata`, `temporal.activity.attempt` on Temporal spans | `OpenInferenceEnrichmentProcessor` in `telemetry.py` | every process |
 
-The enrichment processor is optional but recommended: without it Phoenix and
+Plain OpenTelemetry works everywhere: in activities without restrictions
+(where LLM calls belong), in workflow code and handlers replay-safely under
+the plugin, and in client code. Without the enrichment processor Phoenix and
 Arize AX show Temporal's spans as UNKNOWN, do not group them into sessions,
 and cannot tell activity attempts apart.
-
-## Where tracing works
-
-| Location | Works? | Notes |
-|---|---|---|
-| Activity bodies | ✅ | Plain OpenTelemetry + any OpenInference instrumentation, no restrictions. This is where LLM calls belong. |
-| Workflow bodies | ✅ | Plain OpenTelemetry APIs are replay-safe under the plugin: deterministic span IDs, no re-export on replay. Spans export when they end; the `RunWorkflow` span exports when the run completes. |
-| Signal/query/update handlers | ✅ | Handled by the plugin automatically (`HandleUpdate:*` etc.). |
-| Client / starter code | ✅ | Standard OpenTelemetry; put the OpenInference trace-level attributes on your root span. |
 
 ## Sending to Arize AX instead of Phoenix
 
 Set `ARIZE_SPACE_ID` and `ARIZE_API_KEY` (and `ARIZE_OTLP_ENDPOINT` for the EU
-region) and `telemetry.py` exports to `https://otlp.arize.com/v1/traces` with
-the same spans and attributes; `ARIZE_PROJECT_NAME` selects the project.
-`verify_trace.py` reads Phoenix's REST API and does not apply to Arize AX; use
-the AX UI or the `ax` CLI there. Arize ran this sample against an Arize AX
-space (October 2026): the trace trees, sessions, replay, restart, and retry
-cases matched this README; the reset defect they found is fixed in temporalio
-1.36.0 (see above). The exporter settings
+region) and `telemetry.py` exports the same spans to
+`https://otlp.arize.com/v1/traces`; `ARIZE_PROJECT_NAME` selects the project.
+`verify_trace.py` reads Phoenix's REST API, so use the AX UI or the `ax` CLI
+there. Arize ran this sample against an AX space in October 2026: the trace
+trees, sessions, replay, restart, and retry cases matched this README, and the
+reset defect they found is fixed in temporalio 1.36.0. The exporter settings
 follow
 [Arize's Temporal guide](https://arize.com/docs/ax/integrations/python-agent-frameworks/temporal/temporal-tracing).
 
 ## Operational notes
 
-- Phoenix and Arize AX both accept OTLP/HTTP; this sample uses
-  `opentelemetry-exporter-otlp-proto-http`.
 - Short-lived processes must flush: the starters and workers call
-  `force_flush()` on exit (see `telemetry.py`).
-- The workflow ID doubles as the Arize session ID. A fresh ID per run is the
-  default; reuse one to group runs.
+  `force_flush()` on exit.
 - `OTEL_SDK_DISABLED=true` turns off export without code changes.
-- Ingestion is asynchronous; `verify_trace.py` waits until the root span has
-  arrived and the span count has stayed unchanged for a few seconds before it
-  checks anything.
-- The OpenAI Agents SDK bridge (`use_otel_instrumentation=True`) ships in the
+- Ingestion is asynchronous; `verify_trace.py` waits for the root span and a
+  stable span count before it checks anything.
+- The Agents SDK bridge (`use_otel_instrumentation=True`) ships in the
   standalone `temporalio-openai-agents` package and is Public Preview. Use
   1.1.0 or later: earlier versions mis-parent the `temporal:startActivity`
   spans when one worker runs both the workflow and its activities
@@ -245,21 +220,14 @@ follow
 
 ## Tests
 
-`tests/` runs without Arize, Docker, or an LLM: mocked activities
-(and the SDK's `TestModel` for the agents scenario), an in-memory span
-exporter, a worker with the workflow cache disabled, whole-tree span
-assertions, enrichment and retry-attempt assertions, and a `Replayer` pass
-asserting that replaying the finished workflow's history emits zero new spans.
-That in-memory check is the authority on replay re-emission: Phoenix
-deduplicates by span ID on ingest, so `verify_trace.py` would only notice
-re-emitted spans that received new IDs, as extra rows in the tree.
+`tests/` runs without Arize, Docker, or an LLM: mocked activities (the SDK's
+`TestModel` for the agents scenario), an in-memory span exporter, a worker
+with the workflow cache disabled, whole-tree span assertions, enrichment and
+retry-attempt assertions, and a `Replayer` pass asserting that replaying the
+finished workflow's history emits zero new spans. That in-memory check is the
+authority on replay re-emission, since Phoenix deduplicates by span ID.
 
 ```bash
 uv run poe test                                       # or: uv run pytest -v
 uv run poe test --workflow-environment time-skipping
 ```
-
-## Using this outside samples-python
-
-The sample is self-contained: copy this directory, keep its `pyproject.toml`
-(or merge its dependencies into yours), and run the same commands.

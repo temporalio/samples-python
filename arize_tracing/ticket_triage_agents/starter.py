@@ -1,9 +1,7 @@
 """Starter for the ticket triage agents sample.
 
-The Agents SDK trace opened here becomes the root AGENT span of the Arize trace:
-the plugin bridges Agents SDK tracing to OpenTelemetry, so the OpenInference
-trace-level attributes (session, user, input, output, metadata, tags) go onto
-that span instead of a separate OpenTelemetry root.
+The Agents SDK trace opened here becomes the root AGENT span of the Arize
+trace, so the OpenInference trace-level attributes go onto that span.
 """
 
 import argparse
@@ -19,11 +17,7 @@ from opentelemetry import trace
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
 
-from telemetry import (
-    force_flush,
-    setup_tracing,
-    trace_url,
-)
+from telemetry import force_flush, setup_tracing, trace_url
 from ticket_triage.activities import ApprovalDecision, Ticket
 from ticket_triage_agents.plugin import TASK_QUEUE, agents_plugin
 from ticket_triage_agents.workflows import (
@@ -75,10 +69,9 @@ async def main() -> None:
     )
 
     # @@@SNIPSTART python-arize-tracing-agents-starter
-    # Starting an Agents SDK trace outside a worker requires the plugin's
-    # tracing context. The OpenInference instrumentation turns the trace into
-    # the root AGENT span and makes it the current OpenTelemetry span, so the
-    # OpenInference trace-level attributes are set on it directly.
+    # Starting an Agents SDK trace outside a worker needs the plugin's tracing
+    # context. The trace becomes the root AGENT span and the current
+    # OpenTelemetry span, so the trace-level attributes are set on it directly.
     try:
         with plugin.tracing_context():
             with agents_trace("Ticket triage agents", group_id=workflow_id):

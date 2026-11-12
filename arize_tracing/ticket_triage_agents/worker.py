@@ -22,8 +22,7 @@ async def main() -> None:
         "--replay-stress",
         action="store_true",
         help="Disable the workflow cache so every workflow task replays the "
-        "workflow (and the agent loop) from the start of history. Traces in "
-        "Arize must look identical with or without this flag.",
+        "agent loop from the start of history. Traces must look identical.",
     )
     args = parser.parse_args()
 

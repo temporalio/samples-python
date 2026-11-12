@@ -10,14 +10,12 @@ TASK_QUEUE = "arize-ticket-triage-agents-task-queue"
 
 # @@@SNIPSTART python-arize-tracing-agents-plugin
 def agents_plugin() -> OpenAIAgentsPlugin:
-    """The OpenAI Agents plugin, configured to export through OpenTelemetry.
+    """The OpenAI Agents plugin, bridging Agents SDK tracing to OpenTelemetry.
 
-    Construct it after ``setup_tracing()``: with ``use_otel_instrumentation=True``
-    the plugin checks that the global tracer provider is Temporal's replay-safe
-    provider, then bridges Agents SDK tracing to OpenTelemetry through the
-    OpenInference ``openai-agents`` instrumentation. ``add_temporal_spans=True``
-    adds CHAIN spans for the Temporal operations (start workflow, execute
-    activity, ...) around the AGENT, LLM, and TOOL spans.
+    Construct it after ``setup_tracing()``: the plugin checks that the global
+    tracer provider is Temporal's replay-safe one. ``add_temporal_spans=True``
+    adds CHAIN spans for the Temporal operations around the AGENT, LLM, and
+    TOOL spans.
     """
     return OpenAIAgentsPlugin(
         use_otel_instrumentation=True,

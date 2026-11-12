@@ -1,12 +1,9 @@
 """Ticket triage with the OpenAI Agents SDK, traced to Arize via OpenTelemetry.
 
-The agent loop runs inside the workflow, durably. Through ``OpenAIAgentsPlugin``
-every model call runs as a Temporal activity, and ``activity_as_tool`` exposes
-the ``lookup_account`` activity to the agent as a tool. With
-``use_otel_instrumentation=True`` the plugin turns the Agents SDK trace into
-OpenInference spans (AGENT, LLM, TOOL, and CHAIN for the Temporal operations)
-on Temporal's replay-safe tracer provider, so Arize renders the agent natively
-and replay never duplicates a span.
+The agent loop runs durably inside the workflow: every model call is a Temporal
+activity, and ``activity_as_tool`` exposes ``lookup_account`` as a tool. The
+plugin turns the Agents SDK trace into OpenInference spans (AGENT, LLM, TOOL,
+CHAIN) on Temporal's replay-safe tracer provider.
 """
 
 from dataclasses import dataclass
@@ -32,8 +29,7 @@ with workflow.unsafe.imports_passed_through():
 @dataclass
 class AgentTicketRequest:
     ticket: Ticket
-    # The model name is a workflow input rather than an environment lookup in
-    # workflow code, which keeps the workflow deterministic.
+    # A workflow input rather than an environment lookup, to stay deterministic.
     model: str = "gpt-4o-mini"
 
 
@@ -64,8 +60,7 @@ class TicketTriageAgentsWorkflow:
             model=request.model,
             instructions=TRIAGE_INSTRUCTIONS,
             tools=[
-                # A Temporal activity as an agent tool: Arize shows a TOOL span
-                # wrapping the activity's own Temporal spans.
+                # Arize shows a TOOL span wrapping the activity's Temporal spans.
                 temporal_agents.workflow.activity_as_tool(
                     lookup_account, start_to_close_timeout=timedelta(seconds=10)
                 )

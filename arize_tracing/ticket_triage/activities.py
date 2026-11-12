@@ -1,10 +1,8 @@
 """Activities for the ticket triage sample.
 
-All LLM and I/O work happens here, in activities — never in workflow code.
-The OpenAI client is instrumented process-wide (see ``telemetry.instrument_openai``),
-so each API call below automatically emits an OpenInference LLM span nested
-under the activity's span, which Arize renders with model, token usage, and
-the prompt/completion messages.
+All LLM and I/O work happens here, never in workflow code. The worker
+instruments the OpenAI client, so each API call below emits an OpenInference
+LLM span (model, token usage, messages) nested under the activity's span.
 """
 
 import asyncio
@@ -17,12 +15,12 @@ from openai import AsyncOpenAI
 from temporalio import activity
 from temporalio.exceptions import ApplicationError
 
-# Demo hooks, set from worker.py flags (module state in the worker process,
-# never activity inputs, which are recorded in workflow history).
-FAIL_FIRST_ATTEMPT = False  # --fail-first-attempt: classify_ticket fails on attempt 1
-SLOW_CLASSIFY_SECONDS = (
-    0  # --slow-classify N: classify_ticket heartbeats N seconds first
-)
+# Demo hooks set from worker.py flags: module state in the worker process, not
+# activity inputs, which would be recorded in workflow history.
+# --fail-first-attempt: classify_ticket fails on attempt 1
+FAIL_FIRST_ATTEMPT = False
+# --slow-classify N: classify_ticket heartbeats N seconds before calling the LLM
+SLOW_CLASSIFY_SECONDS = 0
 
 
 @dataclass
@@ -84,13 +82,9 @@ _openai: Optional[AsyncOpenAI] = None
 def _openai_client() -> AsyncOpenAI:
     """One OpenAI client per worker process, created on first use.
 
-    Created lazily rather than at import so that importing this module (the
-    tests do, with these activities mocked) does not require OPENAI_API_KEY.
-    Configuration comes from the environment, never from activity inputs
-    (activity inputs are recorded in workflow history and shown in the UI).
-    max_retries=0 disables the OpenAI client's built-in retries: Temporal's
-    activity retry policy owns retries, with full visibility in the UI and,
-    through this sample, one RunActivity span per attempt in Arize.
+    Lazy so importing this module (the tests do, mocking the activities) needs
+    no OPENAI_API_KEY. max_retries=0 leaves retries to Temporal's activity
+    retry policy, which shows every attempt in the UI and in Arize.
     """
     global _openai
     if _openai is None:
@@ -128,11 +122,9 @@ T = TypeVar("T")
 async def _heartbeating(awaitable: Awaitable[T], every: float = 2.0) -> T:
     """Await ``awaitable`` while heartbeating every ``every`` seconds.
 
-    The workflow runs ``classify_ticket`` with a 10-second heartbeat timeout so
-    that a worker which dies mid-attempt is detected quickly. That timeout also
-    covers the LLM call, so the call has to keep heartbeating: otherwise a slow
-    response would be mistaken for a dead worker and retried while the first
-    request is still in flight.
+    ``classify_ticket`` runs with a 10-second heartbeat timeout so a worker
+    that dies mid-attempt is noticed quickly; a slow LLM call must keep
+    heartbeating or it would be retried while still in flight.
     """
     task = asyncio.ensure_future(awaitable)
     try:
@@ -178,10 +170,8 @@ async def classify_ticket(ticket: Ticket) -> Classification:
 @activity.defn
 async def lookup_account(customer_email: str) -> AccountInfo:
     """Look up the account name and plan for a customer email address."""
-    # A deterministic, non-LLM activity: appears in Arize as a plain CHAIN span
-    # alongside the LLM spans produced inside the LLM activities. The
-    # ticket_triage_agents sample also exposes it to an agent as a tool, which
-    # is why it has a docstring: the Agents SDK uses it as the tool description.
+    # A plain (non-LLM) activity. The agents sample exposes it as a tool, and
+    # the Agents SDK uses this docstring as the tool description.
     known_accounts = {
         "ada@acme.example": AccountInfo(
             customer_email="ada@acme.example",

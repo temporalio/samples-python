@@ -1,44 +1,31 @@
 """Verify a ticket-triage trace in Arize Phoenix through its REST API.
 
-Fetches every span of the trace, rebuilds the tree, and deep-compares it
-against the expected shape — including OpenInference span kinds — then checks
-that every child has its parent in the trace, that Temporal spans carry the
-enrichment attributes, and that every LLM span has a model and token usage.
-
-Replay-caused re-emission is only partly visible here. Spans re-emitted under
-new IDs would show up as extra rows in the tree comparison, but Phoenix stores
-span IDs under a uniqueness constraint and drops conflicting inserts, so a
-re-export that reuses the same deterministic ID is absorbed on ingest. The
-offline tests under tests/ use an in-memory exporter and a Replayer to assert
-zero re-emission directly.
+Fetches every span of the trace, rebuilds the tree, and compares it with the
+expected shape (including OpenInference span kinds), then checks that no span
+is missing its parent, that Temporal spans carry the enrichment attributes,
+and that every LLM span has a model and token usage. Phoenix deduplicates
+spans by ID on ingest, so a replay re-export under the same deterministic ID
+is invisible here; the tests under tests/ assert zero re-emission directly.
 
 Usage:
     uv run verify_trace.py --trace-id <hex trace id>
-    uv run verify_trace.py --workflow-id <workflow id>
+    uv run verify_trace.py --workflow-id <workflow id> [--expect-runs 2]
     uv run verify_trace.py --trace-id <id> --expect declined
     uv run verify_trace.py --trace-id <id> --expect-attempts classify_ticket=2
-    uv run verify_trace.py --workflow-id <id> --expect-runs 2
     uv run verify_trace.py --trace-id <id> --scenario agents
-
-Stdlib-only on purpose so it is trivially copy-out-able. Reads the same
-environment variables as the samples: PHOENIX_COLLECTOR_ENDPOINT,
-PHOENIX_API_KEY, and ARIZE_PROJECT_NAME / PHOENIX_PROJECT_NAME.
 """
 
 import argparse
 import contextlib
 import io
 import json
-import os
 import sys
 import time
-import urllib.error
 import urllib.parse
 import urllib.request
 from typing import Any, Optional
 
-DEFAULT_PHOENIX_ENDPOINT = "http://localhost:6006"
-DEFAULT_PROJECT_NAME = "temporal-ticket-triage"
+from telemetry import phoenix_base_url, phoenix_request, project_name, trace_url
 
 TEMPORAL_SPAN_PREFIXES = (
     "StartWorkflow:",
@@ -48,16 +35,18 @@ TEMPORAL_SPAN_PREFIXES = (
     "StartWorkflowUpdate:",
     "ValidateUpdate:",
     "HandleUpdate:",
-    "HandleSignal:",
-    "HandleQuery:",
-    "StartChildWorkflow:",
-    "SignalWorkflow:",
-    "QueryWorkflow:",
 )
+# The span a worker exports when a run finishes, per scenario.
+RUN_SPAN_NAMES = {
+    "ticket-triage": "RunWorkflow:TicketTriageWorkflow",
+    "agents": "temporal:executeWorkflow",
+}
+POLL_INTERVAL_SECONDS = 2
+QUIET_POLLS = 3  # consecutive polls with an unchanged span count before checking
 
-# Expected span trees as (depth, name, kind) rows; siblings sorted by name,
-# then by start time. LLM spans are normalized to "<llm>" (their name depends
-# on the API used, for example "ChatCompletion"); their kind must be LLM.
+# Expected span tree as (depth, name, kind) rows; siblings sorted by name, then
+# start time. LLM spans are normalized to "<llm>" since their name depends on
+# the API used; their kind must be LLM.
 EXPECTED_APPROVED = [
     (0, "ticket-triage", "CHAIN"),
     (1, "StartWorkflow:TicketTriageWorkflow", "CHAIN"),
@@ -75,53 +64,38 @@ EXPECTED_APPROVED = [
     (2, "HandleUpdate:approve", "CHAIN"),
     (2, "ValidateUpdate:approve", "CHAIN"),
 ]
-# The declined path never reaches draft_reply: drop its three rows explicitly.
-EXPECTED_DECLINED = [
-    (0, "ticket-triage", "CHAIN"),
-    (1, "StartWorkflow:TicketTriageWorkflow", "CHAIN"),
-    (2, "RunWorkflow:TicketTriageWorkflow", "CHAIN"),
-    (3, "triage", "CHAIN"),
-    (4, "StartActivity:classify_ticket", "CHAIN"),
-    (5, "RunActivity:classify_ticket", "CHAIN"),
-    (6, "<llm>", "LLM"),
-    (4, "StartActivity:lookup_account", "CHAIN"),
-    (5, "RunActivity:lookup_account", "CHAIN"),
-    (1, "StartWorkflowUpdate:approve", "CHAIN"),
-    (2, "HandleUpdate:approve", "CHAIN"),
-    (2, "ValidateUpdate:approve", "CHAIN"),
-]
 
 
-def _base_url() -> str:
-    return os.environ.get(
-        "PHOENIX_COLLECTOR_ENDPOINT", DEFAULT_PHOENIX_ENDPOINT
-    ).rstrip("/")
+def _without_subtree(
+    rows: list[tuple[int, str, str]], name: str
+) -> list[tuple[int, str, str]]:
+    """The rows minus the span called ``name`` and everything nested under it."""
+    kept: list[tuple[int, str, str]] = []
+    skip_below: Optional[int] = None
+    for depth, span_name, kind in rows:
+        if skip_below is not None and depth > skip_below:
+            continue
+        skip_below = depth if span_name == name else None
+        if skip_below is None:
+            kept.append((depth, span_name, kind))
+    return kept
 
 
-def _project() -> str:
-    return (
-        os.environ.get("ARIZE_PROJECT_NAME")
-        or os.environ.get("PHOENIX_PROJECT_NAME")
-        or DEFAULT_PROJECT_NAME
-    )
+# Declined tickets never reach draft_reply.
+EXPECTED_DECLINED = _without_subtree(EXPECTED_APPROVED, "StartActivity:draft_reply")
 
 
 def _api_get(path: str, params: Optional[dict[str, Any]] = None) -> Any:
-    url = f"{_base_url()}/v1{path}"
+    url = f"{phoenix_base_url()}/v1{path}"
     if params:
         url += "?" + urllib.parse.urlencode(params, doseq=True)
-    headers = {}
-    api_key = os.environ.get("PHOENIX_API_KEY")
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=15) as response:
+    with urllib.request.urlopen(phoenix_request(url), timeout=15) as response:
         return json.loads(response.read())
 
 
 def _spans(params: dict[str, Any]) -> list[dict[str, Any]]:
     """Page through GET /v1/projects/{project}/spans with the given filters."""
-    project = urllib.parse.quote(_project(), safe="")
+    project = urllib.parse.quote(project_name(), safe="")
     spans: list[dict[str, Any]] = []
     cursor: Optional[str] = None
     while True:
@@ -136,8 +110,7 @@ def _spans(params: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _flatten(attributes: dict[str, Any], prefix: str = "") -> dict[str, Any]:
-    # Phoenix returns attributes with dotted keys; nested dicts are flattened
-    # defensively so both shapes read the same.
+    # Phoenix returns dotted keys; nested dicts are flattened so both read alike.
     flat: dict[str, Any] = {}
     for key, value in attributes.items():
         name = f"{prefix}{key}"
@@ -153,13 +126,13 @@ def _attrs(span: dict[str, Any]) -> dict[str, Any]:
 
 
 def _trace_ids_for_workflow(workflow_id: str, scenario: str) -> list[str]:
-    """Trace IDs whose RunWorkflow span belongs to the workflow, newest first."""
-    name = (
-        "RunWorkflow:TicketTriageWorkflow"
-        if scenario == "ticket-triage"
-        else "temporal:executeWorkflow"
+    """Trace IDs whose run span belongs to the workflow, newest first."""
+    spans = _spans(
+        {
+            "attribute": f"temporalWorkflowID:{workflow_id}",
+            "name": RUN_SPAN_NAMES[scenario],
+        }
     )
-    spans = _spans({"attribute": f"temporalWorkflowID:{workflow_id}", "name": name})
     if not spans:
         spans = _spans({"attribute": f"session.id:{workflow_id}", "parent_id": "null"})
     spans.sort(key=lambda s: s["start_time"], reverse=True)
@@ -171,23 +144,9 @@ def _trace_ids_for_workflow(workflow_id: str, scenario: str) -> list[str]:
     return trace_ids
 
 
-POLL_INTERVAL_SECONDS = 2
-QUIET_POLLS = 3  # consecutive polls with an unchanged span count before checking
-
-
-def _run_span_name(scenario: str) -> str:
-    # The span a worker exports when a run finishes: its presence means that
-    # run completed.
-    return (
-        "RunWorkflow:TicketTriageWorkflow"
-        if scenario == "ticket-triage"
-        else "temporal:executeWorkflow"
-    )
-
-
 def _looks_complete(spans: list[dict[str, Any]], args: argparse.Namespace) -> bool:
     has_root = any(not s.get("parent_id") for s in spans)
-    runs = [s for s in spans if s["name"] == _run_span_name(args.scenario)]
+    runs = [s for s in spans if s["name"] == RUN_SPAN_NAMES[args.scenario]]
     return has_root and len(runs) >= args.expect_runs
 
 
@@ -197,14 +156,8 @@ def _poll_trace(
     """Poll until the trace looks complete, then return its spans.
 
     The starter and the worker export independently and Phoenix ingests
-    asynchronously, so spans of a finished run can keep arriving for a few
-    seconds. Three conditions must hold before the checks run: the root span
-    is present (the starter ends it last, after the workflow result), one
-    completed-run span per expected run is present (after a reset the original
-    run's spans are already there while the new run is still executing), and
-    the span count has not changed for QUIET_POLLS consecutive polls. If the
-    checks then fail, main() polls and checks again until the deadline, so a
-    span that arrives late cannot produce a false failure.
+    asynchronously, so wait for the root span, one completed-run span per
+    expected run, and a span count unchanged for QUIET_POLLS polls.
     """
     previous_count, unchanged = -1, 0
     while True:
@@ -264,25 +217,10 @@ def _expected_tree(expect: str, attempts: dict[str, int]) -> list[tuple[int, str
     return rows
 
 
-def _trace_url(trace_id: str) -> str:
-    try:
-        projects = _api_get("/projects").get("data") or []
-        for project in projects:
-            if project.get("name") == _project():
-                return f"{_base_url()}/projects/{project['id']}/traces/{trace_id}"
-    except (OSError, ValueError):
-        pass
-    return f"{_base_url()}/projects"
-
-
 def _verify_common(
-    trace_id: str,
-    spans: list[dict[str, Any]],
-    failures: list[str],
-    args: argparse.Namespace,
+    spans: list[dict[str, Any]], failures: list[str], args: argparse.Namespace
 ) -> None:
-    # Every child points at a span that is part of the trace. A missing parent
-    # means a span was exported with the wrong parent, which Arize renders as a
+    # Every child points at a span in the trace; otherwise Arize shows a
     # detached subtree.
     span_ids = {s["context"]["span_id"] for s in spans}
     orphans = [
@@ -328,13 +266,12 @@ def _verify_ticket_triage(
     args: argparse.Namespace, trace_id: str, spans: list[dict[str, Any]]
 ) -> list[str]:
     failures: list[str] = []
-    _verify_common(trace_id, spans, failures, args)
+    _verify_common(spans, failures, args)
 
     actual = _build_tree(spans)
     print(f"Trace {trace_id}: {len(spans)} spans")
     _print_tree(actual)
 
-    run_workflow_spans = [s for s in spans if s["name"].startswith("RunWorkflow:")]
     if args.expect_runs == 1:
         expected = _expected_tree(args.expect, args.expect_attempts)
         if actual != expected:
@@ -342,27 +279,21 @@ def _verify_ticket_triage(
             print("  Expected:")
             _print_tree(expected)
     else:
-        # Reset / retry experiments: several runs share one trace.
-        run_ids = {_attrs(s).get("temporalRunID") for s in run_workflow_spans}
-        if (
-            len(run_workflow_spans) != args.expect_runs
-            or len(run_ids) != args.expect_runs
-        ):
+        # After a reset, several runs share one trace and each run handles the
+        # reapplied approval update once.
+        runs = [s for s in spans if s["name"].startswith("RunWorkflow:")]
+        run_ids = {_attrs(s).get("temporalRunID") for s in runs}
+        if len(runs) != args.expect_runs or len(run_ids) != args.expect_runs:
             failures.append(
                 f"expected {args.expect_runs} RunWorkflow spans with distinct run ids, "
-                f"found {len(run_workflow_spans)} ({len(run_ids)} run ids)"
+                f"found {len(runs)} ({len(run_ids)} run ids)"
             )
-        # A reset reapplies the approval update, so each run handles it once.
         handled = [s for s in spans if s["name"] == "HandleUpdate:approve"]
         if len(handled) != args.expect_runs:
             failures.append(
                 f"expected {args.expect_runs} HandleUpdate:approve spans, "
                 f"found {len(handled)}"
             )
-    if args.expect_runs == 1 and len(run_workflow_spans) != 1:
-        failures.append(
-            f"expected exactly one RunWorkflow span, found {len(run_workflow_spans)}"
-        )
 
     # Temporal spans carry the OpenInference enrichment.
     for span in spans:
@@ -426,10 +357,9 @@ def _verify_agents(
     """Looser checks for the OpenAI Agents scenario, whose span names come from
     the Agents SDK and the OpenInference instrumentation."""
     failures: list[str] = []
-    _verify_common(trace_id, spans, failures, args)
-    actual = _build_tree(spans)
+    _verify_common(spans, failures, args)
     print(f"Trace {trace_id}: {len(spans)} spans")
-    _print_tree(actual)
+    _print_tree(_build_tree(spans))
     kinds = {str(s.get("span_kind")) for s in spans}
     for kind in ("AGENT", "LLM", "TOOL", "CHAIN"):
         if kind not in kinds:
@@ -521,7 +451,7 @@ def main() -> int:
             print(output.getvalue(), end="")
             break
         time.sleep(POLL_INTERVAL_SECONDS)
-    print(f"Phoenix: {_trace_url(trace_id)}")
+    print(f"Phoenix: {trace_url(trace_id)}")
     if failures:
         for failure in failures:
             print(f"FAIL: {failure}")

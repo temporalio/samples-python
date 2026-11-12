@@ -39,7 +39,7 @@ lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages
 test = "uv run pytest"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 
 [tool.mypy]
 ignore_missing_imports = true

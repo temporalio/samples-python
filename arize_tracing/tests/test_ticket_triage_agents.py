@@ -16,14 +16,11 @@ import uuid
 from datetime import timedelta
 from typing import Any, Optional, Sequence
 
-import opentelemetry.trace
 from agents import trace as agents_trace
 from openinference.semconv.trace import SpanAttributes
 from opentelemetry.sdk.trace import ReadableSpan
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from temporalio.client import Client
-from temporalio.contrib.opentelemetry import create_tracer_provider
 from temporalio.openai_agents import ModelActivityParameters
 from temporalio.openai_agents.testing import (
     AgentEnvironment,
@@ -32,9 +29,6 @@ from temporalio.openai_agents.testing import (
 )
 from temporalio.worker import Replayer, Worker
 
-from telemetry import (
-    OpenInferenceEnrichmentProcessor,
-)
 from ticket_triage.activities import (
     ApprovalDecision,
     Ticket,
@@ -63,15 +57,6 @@ def _model_responses() -> list[Any]:
     ]
 
 
-def _install_in_memory_exporter() -> InMemorySpanExporter:
-    exporter = InMemorySpanExporter()
-    provider = create_tracer_provider()
-    provider.add_span_processor(OpenInferenceEnrichmentProcessor())
-    provider.add_span_processor(SimpleSpanProcessor(exporter))
-    opentelemetry.trace.set_tracer_provider(provider)
-    return exporter
-
-
 def _kind(span: ReadableSpan) -> str:
     return str(dict(span.attributes or {}).get(SpanAttributes.OPENINFERENCE_SPAN_KIND))
 
@@ -94,10 +79,9 @@ def _only(spans: Sequence[ReadableSpan], name: str) -> ReadableSpan:
 
 
 async def test_agent_spans_emitted_exactly_once_under_replay_stress(
-    client: Client, reset_otel_tracer_provider: Any
+    client: Client, span_exporter: InMemorySpanExporter
 ) -> None:
-    # The provider must exist before the plugin is constructed.
-    exporter = _install_in_memory_exporter()
+    # The span_exporter fixture installs the provider before the plugin is built.
     workflow_id = f"ticket-triage-agents-test-{uuid.uuid4()}"
     task_queue = f"tq-{uuid.uuid4()}"
 
@@ -134,7 +118,7 @@ async def test_agent_spans_emitted_exactly_once_under_replay_stress(
     assert result.status == "replied"
     assert result.classification.category == "billing"
 
-    spans = exporter.get_finished_spans()
+    spans = span_exporter.get_finished_spans()
 
     # Every span has an OpenInference kind, so nothing renders as UNKNOWN.
     kinds: dict[str, set[str]] = {}
@@ -178,9 +162,8 @@ async def test_agent_spans_emitted_exactly_once_under_replay_stress(
 
     # Replaying the finished workflow's real history must emit zero new spans.
     history = await handle.fetch_history()
-    before = len(exporter.get_finished_spans())
     replayer = Replayer(
         workflows=[TicketTriageAgentsWorkflow], plugins=[env.openai_agents_plugin]
     )
     await replayer.replay_workflow(history)
-    assert len(exporter.get_finished_spans()) == before
+    assert len(span_exporter.get_finished_spans()) == len(spans)

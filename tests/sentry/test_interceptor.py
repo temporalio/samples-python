@@ -106,12 +106,27 @@ async def test_sentry_interceptor_captures_errors(
 
     # THEN
     # there should be two events: one for the failed activity and one for the failed workflow
-    assert len(transport.events) == 2, "Two events should be captured; got: " + json.dumps(
-        [
-            {k: e.get(k) for k in ("level", "logger", "message", "logentry", "exception", "transaction", "tags", "extra")}
-            for e in transport.events
-        ],
-        default=str,
+    assert len(transport.events) == 2, (
+        "Two events should be captured; got: "
+        + json.dumps(
+            [
+                {
+                    k: dict(e).get(k)
+                    for k in (
+                        "level",
+                        "logger",
+                        "message",
+                        "logentry",
+                        "exception",
+                        "transaction",
+                        "tags",
+                        "extra",
+                    )
+                }
+                for e in transport.events
+            ],
+            default=str,
+        )
     )
 
     # Check the first event - should be the activity exception

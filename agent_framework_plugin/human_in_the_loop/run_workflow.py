@@ -8,6 +8,7 @@ from temporalio.client import Client
 
 from agent_framework_plugin.human_in_the_loop.workflow import (
     ApprovalRequest,
+    Decision,
     HumanInTheLoopWorkflow,
 )
 
@@ -34,10 +35,12 @@ async def main() -> None:
 
     for request in pending:
         print(f"Approval requested: {request.tool_name}({request.arguments})")
-
-    # Send "reject" to see the agent handle a rejection.
-    outcome = await handle.execute_update(HumanInTheLoopWorkflow.decide, "approve")
-    print(f"Decision: {outcome}")
+        # Set approved=False to see the rejection path.
+        outcome = await handle.execute_update(
+            HumanInTheLoopWorkflow.decide,
+            Decision(request_id=request.request_id, approved=True),
+        )
+        print(f"Decision: {outcome}")
 
     result = await handle.result()
     print(f"Result: {result}")

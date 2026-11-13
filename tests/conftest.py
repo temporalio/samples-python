@@ -72,13 +72,8 @@ async def client(env: WorkflowEnvironment) -> Client:
 def collect_garbage_between_tests() -> Iterator[None]:
     """Run the cyclic garbage collector on the main thread after every test.
 
-    Otherwise objects a test leaves in reference cycles are collected whenever
-    an allocation crosses the collector's threshold, which can be on a workflow
-    thread in the middle of a sandboxed import. redis-py's ConnectionPool.__del__
-    runs an import, and on CPython before 3.12 an import started by a finalizer
-    while the same thread is inside importlib's module-lock acquire leaks that
-    lock (python/cpython#91351), so the next sandbox import of the same module
-    waits forever. That is what stalled the Python 3.10 CI job.
+    Otherwise there can be a bug that leads to test stalls, when using CPython
+    before 3.12 (python/cpython#91351).
     """
     yield
     gc.collect()

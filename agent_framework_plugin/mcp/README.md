@@ -38,7 +38,7 @@ The Worker spawns the server itself. The starter prints the agent's answer, and 
 
 ## Tests
 
-`uv run pytest` runs the Workflow against the plugin's scripted chat client and the real echo server, with no API key. `uv run poe lint` runs ruff and mypy.
+`uv run poe test` runs the Workflow against the plugin's scripted chat client and the real echo server, with no API key. `uv run poe lint` runs ruff and mypy.
 
 ## Files
 

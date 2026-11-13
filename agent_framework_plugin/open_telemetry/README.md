@@ -22,6 +22,8 @@ Start [Jaeger](https://www.jaegertracing.io/) to receive and show the traces. It
 docker run --rm -p 16686:16686 -p 4317:4317 jaegertracing/all-in-one:latest
 ```
 
+Without a collector the Workflow still completes; each process logs an export warning and an export error, and the starter exits a few seconds late.
+
 Then the Worker and the starter, from the repository root:
 
 ```bash

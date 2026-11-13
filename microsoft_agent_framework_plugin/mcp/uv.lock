@@ -1603,7 +1603,7 @@ wheels = [
 
 [[package]]
 name = "temporalio-mcp"
-version = "0.3.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mcp" },
@@ -1611,15 +1611,15 @@ dependencies = [
     { name = "pydantic" },
     { name = "temporalio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/46/d2/6b1a7cfc08b6554862e241526cee3ad5a91bfe14baa854b6cf20c9885781/temporalio_mcp-0.3.0.tar.gz", hash = "sha256:c42ab0ab878fb2b4105822b28b199a438c1c8c9f81051a847234eb517b4ce408", size = 17497, upload-time = "2026-11-09T20:32:26.624Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/06/81/c44d7de24ebb18feb0fdb098866f2a80c06975fc76e3d94aacc902a2f6a5/temporalio_mcp-0.4.0.tar.gz", hash = "sha256:442fee7dcb7b44e5479d61f4b704cdd1d3c4fa5644853d04a087733056846729", size = 17878, upload-time = "2026-11-13T17:34:21.839Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/26/22398c7a39f43999167e8800f1860b867b014fea3903c8d6c2109cbc5a82/temporalio_mcp-0.3.0-py3-none-any.whl", hash = "sha256:90b030e50382a246546528dcf85557b3428837dd28e6f13675fa72ade021777b", size = 21388, upload-time = "2026-11-09T20:32:25.297Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/16/a4828a00ab56e9038742c809d3d3a41d018a19b3eb720c298cfda5bd1e17/temporalio_mcp-0.4.0-py3-none-any.whl", hash = "sha256:ab8295e03f1db7a9daeb67101f9e7a1182cab520ba3f9cbb52160cdef539760a", size = 21767, upload-time = "2026-11-13T17:34:20.676Z" },
 ]
 
 [[package]]
 name = "temporalio-microsoft-agent-framework"
 version = "0.0.0"
-source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&branch=dabh%2Fagent-framework-python#8b472d211bec0d246b4f0978ea0feef75c128e55" }
+source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&branch=dabh%2Fagent-framework-python#a453fa6c799e9e8f7d1af2b918afa85e0539193c" }
 dependencies = [
     { name = "agent-framework-core" },
     { name = "opentelemetry-api" },

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from agent_framework import Agent, AgentSession
+from agent_framework import Agent, AgentSession, InMemoryHistoryProvider
 from temporalio import workflow
 from temporalio.agent_framework import TemporalChatClient
 
@@ -49,7 +49,8 @@ class ChatWorkflow:
         if self._session is None:
             return []
         # Agent Framework's in-memory history provider keeps the messages here.
-        messages = self._session.state.get("in_memory", {}).get("messages", [])
+        state = self._session.state.get(InMemoryHistoryProvider.DEFAULT_SOURCE_ID, {})
+        messages = state.get("messages", [])
         return [
             {
                 "role": str(getattr(message.role, "value", message.role)),

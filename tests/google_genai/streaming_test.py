@@ -1,5 +1,7 @@
 import uuid
+from collections.abc import AsyncGenerator
 from datetime import timedelta
+from typing import Any, cast
 
 from google.genai import types
 from temporalio.client import Client
@@ -33,17 +35,23 @@ async def test_streaming_publishes_to_workflow_stream(client: Client) -> None:
             execution_timeout=timedelta(seconds=15),
         )
 
-        # Consume the published chunk from the "gemini" topic.
+        # Consume the published chunk from the "gemini" topic. Close the
+        # subscription explicitly instead of leaving the generator to the
+        # garbage collector.
         stream = WorkflowStreamClient.create(client, wf_id)
         received: list[types.GenerateContentResponse] = []
-        async for item in stream.subscribe(
+        items = stream.subscribe(
             ["gemini"],
             from_offset=0,
             result_type=types.GenerateContentResponse,
             poll_cooldown=timedelta(milliseconds=20),
-        ):
-            received.append(item.data)
-            break  # one scripted chunk
+        )
+        try:
+            async for item in items:
+                received.append(item.data)
+                break  # one scripted chunk
+        finally:
+            await cast(AsyncGenerator[Any, None], items).aclose()
 
         await handle.signal(StreamingWorkflow.finish)
         result = await handle.result()

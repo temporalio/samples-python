@@ -30,7 +30,7 @@
 /openai_agents/           @temporalio/sdk @temporalio/ai-sdk
 /strands_plugin/          @temporalio/sdk @temporalio/ai-sdk
 /tests/agent_framework_plugin/  @temporalio/sdk @temporalio/ai-sdk
-/claude_agent_sdk_plugin/ @temporalio/sdk @temporalio/ai-sdk
+/tests/claude_agent_sdk_plugin/ @temporalio/sdk @temporalio/ai-sdk
 /tests/deepagents_plugin/ @temporalio/sdk @temporalio/ai-sdk
 /tests/google_adk_agents/ @temporalio/sdk @temporalio/ai-sdk
 /tests/google_genai/      @temporalio/sdk @temporalio/ai-sdk

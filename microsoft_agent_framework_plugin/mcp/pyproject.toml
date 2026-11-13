@@ -1,0 +1,51 @@
+[project]
+name = "temporalio-samples-microsoft-agent-framework-mcp"
+version = "0.1.0"
+description = "Temporal.io Python SDK sample: Microsoft Agent Framework with an MCP server"
+requires-python = ">=3.10"
+# The plugin declares requires-python >=3.11, as temporalio 1.36 does. On 3.10
+# these resolve to nothing and the tests are not collected, so the shared
+# standalone CI matrix stays green.
+dependencies = [
+    "temporalio-microsoft-agent-framework[mcp] ; python_version >= '3.11'",
+    "agent-framework-openai>=1.17,<2 ; python_version >= '3.11'",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0,<0.6",
+    "mypy>=1.4.1,<2",
+    "poethepoet>=0.36.0",
+    "pytest>=9.0.3,<10",
+    "pytest-asyncio>=1.3,<2",
+]
+
+[tool.uv.sources]
+# Temporary while the plugin is unreleased: remove once temporalio-microsoft-agent-framework is on PyPI.
+temporalio-microsoft-agent-framework = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/microsoft_agent_framework", branch = "dabh/agent-framework-python" }
+
+[tool.poe.tasks]
+format = [
+    { cmd = "uv run ruff check --select I --fix" },
+    { cmd = "uv run ruff format" },
+]
+lint = [
+    { cmd = "uv run ruff check --select I" },
+    { cmd = "uv run ruff format --check" },
+    { ref = "lint-types" },
+]
+lint-types = "uv run --all-groups mypy --check-untyped-defs --namespace-packages --explicit-package-bases ."
+test = "uv run pytest"
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+pythonpath = ["."]
+testpaths = ["tests"]

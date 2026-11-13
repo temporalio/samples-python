@@ -60,7 +60,6 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello update](hello/hello_update.py) - Send a request to and a response from a client to a workflow execution.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
-* [agent_framework_plugin](agent_framework_plugin) - Run Microsoft Agent Framework agents as durable Temporal Workflows (model calls, tools, MCP, approvals, streaming, Continue-As-New).
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
 * [bedrock_agentcore/strands_agent](bedrock_agentcore/strands_agent) - Run a AWS Strands Agent with Temporal Plugin on AgentCore Worker.
@@ -91,6 +90,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
 * [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.
+* [microsoft_agent_framework_plugin](microsoft_agent_framework_plugin) - Run Microsoft Agent Framework agents as durable Temporal Workflows (model calls, tools, MCP, approvals, streaming, Continue-As-New).
 * [nexus_cancel](nexus_cancel) - Fan out concurrent Nexus operations, take the first result, and cancel the rest.
 * [nexus_messaging](nexus_messaging): Demonstrates how to send signal, update and query messages through Nexus.
   This contains two samples, one sending messages to an existing workflow and a second that creates a workflow through Nexus

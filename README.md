@@ -60,6 +60,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello update](hello/hello_update.py) - Send a request to and a response from a client to a workflow execution.
 <!-- Keep this list in alphabetical order -->
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
+* [agent_framework_plugin](agent_framework_plugin) - Run Microsoft Agent Framework agents as durable Temporal Workflows (model calls, tools, MCP, approvals, streaming, Continue-As-New).
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.
 * [bedrock](bedrock) - Orchestrate a chatbot with Amazon Bedrock.
 * [bedrock_agentcore/strands_agent](bedrock_agentcore/strands_agent) - Run a AWS Strands Agent with Temporal Plugin on AgentCore Worker.

@@ -1,7 +1,8 @@
 import asyncio
+import gc
 import multiprocessing
 import sys
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Iterator
 
 import pytest
 import pytest_asyncio
@@ -65,3 +66,19 @@ async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
 @pytest_asyncio.fixture
 async def client(env: WorkflowEnvironment) -> Client:
     return env.client
+
+
+@pytest.fixture(autouse=True)
+def collect_garbage_between_tests() -> Iterator[None]:
+    """Run the cyclic garbage collector on the main thread after every test.
+
+    Otherwise objects a test leaves in reference cycles are collected whenever
+    an allocation crosses the collector's threshold, which can be on a workflow
+    thread in the middle of a sandboxed import. redis-py's ConnectionPool.__del__
+    runs an import, and on CPython before 3.12 an import started by a finalizer
+    while the same thread is inside importlib's module-lock acquire leaks that
+    lock (python/cpython#91351), so the next sandbox import of the same module
+    waits forever. That is what stalled the Python 3.10 CI job.
+    """
+    yield
+    gc.collect()

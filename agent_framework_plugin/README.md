@@ -23,7 +23,7 @@ These samples show the [Temporal plugin for Microsoft Agent Framework](https://g
 
 ## Prerequisites
 
-1. Python 3.11 or later. Agent Framework does not support 3.10, so on 3.10 the `agent-framework` dependency group resolves to nothing and the tests are not collected.
+1. Python 3.11 or later. The plugin declares `requires-python = ">=3.11"`, as Temporal Python SDK 1.36 does, so on 3.10 the `agent-framework` dependency group resolves to nothing and the tests are not collected.
 
 2. Install the dependencies from the repository root:
 

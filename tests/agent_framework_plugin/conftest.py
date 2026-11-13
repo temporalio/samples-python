@@ -2,7 +2,8 @@
 
 The plugin ships as the standalone `temporalio-agent-framework` package, which
 the `agent-framework` dependency group installs on Python >= 3.11 only, because
-Agent Framework itself needs 3.11. These test modules import
+the plugin declares `requires-python = ">=3.11"`, as Temporal Python SDK 1.36
+does. These test modules import
 `temporalio.agent_framework` at module load, which would raise `ImportError`
 during collection on 3.10 or in an environment synced without the group, and
 fail the whole session.

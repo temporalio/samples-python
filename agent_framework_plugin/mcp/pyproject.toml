@@ -3,8 +3,9 @@ name = "temporalio-samples-agent-framework-mcp"
 version = "0.1.0"
 description = "Temporal.io Python SDK sample: Microsoft Agent Framework with an MCP server"
 requires-python = ">=3.10"
-# Agent Framework needs Python 3.11. On 3.10 these resolve to nothing and the
-# tests are not collected, so the shared standalone CI matrix stays green.
+# The plugin declares requires-python >=3.11, as temporalio 1.36 does. On 3.10
+# these resolve to nothing and the tests are not collected, so the shared
+# standalone CI matrix stays green.
 dependencies = [
     "temporalio-agent-framework[mcp] ; python_version >= '3.11'",
     "agent-framework-openai>=1.17,<2 ; python_version >= '3.11'",

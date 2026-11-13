@@ -1619,9 +1619,10 @@ wheels = [
 [[package]]
 name = "temporalio-microsoft-agent-framework"
 version = "0.0.0"
-source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&branch=dabh%2Fagent-framework-python#d374e26c01c907ae08bdceccef346b42d3fd3dec" }
+source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&branch=dabh%2Fagent-framework-python#8b472d211bec0d246b4f0978ea0feef75c128e55" }
 dependencies = [
     { name = "agent-framework-core" },
+    { name = "opentelemetry-api" },
     { name = "pydantic" },
     { name = "temporalio" },
 ]

@@ -29,11 +29,15 @@ class ToolRequest:
 CONTINUE = "Continue from where you left off."
 
 
+def call_key(tool_name: str, tool_input: dict[str, Any]) -> str:
+    """The key a decision is remembered under: the same call asks the same question."""
+    return json.dumps([tool_name, tool_input], sort_keys=True)
+
+
 @workflow.defn
 class HumanInTheLoopWorkflow:
     def __init__(self) -> None:
         self.pending: ToolRequest | None = None
-        self.approved: bool | None = None
         self.decisions: dict[str, bool] = {}
 
     @workflow.run
@@ -98,15 +102,13 @@ class HumanInTheLoopWorkflow:
         self, tool_name: str, tool_input: dict[str, Any], context: ToolPermissionContext
     ) -> PermissionResult:
         # A turn redone after a Worker restart asks again, so reuse the decision.
-        call = json.dumps([tool_name, tool_input], sort_keys=True)
+        call = call_key(tool_name, tool_input)
         if call not in self.decisions:
             self.pending = ToolRequest(context.tool_use_id or "", tool_name, tool_input)
             try:
-                await workflow.wait_condition(lambda: self.approved is not None)
-                self.decisions[call] = self.approved is True
+                await workflow.wait_condition(lambda: call in self.decisions)
             finally:
                 self.pending = None
-                self.approved = None
         if self.decisions[call]:
             return PermissionResultAllow()
         return PermissionResultDeny(message="A person denied this tool call")
@@ -120,11 +122,21 @@ class HumanInTheLoopWorkflow:
     # @@@SNIPSTART python-claude-agent-sdk-human-in-the-loop-decision
     @workflow.update
     def decide(self, approved: bool) -> None:
-        self.approved = approved
+        # Remember the decision here, not after the wait in ask_human. That wait
+        # is cancelled when Claude Code's connection is lost, and the turn
+        # redone after the restart must find the decision already recorded.
+        assert self.pending is not None
+        self.decisions[call_key(self.pending.tool_name, self.pending.tool_input)] = (
+            approved
+        )
 
     # @@@SNIPEND
 
     @decide.validator
     def validate_decide(self, approved: bool) -> None:
-        if self.pending is None or self.approved is not None:
+        if (
+            self.pending is None
+            or call_key(self.pending.tool_name, self.pending.tool_input)
+            in self.decisions
+        ):
             raise ValueError("No tool call is waiting for a decision")

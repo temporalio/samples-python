@@ -103,7 +103,9 @@ class HumanInTheLoopWorkflow:
                 item.request_id: item for item in map(approval_request, requests)
             }
             await workflow.wait_condition(
-                lambda: all(id in self._decisions for id in self._pending)
+                lambda: all(
+                    request_id in self._decisions for request_id in self._pending
+                )
             )
             replies = [
                 request.to_function_approval_response(self._decisions[request.id or ""])

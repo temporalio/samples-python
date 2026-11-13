@@ -5,6 +5,10 @@ When Temporal suggests Continue-As-New, the Workflow lets in-flight Updates
 finish and hands the serialized session to a fresh run. ``session.to_dict()``
 carries the transcript and Agent Framework's own session state across the
 boundary; the ``Agent`` object does not cross and is built again in the new run.
+Nothing waits in Workflow fields at the handoff: a ``turn`` is an Update, so it
+completes in the run that accepted it, ``workflow.all_handlers_finished`` lets
+an accepted turn finish before the handoff, and an ``end_chat`` that arrives
+during a turn ends the chat after that turn.
 """
 
 # @@@SNIPSTART python-microsoft-agent-framework-continue-as-new-workflow

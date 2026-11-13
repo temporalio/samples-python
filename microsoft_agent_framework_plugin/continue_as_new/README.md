@@ -2,7 +2,7 @@
 
 A chat that runs as long as you like. Each user turn is an Update, so the caller gets the reply from the same call. History grows with every turn, and `workflow.info().is_continue_as_new_suggested()` turns `True` once the Temporal Service decides it is large enough. The Workflow waits on that or on the `end_chat` Signal, lets in-flight Updates finish with `workflow.all_handlers_finished`, and hands `session.to_dict()` to a fresh run, which restores it with `AgentSession.from_dict`.
 
-What crosses the boundary: the serialized session, which holds the transcript, any pending approval state and the provider's conversation id. What does not: the `Agent` object, provider connections and spans; the new run builds the agent again.
+What crosses the boundary: the serialized session, which holds the transcript, any pending approval state and the provider's conversation id. What does not: the `Agent` object, provider connections and spans; the new run builds the agent again. Nothing waits in Workflow fields at the handoff: a `turn` is an Update, so it completes in the run that accepted it and returns its reply from there, `workflow.all_handlers_finished` lets an accepted turn finish before the handoff, and an `end_chat` that arrives during a turn ends the chat after that turn instead of being lost.
 
 ## What this sample demonstrates
 

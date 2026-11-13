@@ -16,6 +16,7 @@ from claude_agent_sdk import (
 )
 from temporalio import workflow
 from temporalio.claude_agent_sdk import TemporalTransport
+from temporalio.exceptions import ApplicationError
 
 
 @dataclass
@@ -27,11 +28,6 @@ class ToolRequest:
 
 # The text Claude Code sends itself to continue an interrupted turn.
 CONTINUE = "Continue from where you left off."
-
-
-def call_key(tool_name: str, tool_input: dict[str, Any]) -> str:
-    """The key a decision is remembered under: the same call asks the same question."""
-    return json.dumps([tool_name, tool_input], sort_keys=True)
 
 
 @workflow.defn
@@ -98,11 +94,16 @@ class HumanInTheLoopWorkflow:
                 pass
 
     # @@@SNIPSTART python-claude-agent-sdk-human-in-the-loop-approval
+    @staticmethod
+    def call_key(tool_name: str, tool_input: dict[str, Any]) -> str:
+        """The key a decision is remembered under: the same call asks the same question."""
+        return json.dumps([tool_name, tool_input], sort_keys=True)
+
     async def ask_human(
         self, tool_name: str, tool_input: dict[str, Any], context: ToolPermissionContext
     ) -> PermissionResult:
         # A turn redone after a Worker restart asks again, so reuse the decision.
-        call = call_key(tool_name, tool_input)
+        call = self.call_key(tool_name, tool_input)
         if call not in self.decisions:
             self.pending = ToolRequest(context.tool_use_id or "", tool_name, tool_input)
             try:
@@ -122,13 +123,14 @@ class HumanInTheLoopWorkflow:
     # @@@SNIPSTART python-claude-agent-sdk-human-in-the-loop-decision
     @workflow.update
     def decide(self, approved: bool) -> None:
+        if self.pending is None:
+            # Fails this Update only; an assertion would fail the Workflow Task.
+            raise ApplicationError("No tool call is waiting for a decision")
         # Remember the decision here, not after the wait in ask_human. That wait
         # is cancelled when Claude Code's connection is lost, and the turn
         # redone after the restart must find the decision already recorded.
-        assert self.pending is not None
-        self.decisions[call_key(self.pending.tool_name, self.pending.tool_input)] = (
-            approved
-        )
+        call = self.call_key(self.pending.tool_name, self.pending.tool_input)
+        self.decisions[call] = approved
 
     # @@@SNIPEND
 
@@ -136,7 +138,7 @@ class HumanInTheLoopWorkflow:
     def validate_decide(self, approved: bool) -> None:
         if (
             self.pending is None
-            or call_key(self.pending.tool_name, self.pending.tool_input)
+            or self.call_key(self.pending.tool_name, self.pending.tool_input)
             in self.decisions
         ):
             raise ValueError("No tool call is waiting for a decision")

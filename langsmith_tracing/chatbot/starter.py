@@ -27,7 +27,7 @@ async def main():
         add_temporal_runs=add_temporal_runs,
     )
 
-    client = await Client.connect(
+    client = await Client.connect(  # type: ignore[misc]
         **config,
         data_converter=pydantic_data_converter,
         plugins=[plugin],

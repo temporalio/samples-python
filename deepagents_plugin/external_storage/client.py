@@ -62,4 +62,4 @@ async def connect_client(
                 ]
             ),
         )
-        yield await Client.connect(**config, plugins=[plugin])
+        yield await Client.connect(**config, plugins=[plugin])  # type: ignore[misc]

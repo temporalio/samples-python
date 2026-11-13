@@ -33,7 +33,7 @@ async def main() -> str:
         add_temporal_runs=add_temporal_runs,
     )
 
-    client = await Client.connect(
+    client = await Client.connect(  # type: ignore[misc]
         **config,
         plugins=[plugin],
     )

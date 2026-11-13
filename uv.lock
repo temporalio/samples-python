@@ -4987,7 +4987,7 @@ wheels = [
 [[package]]
 name = "temporalio-microsoft-agent-framework"
 version = "0.0.0"
-source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&branch=dabh%2Fagent-framework-python#d20bc0c83d7e0009842ce1a3368d789b08767dd6" }
+source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&branch=dabh%2Fagent-framework-python#d374e26c01c907ae08bdceccef346b42d3fd3dec" }
 dependencies = [
     { name = "agent-framework-core" },
     { name = "pydantic" },

@@ -96,8 +96,9 @@ uv run run_workflow.py
 The tests run every sample against the plugin's scripted `FakeChatClient` and a local dev server, with no API key:
 
 ```bash
-uv run --group agent-framework pytest tests/agent_framework_plugin
-cd agent_framework_plugin/mcp && uv run pytest
+uv run poe test tests/agent_framework_plugin
+uv run poe test tests/agent_framework_plugin --workflow-environment time-skipping
+cd agent_framework_plugin/mcp && uv run poe test
 ```
 
 ## Related

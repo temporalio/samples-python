@@ -1,9 +1,10 @@
 """Stream model output to a subscriber outside the Workflow.
 
-``TemporalChatClient(streaming_topic="events")`` makes the model Activity
-publish every update to the ``events`` topic of a ``WorkflowStream`` hosted on
-the Workflow, batched every 100 milliseconds. The Workflow still gets the whole
-response, so the result is the same as without streaming.
+``TemporalChatClient(streaming_topic="events")`` makes every model call of that
+client run as the streaming Activity, which publishes each update to the
+``events`` topic of a ``WorkflowStream`` hosted on the Workflow, batched every
+100 milliseconds. The Workflow still gets the whole response, so the result is
+the same as without a topic.
 """
 
 # @@@SNIPSTART python-microsoft-agent-framework-streaming-workflow
@@ -33,8 +34,9 @@ class StreamingWorkflow:
             ),
             instructions="You are a concise assistant.",
         )
-        # stream=True selects the streaming Activity; the final response is the same.
-        response = await agent.run(prompt, stream=True).get_final_response()
+        # With a topic set, this call runs as the streaming Activity and
+        # publishes its updates, with or without stream=True.
+        response = await agent.run(prompt)
         return response.text
 
 

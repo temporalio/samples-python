@@ -67,7 +67,7 @@ async def test_streaming(client: Client) -> None:
     # ...and the same text reached the subscriber in more than one update.
     assert len(chunks) > 1
     assert "".join(chunks) == expected
-    # stream=True ran the streaming Activity, not the plain one.
+    # The topic routed the call to the streaming Activity, not the plain one.
     counts = await count_scheduled_activities(handle)
     assert counts == {INVOKE_MODEL_STREAMING: 1}
     assert counts[INVOKE_MODEL] == 0

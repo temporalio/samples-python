@@ -1,11 +1,11 @@
 # Streaming
 
-Model output streamed to a subscriber outside the Workflow. `TemporalChatClient(streaming_topic="events")` makes a streamed call run as the `microsoft_agent_framework.invoke_model_streaming` Activity, which publishes every `ChatResponseUpdate` to the `events` topic of a `WorkflowStream` hosted on the Workflow, batched every 100 milliseconds (`streaming_batch_interval`). The Workflow still gets the whole response, so the durable result is the same as without streaming.
+Model output streamed to a subscriber outside the Workflow. `TemporalChatClient(streaming_topic="events")` makes every model call of that client run as the `microsoft_agent_framework.invoke_model_streaming` Activity, with or without `stream=True`. The Activity publishes every `ChatResponseUpdate` to the `events` topic of a `WorkflowStream` hosted on the Workflow, in batches every 100 milliseconds (`streaming_batch_interval`) or every 256 updates, whichever comes first. The Workflow still gets the whole response, so the durable result is the same as without a topic.
 
 ## What this sample demonstrates
 
 - A `WorkflowStream()` hosted on the Workflow
-- `agent.run(prompt, stream=True)` with `streaming_topic` set; without `stream=True` the call runs as the plain model Activity and publishes nothing
+- `streaming_topic` on the client: a plain `agent.run(prompt)` then runs as the streaming Activity and publishes; `stream=True` still works and lets the Workflow read the updates too
 - `WorkflowStreamClient.subscribe(["events"])` in the starter, decoding each item with `ChatResponseUpdate.from_dict`
 
 ## Running the sample

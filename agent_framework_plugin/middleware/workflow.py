@@ -19,9 +19,6 @@ from agent_framework import (
 from temporalio import workflow
 from temporalio.agent_framework import TemporalChatClient
 
-ALLOWED_PREFIX = "/tmp/"
-REMINDER = "Answer in one short sentence."
-
 
 @tool
 def delete_file(path: str) -> str:
@@ -30,6 +27,10 @@ def delete_file(path: str) -> str:
 
 
 # @@@SNIPSTART python-agent-framework-middleware-middleware
+ALLOWED_PREFIX = "/tmp/"
+REMINDER = "Answer in one short sentence."
+
+
 class BlockOutsideTmp(FunctionMiddleware):
     """Refuses delete_file calls outside /tmp without running the tool."""
 

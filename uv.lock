@@ -4987,7 +4987,7 @@ wheels = [
 [[package]]
 name = "temporalio-microsoft-agent-framework"
 version = "0.0.0"
-source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&branch=dabh%2Fagent-framework-python#54998df812f930fffccb97d58d00ee74cdb65f70" }
+source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&rev=e7303bbc65c4507106fb69f1cca1e978d88b6955#e7303bbc65c4507106fb69f1cca1e978d88b6955" }
 dependencies = [
     { name = "agent-framework-core" },
     { name = "opentelemetry-api" },
@@ -5247,7 +5247,7 @@ microsoft-agent-framework = [
     { name = "agent-framework-openai", marker = "python_full_version >= '3.11'", specifier = ">=1.17,<2" },
     { name = "opentelemetry-exporter-otlp-proto-grpc", marker = "python_full_version >= '3.11'", specifier = ">=1.30.0,<2" },
     { name = "temporalio", extras = ["opentelemetry"], marker = "python_full_version >= '3.11'", specifier = ">=1.36.0,<2" },
-    { name = "temporalio-microsoft-agent-framework", marker = "python_full_version >= '3.11'", git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&branch=dabh%2Fagent-framework-python" },
+    { name = "temporalio-microsoft-agent-framework", marker = "python_full_version >= '3.11'", git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&rev=e7303bbc65c4507106fb69f1cca1e978d88b6955" },
 ]
 nexus = [{ name = "nexus-rpc", specifier = ">=1.1.0,<2" }]
 open-telemetry = [

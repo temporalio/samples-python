@@ -22,7 +22,7 @@ dev = [
 
 [tool.uv.sources]
 # Temporary while the plugin is unreleased: remove once temporalio-microsoft-agent-framework is on PyPI.
-temporalio-microsoft-agent-framework = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/microsoft_agent_framework", branch = "dabh/agent-framework-python" }
+temporalio-microsoft-agent-framework = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/microsoft_agent_framework", rev = "e7303bbc65c4507106fb69f1cca1e978d88b6955" }
 
 [tool.poe.tasks]
 format = [

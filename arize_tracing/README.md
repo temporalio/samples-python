@@ -168,10 +168,14 @@ temporal workflow reset --workflow-id <workflow id> --type FirstWorkflowTask --r
 uv run verify_trace.py --workflow-id <workflow id> --expect-runs 2
 ```
 
-The reset case needs temporalio 1.36.0 or later. Earlier releases ran the
-reapplied update before reseeding the new run, so its `HandleUpdate` span
-reused the original `RunWorkflow` span's ID
-([temporalio/sdk-python#2081](https://github.com/temporalio/sdk-python/pull/2081)).
+The reset case needs temporalio 1.36.0 exactly, which is why `pyproject.toml`
+pins it. Earlier releases ran the reapplied update before reseeding the new
+run, so its `HandleUpdate` span reused the original `RunWorkflow` span's ID;
+1.36.0 applies the whole Workflow Task as one batch
+([temporalio/sdk-python#2081](https://github.com/temporalio/sdk-python/pull/2081)),
+and 1.36.1 turns that off by default again
+([temporalio/sdk-python#2121](https://github.com/temporalio/sdk-python/pull/2121))
+until its cancellation semantics are settled.
 
 ![Activity retry attempts in Phoenix](phoenix-retry-attempts.png)
 

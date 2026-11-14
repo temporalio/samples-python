@@ -4,8 +4,8 @@ requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15'",
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
     "python_full_version == '3.14.*' and sys_platform != 'emscripten'",
+    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
     "(python_full_version < '3.14' and sys_platform != 'emscripten') or (python_full_version < '3.12' and sys_platform == 'emscripten')",
 ]
 
@@ -1671,7 +1671,7 @@ requires-dist = [
     { name = "openinference-instrumentation-openai", specifier = ">=0.1.52" },
     { name = "openinference-semantic-conventions", specifier = ">=0.1.30" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.30.0,<2" },
-    { name = "temporalio", extras = ["opentelemetry"], specifier = ">=1.36.0,<2" },
+    { name = "temporalio", extras = ["opentelemetry"], specifier = "==1.36.0" },
     { name = "temporalio-openai-agents", extras = ["openinference"], specifier = ">=1.1.0" },
 ]
 

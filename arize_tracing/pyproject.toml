@@ -5,9 +5,8 @@ requires-python = ">=3.11"
 dependencies = [
     # Pinned: 1.36.0 applies workflow activation jobs as a single batch, which
     # keeps a reset's reapplied update from reusing a span ID of the original
-    # run. 1.36.1 turns that off by default again (temporalio/sdk-python#2121)
-    # while its cancellation semantics are settled (temporalio/sdk-python#2124).
-    # Lift the pin once single-batch processing is the default again.
+    # run. 1.36.1 (temporarily?) undoes that, so we're pinning to 1.36.0
+    # explicitly until a future release resolves this issue one way or another.
     "temporalio[opentelemetry]==1.36.0",
     # 1.1.0 fixes span parenting when one worker runs both workflows and
     # activities; its openinference extra brings the Agents SDK instrumentation.

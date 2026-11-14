@@ -3,10 +3,9 @@ name = "temporalio-samples-arize-tracing"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
-    # Pinned: 1.36.0 applies workflow activation jobs as a single batch, which
-    # keeps a reset's reapplied update from reusing a span ID of the original
-    # run. 1.36.1 (temporarily?) undoes that, so we're pinning to 1.36.0
-    # explicitly until a future release resolves this issue one way or another.
+    # 1.36.0 applies workflow activation jobs as a single batch, which keeps a
+    # reset's reapplied update from reusing a span ID of the original run.
+    # Later releases do not do this by default (temporalio/sdk-python#2121).
     "temporalio[opentelemetry]==1.36.0",
     # 1.1.0 fixes span parenting when one worker runs both workflows and
     # activities; its openinference extra brings the Agents SDK instrumentation.

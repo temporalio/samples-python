@@ -1,7 +1,8 @@
 import asyncio
+import gc
 import multiprocessing
 import sys
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Iterator
 
 import pytest
 import pytest_asyncio
@@ -65,3 +66,14 @@ async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
 @pytest_asyncio.fixture
 async def client(env: WorkflowEnvironment) -> Client:
     return env.client
+
+
+@pytest.fixture(autouse=True)
+def collect_garbage_between_tests() -> Iterator[None]:
+    """Run the cyclic garbage collector on the main thread after every test.
+
+    Otherwise there can be a bug that leads to test stalls, when using CPython
+    before 3.12 (python/cpython#91351).
+    """
+    yield
+    gc.collect()

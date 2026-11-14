@@ -7,13 +7,30 @@ import tempfile
 import threading
 import uuid
 from collections.abc import Callable, Iterator, Mapping
+from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Union
 
 # Outlives the Worker, so a restarted Worker finds the sessions it can resume.
 OFFLINE_CONFIG_DIR = os.path.join(tempfile.gettempdir(), "claude-agent-sdk-samples")
 
-Answer = Union[str, list[str], dict[str, Any], Callable[[dict[str, Any]], Any]]
+
+@dataclass(frozen=True)
+class ApiError:
+    """An error response from the Anthropic API, such as a rejected API key."""
+
+    status: int
+    type: str
+    message: str
+
+    def body(self) -> bytes:
+        error = {"type": self.type, "message": self.message}
+        return json.dumps({"type": "error", "error": error}).encode()
+
+
+Answer = Union[
+    str, list[str], dict[str, Any], ApiError, Callable[[dict[str, Any]], Any]
+]
 
 
 def tool_use(id: str, name: str, **tool_input: Any) -> dict[str, Any]:
@@ -47,10 +64,16 @@ class ScriptedApi:
         class Handler(BaseHTTPRequestHandler):
             def do_POST(self) -> None:
                 body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-                data = stream(api.answer(body), body.get("model", "claude"))
+                answer = api.answer(body)
+                if isinstance(answer, ApiError):
+                    status, content_type = answer.status, "application/json"
+                    data = answer.body()
+                else:
+                    status, content_type = 200, "text/event-stream"
+                    data = stream(answer, body.get("model", "claude"))
                 with contextlib.suppress(OSError):
-                    self.send_response(200)
-                    self.send_header("Content-Type", "text/event-stream")
+                    self.send_response(status)
+                    self.send_header("Content-Type", content_type)
                     self.send_header("Content-Length", str(len(data)))
                     self.end_headers()
                     self.wfile.write(data)
@@ -69,6 +92,8 @@ def scripted_api(answers: Mapping[str, Answer]) -> Iterator[ScriptedApi]:
         "ANTHROPIC_API_KEY": "offline",
         "ANTHROPIC_BASE_URL": api.url,
         "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+        # The scripted API answers at once, so an error it returns is final.
+        "CLAUDE_CODE_MAX_RETRIES": "0",
         "CLAUDE_CONFIG_DIR": OFFLINE_CONFIG_DIR,
     }
     inherited = [

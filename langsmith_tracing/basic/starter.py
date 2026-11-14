@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+from typing import Any
 
 from langsmith import traceable
 from temporalio.client import Client
@@ -25,7 +26,7 @@ PROJECT_NAME = "langsmith-basic"
 async def main() -> str:
     add_temporal_runs = "--add-temporal-runs" in sys.argv
 
-    config = ClientConfig.load_client_connect_config()
+    config: dict[str, Any] = dict(ClientConfig.load_client_connect_config())
     config.setdefault("target_host", "localhost:7233")
 
     plugin = LangSmithPlugin(
@@ -33,10 +34,8 @@ async def main() -> str:
         add_temporal_runs=add_temporal_runs,
     )
 
-    client = await Client.connect(
-        **config,
-        plugins=[plugin],
-    )
+    config["plugins"] = [*config.get("plugins", []), plugin]
+    client = await Client.connect(**config)
 
     result = await client.execute_workflow(
         BasicLLMWorkflow.run,

@@ -78,6 +78,16 @@ langgraph = [
     "temporalio-langsmith>=0.1.0",
 ]
 litellm = ["litellm>=1.85.0,<2"]
+microsoft-agent-framework = [
+    # No lower bound while [tool.uv.sources] pins the unreleased plugin; set
+    # ">=0.1.0" when that entry goes. The mcp sample is its own uv project
+    # (microsoft_agent_framework_plugin/mcp) because it needs MCP SDK v2 and other
+    # groups here still pin v1.
+    "temporalio-microsoft-agent-framework ; python_version >= '3.11'",
+    "agent-framework-openai>=1.17,<2 ; python_version >= '3.11'",
+    "temporalio[opentelemetry]>=1.36.0,<2 ; python_version >= '3.11'",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.30.0,<2 ; python_version >= '3.11'",
+]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
     "temporalio[opentelemetry]",
@@ -112,6 +122,10 @@ constraint-dependencies = [
     # install on the Python 3.14 CI jobs.
     "yarl!=1.24.0",
 ]
+
+[tool.uv.sources]
+# Temporary while the plugin is unreleased: remove once temporalio-microsoft-agent-framework is on PyPI.
+temporalio-microsoft-agent-framework = { git = "https://github.com/temporalio/ai-integrations", subdirectory = "python/microsoft_agent_framework", rev = "e7303bbc65c4507106fb69f1cca1e978d88b6955" }
 
 [tool.setuptools.packages.find]
 exclude = ["lambda_worker*"]

@@ -12,9 +12,8 @@ defaults, and `worker.py` opts into `add_temporal_spans=True`.
 to `<instance_id>@<revision>` from Cloud Run instance metadata, so each container
 is individually identifiable as a poller.
 
-`CloudRunIdPlugin` is unreleased, so `pyproject.toml` pins `temporalio` to the
-SDK commit that adds it (a git source, which also builds inside the container);
-drop the `[tool.uv.sources]` override once it ships on PyPI.
+`CloudRunIdPlugin` is included in Temporal Python SDK 1.36.0. This sample uses
+the published PyPI release and requires Python 3.11 or newer.
 
 Prerequisites: a Temporal Cloud namespace and API key; a Google Cloud project
 with billing and an authenticated `gcloud` CLI; `envsubst` (`gettext` package).

@@ -29,17 +29,16 @@ async def main() -> None:
 
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
-    client = await Client.connect(
-        **config,
-        plugins=[
-            OpenAIAgentsPlugin(
-                model_params=ModelActivityParameters(
-                    start_to_close_timeout=timedelta(seconds=60)
-                ),
-                mcp_servers={MCP_SERVER_NAME: streamable_http_server},
+    config["plugins"] = [
+        *config.get("plugins", []),
+        OpenAIAgentsPlugin(
+            model_params=ModelActivityParameters(
+                start_to_close_timeout=timedelta(seconds=60)
             ),
-        ],
-    )
+            mcp_servers={MCP_SERVER_NAME: streamable_http_server},
+        ),
+    ]
+    client = await Client.connect(**config)
 
     worker = Worker(
         client,

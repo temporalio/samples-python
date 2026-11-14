@@ -52,7 +52,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.10", "3.14"]
+        python: ["3.11", "3.14"]
         project: ${{ fromJSON(needs.detect-standalone-changes.outputs.projects) }}
         exclude:
           # temporalio 1.36.0, which arize_tracing needs, requires Python 3.11+
@@ -103,7 +103,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python: ["3.10", "3.14"]
+        python: ["3.11", "3.14"]
         os: [ubuntu-latest, macos-intel, macos-arm, windows-latest]
         include:
           - os: macos-intel

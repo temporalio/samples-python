@@ -1,9 +1,10 @@
 [project]
 name = "temporalio-samples-openai-agents-mcp-v2"
 version = "0.1.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "requests>=2.32.0,<3",
+    "temporalio>=1.36.0,<2",
     "temporalio-openai-agents[mcp]>=1.0.0",
 ]
 

@@ -27,10 +27,10 @@ async def main():
         add_temporal_runs=add_temporal_runs,
     )
 
+    config["plugins"] = [*config.get("plugins", []), plugin]
     client = await Client.connect(
         **config,
         data_converter=pydantic_data_converter,
-        plugins=[plugin],
     )
 
     wf_id = f"langsmith-chatbot-{uuid.uuid4().hex[:8]}"

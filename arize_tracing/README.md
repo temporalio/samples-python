@@ -168,7 +168,7 @@ temporal workflow reset --workflow-id <workflow id> --type FirstWorkflowTask --r
 uv run verify_trace.py --workflow-id <workflow id> --expect-runs 2
 ```
 
-The reset case currently needs temporalio 1.36.0 exactly (see PR #420).
+The reset case needs temporalio 1.36.0 exactly (see PR #420).
 
 ![Activity retry attempts in Phoenix](phoenix-retry-attempts.png)
 

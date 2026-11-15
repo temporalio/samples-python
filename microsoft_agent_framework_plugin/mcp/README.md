@@ -14,7 +14,7 @@ This sample is its own uv project. The plugin's MCP support needs MCP Python SDK
 ## What this sample demonstrates
 
 - `MicrosoftAgentFrameworkPlugin(mcp_clients=...)` with a factory that returns an `mcp.Client`
-- `TemporalMCPToolProvider` as a context provider, with a 30-second start-to-close timeout for its list and call Activities
+- `TemporalMCPToolProvider` as a context provider, with a 30-second start-to-close timeout for its list and call Activities and the plugin's default 10-second heartbeat timeout; the Activities heartbeat every 5 seconds while they run
 - The model sees the server's tool schema; the server's connection never leaves the Worker
 
 ## Running the sample

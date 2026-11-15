@@ -1,0 +1,464 @@
+"""Verify a ticket-triage trace in Arize Phoenix through its REST API.
+
+Fetches every span of the trace, rebuilds the tree, and compares it with the
+expected shape (including OpenInference span kinds), then checks that no span
+is missing its parent, that Temporal spans carry the enrichment attributes,
+and that every LLM span has a model and token usage. Phoenix deduplicates
+spans by ID on ingest, so a replay re-export under the same deterministic ID
+is invisible here; the tests under tests/ assert zero re-emission directly.
+
+Usage:
+    uv run verify_trace.py --trace-id <hex trace id>
+    uv run verify_trace.py --workflow-id <workflow id> [--expect-runs 2]
+    uv run verify_trace.py --trace-id <id> --expect declined
+    uv run verify_trace.py --trace-id <id> --expect-attempts classify_ticket=2
+    uv run verify_trace.py --trace-id <id> --scenario agents
+"""
+
+import argparse
+import contextlib
+import io
+import json
+import sys
+import time
+import urllib.parse
+import urllib.request
+from typing import Any, Optional
+
+from telemetry import phoenix_base_url, phoenix_request, project_name, trace_url
+
+TEMPORAL_SPAN_PREFIXES = (
+    "StartWorkflow:",
+    "RunWorkflow:",
+    "StartActivity:",
+    "RunActivity:",
+    "StartWorkflowUpdate:",
+    "ValidateUpdate:",
+    "HandleUpdate:",
+)
+# The span a worker exports when a run finishes, per scenario.
+RUN_SPAN_NAMES = {
+    "ticket-triage": "RunWorkflow:TicketTriageWorkflow",
+    "agents": "temporal:executeWorkflow",
+}
+POLL_INTERVAL_SECONDS = 2
+QUIET_POLLS = 3  # consecutive polls with an unchanged span count before checking
+
+# Expected span tree as (depth, name, kind) rows; siblings sorted by name, then
+# start time. LLM spans are normalized to "<llm>" since their name depends on
+# the API used; their kind must be LLM.
+EXPECTED_APPROVED = [
+    (0, "ticket-triage", "CHAIN"),
+    (1, "StartWorkflow:TicketTriageWorkflow", "CHAIN"),
+    (2, "RunWorkflow:TicketTriageWorkflow", "CHAIN"),
+    (3, "StartActivity:draft_reply", "CHAIN"),
+    (4, "RunActivity:draft_reply", "CHAIN"),
+    (5, "<llm>", "LLM"),
+    (3, "triage", "CHAIN"),
+    (4, "StartActivity:classify_ticket", "CHAIN"),
+    (5, "RunActivity:classify_ticket", "CHAIN"),
+    (6, "<llm>", "LLM"),
+    (4, "StartActivity:lookup_account", "CHAIN"),
+    (5, "RunActivity:lookup_account", "CHAIN"),
+    (1, "StartWorkflowUpdate:approve", "CHAIN"),
+    (2, "HandleUpdate:approve", "CHAIN"),
+    (2, "ValidateUpdate:approve", "CHAIN"),
+]
+
+
+def _without_subtree(
+    rows: list[tuple[int, str, str]], name: str
+) -> list[tuple[int, str, str]]:
+    """The rows minus the span called ``name`` and everything nested under it."""
+    kept: list[tuple[int, str, str]] = []
+    skip_below: Optional[int] = None
+    for depth, span_name, kind in rows:
+        if skip_below is not None and depth > skip_below:
+            continue
+        skip_below = depth if span_name == name else None
+        if skip_below is None:
+            kept.append((depth, span_name, kind))
+    return kept
+
+
+# Declined tickets never reach draft_reply.
+EXPECTED_DECLINED = _without_subtree(EXPECTED_APPROVED, "StartActivity:draft_reply")
+
+
+def _api_get(path: str, params: Optional[dict[str, Any]] = None) -> Any:
+    url = f"{phoenix_base_url()}/v1{path}"
+    if params:
+        url += "?" + urllib.parse.urlencode(params, doseq=True)
+    with urllib.request.urlopen(phoenix_request(url), timeout=15) as response:
+        return json.loads(response.read())
+
+
+def _spans(params: dict[str, Any]) -> list[dict[str, Any]]:
+    """Page through GET /v1/projects/{project}/spans with the given filters."""
+    project = urllib.parse.quote(project_name(), safe="")
+    spans: list[dict[str, Any]] = []
+    cursor: Optional[str] = None
+    while True:
+        query = dict(params, limit=100)
+        if cursor:
+            query["cursor"] = cursor
+        page = _api_get(f"/projects/{project}/spans", query)
+        spans.extend(page.get("data") or [])
+        cursor = page.get("next_cursor")
+        if not cursor:
+            return spans
+
+
+def _flatten(attributes: dict[str, Any], prefix: str = "") -> dict[str, Any]:
+    # Phoenix returns dotted keys; nested dicts are flattened so both read alike.
+    flat: dict[str, Any] = {}
+    for key, value in attributes.items():
+        name = f"{prefix}{key}"
+        if isinstance(value, dict):
+            flat.update(_flatten(value, f"{name}."))
+        else:
+            flat[name] = value
+    return flat
+
+
+def _attrs(span: dict[str, Any]) -> dict[str, Any]:
+    return _flatten(span.get("attributes") or {})
+
+
+def _trace_ids_for_workflow(workflow_id: str, scenario: str) -> list[str]:
+    """Trace IDs whose run span belongs to the workflow, newest first."""
+    spans = _spans(
+        {
+            "attribute": f"temporalWorkflowID:{workflow_id}",
+            "name": RUN_SPAN_NAMES[scenario],
+        }
+    )
+    if not spans:
+        spans = _spans({"attribute": f"session.id:{workflow_id}", "parent_id": "null"})
+    spans.sort(key=lambda s: s["start_time"], reverse=True)
+    trace_ids: list[str] = []
+    for span in spans:
+        trace_id = span["context"]["trace_id"]
+        if trace_id not in trace_ids:
+            trace_ids.append(trace_id)
+    return trace_ids
+
+
+def _looks_complete(spans: list[dict[str, Any]], args: argparse.Namespace) -> bool:
+    has_root = any(not s.get("parent_id") for s in spans)
+    runs = [s for s in spans if s["name"] == RUN_SPAN_NAMES[args.scenario]]
+    return has_root and len(runs) >= args.expect_runs
+
+
+def _poll_trace(
+    trace_id: str, deadline: float, args: argparse.Namespace
+) -> list[dict[str, Any]]:
+    """Poll until the trace looks complete, then return its spans.
+
+    The starter and the worker export independently and Phoenix ingests
+    asynchronously, so wait for the root span, one completed-run span per
+    expected run, and a span count unchanged for QUIET_POLLS polls.
+    """
+    previous_count, unchanged = -1, 0
+    while True:
+        spans = _spans({"trace_id": trace_id})
+        unchanged = unchanged + 1 if spans and len(spans) == previous_count else 0
+        if (_looks_complete(spans, args) and unchanged >= QUIET_POLLS - 1) or (
+            time.monotonic() >= deadline
+        ):
+            return spans
+        previous_count = len(spans)
+        time.sleep(POLL_INTERVAL_SECONDS)
+
+
+def _normalized_name(span: dict[str, Any]) -> str:
+    return "<llm>" if span.get("span_kind") == "LLM" else str(span["name"])
+
+
+def _build_tree(spans: list[dict[str, Any]]) -> list[tuple[int, str, str]]:
+    by_id = {s["context"]["span_id"]: s for s in spans}
+    children: dict[Optional[str], list[dict[str, Any]]] = {}
+    for span in spans:
+        parent = span.get("parent_id")
+        children.setdefault(parent if parent in by_id else None, []).append(span)
+    rows: list[tuple[int, str, str]] = []
+
+    def walk(span: dict[str, Any], depth: int) -> None:
+        rows.append((depth, _normalized_name(span), str(span.get("span_kind"))))
+        for child in sorted(
+            children.get(span["context"]["span_id"], []),
+            key=lambda s: (_normalized_name(s), s["start_time"]),
+        ):
+            walk(child, depth + 1)
+
+    for root in sorted(
+        children.get(None, []), key=lambda s: (str(s["name"]), s["start_time"])
+    ):
+        walk(root, 0)
+    return rows
+
+
+def _print_tree(rows: list[tuple[int, str, str]]) -> None:
+    for depth, name, kind in rows:
+        print(f"    {'    ' * depth}{name}  [{kind}]")
+
+
+def _expected_tree(expect: str, attempts: dict[str, int]) -> list[tuple[int, str, str]]:
+    rows = list(EXPECTED_DECLINED if expect == "declined" else EXPECTED_APPROVED)
+    for activity_name, count in attempts.items():
+        # Failed attempts have no LLM child; they precede the successful one.
+        index = rows.index(
+            next(row for row in rows if row[1] == f"RunActivity:{activity_name}")
+        )
+        depth = rows[index][0]
+        rows[index:index] = [(depth, f"RunActivity:{activity_name}", "CHAIN")] * (
+            count - 1
+        )
+    return rows
+
+
+def _verify_common(
+    spans: list[dict[str, Any]], failures: list[str], args: argparse.Namespace
+) -> None:
+    # Every child points at a span in the trace; otherwise Arize shows a
+    # detached subtree.
+    span_ids = {s["context"]["span_id"] for s in spans}
+    orphans = [
+        s for s in spans if s.get("parent_id") and s["parent_id"] not in span_ids
+    ]
+    if orphans:
+        names = sorted({s["name"] for s in orphans})
+        failures.append(
+            f"{len(orphans)} span(s) reference a parent that is not in the trace: {names}"
+        )
+
+    # The root carries the OpenInference trace-level attributes.
+    roots = [s for s in spans if not s.get("parent_id")]
+    if len(roots) != 1:
+        failures.append(f"expected exactly one root span, found {len(roots)}")
+    else:
+        root_attrs = _attrs(roots[0])
+        for key in ("session.id", "user.id", "input.value", "output.value"):
+            if not root_attrs.get(key):
+                failures.append(f"root span missing {key}")
+        if args.workflow_id and root_attrs.get("session.id") != args.workflow_id:
+            failures.append("root span session.id is not the workflow id")
+
+    # Every LLM span has a model and token usage.
+    for span in spans:
+        if span.get("span_kind") != "LLM":
+            continue
+        attrs = _attrs(span)
+        if not attrs.get("llm.model_name"):
+            failures.append(
+                f"LLM span {span['context']['span_id']} missing llm.model_name"
+            )
+        if (
+            attrs.get("llm.token_count.prompt") is None
+            or attrs.get("llm.token_count.completion") is None
+        ):
+            failures.append(
+                f"LLM span {span['context']['span_id']} missing token counts"
+            )
+
+
+def _verify_ticket_triage(
+    args: argparse.Namespace, trace_id: str, spans: list[dict[str, Any]]
+) -> list[str]:
+    failures: list[str] = []
+    _verify_common(spans, failures, args)
+
+    actual = _build_tree(spans)
+    print(f"Trace {trace_id}: {len(spans)} spans")
+    _print_tree(actual)
+
+    if args.expect_runs == 1:
+        expected = _expected_tree(args.expect, args.expect_attempts)
+        if actual != expected:
+            failures.append("tree mismatch")
+            print("  Expected:")
+            _print_tree(expected)
+    else:
+        # After a reset, several runs share one trace and each run handles the
+        # reapplied approval update once.
+        runs = [s for s in spans if s["name"].startswith("RunWorkflow:")]
+        run_ids = {_attrs(s).get("temporalRunID") for s in runs}
+        if len(runs) != args.expect_runs or len(run_ids) != args.expect_runs:
+            failures.append(
+                f"expected {args.expect_runs} RunWorkflow spans with distinct run ids, "
+                f"found {len(runs)} ({len(run_ids)} run ids)"
+            )
+        handled = [s for s in spans if s["name"] == "HandleUpdate:approve"]
+        if len(handled) != args.expect_runs:
+            failures.append(
+                f"expected {args.expect_runs} HandleUpdate:approve spans, "
+                f"found {len(handled)}"
+            )
+
+    # Temporal spans carry the OpenInference enrichment.
+    for span in spans:
+        if not span["name"].startswith(TEMPORAL_SPAN_PREFIXES):
+            continue
+        attrs = _attrs(span)
+        if span.get("span_kind") != "CHAIN":
+            failures.append(
+                f"{span['name']} has kind {span.get('span_kind')}, expected CHAIN"
+            )
+        if not attrs.get("session.id"):
+            failures.append(f"{span['name']} missing session.id")
+        if not attrs.get("metadata.temporalWorkflowID"):
+            failures.append(f"{span['name']} missing metadata.temporalWorkflowID")
+
+    # Activity attempts: one RunActivity span per attempt, failed ones first.
+    for activity_name, count in args.expect_attempts.items():
+        runs = sorted(
+            (s for s in spans if s["name"] == f"RunActivity:{activity_name}"),
+            key=lambda s: s["start_time"],
+        )
+        starts = [s for s in spans if s["name"] == f"StartActivity:{activity_name}"]
+        if len(runs) != count:
+            failures.append(
+                f"expected {count} RunActivity:{activity_name} spans, found {len(runs)}"
+            )
+            continue
+        if len(starts) != 1:
+            failures.append(
+                f"expected one StartActivity:{activity_name} span, found {len(starts)}"
+            )
+        attempts = [_attrs(s).get("temporal.activity.attempt") for s in runs]
+        if attempts != list(range(1, count + 1)):
+            failures.append(
+                f"RunActivity:{activity_name} attempt attributes are {attempts}"
+            )
+        for failed in runs[:-1]:
+            if failed.get("status_code") != "ERROR":
+                failures.append(
+                    f"failed attempt of {activity_name} does not have ERROR status"
+                )
+        if runs[-1].get("status_code") == "ERROR":
+            failures.append(f"final attempt of {activity_name} has ERROR status")
+
+    # A worker that died mid-attempt never ended that attempt's span, so only
+    # the later attempt is present, carrying its attempt number.
+    for activity_name, attempt in args.surviving_attempt.items():
+        runs = [s for s in spans if s["name"] == f"RunActivity:{activity_name}"]
+        attempts = [_attrs(s).get("temporal.activity.attempt") for s in runs]
+        if attempts != [attempt]:
+            failures.append(
+                f"expected one RunActivity:{activity_name} span with attempt {attempt}, "
+                f"found attempts {attempts}"
+            )
+    return failures
+
+
+def _verify_agents(
+    args: argparse.Namespace, trace_id: str, spans: list[dict[str, Any]]
+) -> list[str]:
+    """Looser checks for the OpenAI Agents scenario, whose span names come from
+    the Agents SDK and the OpenInference instrumentation."""
+    failures: list[str] = []
+    _verify_common(spans, failures, args)
+    print(f"Trace {trace_id}: {len(spans)} spans")
+    _print_tree(_build_tree(spans))
+    kinds = {str(s.get("span_kind")) for s in spans}
+    for kind in ("AGENT", "LLM", "TOOL", "CHAIN"):
+        if kind not in kinds:
+            failures.append(f"no span of kind {kind}")
+    if "UNKNOWN" in kinds:
+        failures.append("spans with UNKNOWN kind present")
+    executes = [s for s in spans if s["name"] == "temporal:executeWorkflow"]
+    if len(executes) != args.expect_runs:
+        failures.append(
+            f"expected {args.expect_runs} temporal:executeWorkflow spans, found {len(executes)}"
+        )
+    return failures
+
+
+def _activity_count(value: str) -> tuple[str, int]:
+    name, sep, count = value.partition("=")
+    if not sep or not name or not count.isdigit():
+        raise argparse.ArgumentTypeError(f"expected ACTIVITY=N, got {value!r}")
+    return name, int(count)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--trace-id", help="Trace ID printed by the starter")
+    parser.add_argument(
+        "--workflow-id", help="Workflow ID (resolved through the RunWorkflow span)"
+    )
+    parser.add_argument(
+        "--scenario", choices=["ticket-triage", "agents"], default="ticket-triage"
+    )
+    parser.add_argument(
+        "--expect", choices=["approved", "declined"], default="approved"
+    )
+    parser.add_argument(
+        "--expect-attempts",
+        action="append",
+        type=_activity_count,
+        default=[],
+        metavar="ACTIVITY=N",
+        help="Expect N RunActivity spans (attempts) for ACTIVITY, for example classify_ticket=2",
+    )
+    parser.add_argument(
+        "--surviving-attempt",
+        action="append",
+        type=_activity_count,
+        default=[],
+        metavar="ACTIVITY=N",
+        help="Expect a single RunActivity span for ACTIVITY carrying attempt N: earlier "
+        "attempts died with a killed worker and were never exported",
+    )
+    parser.add_argument(
+        "--expect-runs",
+        type=int,
+        default=1,
+        help="Number of workflow runs sharing the trace (after a reset), default 1",
+    )
+    parser.add_argument("--timeout", type=int, default=60)
+    args = parser.parse_args()
+    if not args.trace_id and not args.workflow_id:
+        parser.error("one of --trace-id or --workflow-id is required")
+    args.expect_attempts = dict(args.expect_attempts)
+    args.surviving_attempt = dict(args.surviving_attempt)
+
+    trace_id = args.trace_id
+    if not trace_id:
+        trace_ids = _trace_ids_for_workflow(args.workflow_id, args.scenario)
+        if not trace_ids:
+            print(f"FAIL: no trace found for workflow id {args.workflow_id}")
+            return 1
+        if len(trace_ids) > 1:
+            print(
+                f"Workflow {args.workflow_id} has {len(trace_ids)} traces; verifying the newest"
+            )
+        trace_id = trace_ids[0]
+
+    verify = _verify_agents if args.scenario == "agents" else _verify_ticket_triage
+    deadline = time.monotonic() + args.timeout
+    while True:
+        spans = _poll_trace(trace_id, deadline, args)
+        if not spans:
+            print(f"FAIL: no spans for trace {trace_id} within {args.timeout}s")
+            return 1
+        # Retry failed checks until the deadline; print only the final attempt.
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            failures = verify(args, trace_id, spans)
+        if not failures or time.monotonic() >= deadline:
+            print(output.getvalue(), end="")
+            break
+        time.sleep(POLL_INTERVAL_SECONDS)
+    print(f"Phoenix: {trace_url(trace_id)}")
+    if failures:
+        for failure in failures:
+            print(f"FAIL: {failure}")
+        return 1
+    print("PASS: tree shape, span kinds, enrichment, and LLM spans all match")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

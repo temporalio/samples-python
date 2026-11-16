@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockAgentCoreCodeInterpreterAccess",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock-agentcore:StartCodeInterpreterSession",
+        "bedrock-agentcore:InvokeCodeInterpreter",
+        "bedrock-agentcore:StopCodeInterpreterSession",
+        "bedrock-agentcore:GetCodeInterpreterSession",
+        "bedrock-agentcore:ListCodeInterpreterSessions",
+        "bedrock-agentcore:GetCodeInterpreter",
+        "bedrock-agentcore:ListCodeInterpreters"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

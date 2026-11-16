@@ -7,11 +7,15 @@ requires-python = ">=3.10"
 readme = "README.md"
 license = "MIT"
 dependencies = [
+    # TEMPORARY: both resolve to local wheels (see [tool.uv.sources]) until
+    # activity sessions are released; then restore the PyPI floors.
     "temporalio>=1.34.0,<2",
-    "temporalio-strands-agents>=0.1.0",
+    "temporalio-strands-agents",
     "strands-agents>=1.39.0",
     "bedrock-agentcore>=1.9.1",
-    "strands-agents-tools>=0.5.2",
+    # <0.9: 0.9.0 removed strands_tools.code_interpreter, which activities.py
+    # uses. `agentcore deploy` installs from this file, not uv.lock.
+    "strands-agents-tools>=0.5.2,<0.9",
 ]
 
 [dependency-groups]
@@ -26,6 +30,23 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# TEMPORARY: unreleased builds of temporalio (activity sessions) and
+# temporalio-strands-agents (session_options), produced by
+# ../build-local-wheels.sh. Path sources mean uv never looks these packages up on
+# PyPI -- including the `uv pip install -r pyproject.toml --python-platform
+# aarch64-manylinux...` that `agentcore deploy` runs for the CodeZip build.
+# Remove this table once the releases exist.
+[tool.uv.sources]
+temporalio = [
+    { path = "../wheels/temporalio-1.34.0+sessions-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", marker = "sys_platform == 'linux'" },
+    { path = "../wheels/temporalio-1.34.0+sessions-cp310-abi3-macosx_11_0_arm64.whl", marker = "sys_platform == 'darwin'" },
+]
+temporalio-strands-agents = { path = "../wheels/temporalio_strands_agents-0.0.0-py3-none-any.whl" }
+
+[tool.uv]
+# The local temporalio wheels only cover macOS and Linux; lock nothing else.
+environments = ["sys_platform == 'darwin'", "sys_platform == 'linux'"]
 
 [tool.hatch.metadata]
 allow-direct-references = true

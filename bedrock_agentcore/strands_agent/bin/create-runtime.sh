@@ -25,6 +25,15 @@ for tool in agentcore aws uv; do
   fi
 done
 
+# TEMPORARY: temporalio and temporalio-strands-agents resolve to unreleased
+# wheels in ../wheels (see [tool.uv.sources] in pyproject.toml); the CodeZip
+# build installs the Linux arm64 one. Build them with ../build-local-wheels.sh
+# (clones the sources from GitHub; see "Build the local wheels" in README.md).
+if ! ls ../wheels/temporalio-*manylinux*aarch64*.whl ../wheels/temporalio_strands_agents-*.whl >/dev/null 2>&1; then
+  echo "Missing local wheels in $(cd .. && pwd)/wheels; run ../build-local-wheels.sh first (needs git, uv and docker)." >&2
+  exit 1
+fi
+
 if [ ! -d agentcore/cdk ]; then
   echo "Bootstrapping the AgentCore CDK scaffold (one time)..." >&2
   PROJECT_NAME="$(python3 -c 'import json;print(json.load(open("agentcore/agentcore.json"))["name"])')"

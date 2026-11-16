@@ -47,7 +47,9 @@
 # Prerequisites: git, uv, and docker able to run linux/arm64 containers
 # (native on Apple silicon / arm64 Linux, or via QEMU/binfmt elsewhere).
 # Optional: a Rust toolchain (cargo on PATH or in $HOME/.cargo/bin) on macOS,
-# for the macOS temporalio wheel.
+# for the macOS temporalio wheel. protoc for that wheel is provided by the
+# script (protoc-wheel-0 in a cached venv under .wheel-build/), independent of
+# any mise/homebrew setup; set PROTOC to use a specific protoc instead.
 #
 # Usage: ./build-local-wheels.sh            (from anywhere)
 # Env overrides:
@@ -62,6 +64,8 @@
 #   AI_INTEGRATIONS_DIR  use this local ai-integrations checkout; skips the clone
 #   SKIP_LINUX=1 / SKIP_MACOS=1 / SKIP_PLUGINS=1   build a subset
 #   MANYLINUX_IMAGE      (default: quay.io/pypa/manylinux2014_aarch64)
+#   PROTOC               protoc for the macOS wheel (default: protoc-wheel-0
+#                        installed into .wheel-build/protoc-venv)
 #   RELOCK=1             afterwards run `uv lock --refresh` in both samples
 #                        (needs the macOS wheel; see below)
 #
@@ -211,11 +215,33 @@ if [[ "${SKIP_MACOS:-}" != "1" ]]; then
     echo "    ($MACOS_SKIP_HINT; install Rust from https://rustup.rs to build it)"
   else
     echo "==> temporalio (macOS arm64)"
+    # protoc: the temporalio-protos build script runs $PROTOC, else `protoc`
+    # from PATH. In a mise-activated shell that is a mise shim which refuses to
+    # run inside the staged copy (sdk-core's mise.toml is untrusted there). So,
+    # like the Linux build, provide our own protoc from protoc-wheel-0 in a
+    # cached scratch venv, unless the caller set PROTOC.
+    if [[ -z "${PROTOC:-}" ]]; then
+      PROTOC_VENV="$SCRATCH/protoc-venv"
+      if [[ ! -x "$PROTOC_VENV/bin/protoc" ]]; then
+        rm -rf "$PROTOC_VENV"
+        uv venv --quiet "$PROTOC_VENV"
+        uv pip install --quiet --python "$PROTOC_VENV/bin/python" protoc-wheel-0
+      fi
+      PROTOC="$PROTOC_VENV/bin/protoc"
+    fi
+    if ! PROTOC_VERSION="$("$PROTOC" --version 2>&1)"; then
+      echo "error: protoc '$PROTOC' does not run: $PROTOC_VERSION" >&2
+      exit 1
+    fi
+    echo "using $PROTOC ($PROTOC_VERSION)"
     stage_sdk "$SCRATCH/sdk-macos"
     rm -f "$OUT"/temporalio-*macosx*.whl
     # A persistent cargo target dir (outside the staged copy) keeps rebuilds incremental.
+    # MISE_IGNORED_CONFIG_PATHS: never let mise parse the staged sdk-core mise.toml.
     (cd "$SCRATCH/sdk-macos" &&
       PATH="$HOME/.cargo/bin:$PATH" \
+      PROTOC="$PROTOC" \
+      MISE_IGNORED_CONFIG_PATHS="${MISE_IGNORED_CONFIG_PATHS:+$MISE_IGNORED_CONFIG_PATHS:}$SCRATCH" \
       MACOSX_DEPLOYMENT_TARGET=11.0 \
       CARGO_TARGET_DIR="$SCRATCH/macos-target" \
       uv build --wheel --out-dir "$OUT")

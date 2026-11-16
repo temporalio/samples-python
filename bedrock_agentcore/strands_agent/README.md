@@ -46,6 +46,7 @@ workflows kick off.
 - For `../build-local-wheels.sh` (temporary, see above): git, uv, and Docker able to run `linux/arm64` containers
   (native on Apple silicon; QEMU/binfmt emulation on x86_64, which is much slower). A Rust toolchain is only needed
   for the optional macOS `temporalio` wheel (local `uv sync`, lint and tests on macOS); deploying does not need it.
+  The script provides its own `protoc` for that wheel; set `PROTOC` to use a different one.
 - Access to an [Amazon
   Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html)
   foundation model in your region -- the agent uses the plugin's default
@@ -132,6 +133,7 @@ Environment overrides:
 | `SKIP_LINUX` / `SKIP_MACOS` / `SKIP_PLUGINS` | unset; `1` skips that part |
 | `RELOCK` | unset; `1` runs `uv lock --refresh` in both samples afterwards |
 | `MANYLINUX_IMAGE` | `quay.io/pypa/manylinux2014_aarch64` |
+| `PROTOC` | unset (uses `protoc-wheel-0` in a cached venv under `.wheel-build/`); set to a `protoc` binary for the macOS wheel |
 
 A ref can be a branch, tag or commit SHA, e.g. to pin exact commits:
 

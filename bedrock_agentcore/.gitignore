@@ -5,3 +5,7 @@
 **/agentcore/.cache/
 **/agentcore/.env.local
 **/agentcore/.llm-context/
+
+# Built by build-local-wheels.sh (temporary); never commit.
+wheels/
+.wheel-build/

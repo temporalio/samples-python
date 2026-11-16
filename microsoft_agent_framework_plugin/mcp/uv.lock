@@ -1618,13 +1618,17 @@ wheels = [
 
 [[package]]
 name = "temporalio-microsoft-agent-framework"
-version = "0.0.0"
-source = { git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&rev=e7303bbc65c4507106fb69f1cca1e978d88b6955#e7303bbc65c4507106fb69f1cca1e978d88b6955" }
+version = "0.0.1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "agent-framework-core" },
     { name = "opentelemetry-api" },
     { name = "pydantic" },
     { name = "temporalio" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/23/c1/2b27d30a8edf24d263df74ca958bd023e5cd81f8f757c5f383172375cbe3/temporalio_microsoft_agent_framework-0.0.1.tar.gz", hash = "sha256:3de20284817a498ba5eb313496013475ca0c3bb1dcbc97da32356e9ec5b87898", size = 54573, upload-time = "2026-11-16T02:37:11.992Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/72/73/f9c1502b2de563b666e471bcb71c7b4c61cc291785b22ff68b407865ef7c/temporalio_microsoft_agent_framework-0.0.1-py3-none-any.whl", hash = "sha256:5ae5f28eddc94f02012d3885f71655536e7479688d1848826dfa2290826b62c9", size = 48791, upload-time = "2026-11-16T02:37:10.659Z" },
 ]
 
 [package.optional-dependencies]
@@ -1655,7 +1659,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "agent-framework-openai", marker = "python_full_version >= '3.11'", specifier = ">=1.17,<2" },
-    { name = "temporalio-microsoft-agent-framework", extras = ["mcp"], marker = "python_full_version >= '3.11'", git = "https://github.com/temporalio/ai-integrations?subdirectory=python%2Fmicrosoft_agent_framework&rev=e7303bbc65c4507106fb69f1cca1e978d88b6955" },
+    { name = "temporalio-microsoft-agent-framework", extras = ["mcp"], marker = "python_full_version >= '3.11'", specifier = ">=0.0.1" },
 ]
 
 [package.metadata.requires-dev]

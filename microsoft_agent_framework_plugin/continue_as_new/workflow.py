@@ -29,16 +29,26 @@ class ChatInput:
 
 @workflow.defn
 class ChatWorkflow:
-    def __init__(self) -> None:
+    @workflow.init
+    def __init__(self, input: ChatInput) -> None:
+        # Runs before any handler, so a turn that arrives with the start finds
+        # the agent and the session ready.
         self._done = False
         self._lock = asyncio.Lock()
-        self._agent: Agent | None = None
-        self._session: AgentSession | None = None
+        self._agent = Agent(
+            client=TemporalChatClient(
+                "gpt-4o-mini", start_to_close_timeout=timedelta(seconds=60)
+            ),
+            instructions="You are a helpful assistant. Keep replies short.",
+        )
+        self._session = (
+            AgentSession.from_dict(input.session)
+            if input.session
+            else self._agent.create_session()
+        )
 
     @workflow.update
     async def turn(self, prompt: str) -> str:
-        await workflow.wait_condition(lambda: self._agent is not None)
-        assert self._agent is not None and self._session is not None
         # One turn at a time, so the session's history stays in order.
         async with self._lock:
             response = await self._agent.run(prompt, session=self._session)
@@ -50,8 +60,6 @@ class ChatWorkflow:
 
     @workflow.query
     def transcript(self) -> list[dict[str, str]]:
-        if self._session is None:
-            return []
         # Agent Framework's in-memory history provider keeps the messages here.
         state = self._session.state.get(InMemoryHistoryProvider.DEFAULT_SOURCE_ID, {})
         messages = state.get("messages", [])
@@ -65,18 +73,6 @@ class ChatWorkflow:
 
     @workflow.run
     async def run(self, input: ChatInput) -> None:
-        self._agent = Agent(
-            client=TemporalChatClient(
-                "gpt-4o-mini", start_to_close_timeout=timedelta(seconds=60)
-            ),
-            instructions="You are a helpful assistant. Keep replies short.",
-        )
-        self._session = (
-            AgentSession.from_dict(input.session)
-            if input.session
-            else self._agent.create_session()
-        )
-
         await workflow.wait_condition(
             lambda: self._done or workflow.info().is_continue_as_new_suggested()
         )

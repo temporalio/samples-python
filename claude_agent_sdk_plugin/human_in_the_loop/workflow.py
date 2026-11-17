@@ -124,7 +124,9 @@ class HumanInTheLoopWorkflow:
     @workflow.update
     def decide(self, approved: bool) -> None:
         if self.pending is None:
-            # Fails this Update only; an assertion would fail the Workflow Task.
+            # Not reachable: validate_decide rejected the Update already, and
+            # nothing runs between the validator and this handler. It narrows
+            # the type for the checker; an assert would fail the Workflow Task.
             raise ApplicationError("No tool call is waiting for a decision")
         # Remember the decision here, not after the wait in ask_human. That wait
         # is cancelled when Claude Code's connection is lost, and the turn

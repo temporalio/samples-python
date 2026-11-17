@@ -15,12 +15,8 @@ async def main():
     config.setdefault("target_host", "localhost:7233")
 
     # Create client connected to server at the given address
-    client = await Client.connect(
-        **config,
-        plugins=[
-            OpenAIAgentsPlugin(),
-        ],
-    )
+    config["plugins"] = [*config.get("plugins", []), OpenAIAgentsPlugin()]
+    client = await Client.connect(**config)
 
     # Execute a workflow
     result = await client.execute_workflow(

@@ -62,4 +62,5 @@ async def connect_client(
                 ]
             ),
         )
-        yield await Client.connect(**config, plugins=[plugin])
+        config["plugins"] = [*config.get("plugins", []), plugin]
+        yield await Client.connect(**config)

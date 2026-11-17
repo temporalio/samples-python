@@ -43,10 +43,11 @@ async def main() -> None:
 
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
-    client = await Client.connect(
-        **config,
-        plugins=[OpenTelemetryPlugin(add_temporal_spans=True)],
-    )
+    config["plugins"] = [
+        *config.get("plugins", []),
+        OpenTelemetryPlugin(add_temporal_spans=True),
+    ]
+    client = await Client.connect(**config)
 
     # A fresh workflow ID per run avoids Temporal workflow ID conflicts and
     # gives each run its own Langfuse session (langfuse.session.id on the root

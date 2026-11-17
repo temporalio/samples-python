@@ -44,10 +44,11 @@ async def main() -> None:
     # add_temporal_spans=True emits spans for Temporal operations (StartWorkflow,
     # RunWorkflow, RunActivity, HandleUpdate, ...) in addition to propagating
     # trace context across the client/workflow/activity boundaries.
-    client = await Client.connect(
-        **config,
-        plugins=[OpenTelemetryPlugin(add_temporal_spans=True)],
-    )
+    config["plugins"] = [
+        *config.get("plugins", []),
+        OpenTelemetryPlugin(add_temporal_spans=True),
+    ]
+    client = await Client.connect(**config)
 
     worker = Worker(
         client,

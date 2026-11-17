@@ -33,10 +33,8 @@ async def main() -> str:
         add_temporal_runs=add_temporal_runs,
     )
 
-    client = await Client.connect(
-        **config,
-        plugins=[plugin],
-    )
+    config["plugins"] = [*config.get("plugins", []), plugin]
+    client = await Client.connect(**config)
 
     result = await client.execute_workflow(
         BasicLLMWorkflow.run,

@@ -38,17 +38,16 @@ async def main():
     # Create client connected to server at the given address
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
-    client = await Client.connect(
-        **config,
-        plugins=[
-            OpenAIAgentsPlugin(
-                model_params=ModelActivityParameters(
-                    start_to_close_timeout=timedelta(seconds=60)
-                ),
-                mcp_server_providers=[file_system_server],
+    config["plugins"] = [
+        *config.get("plugins", []),
+        OpenAIAgentsPlugin(
+            model_params=ModelActivityParameters(
+                start_to_close_timeout=timedelta(seconds=60)
             ),
-        ],
-    )
+            mcp_server_providers=[file_system_server],
+        ),
+    ]
+    client = await Client.connect(**config)
     # @@@SNIPEND
 
     worker = Worker(

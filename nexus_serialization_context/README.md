@@ -20,10 +20,14 @@ The encryption codec uses `cryptography`'s AES-GCM implementation and Python's `
 Nexus supplies the endpoint context used to select them. The context also identifies the
 service and operation, so a codec can select keys using those fields as well.
 
-Each worker configures `NexusCodec` with an endpoint-to-codec map and a default codec
-for ordinary workflow payloads. The caller uses a separate key for its own input and
-final result, keeping those payloads independent of the keys shared with Nexus handlers.
-Each handler reuses its key 1 for backing workflow inputs.
+`NexusCodec` uses an endpoint-to-codec map and a default codec for ordinary workflow
+payloads. To use this pattern, set the codec as `payload_codec` on a `DataConverter` and
+pass that converter to `Client.connect` as `data_converter` on the caller and handler
+clients. Both sides need matching keys and encodings for each endpoint.
+
+The caller uses a separate key for its own input and final result, keeping those
+payloads independent of the keys shared with Nexus handlers. Each handler reuses its
+key 1 for backing workflow inputs.
 
 | Ordinary workflow payload | Default key ID |
 |---|---|
@@ -35,18 +39,15 @@ These workflow payloads use AES-GCM without compression or endpoint metadata.
 An async Nexus result uses the key and compression selected by its endpoint,
 even when that differs from the backing workflow's input encryption.
 
-For synchronous operations, the SDK supplies Nexus context when decoding inputs and
-encoding results. When an asynchronous handler starts `EchoWorkflow`, the SDK includes
-the Nexus endpoint, service, and operation in the workflow-start request. The server
-stores these fields in the `WorkflowExecutionStarted` history event. The worker SDK
-restores the Nexus context from that event when encoding the workflow's result, so
-`NexusCodec` can select the endpoint's codec and key from the worker's local configuration.
-The workflow's input still uses ordinary workflow context; the default codec encrypts
-it with that handler's key 1.
+The SDK supplies Nexus context when encoding and decoding operation requests and
+results. For workflow-backed asynchronous operations, it preserves that context in
+workflow history and restores it when encoding the result. A call through endpoint 2
+can therefore return a result encrypted with key 2, as the caller expects, even though
+the backing workflow's input uses the handler's default key 1.
 
-The caller starts all eight operations before waiting for their results. `NexusCodec`
-implements `WithSerializationContext`; its `with_context` method returns a lightweight
-copy so each operation keeps its own codec selection while sharing read-only configuration.
+The caller starts all eight operations before waiting for their results. Each operation
+keeps its own endpoint context, even when operations for different keys are in flight.
+`NexusCodec.with_context` returns a copy so binding one operation does not change another.
 No custom interceptor or workflow-header propagation is required.
 
 A workflow execution produces one serialized result, shared by all Nexus operations
@@ -73,8 +74,9 @@ implementation and secure key storage for production.
 ## Prerequisites
 
 Use Python 3.11 or newer, [uv](https://docs.astral.sh/uv/), and Temporal Python SDK
-1.36.0 or later. This directory is a standalone uv project so it can use the newer SDK
-without changing the Python version or dependencies of other samples.
+1.36.0 or later.
+This is a separate uv project because the required SDK needs Python 3.11+, while the
+repository's other samples support Python 3.10.
 
 Use a Temporal Server that supports Nexus serialization-context propagation for
 workflow-backed asynchronous operations. For local development, download
@@ -155,6 +157,8 @@ Start the caller workflow in another terminal:
 uv run starter.py
 ```
 
+### Output
+
 The starter prints the workflow and run IDs, followed by a sync result and an async result
 for each endpoint. Replacing the generated IDs, the output is:
 
@@ -166,9 +170,10 @@ nexus-serialization-encrypted-1: sync="Hello from Nexus" async="Hello from Nexus
 nexus-serialization-encrypted-2: sync="Hello from Nexus" async="Hello from Nexus"
 ```
 
-All eight results should be `Hello from Nexus`. The starter exits when they are available;
-the workers and server keep running. The run creates five workflow executions: one caller
-and four async backing workflows. The four sync operations return directly from their handlers.
+All eight results should be `Hello from Nexus`.
+
+The run creates five workflow executions: one caller and four async backing workflows.
+The four sync operations return directly from their handlers.
 
 ## Test
 
@@ -178,5 +183,5 @@ Run the codec and workflow tests:
 uv run poe test
 ```
 
-The workflow test starts its own server using the same CLI build and checks the stored
-Nexus context and the backing workflows' input and result metadata.
+The workflow test starts its own server and checks all eight results, the stored Nexus
+context, and the backing workflows' input and result encryption metadata.

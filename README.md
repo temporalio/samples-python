@@ -98,6 +98,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [nexus_messaging_temporal_operation](nexus_messaging_temporal_operation): Demonstrates how to send signal, update and query messages through Nexus.
   This version uses `@nexus.temporal_operation` to allow Nexus operation handlers to either return a synchronous result or start a Workflow as the async backing operation.
 * [nexus_multiple_args](nexus_multiple_args) - Map a Nexus operation to a handler workflow that takes multiple arguments.
+* [nexus_serialization_context](nexus_serialization_context) - Select encryption keys and compression by endpoint for synchronous and workflow-backed asynchronous Nexus operations.
 * [nexus_standalone_activity](nexus_standalone_activity) - Back a Nexus operation with a standalone Activity.
 * [nexus_standalone_operations](nexus_standalone_operations) - Execute Nexus operations directly from client code,
 without wrapping them in a workflow.

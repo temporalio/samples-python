@@ -5,6 +5,7 @@ they must be deterministic: no clock, no I/O, no randomness. Middleware that
 needs I/O calls ``await workflow.execute_activity(...)``.
 """
 
+import posixpath
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import timedelta
 
@@ -27,8 +28,6 @@ def delete_file(path: str) -> str:
 
 
 # @@@SNIPSTART python-microsoft-agent-framework-middleware-middleware
-import posixpath
-
 ALLOWED_PREFIX = "/tmp/"
 REMINDER = "Answer in one short sentence."
 

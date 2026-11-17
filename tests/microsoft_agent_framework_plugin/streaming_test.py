@@ -40,9 +40,8 @@ async def test_streaming(client: Client) -> None:
             task_queue=task_queue,
         )
 
-        chunks: list[str] = []
-
-        async def consume() -> None:
+        async def consume() -> list[str]:
+            chunks: list[str] = []
             stream = WorkflowStreamClient.create(client, workflow_id)
             async for item in stream.subscribe(
                 [STREAMING_TOPIC],
@@ -53,20 +52,22 @@ async def test_streaming(client: Client) -> None:
                 update = ChatResponseUpdate.from_dict(item.data)
                 if update.text:
                     chunks.append(update.text)
-                if "".join(chunks) == expected:
-                    return
+            return chunks
 
         consume_task = asyncio.create_task(consume())
         result = await handle.result()
-        # The subscriber stops once it has the whole answer; the timeout only
-        # bounds a regression.
-        await asyncio.wait_for(consume_task, timeout=10)
+        # Once the Workflow is complete, subscribe reads the rest of the stream
+        # and then ends.
+        chunks = await consume_task
+        # A subscriber that starts after the Workflow completed gets them all too.
+        late_chunks = await consume()
 
     # The durable result is the whole text...
     assert result == expected
-    # ...and the same text reached the subscriber in more than one update.
+    # ...and the same text reached both subscribers in more than one update.
     assert len(chunks) > 1
     assert "".join(chunks) == expected
+    assert late_chunks == chunks
     # The topic routed the call to the streaming Activity, not the plain one.
     counts = await count_scheduled_activities(handle)
     assert counts == {INVOKE_MODEL_STREAMING: 1}

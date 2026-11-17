@@ -26,8 +26,6 @@ async def main() -> None:
         task_queue="microsoft-agent-framework-streaming",
     )
 
-    printed: list[str] = []
-
     async def consume() -> None:
         # Each item is a ChatResponseUpdate in its dict form.
         stream = WorkflowStreamClient.create(client, workflow_id)
@@ -39,27 +37,13 @@ async def main() -> None:
         ):
             update = ChatResponseUpdate.from_dict(item.data)
             if update.text:
-                printed.append(update.text)
                 print(update.text, end="", flush=True)
 
     consume_task = asyncio.create_task(consume())
     result = await handle.result()
-
-    # The subscriber may still be reading the tail of the stream after the
-    # Workflow completes. The streamed text adds up to the result, so wait for it.
-    async def drained() -> None:
-        while result not in "".join(printed):
-            await asyncio.sleep(0.05)
-
-    try:
-        await asyncio.wait_for(drained(), timeout=10)
-    except asyncio.TimeoutError:
-        print("\n(timed out waiting for the last streamed updates)")
-    consume_task.cancel()
-    try:
-        await consume_task
-    except asyncio.CancelledError:
-        pass
+    # Once the Workflow is complete, subscribe reads the rest of the stream
+    # and then ends, so this returns with every update printed.
+    await consume_task
 
     print()
     print(f"Final result: {result}")

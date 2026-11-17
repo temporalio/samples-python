@@ -12,7 +12,7 @@ Prerequisites:
   temporal server start-dev
   ```
 
-The SDK requires Python >= 3.10. You can install Python using uv. For example,
+The samples require Python >= 3.11, as Temporal Python SDK 1.36 does. You can install Python using uv. For example,
 
     uv python install 3.13
 

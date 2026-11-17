@@ -96,6 +96,18 @@ async def test_sync_and_async_operations_through_all_four_endpoints():
                     ("AsyncEchoService", "echoAsync"),
                 ]
             )
+            scheduled_ids = [
+                event.event_id
+                for event in history.events
+                if event.HasField("nexus_operation_scheduled_event_attributes")
+            ]
+            completed_ids = [
+                event.event_id
+                for event in history.events
+                if event.HasField("nexus_operation_completed_event_attributes")
+            ]
+            assert len(completed_ids) == 8
+            assert max(scheduled_ids) < min(completed_ids)
             for operation in scheduled:
                 if operation.operation != "echoAsync":
                     continue

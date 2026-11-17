@@ -59,9 +59,21 @@ async def test_model_activity_span_joins_the_trace(
     assert await count_scheduled_activities(handle) == {INVOKE_MODEL: 1}
 
     trace_id = root.get_span_context().trace_id
-    spans = {span.name: span for span in exporter.get_finished_spans()}
+    finished = exporter.get_finished_spans()
+    spans = {span.name: span for span in finished}
     # The model Activity and the Workflow run are spans of the caller's trace.
     for name in ("RunWorkflow:TracedWorkflow", f"RunActivity:{INVOKE_MODEL}"):
         assert name in spans, sorted(spans)
         assert spans[name].context.trace_id == trace_id
     assert spans[f"RunActivity:{INVOKE_MODEL}"].parent is not None
+    # Agent Framework starts the agent span from Workflow code. The Worker
+    # replays the Workflow (max_cached_workflows=0), and the replay-safe
+    # provider exports the span once, under the Workflow's own span.
+    agent_spans = [span for span in finished if span.name == "invoke_agent assistant"]
+    assert len(agent_spans) == 1, [span.name for span in finished]
+    (agent_span,) = agent_spans
+    assert agent_span.parent is not None
+    assert (
+        agent_span.parent.span_id == spans["RunWorkflow:TracedWorkflow"].context.span_id
+    )
+    assert agent_span.context.trace_id == trace_id

@@ -1,6 +1,6 @@
 # Middleware
 
-Agent Framework middleware, running in the Workflow. `BlockOutsideTmp` is a `FunctionMiddleware` that refuses `delete_file` calls outside `/tmp` by setting `context.result` and not calling `call_next()`, so the tool never runs and the model reads the refusal. `AppendReminder` is a `ChatMiddleware` that adds one sentence to the instructions of every model call.
+Agent Framework middleware, running in the Workflow. `BlockOutsideTmp` is a `FunctionMiddleware` that refuses `delete_file` calls outside `/tmp` by setting `context.result` and not calling `call_next()`, so the tool never runs and the model reads the refusal. It normalizes the path with `posixpath.normpath` first, so `/tmp/../etc/passwd` is refused too. `AppendReminder` is a `ChatMiddleware` that adds one sentence to the instructions of every model call.
 
 Both run inside the Workflow, next to the agent's loop, so a Workflow Definition that uses them must stay deterministic: no clock, no I/O, no randomness in middleware. Middleware that needs I/O calls `await workflow.execute_activity(...)`.
 

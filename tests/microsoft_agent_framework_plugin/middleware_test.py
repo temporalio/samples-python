@@ -27,9 +27,12 @@ async def test_middleware(client: Client) -> None:
                 "delete_file", {"path": "/etc/passwd"}, call_id="c1"
             ),
             function_call_response(
-                "delete_file", {"path": "/tmp/scratch.txt"}, call_id="c2"
+                "delete_file", {"path": "/tmp/../etc/passwd"}, call_id="c2"
             ),
-            text_response("The first delete was refused; the second file is gone."),
+            function_call_response(
+                "delete_file", {"path": "/tmp/scratch.txt"}, call_id="c3"
+            ),
+            text_response("Two deletes were refused; the third file is gone."),
         ]
     )
     client = with_plugin(client, plugin)
@@ -49,13 +52,14 @@ async def test_middleware(client: Client) -> None:
         )
         result = await handle.result()
 
-    assert result == "The first delete was refused; the second file is gone."
-    # Three model turns; both tool calls were handled in the Workflow.
-    assert await count_scheduled_activities(handle) == {INVOKE_MODEL: 3}
+    assert result == "Two deletes were refused; the third file is gone."
+    # Four model turns; all three tool calls were handled in the Workflow.
+    assert await count_scheduled_activities(handle) == {INVOKE_MODEL: 4}
     calls = factory().calls
-    # The function middleware refused the first call without running the tool
-    # and let the second one through.
+    # The function middleware refused the first two calls without running the
+    # tool, the second one after normalizing the path, and let the third through.
     assert function_results(calls[-1]["messages"]) == [
+        "Refused: /etc/passwd is outside /tmp/",
         "Refused: /etc/passwd is outside /tmp/",
         "deleted /tmp/scratch.txt",
     ]

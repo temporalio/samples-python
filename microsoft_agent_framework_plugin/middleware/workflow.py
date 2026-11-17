@@ -27,6 +27,8 @@ def delete_file(path: str) -> str:
 
 
 # @@@SNIPSTART python-microsoft-agent-framework-middleware-middleware
+import posixpath
+
 ALLOWED_PREFIX = "/tmp/"
 REMINDER = "Answer in one short sentence."
 
@@ -41,11 +43,13 @@ class BlockOutsideTmp(FunctionMiddleware):
     ) -> None:
         if context.function.name == "delete_file":
             arguments = context.arguments
-            path = str(
+            raw_path = str(
                 arguments.get("path", "")
                 if isinstance(arguments, Mapping)
                 else getattr(arguments, "path", "")
             )
+            # Normalize first, so "/tmp/../etc/passwd" does not pass as /tmp.
+            path = posixpath.normpath(raw_path)
             if not path.startswith(ALLOWED_PREFIX):
                 # Not calling call_next() skips the tool; the model gets this result.
                 context.result = f"Refused: {path} is outside {ALLOWED_PREFIX}"

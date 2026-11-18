@@ -51,7 +51,7 @@ class BlockOutsideTmp(FunctionMiddleware):
             path = posixpath.normpath(raw_path)
             if not path.startswith(ALLOWED_PREFIX):
                 # Not calling call_next() skips the tool; the model gets this result.
-                context.result = f"Refused: {path} is outside {ALLOWED_PREFIX}"
+                context.result = f"Refused: {raw_path} is outside {ALLOWED_PREFIX}"
                 return
         await call_next()
 

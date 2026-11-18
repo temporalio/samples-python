@@ -60,7 +60,7 @@ async def test_middleware(client: Client) -> None:
     # tool, the second one after normalizing the path, and let the third through.
     assert function_results(calls[-1]["messages"]) == [
         "Refused: /etc/passwd is outside /tmp/",
-        "Refused: /etc/passwd is outside /tmp/",
+        "Refused: /tmp/../etc/passwd is outside /tmp/",
         "deleted /tmp/scratch.txt",
     ]
     # The chat middleware added the reminder to every model call.

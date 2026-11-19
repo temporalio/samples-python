@@ -14,46 +14,55 @@ The caller and each handler run in separate namespaces.
 | Encrypted | `nexus-serialization-encrypted-1` | `encrypted-1` | AES-GCM |
 | Encrypted | `nexus-serialization-encrypted-2` | `encrypted-2` | AES-GCM |
 
-Each endpoint uses a different 128-bit AES key. The codec uses `cryptography` for
-AES-GCM and Python's `zlib` module for compression.
+Each endpoint uses a different 128-bit AES key. Compression runs before encryption,
+and decoding decrypts before decompressing. AES-GCM authenticates the ciphertext.
+The encryption codec uses `cryptography`'s AES-GCM implementation and Python's `zlib` module.
+Nexus supplies the endpoint context used to select a codec. The context also identifies
+the service and operation, which can be used to select keys.
 
-`NexusCodec` uses the endpoint from the Nexus context to select a codec. It uses a default
-codec for ordinary workflow payloads. Use `NexusCodec` as the `payload_codec` on a
-`DataConverter`, then pass that converter as `data_converter` to `Client.connect` for
-the caller and handler clients.
+## Adapt this pattern
+
+`NexusCodec` maps endpoints to codecs and uses a default codec for ordinary workflow
+payloads. Set it as the `payload_codec` of a `DataConverter`, then pass the converter to
+`Client.connect` using `data_converter` on the caller and handler clients. See [config.py](config.py) for the key maps and [worker.py](worker.py) for client setup.
 
 Because AES-GCM uses symmetric encryption, the caller and handler share a secret key
 for each endpoint. This sample uses that key for both requests and results.
+Both sides also need the same payload format, including whether to compress.
 
-The caller uses a separate key for its workflow input and final result. Each handler
-reuses its key 1 for backing workflow inputs.
+The caller uses a separate key for its workflow input and final result.
+For this example, each handler reuses its endpoint-1 key for backing workflow inputs.
+If your application already has a workflow codec, keep it as the default so it
+can still read existing histories.
 
 | Ordinary workflow payload | Default key ID |
 |---|---|
 | Caller workflow input and final result | `caller-workflow` |
-| Compressed/encrypted handler workflow inputs | `compressed-encrypted-1` |
-| Encrypted handler workflow inputs | `encrypted-1` |
+| Compressed/encrypted handler's backing workflow inputs | `compressed-encrypted-1` |
+| Encrypted handler's backing workflow inputs | `encrypted-1` |
 
 These workflow payloads use AES-GCM without compression or endpoint metadata.
-An async Nexus result uses the key and compression selected by its endpoint,
-even when that differs from the backing workflow's input encryption.
 
-The SDK supplies Nexus context when encoding and decoding operation requests and
-results. For workflow-backed asynchronous operations, it preserves that context in
-workflow history and restores it when encoding the result. A call through endpoint 2
-can therefore return a result encrypted with key 2, as the caller expects, even though
-the backing workflow's input uses the handler's default key 1.
+On decode, the AES-GCM codec passes other encodings through for ordinary decoding.
+For AES-GCM payloads, it checks the key ID against the codec selected by context and
+verifies the ciphertext before returning the decoded value.
+
+The SDK supplies Nexus context for operation requests and results. For workflow-backed
+async operations, the server stores the context in workflow history and the SDK uses it
+to select the result's key and compression. To see the two keys in one execution, call
+`nexus-serialization-encrypted-2` and check the backing workflow's history. Its input
+records `encrypted-1` and its result records `encrypted-2`.
 
 The caller starts all eight operations before waiting for their results. Each operation
-keeps its own endpoint context, even when operations for different keys are in flight.
+keeps its own endpoint context while calls using different keys run concurrently.
 `NexusCodec.with_context` returns a copy so binding one operation does not change another.
 No custom interceptor or workflow-header propagation is required.
 
-A workflow execution produces one serialized result, shared by all Nexus operations
-attached to it. Operations that need differently encrypted results therefore need
-separate workflow executions. This sample starts a backing workflow for each async
-operation, using its Nexus request ID as the workflow ID suffix. Retrying the same
-request uses the same workflow ID.
+Each workflow execution has one serialized result, shared by all Nexus operations
+attached to it. Operations that need results encrypted with different keys must use
+separate workflow executions. This sample starts one backing workflow per async
+operation, using the Nexus request ID as its workflow ID suffix. Retrying the same
+request reuses that workflow ID.
 
 The outer encrypted payload includes `encoding`, `encryption-key-id`, and, for Nexus
 payloads, `nexus-endpoint-name` metadata. For example:
@@ -66,7 +75,6 @@ nexus-endpoint-name: nexus-serialization-compressed-encrypted-1
 
 The metadata identifies the key and endpoint. The key material stays in the codec
 configuration.
-Ordinary workflow payloads have a key ID but no endpoint metadata or compression.
 
 The AES-GCM codec and hard-coded keys are for this example. For production, use an
 established encryption implementation and secure key storage.
@@ -74,12 +82,11 @@ established encryption implementation and secure key storage.
 ## Prerequisites
 
 Use Python 3.11 or newer, [uv](https://docs.astral.sh/uv/), and Temporal Python SDK
-1.36.0 or later.
-This is a separate uv project because the required SDK needs Python 3.11+, while the
-repository's other samples support Python 3.10.
+1.36.0 or later. This sample has its own uv project so the other samples can continue
+to support Python 3.10.
 
 Use a Temporal Server that supports Nexus serialization-context propagation for
-workflow-backed asynchronous operations. For local development, download
+workflow-backed asynchronous operations. For the local walkthrough, download the prerelease
 [Temporal CLI `v1.9.3-nexus-serialization-context`](https://github.com/temporalio/cli/releases/tag/v1.9.3-nexus-serialization-context).
 Extract it and place the `temporal` executable in the repository root. The commands below
 use `../temporal` to run this build separately from your installed CLI.
@@ -97,9 +104,8 @@ uv sync
 The CLI should report `1.9.3-nexus-serialization-context`. Run the remaining commands
 from `nexus_serialization_context`, including commands in new terminals.
 
-The caller and each handler use separate namespaces. Each worker polls a task queue
-with the same name as its namespace. Both endpoints for a handler target that handler's
-namespace and task queue.
+Each worker polls a task queue with the same name as its namespace. Both endpoints
+for a handler target that handler's namespace and task queue.
 
 | Worker | Namespace and task queue |
 |---|---|
@@ -107,7 +113,7 @@ namespace and task queue.
 | Compressed/encrypted handler | `nexus-serialization-compressed-encrypted-handler` |
 | Encrypted handler | `nexus-serialization-encrypted-handler` |
 
-Start the dev server in its own terminal and leave it running:
+Start the dev server in its own terminal:
 
 ```shell
 ../temporal server start-dev \
@@ -137,7 +143,7 @@ In another terminal, create two endpoints for each handler worker:
   --target-task-queue nexus-serialization-encrypted-handler
 ```
 
-Run each worker in its own terminal and leave all three running alongside the server:
+Run each worker in its own terminal:
 
 ```shell
 uv run worker.py compressed-encrypted
@@ -159,8 +165,7 @@ uv run starter.py
 
 ### Output
 
-The starter prints the workflow and run IDs, followed by a sync result and an async result
-for each endpoint. Replacing the generated IDs, the output is:
+Expected output:
 
 ```text
 Started workflow: ID=nexus-serialization-<workflow UUID> RunID=<run UUID>

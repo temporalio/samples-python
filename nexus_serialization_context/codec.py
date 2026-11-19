@@ -36,7 +36,7 @@ class NexusCodec(PayloadCodec, WithSerializationContext):
                 ) from None
         if isinstance(selected, WithSerializationContext):
             selected = selected.with_context(context)
-        # Keep each operation's selection separate; share the read-only configuration.
+        # Keep each operation's selection separate and share the read-only configuration.
         bound = copy.copy(self)
         bound._selected_codec = selected
         return bound
@@ -93,7 +93,8 @@ class EncryptionCodec(PayloadCodec, WithSerializationContext):
         decoded = []
         for payload in payloads:
             if payload.metadata.get("encoding") != b"binary/nexus-aes-gcm":
-                raise ValueError("Expected an AES-GCM payload")
+                decoded.append(payload)
+                continue
             if payload.metadata.get("encryption-key-id") != self._key_id.encode():
                 raise ValueError("Unexpected encryption key ID")
             if len(payload.data) < 28:

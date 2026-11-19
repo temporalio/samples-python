@@ -54,7 +54,8 @@ async def test_caller_and_handlers_use_the_key_for_each_endpoint(
         "encryption-key-id": key_id.encode(),
         "nexus-endpoint-name": endpoint.encode(),
     }
-    assert await handler.decode([request], [str]) == ["hello"]
+    [plain] = await DataConverter.default.encode(["plain"])
+    assert await handler.decode([plain, request], [str, str]) == ["plain", "hello"]
 
     [result] = await handler.encode(["reply"])
     assert result.metadata == request.metadata

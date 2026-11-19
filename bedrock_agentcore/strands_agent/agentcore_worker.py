@@ -190,6 +190,7 @@ async def run_worker(session_id: str | None) -> None:
                 use_worker_versioning=True,
                 default_versioning_behavior=VersioningBehavior.PINNED,
             ),
+            identity=f"SessionWorker={session_id}",
             graceful_shutdown_timeout=DRAIN,
         )
         async with worker:

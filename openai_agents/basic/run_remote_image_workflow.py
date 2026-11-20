@@ -1,4 +1,5 @@
 import asyncio
+from typing import Any
 
 from temporalio.client import Client
 from temporalio.envconfig import ClientConfig
@@ -8,13 +9,11 @@ from openai_agents.basic.workflows.remote_image_workflow import RemoteImageWorkf
 
 
 async def main():
-    config = ClientConfig.load_client_connect_config()
+    config: dict[str, Any] = dict(ClientConfig.load_client_connect_config())
     config.setdefault("target_host", "localhost:7233")
 
-    client = await Client.connect(
-        **config,
-        plugins=[OpenAIAgentsPlugin()],
-    )
+    config["plugins"] = [*config.get("plugins", []), OpenAIAgentsPlugin()]
+    client = await Client.connect(**config)
 
     # Use the URL from the original example
     image_url = (

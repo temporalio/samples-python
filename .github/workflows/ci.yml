@@ -36,6 +36,7 @@ jobs:
               arize_tracing \
               bedrock_agentcore/strands_agent \
               lambda_worker \
+              microsoft_agent_framework_plugin/mcp \
               openai_agents/mcp_v2
             do
               if grep -q "^${project}/" <<< "$changed_files"; then

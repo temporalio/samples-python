@@ -102,8 +102,8 @@ uv sync
 ../temporal --version
 ```
 
-The CLI should report `1.9.3-nexus-serialization-context`. Run the remaining commands
-from `nexus_serialization_context`, including commands in new terminals.
+The CLI version should be `1.9.3-nexus-serialization-context`. Run the remaining
+commands from the `nexus_serialization_context` folder, including in new terminals.
 
 Each worker polls a task queue with the same name as its namespace. Both endpoints
 for a handler target that handler's namespace and task queue.

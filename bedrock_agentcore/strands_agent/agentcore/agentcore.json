@@ -20,15 +20,15 @@
       "envVars": [
         {
           "name": "TEMPORAL_ADDRESS",
-          "value": "<your-namespace>.<account>.tmprl.cloud:7233"
+          "value": "ns-agentcore-demo-001.temporal-dev.tmprl-test.cloud:7233"
         },
         {
           "name": "TEMPORAL_NAMESPACE",
-          "value": "<your-namespace>.<account>"
+          "value": "ns-agentcore-demo-001.temporal-dev"
         },
         {
           "name": "TEMPORAL_API_KEY",
-          "value": "<your-api-key>"
+          "value": "eyJhbGciOiJFUzI1NiIsImtpZCI6InBwYWtIQSJ9.eyJhY2NvdW50X2lkIjoidGVtcG9yYWwtZGV2IiwiYXVkIjpbInRlbXBvcmFsLXRlc3QuaW8iXSwiZXhwIjoxODU3NjcyMzY5LCJpc3MiOiJ0ZW1wb3JhbC10ZXN0LmlvIiwianRpIjoiVXFEWUlpUUlkOExiSXdKRzB2aFRSY0VKN09rTk9iSG4iLCJrZXlfaWQiOiJVcURZSWlRSWQ4TGJJd0pHMHZoVFJjRUo3T2tOT2JIbiIsInN1YiI6ImIwM2YzMzY4Njc3NjQ2MzU5YmI5YjQwNDFlYzc3MWExIn0.xglt15PPGgX0ZTH0n-mnzxgDBFWYO7CeYbDmGFCLDV3H62tw_Lcuveqlg_Q4kLI9k5N7-DeiSsI6VxLFvDXYVQ"
         },
         {
           "name": "TEMPORAL_TASK_QUEUE",
@@ -44,7 +44,7 @@
         },
         {
           "name": "AWS_REGION",
-          "value": "us-west-2"
+          "value": "us-east-1"
         },
         {
           "name": "AGENTCORE_DEBOUNCE_SECONDS",

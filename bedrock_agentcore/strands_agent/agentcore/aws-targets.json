@@ -2,7 +2,7 @@
   {
     "name": "default",
     "description": "Replace with the AWS account and region to deploy the runtime into",
-    "account": "000000000000",
-    "region": "us-west-2"
+    "account": "093235337669",
+    "region": "us-east-1"
   }
 ]

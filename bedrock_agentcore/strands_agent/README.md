@@ -18,6 +18,15 @@ It combines three things:
   sandbox instead of doing arithmetic in its head. The Temporal plugin enables wrapping the tool with an activity.
 - [Temporal Serverless Workers](https://docs.temporal.io/serverless-workers) to launch the AgentCore Runtime when
 workflows kick off.
+- **Activity sessions (experimental)**, so the agent's model calls and `execute_code` run on the same AgentCore microVM
+  that holds the Workflow -- see [Activity sessions](#activity-sessions-experimental).
+
+> **Temporary: unreleased dependencies.** Activity sessions are not in a released `temporalio` yet, and
+> `StrandsPlugin(session_options=...)` is not in a released `temporalio-strands-agents`. Until they are,
+> `pyproject.toml` resolves both from local wheels in `../wheels/`, built by
+> [`../build-local-wheels.sh`](../build-local-wheels.sh), which clones `temporalio/sdk-python` (`dev/sticky-activities`)
+> and `temporalio/ai-integrations` (`feature/activity-sessions`) from GitHub and builds from those clones. Run it
+> before `uv sync` and before `bin/create-runtime.sh` -- see [Build the local wheels](#0-build-the-local-wheels-temporary).
 
 ## Prerequisites
 
@@ -32,15 +41,22 @@ workflows kick off.
 - AWS permissions for the AgentCore CLI (S3, IAM, CloudFormation): see [Use the
   AgentCore
   CLI](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-permissions.html#runtime-permissions-cli)
+- A Temporal Service with **sticky activity execution enabled** (activity sessions are experimental and need
+  server support)
+- For `../build-local-wheels.sh` (temporary, see above): git, uv, and Docker able to run `linux/arm64` containers
+  (native on Apple silicon; QEMU/binfmt emulation on x86_64, which is much slower). A Rust toolchain is only needed
+  for the optional macOS `temporalio` wheel (local `uv sync`, lint and tests on macOS); deploying does not need it.
+  The script provides its own `protoc` for that wheel; set `PROTOC` to use a different one.
 - Access to an [Amazon
   Bedrock](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html)
   foundation model in your region -- the agent uses the plugin's default
   `BedrockModel()`
 
 
-Docker is not needed. With the CodeZip build there is no image: the CLI uploads a
-zip of this directory and the platform runs it on a managed Python runtime, which
-also takes care of AgentCore's ARM64 (Graviton) requirement.
+The deploy itself needs no Docker. With the CodeZip build there is no image: the CLI installs the dependencies for
+Linux ARM64 (Graviton) with your local `uv`, zips them with this directory, and the platform runs it on a managed
+Python runtime. That local install is why the unreleased `temporalio` must exist as a Linux aarch64 wheel in
+`../wheels/`.
 
 ## Files
 
@@ -65,11 +81,81 @@ is no more work for it to do. The max timeout determines the max amount of time 
 approach would be to have the Temporal worker spin up and never shutdown on its own. However, the max timeout doesn't
 offer graceful shutdown and it would defeat the purpose of AgentCore's idle timer.
 
-This sample, includes a ActivityTracker which intercepts the Worker activity and keeps the worker alive. If the worker sits
+This sample includes a WorkTracker which counts in-flight Workflow and Nexus tasks (via a tracking slot supplier) and Activities (via an interceptor), and keeps the worker alive while any are running. If the worker sits
 idle for AGENTCORE_DEBOUNCE_SECONDS, it will shutdown and enable AgentCore to exit based on idle timer. The idle timer
 in this configuration can be very short since there is no temporal worker running when idle.
 
+## Activity sessions (experimental)
+
+By default, Temporal may dispatch a Workflow's Activities to any Worker polling the Task Queue. Here the Worker is
+built so that every Activity the agent Workflow starts -- each model call and each `execute_code` -- runs on the
+**same Worker, and so the same AgentCore microVM, that holds the Workflow**:
+
+- `StrandsPlugin(session_options=ActivitySessionOptions(placement=UseWorkflowSession()))` fills the session on every
+  Activity the Workflow starts on its own Task Queue (a `workflow.activity_session(...)` scope in your code wins).
+- The Worker passes `session_config=WorkerSessionConfig(admission=SingleSessionAdmission(stable_identity=session_id))`,
+  keyed on the AgentCore runtime session (`context.session_id` in the entrypoint). The Worker then serves exactly one
+  Workflow for its lifetime. Without a session id (e.g. a local run) it falls back to `WorkerSessionConfig()`.
+- The plugin refuses to start a Worker that has no `session_config`. It is registered on the Client, which works because
+  `Worker(...)` merges its own arguments (including `session_config`) before any plugin's `configure_worker` runs.
+- Session Workers need fixed-size activity slots: the tuner uses a `FixedSizeSlotSupplier` for activities that matches the sync-Activity thread pool.
+- `starter.py` keeps a plain `StrandsPlugin()`; the Client only needs the plugin's data converter.
+
+This requires a Temporal Service with sticky activity execution enabled.
+
 ## Setup
+
+### 0. Build the local wheels (temporary)
+
+```bash
+../build-local-wheels.sh
+uv lock --refresh && uv sync   # needs the macOS temporalio wheel when run on macOS
+```
+
+By default the script clones the sources from GitHub into the gitignored `../.wheel-build/` (re-runs fetch and reuse
+the clones) and writes these to the gitignored `../wheels/`:
+
+- `temporalio-1.34.0+sessions-…-manylinux2014_aarch64…whl`, built in Docker -- what the deploy installs
+- `temporalio-1.34.0+sessions-…-macosx_11_0_arm64.whl`, only on macOS with Rust (`cargo`) installed; otherwise
+  skipped with a message
+- `temporalio_strands_agents-0.0.0-py3-none-any.whl` and `temporalio_openai_agents-0.0.0-py3-none-any.whl`
+- `BUILD_INFO`: each repo URL, the requested ref and the resolved commit SHA, plus wheel checksums. Include it when
+  reporting results.
+
+Environment overrides:
+
+| Variable | Default |
+|----------|---------|
+| `SDK_PYTHON_REPO` / `SDK_PYTHON_REF` | `https://github.com/temporalio/sdk-python.git` / `dev/sticky-activities` |
+| `AI_INTEGRATIONS_REPO` / `AI_INTEGRATIONS_REF` | `https://github.com/temporalio/ai-integrations.git` / `feature/activity-sessions` |
+| `SDK_CORE_REPO` | unset (the URL in sdk-python's `.gitmodules`, `temporalio/sdk-rust`); set when the sdk-core commit sdk-python pins lives in another repo or fork |
+| `SDK_PYTHON_DIR` / `AI_INTEGRATIONS_DIR` | unset; set to a local checkout to build from it instead of cloning |
+| `SKIP_LINUX` / `SKIP_MACOS` / `SKIP_PLUGINS` | unset; `1` skips that part |
+| `RELOCK` | unset; `1` runs `uv lock --refresh` in both samples afterwards |
+| `MANYLINUX_IMAGE` | `quay.io/pypa/manylinux2014_aarch64` |
+| `PROTOC` | unset (uses `protoc-wheel-0` in a cached venv under `.wheel-build/`); set to a `protoc` binary for the macOS wheel |
+
+A ref can be a branch, tag or commit SHA, e.g. to pin exact commits:
+
+```bash
+SDK_PYTHON_REF=e73f54d3 AI_INTEGRATIONS_REF=5492934 ../build-local-wheels.sh
+```
+
+The committed `uv.lock` records the hashes of the author's wheels, so re-lock after every build (`uv lock --refresh`
+or `RELOCK=1`). The lock covers macOS and Linux, so locking needs both `temporalio` wheels. The deploy does not read
+`uv.lock` -- it installs from `pyproject.toml` and only needs the Linux wheel and the plugin wheels.
+
+#### Handing this sample to a tester
+
+Prerequisites: git, uv, Docker with `linux/arm64` support, plus the deploy prerequisites above (Rust optional).
+
+```bash
+git clone -b feature/activity-sessions https://github.com/temporalio/samples-python.git
+cd samples-python/bedrock_agentcore/strands_agent
+../build-local-wheels.sh            # clone + build; prints wheels/BUILD_INFO
+uv lock --refresh && uv sync        # optional: local runs/tests; needs the macOS wheel (macOS + Rust)
+# then follow steps 1-6 below; step 3 (bin/create-runtime.sh) deploys
+```
 
 This sample opts to utilize the new AgentCore CLI for creating and updating both the Runtime and Runtime Endpoint.
 

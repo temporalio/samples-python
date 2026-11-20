@@ -36,6 +36,7 @@ jobs:
               arize_tracing \
               bedrock_agentcore/strands_agent \
               lambda_worker \
+              nexus_serialization_context \
               microsoft_agent_framework_plugin/mcp \
               openai_agents/mcp_v2
             do
@@ -58,6 +59,9 @@ jobs:
         exclude:
           # temporalio 1.36.0, which arize_tracing needs, requires Python 3.11+
           - project: arize_tracing
+            python: "3.10"
+          # Nexus serialization context requires SDK 1.36.0 and Python 3.11+.
+          - project: nexus_serialization_context
             python: "3.10"
     runs-on: ubuntu-latest
     timeout-minutes: 15

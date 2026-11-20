@@ -77,6 +77,12 @@ class TriageTicketWorkflow:
                         ):
                             prompt_id = message.uuid
                         elif isinstance(message, ResultMessage):
+                            if message.is_error:
+                                # A failed turn, such as a bad API key, also ends here.
+                                reason = message.result or "; ".join(
+                                    message.errors or []
+                                )
+                                raise ApplicationError(f"Claude Code failed: {reason}")
                             if message.structured_output is not None:
                                 return SupportTicket.model_validate(
                                     message.structured_output

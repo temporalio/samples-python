@@ -101,8 +101,14 @@ class ChatWorkflow:
                         elif isinstance(response, AssistantMessage):
                             reply_id = response.uuid
                         elif isinstance(response, ResultMessage):
+                            if response.is_error:
+                                # A failed turn, such as a bad API key, also ends here.
+                                reason = response.result or "; ".join(
+                                    response.errors or []
+                                )
+                                raise ApplicationError(f"Claude Code failed: {reason}")
                             self.reply_id = reply_id
-                            return response.result or "\n".join(response.errors or [])
+                            return response.result or ""
 
                     raise RuntimeError("Claude Code ended the turn without a result")
 

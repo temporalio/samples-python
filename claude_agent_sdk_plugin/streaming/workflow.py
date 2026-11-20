@@ -11,6 +11,7 @@ from claude_agent_sdk import (
 from temporalio import workflow
 from temporalio.claude_agent_sdk import TemporalTransport
 from temporalio.contrib.workflow_streams import WorkflowStream
+from temporalio.exceptions import ApplicationError
 
 # The text Claude Code sends itself to continue an interrupted turn.
 CONTINUE = "Continue from where you left off."
@@ -76,6 +77,12 @@ class StreamingWorkflow:
                         ):
                             prompt_id = message.uuid
                         elif isinstance(message, ResultMessage):
+                            if message.is_error:
+                                # A failed turn, such as a bad API key, also ends here.
+                                reason = message.result or "; ".join(
+                                    message.errors or []
+                                )
+                                raise ApplicationError(f"Claude Code failed: {reason}")
                             return message.result or ""
 
                 raise RuntimeError("Claude Code ended the turn without a result")

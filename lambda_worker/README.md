@@ -16,7 +16,7 @@ any Workflow/Activity definitions.
   CloudFormation stacks
 - mTLS client certificate and key for your Temporal namespace (place as `client.pem` and
   `client.key` in this directory)
-- Python 3.10+
+- Python 3.11+
 
 ## Files
 

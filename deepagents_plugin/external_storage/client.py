@@ -2,7 +2,6 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any
 
 import aioboto3
 from langchain_core.messages import AIMessage
@@ -25,7 +24,7 @@ async def connect_client(
     s3_endpoint: str = S3_ENDPOINT,
 ) -> AsyncIterator[Client]:
     """Keep the S3 client alive while Temporal reads and writes payloads."""
-    config: dict[str, Any] = dict(ClientConfig.load_client_connect_config())
+    config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     if target_host is not None:
         config["target_host"] = target_host

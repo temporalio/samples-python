@@ -3,10 +3,10 @@ name = "temporalio-samples-gcp-cloud-run"
 version = "0.1a1"
 description = "Temporal Worker on a Google Cloud Run worker pool with the Cloud Run Id and OpenTelemetry plugins"
 authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio[cloud-run-worker-otel]>=1.33.0,<2"]
+dependencies = ["temporalio[cloud-run-worker-otel]>=1.36.0,<2"]
 
 [dependency-groups]
 dev = [
@@ -16,7 +16,3 @@ dev = [
 
 [tool.uv]
 package = false
-
-# The Cloud Run Id plugin is unreleased; pin temporalio to the SDK commit that adds it until it ships on PyPI.
-[tool.uv.sources]
-temporalio = { git = "https://github.com/temporalio/sdk-python", rev = "fa5cf46ea04920be138bafca7e20ca6208822c30" }

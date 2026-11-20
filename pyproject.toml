@@ -78,6 +78,14 @@ langgraph = [
     "temporalio-langsmith>=0.1.0",
 ]
 litellm = ["litellm>=1.85.0,<2"]
+microsoft-agent-framework = [
+    # The mcp sample is its own uv project (microsoft_agent_framework_plugin/mcp)
+    # because it needs MCP SDK v2 and other groups here still pin v1.
+    "temporalio-microsoft-agent-framework>=0.0.1 ; python_version >= '3.11'",
+    "agent-framework-openai>=1.17,<2 ; python_version >= '3.11'",
+    "temporalio[opentelemetry]>=1.36.0,<2 ; python_version >= '3.11'",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.30.0,<2 ; python_version >= '3.11'",
+]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
     "temporalio[opentelemetry]>=1.36.0,<2",

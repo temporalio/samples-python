@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import timedelta
+from typing import Any
 
 from agents.mcp import MCPServerStdio
 from temporalio.client import Client
@@ -35,7 +36,7 @@ async def main():
     )
 
     # Create client connected to server at the given address
-    config = ClientConfig.load_client_connect_config()
+    config: dict[str, Any] = dict(ClientConfig.load_client_connect_config())
     config.setdefault("target_host", "localhost:7233")
     config["plugins"] = [
         *config.get("plugins", []),

@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import os
 import uuid
+from typing import Any
 
 from opentelemetry import trace
 from temporalio.client import Client
@@ -41,7 +42,7 @@ async def main() -> None:
 
     setup_tracing("ticket-triage-starter")
 
-    config = ClientConfig.load_client_connect_config()
+    config: dict[str, Any] = dict(ClientConfig.load_client_connect_config())
     config.setdefault("target_host", "localhost:7233")
     config["plugins"] = [
         *config.get("plugins", []),

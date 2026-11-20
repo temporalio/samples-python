@@ -33,8 +33,10 @@ jobs:
 
           projects_json="$({
             for project in \
+              arize_tracing \
               bedrock_agentcore/strands_agent \
               lambda_worker \
+              microsoft_agent_framework_plugin/mcp \
               openai_agents/mcp_v2
             do
               if grep -q "^${project}/" <<< "$changed_files"; then
@@ -53,6 +55,10 @@ jobs:
       matrix:
         python: ["3.11", "3.14"]
         project: ${{ fromJSON(needs.detect-standalone-changes.outputs.projects) }}
+        exclude:
+          # temporalio 1.36.0, which arize_tracing needs, requires Python 3.11+
+          - project: arize_tracing
+            python: "3.10"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

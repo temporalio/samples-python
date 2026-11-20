@@ -37,17 +37,21 @@ def _encrypted_codecs() -> dict[str, EncryptionCodec]:
 def caller_data_converter() -> DataConverter:
     return DataConverter(
         payload_codec=NexusCodec(
-            {**_compressed_encrypted_codecs(), **_encrypted_codecs()},
-            EncryptionCodec("caller-workflow", CALLER_WORKFLOW_KEY),
+            endpoint_codecs={**_compressed_encrypted_codecs(), **_encrypted_codecs()},
+            workflow_codec=EncryptionCodec("caller-workflow", CALLER_WORKFLOW_KEY),
         )
     )
 
 
+# In this sample, each handler's workflow_codec reuses its endpoint-1 key for
+# backing workflow inputs. Nexus results still use the called endpoint's codec.
 def compressed_encrypted_data_converter() -> DataConverter:
     return DataConverter(
         payload_codec=NexusCodec(
-            _compressed_encrypted_codecs(),
-            EncryptionCodec("compressed-encrypted-1", COMPRESSED_ENCRYPTED_KEY_1),
+            endpoint_codecs=_compressed_encrypted_codecs(),
+            workflow_codec=EncryptionCodec(
+                "compressed-encrypted-1", COMPRESSED_ENCRYPTED_KEY_1
+            ),
         )
     )
 
@@ -55,6 +59,7 @@ def compressed_encrypted_data_converter() -> DataConverter:
 def encrypted_data_converter() -> DataConverter:
     return DataConverter(
         payload_codec=NexusCodec(
-            _encrypted_codecs(), EncryptionCodec("encrypted-1", ENCRYPTED_KEY_1)
+            endpoint_codecs=_encrypted_codecs(),
+            workflow_codec=EncryptionCodec("encrypted-1", ENCRYPTED_KEY_1),
         )
     )

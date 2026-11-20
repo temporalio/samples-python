@@ -17,18 +17,20 @@ from service import (
 )
 from workflows import CallerWorkflow, EchoWorkflow
 
+ROLE_CONFIGS = {
+    "caller": (CALLER_NAMESPACE, caller_data_converter),
+    "compressed-encrypted": (
+        COMPRESSED_ENCRYPTED_NAMESPACE,
+        compressed_encrypted_data_converter,
+    ),
+    "encrypted": (ENCRYPTED_NAMESPACE, encrypted_data_converter),
+}
+
 
 async def main(role: str) -> None:
-    namespace, data_converter = {
-        "caller": (CALLER_NAMESPACE, caller_data_converter),
-        "compressed-encrypted": (
-            COMPRESSED_ENCRYPTED_NAMESPACE,
-            compressed_encrypted_data_converter,
-        ),
-        "encrypted": (ENCRYPTED_NAMESPACE, encrypted_data_converter),
-    }[role]
+    namespace, make_data_converter = ROLE_CONFIGS[role]
     client = await Client.connect(
-        "localhost:7233", namespace=namespace, data_converter=data_converter()
+        "localhost:7233", namespace=namespace, data_converter=make_data_converter()
     )
     async with Worker(
         client,
@@ -44,7 +46,7 @@ async def main(role: str) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("role", choices=["caller", "compressed-encrypted", "encrypted"])
+    parser.add_argument("role", choices=ROLE_CONFIGS)
     try:
         asyncio.run(main(parser.parse_args().role))
     except KeyboardInterrupt:

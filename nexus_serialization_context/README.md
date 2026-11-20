@@ -32,8 +32,9 @@ Both sides also need the same payload format, including whether to compress.
 
 The caller uses a separate key for its workflow input and final result.
 For this example, each handler reuses its endpoint-1 key for backing workflow inputs.
-If your application already has a workflow codec, keep it as the default so it
-can still read existing histories.
+
+When adapting this sample, pass your existing workflow codec as the `workflow_codec`
+argument to [`NexusCodec`](codec.py) so workers can still read existing histories.
 
 | Ordinary workflow payload | Default key ID |
 |---|---|

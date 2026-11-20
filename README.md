@@ -59,6 +59,7 @@ Some examples require extra dependencies. See each sample's directory for specif
   * [hello_signal](hello/hello_signal.py) - Send signals to a workflow.
   * [hello update](hello/hello_update.py) - Send a request to and a response from a client to a workflow execution.
 <!-- Keep this list in alphabetical order -->
+* [activity_sessions](activity_sessions) - Experimental activity sessions reuse worker-local conversation context.
 * [activity_worker](activity_worker) - Use Python activities from a workflow in another language.
 * [arize_tracing](arize_tracing) - Trace Temporal workflows and OpenAI Agents in Arize Phoenix or Arize AX with the OpenTelemetry plugin and OpenInference.
 * [batch_sliding_window](batch_sliding_window) - Batch processing with a sliding window of child workflows.

@@ -81,7 +81,7 @@ is no more work for it to do. The max timeout determines the max amount of time 
 approach would be to have the Temporal worker spin up and never shutdown on its own. However, the max timeout doesn't
 offer graceful shutdown and it would defeat the purpose of AgentCore's idle timer.
 
-This sample, includes a ActivityTracker which intercepts the Worker activity and keeps the worker alive. If the worker sits
+This sample includes a WorkTracker which counts in-flight Workflow and Nexus tasks (via a tracking slot supplier) and Activities (via an interceptor), and keeps the worker alive while any are running. If the worker sits
 idle for AGENTCORE_DEBOUNCE_SECONDS, it will shutdown and enable AgentCore to exit based on idle timer. The idle timer
 in this configuration can be very short since there is no temporal worker running when idle.
 
@@ -98,7 +98,7 @@ built so that every Activity the agent Workflow starts -- each model call and ea
   Workflow for its lifetime. Without a session id (e.g. a local run) it falls back to `WorkerSessionConfig()`.
 - The plugin refuses to start a Worker that has no `session_config`. It is registered on the Client, which works because
   `Worker(...)` merges its own arguments (including `session_config`) before any plugin's `configure_worker` runs.
-- Session Workers need fixed-size activity slots: `max_concurrent_activities` matches the sync-Activity thread pool.
+- Session Workers need fixed-size activity slots: the tuner uses a `FixedSizeSlotSupplier` for activities that matches the sync-Activity thread pool.
 - `starter.py` keeps a plain `StrandsPlugin()`; the Client only needs the plugin's data converter.
 
 This requires a Temporal Service with sticky activity execution enabled.

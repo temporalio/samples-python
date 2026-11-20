@@ -1862,7 +1862,7 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 wheels = [
-    { filename = "temporalio-1.34.0+sessions-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:c90d0b99862865895c97d8bd8d33225c63683ab7443dc94cfbcc490dcf9ae3a6" },
+    { filename = "temporalio-1.34.0+sessions-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:4d62ace89f036e162d69245136e347efc7194eab21f649caa8b1bcc8fa3da3db" },
 ]
 
 [package.optional-dependencies]
@@ -1924,7 +1924,7 @@ dependencies = [
     { name = "typing-extensions" },
 ]
 wheels = [
-    { filename = "temporalio-1.34.0+sessions-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:13342a6ab239b26976f165793ad2f083238b2aa13d2247aa74e4e320dd14f62c" },
+    { filename = "temporalio-1.34.0+sessions-cp310-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:62b51f959bd711b1ea30fa92a81adc46cf297576ae008103aca61795c0bee23a" },
 ]
 
 [package.optional-dependencies]

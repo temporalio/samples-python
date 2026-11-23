@@ -24,7 +24,6 @@ async def main():
         client,
         task_queue="google-adk-agents-chatbot",
         workflows=[ChatbotAgentWorkflow],
-        plugins=[plugin],
     )
     await worker.run()
     # @@@SNIPEND

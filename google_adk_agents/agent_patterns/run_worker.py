@@ -23,7 +23,6 @@ async def main():
         client,
         task_queue="google-adk-agents-agent-patterns",
         workflows=[MultiAgentWorkflow],
-        plugins=[plugin],
     )
     await worker.run()
 

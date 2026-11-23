@@ -28,7 +28,6 @@ async def main():
         client,
         task_queue="google-adk-agents-mcp",
         workflows=[EchoMcpWorkflow],
-        plugins=[plugin],
     )
     await worker.run()
     # @@@SNIPEND

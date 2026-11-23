@@ -23,7 +23,6 @@ async def main():
         client,
         task_queue="google-adk-agents-streaming",
         workflows=[StreamingAgentWorkflow],
-        plugins=[plugin],
     )
     await worker.run()
 

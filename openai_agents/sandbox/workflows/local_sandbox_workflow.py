@@ -3,7 +3,7 @@
 ``SandboxAgent`` gives an agent a real machine to work on: it can run shell
 commands and read and write files. The plugin routes every one of those
 operations — creating the session, each ``exec``, each read and write, and the
-teardown — through a Temporal activity against the ``SandboxClientProvider``
+teardown — through a Temporal activity against the sandbox client provider
 registered on the worker under the name passed to
 ``temporal_sandbox_client()``.
 
@@ -11,8 +11,10 @@ Two consequences worth knowing:
 
 1. Each sandbox operation is individually retryable and shows up in workflow
    history, so a flaky command is a retried activity rather than a lost run.
-2. The sandbox session state is serialized with the workflow, so a worker
-   restart mid-run resumes against the same session instead of starting over.
+2. The sandbox session state is serialized with the workflow. With a hosted
+   backend, a worker restart mid-run resumes against the same session. A
+   local sandbox lives on the worker that created it, so a restart in the
+   middle of a step loses it and the run fails with ``SandboxLost``.
 
 This sample uses the local Unix backend, which runs commands on the worker
 host and needs no credentials. Swap in a remote client such as

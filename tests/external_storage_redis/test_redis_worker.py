@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import gc
 import hashlib
 import uuid
 from collections.abc import AsyncIterator, Callable, Sequence
@@ -51,13 +52,22 @@ def new_worker(
     task_queue: str | None = None,
     **kwargs: Any,
 ) -> Worker:
-    return Worker(
-        client,
-        task_queue=task_queue or str(uuid.uuid4()),
-        workflows=workflows,
-        activities=activities,
-        **kwargs,
-    )
+    # A GC finalizer that imports during sandbox validation can hit Python 3.11's
+    # import-lock bug (python/cpython#91351). Pause cyclic GC only for this
+    # synchronous constructor, then restore its previous state.
+    gc_enabled = gc.isenabled()
+    gc.disable()
+    try:
+        return Worker(
+            client,
+            task_queue=task_queue or str(uuid.uuid4()),
+            workflows=workflows,
+            activities=activities,
+            **kwargs,
+        )
+    finally:
+        if gc_enabled:
+            gc.enable()
 
 
 class FailingSetClient(RedisStorageDriverClient):

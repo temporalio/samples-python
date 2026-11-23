@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -2165,7 +2165,7 @@ wheels = [
 
 [[package]]
 name = "strands-agents"
-version = "1.54.0"
+version = "1.66.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "boto3" },
@@ -2182,9 +2182,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "watchdog" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/74/3d/1e38d7644293bc31405562807933a68bd734e75a269bf24ad94869f51915/strands_agents-1.54.0.tar.gz", hash = "sha256:8351ae5962a0cf51c0c8d6ae928752ab5331671603393aef9d267d1c435aa3c3", size = 1457826, upload-time = "2026-08-27T20:47:16.92Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c7/d5/1183b37eade397f9cfbe17b0c5d2808db7b6cd4d1487eb6e58091e59d003/strands_agents-1.66.0.tar.gz", hash = "sha256:6344cee166910fc390ffd5e8afae93cfb99689fc1a9064f0dbf71b262a13d634", size = 2098351, upload-time = "2026-11-23T17:42:45.709Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a3/a2/8bdc61000650649ae10e364698d88f3a4279155f834aefd1fb9ded7cf81b/strands_agents-1.54.0-py3-none-any.whl", hash = "sha256:ca37b9001531596a634e9249f97fb03ce70997e216f6a71d4e8f8182818cbf5c", size = 728301, upload-time = "2026-08-27T20:47:14.764Z" },
+    { url = "https://files.pythonhosted.org/packages/73/ae/060464e060fb1e86283bd72a05c0e445b63a25b0d7b954c7a925f1936ddb/strands_agents-1.66.0-py3-none-any.whl", hash = "sha256:2d270a2bc54e5f26de17b23d776a8b9b484b55295c724659944fd50d2807dfda", size = 1055847, upload-time = "2026-11-23T17:42:43.821Z" },
 ]
 
 [[package]]
@@ -2275,7 +2275,7 @@ requires-dist = [
     { name = "strands-agents", specifier = ">=1.39.0" },
     { name = "strands-agents-tools", specifier = ">=0.5.2" },
     { name = "temporalio", specifier = ">=1.36.0,<2" },
-    { name = "temporalio-strands-agents", specifier = ">=0.1.0" },
+    { name = "temporalio-strands-agents", specifier = ">=1.0.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -2289,7 +2289,7 @@ dev = [
 
 [[package]]
 name = "temporalio-strands-agents"
-version = "0.1.0"
+version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "botocore" },
@@ -2297,9 +2297,9 @@ dependencies = [
     { name = "strands-agents" },
     { name = "temporalio" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/35/ab/2b2a30df8ef357546e14a151ab114869da541405d99da513a74b9c4fc89f/temporalio_strands_agents-0.1.0.tar.gz", hash = "sha256:1da8ac046004bb83f12cd3c87df278f4c71ee11c2abecfb791928e22c22c3f75", size = 36060, upload-time = "2026-10-07T22:52:50.223Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bf/f6/aeed6f837485a112fc531ead1f8c34a9ef77ebccefa75cadc312e95cffc8/temporalio_strands_agents-1.0.0.tar.gz", hash = "sha256:776cdb36332b64d617c78b2c4210009de39c1c84cd31890be934b978d06dd507", size = 68124, upload-time = "2026-11-18T03:23:38.546Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/52/2d8e3126bbfc88f6cf8cbbacf98550ea509e3796885420344b1f49a7eb2d/temporalio_strands_agents-0.1.0-py3-none-any.whl", hash = "sha256:3227ae604e845feeab0f0868fc301d44b299585935dfb42c47d9910234f74e9f", size = 36680, upload-time = "2026-10-07T22:52:49.072Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/1c/8e9819b0639773043eb5a4e91a711b5551a738938f614d40dd28a45dfd69/temporalio_strands_agents-1.0.0-py3-none-any.whl", hash = "sha256:5b34263ab073b8c2fda3481c1f4d03a463cfeaa7b87c5be040a992f3f1303275", size = 61960, upload-time = "2026-11-18T03:23:37.04Z" },
 ]
 
 [[package]]

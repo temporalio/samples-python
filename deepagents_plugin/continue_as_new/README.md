@@ -5,10 +5,13 @@ workflow-history limit. `run_deep_agent(agent, input, state_snapshot=...)` keeps
 the run bounded: once a turn ends with pending todos and the server recommends
 continuing (`workflow.info().is_continue_as_new_suggested()` — the default and
 recommended mode, which accounts for both history length and size), it snapshots
-the accumulated messages **and** the model/tool result cache and continues into
-a fresh run. Completed model/tool calls are reused from the carried cache rather
-than re-run. To trigger on a fixed history-event count instead, pass an explicit
+the accumulated messages and the agent's state files and continues into a fresh
+run. To trigger on a fixed history-event count instead, pass an explicit
 `continue_as_new_after=N`.
+
+`run_deep_agent` reads the todos that LangChain's `TodoListMiddleware` writes.
+`create_deep_agent` does not add that middleware, so this sample adds it.
+Without it, the run returns after each turn and never continues as new.
 
 The `@workflow.run` signature is `run(self, input, state_snapshot=None)`, where
 `input` is the messages mapping and `state_snapshot` is how `run_deep_agent`
@@ -24,7 +27,8 @@ checkpointer would do I/O from workflow code and is not replay-safe.
 - `run_deep_agent(agent, input, state_snapshot=...)` in the default
   server-suggested mode (with `continue_as_new_after=N` as the explicit override)
 - The `run(self, input, state_snapshot=None)` continue-as-new contract
-- Carrying both messages and the result cache across continue-as-new
+- Adding `TodoListMiddleware` so the agent records the todos `run_deep_agent` checks
+- Carrying messages and state files across continue-as-new
 
 ## Running the Sample
 

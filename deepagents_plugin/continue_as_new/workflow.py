@@ -2,13 +2,17 @@
 
 A long conversation would bloat workflow history until it hits Temporal's limit.
 ``run_deep_agent(agent, input, state_snapshot=...)`` solves this: once a turn
-finishes with pending work and the server recommends continuing
+finishes with pending todos and the server recommends continuing
 (``workflow.info().is_continue_as_new_suggested()`` — the default and
 recommended mode, accounting for both history length and size), it snapshots the
-accumulated messages **and** the model/tool result cache and continues into a
-fresh run — so completed model/tool calls are reused, not re-run, after the
-continue-as-new. Pass ``continue_as_new_after=N`` instead to trigger on a fixed
+accumulated messages and the agent's state files and continues into a fresh
+run. Pass ``continue_as_new_after=N`` instead to trigger on a fixed
 history-event count.
+
+``run_deep_agent`` reads the todos that LangChain's ``TodoListMiddleware``
+writes. ``create_deep_agent`` does not add that middleware, so the agent here
+adds it; without it, the run returns after each turn and never continues as
+new.
 
 The contract ``run_deep_agent`` requires is that the ``@workflow.run`` method
 accepts the carried state, i.e. its signature is
@@ -24,6 +28,7 @@ I/O from workflow code.
 from typing import Any
 
 from deepagents import create_deep_agent
+from langchain.agents.middleware import TodoListMiddleware
 from temporalio import workflow
 from temporalio.deepagents import run_deep_agent
 
@@ -40,6 +45,9 @@ class LongResearchAgent:
                 "You are a research agent. Break large tasks into todos and work "
                 "through them until the research is complete."
             ),
+            # run_deep_agent continues as new only while todos are pending, and
+            # this middleware is what records them.
+            middleware=[TodoListMiddleware()],
         )
         result = await run_deep_agent(
             agent,

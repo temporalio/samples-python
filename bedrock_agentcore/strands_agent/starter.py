@@ -21,7 +21,8 @@ async def main() -> None:
     # automatically alongside an API key.
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
-    client = await Client.connect(**config, plugins=[StrandsPlugin()])
+    config["plugins"] = [*config.get("plugins", []), StrandsPlugin()]
+    client = await Client.connect(**config)
     print("Connected to Temporal Service")
 
     result = await client.execute_workflow(

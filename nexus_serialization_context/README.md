@@ -83,8 +83,7 @@ established encryption implementation and secure key storage.
 ## Prerequisites
 
 Use Python 3.11 or newer, [uv](https://docs.astral.sh/uv/), and Temporal Python SDK
-1.36.0 or later. This sample has its own uv project so the other samples can continue
-to support Python 3.10.
+1.36.0 or later. This sample has its own uv project and lockfile.
 
 Use a Temporal Server that supports Nexus serialization-context propagation for
 workflow-backed asynchronous operations. For the local walkthrough, download the prerelease

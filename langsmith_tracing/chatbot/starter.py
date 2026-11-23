@@ -4,7 +4,6 @@ import asyncio
 import readline  # noqa: F401 — enables input() line editing
 import sys
 import uuid
-from typing import Any
 
 from langsmith import traceable
 from temporalio.client import Client
@@ -20,7 +19,7 @@ PROJECT_NAME = "langsmith-chatbot"
 async def main():
     add_temporal_runs = "--add-temporal-runs" in sys.argv
 
-    config: dict[str, Any] = dict(ClientConfig.load_client_connect_config())
+    config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
 
     plugin = LangSmithPlugin(
@@ -29,7 +28,10 @@ async def main():
     )
 
     config["plugins"] = [*config.get("plugins", []), plugin]
-    client = await Client.connect(**config, data_converter=pydantic_data_converter)
+    client = await Client.connect(
+        **config,
+        data_converter=pydantic_data_converter,
+    )
 
     wf_id = f"langsmith-chatbot-{uuid.uuid4().hex[:8]}"
 

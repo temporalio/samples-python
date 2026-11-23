@@ -3,7 +3,6 @@
 import argparse
 import asyncio
 import logging
-from typing import Any
 
 from temporalio.client import Client
 from temporalio.contrib.opentelemetry import OpenTelemetryPlugin
@@ -39,7 +38,7 @@ async def main() -> None:
     setup_tracing("ticket-triage-worker")
     flavor = instrument_openai()
 
-    config: dict[str, Any] = dict(ClientConfig.load_client_connect_config())
+    config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
 
     # add_temporal_spans=True emits spans for Temporal operations (StartWorkflow,

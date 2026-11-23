@@ -41,8 +41,9 @@ async def main() -> None:
         plugins=[
             OpenAIAgentsPlugin(
                 model_params=ModelActivityParameters(
-                    # A custom model provider must set a timeout. Raise it for
-                    # slow models or deployments that scale up from zero.
+                    # Model calls time out after 60 seconds by default. Raise
+                    # this for slow models or deployments that scale up from
+                    # zero.
                     start_to_close_timeout=timedelta(seconds=60),
                     # The plugin heartbeats, so a Worker that dies mid-call is
                     # noticed in seconds rather than after the full timeout.

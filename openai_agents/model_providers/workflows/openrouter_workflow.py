@@ -12,8 +12,8 @@ OPENROUTER_MODEL = "openrouter/auto"
 class OpenRouterAgentWorkflow:
     @workflow.run
     async def run(self, prompt: str) -> str:
-        # Tools that run inside the Workflow must be async: the Agents SDK runs
-        # sync tools in a thread, which the Workflow sandbox does not allow.
+        # Function tools run inline in the Workflow, sync or async, so they must
+        # be fast and deterministic. Put slow work or I/O in Activities.
         @function_tool
         async def get_weather(city: str) -> str:
             workflow.logger.debug(f"Getting weather for {city}")

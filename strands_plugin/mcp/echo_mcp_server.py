@@ -1,12 +1,12 @@
-"""Tiny FastMCP server: exposes a single ``echo`` tool over stdio.
+"""Tiny MCP server: exposes a single ``echo`` tool over stdio.
 
 The worker launches this script as a subprocess and connects to it via the
 MCP stdio transport. Replace it with any real MCP server in production.
 """
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("echo-server")
+mcp = MCPServer("echo-server")
 
 
 @mcp.tool()

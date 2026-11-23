@@ -2,10 +2,10 @@ import argparse
 import random
 
 import requests
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 # Create server
-mcp = FastMCP("Tools Server")
+mcp = MCPServer("Tools Server")
 
 
 @mcp.tool()

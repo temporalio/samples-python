@@ -31,7 +31,7 @@ uv run google_genai/mcp/run_workflow.py
 
 | File | Description |
 |------|-------------|
-| `echo_mcp_server.py` | A minimal `FastMCP` stdio server exposing an `echo` tool |
+| `echo_mcp_server.py` | A minimal stdio MCP server exposing an `echo` tool |
 | `workflow.py` | `McpWorkflow` — passes `TemporalMcpClientSession("echo")` as a tool |
 | `run_worker.py` | Registers the `echo` MCP server with the plugin, starts the worker |
 | `run_workflow.py` | Executes the workflow and prints the result |

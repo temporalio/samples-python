@@ -1,8 +1,8 @@
 """A minimal stdio MCP server used by the MCP sample."""
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("echo-server")
+mcp = MCPServer("echo-server")
 
 
 @mcp.tool()

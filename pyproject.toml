@@ -162,3 +162,8 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "opentelemetry.*"
 ignore_errors = true
+
+# The released temporalio that CI installs has no Streams API yet.
+[[tool.mypy.overrides]]
+module = ["streams_redis.*", "tests.streams_redis.*"]
+ignore_errors = true

@@ -1,9 +1,9 @@
 """Workflow that uses an MCP server through ``TemporalMCPClient``.
 
-The plugin connects to each registered MCP server at worker startup and
-caches the tool manifest. ``TemporalMCPClient`` on the workflow side is a
-pure handle that references the server by name and carries the activity
-options for each tool call.
+``TemporalMCPClient`` on the workflow side is a pure handle that references
+the server by name and carries the activity options for each MCP call. The
+agent lists the server's tools in an activity before each model call, and
+runs each tool call in another activity.
 """
 
 # @@@SNIPSTART python-strands-mcp-workflow

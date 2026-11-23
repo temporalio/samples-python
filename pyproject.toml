@@ -122,7 +122,7 @@ constraint-dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-exclude = ["lambda_worker*"]
+exclude = ["lambda_worker*", "nexus_serialization_context*"]
 
 [build-system]
 requires = ["setuptools>=77"]

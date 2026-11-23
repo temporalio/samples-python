@@ -49,6 +49,7 @@ sends an `approve` decision via the update, and prints the final result.
 
 | File | Description |
 |------|-------------|
+| `tools.py` | `book_trip`, wrapped with `tool_as_activity` at module level |
 | `workflow.py` | `HumanInTheLoopAgent` with `interrupt_on`, a Query, and an Update |
 | `run_worker.py` | Adds `DeepAgentsPlugin`, starts the worker |
 | `run_workflow.py` | Starts the workflow, polls the query, sends the resume update |

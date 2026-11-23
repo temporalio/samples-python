@@ -19,14 +19,16 @@ workflow id.
 """
 
 # @@@SNIPSTART python-deepagents-human-in-the-loop-workflow
-from datetime import timedelta
-
 from deepagents import create_deep_agent
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 from temporalio import workflow
-from temporalio.deepagents import tool_as_activity
+
+# tools.py calls tool_as_activity(...) at module level, so the worker registers
+# the tool once, at import.
+with workflow.unsafe.imports_passed_through():
+    from deepagents_plugin.human_in_the_loop.tools import trip_tool
 
 
 @workflow.defn
@@ -38,13 +40,6 @@ class HumanInTheLoopAgent:
 
     @workflow.run
     async def run(self, city: str) -> str:
-        def book_trip(city: str) -> str:
-            """Book a trip to a city (requires human approval)."""
-            return f"Booked a trip to {city}."
-
-        trip_tool = tool_as_activity(
-            book_trip, start_to_close_timeout=timedelta(seconds=30)
-        )
         agent = create_deep_agent(
             model="anthropic:claude-sonnet-4-5",
             tools=[trip_tool],

@@ -6,7 +6,7 @@ from temporalio.strands_agents.workflow import activity_as_tool
 
 TASK_QUEUE = "agentcore-strands-task-queue"
 DEPLOYMENT_NAME = "agentcore-strands-agent-python"
-BUILD_ID = "1.0.0"
+BUILD_ID = "1.1.0"
 
 with workflow.unsafe.imports_passed_through():
     from activities import execute_code

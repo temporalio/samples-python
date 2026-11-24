@@ -1,11 +1,15 @@
 import asyncio
+import os
 from datetime import timedelta
 
-from agents import set_tracing_disabled
 from agents.extensions.models.litellm_provider import LitellmProvider
 from temporalio.client import Client
 from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
+from temporalio.worker.workflow_sandbox import (
+    SandboxedWorkflowRunner,
+    SandboxRestrictions,
+)
 
 from openai_agents.model_providers.workflows.litellm_auto_workflow import (
     LitellmAutoWorkflow,
@@ -13,10 +17,8 @@ from openai_agents.model_providers.workflows.litellm_auto_workflow import (
 
 
 async def main():
-    # Disable Agents SDK tracing — the default exporter sends traces to OpenAI's
-    # backend, which requires an OpenAI API key not available in these samples.
-    # Call here rather than in the workflow because it's a global side effect.
-    set_tracing_disabled(disabled=True)
+    # Disable tracing, including the provider installed by the plugin.
+    os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "1"
 
     # Create client connected to server at the given address
     client = await Client.connect(
@@ -34,6 +36,9 @@ async def main():
     worker = Worker(
         client,
         task_queue="openai-agents-model-providers-task-queue",
+        workflow_runner=SandboxedWorkflowRunner(
+            restrictions=SandboxRestrictions.default.with_passthrough_modules("litellm")
+        ),
         workflows=[
             LitellmAutoWorkflow,
         ],

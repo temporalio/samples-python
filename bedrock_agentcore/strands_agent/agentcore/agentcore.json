@@ -40,7 +40,7 @@
         },
         {
           "name": "TEMPORAL_BUILD_ID",
-          "value": "1.0.0"
+          "value": "1.1.0"
         },
         {
           "name": "AWS_REGION",

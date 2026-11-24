@@ -29,10 +29,11 @@ anything you would not run locally, register a remote client such as
 still just names a provider.
 
 A Unix-local or Docker sandbox lives on the worker that created it, so the
-worker registers it with `OnHostSandboxClientProvider`, which sends every
-operation on a sandbox to that worker. Hosted backends use
-`SandboxClientProvider`. A worker restart in the middle of a step loses a
-local sandbox, and the run fails with the non-retryable `SandboxLost`.
+worker registers it with `OnHostSandboxClientProvider` and a unique
+`worker_name` for each worker process. Hosted backends use
+`SandboxClientProvider`. If the worker disappears, the next operation reaches
+its `schedule_to_start_timeout`. An operation sent to a worker that no longer
+has the sandbox fails with the non-retryable `SandboxLost`.
 
 ## Running the Example
 

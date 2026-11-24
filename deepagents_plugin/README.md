@@ -43,7 +43,7 @@ one side.
 
    > The group installs the standalone `temporalio-deepagents` and
    > `temporalio-langsmith` packages plus the Anthropic provider package. Requires
-   > Temporal 1.34.0 or later and Python >= 3.11 — on older interpreters the group resolves to nothing
+   > Temporal Python SDK 1.36.0 or later and Python >= 3.11 — on older interpreters the group resolves to nothing
    > and the samples are skipped.
 
 2. Configure a model provider. Most samples use

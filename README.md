@@ -128,3 +128,7 @@ without wrapping them in a workflow.
 To run the tests:
 
     uv run poe test
+
+External Storage tests run in a separate environment:
+
+    uv run poe test-external-storage

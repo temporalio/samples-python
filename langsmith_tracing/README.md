@@ -15,7 +15,7 @@ Install dependencies:
 uv sync --group langsmith-tracing
 ```
 
-This installs the standalone `temporalio-langsmith` package, which requires Temporal 1.34.0 or later.
+This installs the standalone `temporalio-langsmith` package, which requires Temporal Python SDK 1.36.0 or later.
 
 Set environment variables:
 

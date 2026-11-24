@@ -2,10 +2,10 @@
 
 import asyncio
 import logging
+import os
 import sys
 from datetime import timedelta
 
-from agents import set_tracing_disabled
 from temporalio.client import Client
 from temporalio.openai_agents import ModelActivityParameters, OpenAIAgentsPlugin
 from temporalio.worker import Worker
@@ -20,9 +20,8 @@ from openai_agents.model_providers.workflows.openai_compatible_workflow import (
 
 
 async def main() -> None:
-    # Disable Agents SDK tracing: the default exporter sends traces to OpenAI's
-    # backend, which needs an OpenAI API key that this sample does not have.
-    set_tracing_disabled(disabled=True)
+    # Disable tracing, including the provider installed by the plugin.
+    os.environ["OPENAI_AGENTS_DISABLE_TRACING"] = "1"
 
     logging.basicConfig(level=logging.WARNING)
     logging.getLogger("temporalio.workflow").setLevel(logging.DEBUG)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 from datetime import timedelta
 
 from agents.sandbox.sandboxes.unix_local import UnixLocalSandboxClient
@@ -36,7 +37,9 @@ async def main() -> None:
                 # such as Daytona use SandboxClientProvider.
                 sandbox_clients=[
                     OnHostSandboxClientProvider(
-                        SANDBOX_PROVIDER, UnixLocalSandboxClient()
+                        SANDBOX_PROVIDER,
+                        UnixLocalSandboxClient(),
+                        worker_name=str(uuid.uuid4()),
                     ),
                 ],
             ),

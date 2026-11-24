@@ -58,6 +58,7 @@ google-adk = [
 google-genai = ["temporalio-google-genai[mcp]>=1.0.0"]
 langfuse-tracing = [
     "openai>=1.4.0",
+    "httpx>=0.28.1",
     "temporalio[opentelemetry]>=1.36.0,<2",
     # Langfuse's OTLP endpoint is HTTP-only (no gRPC), so use the http exporter.
     "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
@@ -115,9 +116,10 @@ cloud-export-to-parquet = [
 ]
 
 [tool.uv]
-# aioboto3 15.5 needs boto3 older than 1.40.62. temporalio-openai-agents 2 needs
-# openai 3, and every litellm release that accepts openai 3 needs boto3 1.43 or
-# later, so external-storage can't share an environment with these groups.
+# external-storage pins aioboto3 below 15.2. Even aioboto3 15.5 needs boto3
+# older than 1.40.62. temporalio-openai-agents 2 needs openai 3, and every
+# litellm release that accepts openai 3 needs boto3 1.43 or later, so these
+# groups cannot share an environment.
 conflicts = [
     [{ group = "external-storage" }, { group = "litellm" }],
     [{ group = "external-storage" }, { group = "openai-agents" }],
@@ -144,8 +146,10 @@ lint = [
     { cmd = "uv run scripts/run_root_tool.py ruff check --select I" },
     { cmd = "uv run scripts/run_root_tool.py ruff format --check" },
     { ref = "lint-types" },
+    { ref = "lint-types-external-storage" },
 ]
 lint-types = "uv run --all-groups --no-group cloud-export-to-parquet --no-group external-storage scripts/run_root_tool.py mypy --check-untyped-defs --namespace-packages ."
+lint-types-external-storage = "uv run --group external-storage --group deepagents scripts/run_root_tool.py mypy --check-untyped-defs --namespace-packages external_storage deepagents_plugin/external_storage tests/deepagents_plugin/external_storage_test.py"
 test = "uv run --all-groups --no-group cloud-export-to-parquet --no-group external-storage pytest --ignore=tests/deepagents_plugin/external_storage_test.py"
 test-external-storage = "uv run --group external-storage --group deepagents pytest tests/deepagents_plugin/external_storage_test.py"
 

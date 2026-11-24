@@ -5,12 +5,11 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from langchain_core.messages import ToolMessage
-from langchain_core.tools import tool
 from temporalio import workflow
-from temporalio.common import RetryPolicy
-from temporalio.deepagents import create_temporal_deep_agent, tool_as_activity
+from temporalio.deepagents import create_temporal_deep_agent
 
-PAYLOAD_BYTES = 6 * 1024 * 1024
+with workflow.unsafe.imports_passed_through():
+    from deepagents_plugin.external_storage.tools import PAYLOAD_BYTES, reader
 
 
 @dataclass
@@ -20,22 +19,10 @@ class ExternalStorageResult:
     last_answer: str
 
 
-@tool
-async def read_file(file_path: str) -> str:
-    """Read a mock document containing exactly 6 MiB of text."""
-    del file_path
-    return "x" * PAYLOAD_BYTES
-
-
 @workflow.defn
 class ExternalStorageAgent:
     @workflow.run
     async def run(self, question: str) -> ExternalStorageResult:
-        reader = tool_as_activity(
-            read_file,
-            start_to_close_timeout=timedelta(seconds=30),
-            activity_options={"retry_policy": RetryPolicy(maximum_attempts=1)},
-        )
         agent = create_temporal_deep_agent(
             model="fake:external-storage",
             tools=[reader],

@@ -4676,6 +4676,7 @@ google-genai = [
     { name = "temporalio-google-genai", extra = ["mcp"] },
 ]
 langfuse-tracing = [
+    { name = "httpx" },
     { name = "openai" },
     { name = "openinference-instrumentation-openai" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
@@ -4800,6 +4801,7 @@ google-adk = [
 ]
 google-genai = [{ name = "temporalio-google-genai", extras = ["mcp"], specifier = ">=1.0.0" }]
 langfuse-tracing = [
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "openai", specifier = ">=1.4.0" },
     { name = "openinference-instrumentation-openai", specifier = ">=0.1.52" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.30.0,<2" },

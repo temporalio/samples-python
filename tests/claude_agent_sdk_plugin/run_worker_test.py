@@ -80,6 +80,16 @@ async def running_main(
     run_worker = importlib.import_module(
         f"claude_agent_sdk_plugin.{scenario}.run_worker"
     )
+    connect = Client.connect
+
+    async def connect_with_plugins(*args: Any, **kwargs: Any) -> Client:
+        kwargs["plugins"] = [
+            *client.config()["plugins"],
+            *kwargs.get("plugins", []),
+        ]
+        return await connect(*args, **kwargs)
+
+    monkeypatch.setattr(run_worker.Client, "connect", connect_with_plugins)
     main = asyncio.create_task(run_worker.main())
 
     async def until(awaitable: Awaitable[T]) -> T:
@@ -165,6 +175,7 @@ async def test_execute_workflow(
         client = await Client.connect(
             client.service_client.config.target_host,
             data_converter=pydantic_data_converter,
+            plugins=client.config()["plugins"],
         )
     async with running_main(scenario, client, monkeypatch) as until:
         result = await until(

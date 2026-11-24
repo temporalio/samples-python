@@ -13,8 +13,10 @@ Two consequences worth knowing:
    history, so a flaky command is a retried activity rather than a lost run.
 2. The sandbox session state is serialized with the workflow. With a hosted
    backend, a worker restart mid-run resumes against the same session. A
-   local sandbox lives on the worker that created it, so a restart in the
-   middle of a step loses it and the run fails with ``SandboxLost``.
+   local sandbox lives on the worker that created it. If that worker is
+   unavailable, the next operation reaches its schedule-to-start timeout.
+   If a worker receives an operation for a sandbox it no longer has, it
+   raises ``SandboxLost``.
 
 This sample uses the local Unix backend, which runs commands on the worker
 host and needs no credentials. Swap in a remote client such as
@@ -24,12 +26,15 @@ only the worker changes, the workflow just names a different provider.
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from agents import Runner
 from agents.run import RunConfig
 from agents.sandbox import SandboxAgent, SandboxRunConfig
 from agents.sandbox.sandboxes.unix_local import UnixLocalSandboxClientOptions
 from temporalio import workflow
 from temporalio.openai_agents.workflow import temporal_sandbox_client
+from temporalio.workflow import ActivityConfig
 
 from openai_agents.sandbox.shared import SANDBOX_PROVIDER
 
@@ -56,7 +61,13 @@ class LocalSandboxWorkflow:
             run_config=RunConfig(
                 sandbox=SandboxRunConfig(
                     # Must match the name registered on the worker.
-                    client=temporal_sandbox_client(SANDBOX_PROVIDER),
+                    client=temporal_sandbox_client(
+                        SANDBOX_PROVIDER,
+                        config=ActivityConfig(
+                            start_to_close_timeout=timedelta(minutes=5),
+                            schedule_to_start_timeout=timedelta(seconds=30),
+                        ),
+                    ),
                     options=UnixLocalSandboxClientOptions(),
                 ),
             ),

@@ -24,7 +24,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
    uv sync --group strands-agents
    ```
 
-   This installs the standalone `temporalio-strands-agents` package, which requires Temporal 1.34.0 or later.
+   This installs the standalone `temporalio-strands-agents` package, which requires Temporal Python SDK 1.36.0 or later.
 
 2. Configure AWS credentials. The samples use the plugin's default `BedrockModel()`, which picks up the standard AWS SDK credential chain. Make sure the credentials grant access to a Bedrock model in your selected region (e.g., `us-west-2`).
 

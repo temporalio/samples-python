@@ -5,6 +5,9 @@ here at module level and import this module in the workflow file under
 ``workflow.unsafe.imports_passed_through()``. Calling it inside the workflow
 registers the tool only once a run gets there, and a worker that has not run
 the workflow yet fails the tool activity.
+
+Options are resolved when the tool is wrapped, before this sample creates
+the plugin.
 """
 
 # @@@SNIPSTART python-deepagents-react-agent-activity

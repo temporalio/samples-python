@@ -31,6 +31,7 @@ async def redis_asyncio_client() -> AsyncIterator[Redis]:
             await aclose()
         else:
             await client.close()
+        client.connection_pool.reset()
 
 
 @pytest.fixture

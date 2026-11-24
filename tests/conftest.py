@@ -1,4 +1,5 @@
 import asyncio
+import dataclasses
 import multiprocessing
 import sys
 from typing import AsyncGenerator
@@ -6,7 +7,10 @@ from typing import AsyncGenerator
 import pytest
 import pytest_asyncio
 from temporalio.client import Client
+from temporalio.plugin import SimplePlugin
 from temporalio.testing import WorkflowEnvironment
+from temporalio.worker import WorkflowRunner
+from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner
 
 # Due to https://github.com/python/cpython/issues/77906, multiprocessing on
 # macOS starting with Python 3.8 has changed from "fork" to "spawn". For
@@ -39,9 +43,23 @@ def event_loop():
 
 @pytest_asyncio.fixture(scope="session")
 async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
+    # LiteLLM's asyncio logging filter runs on workflow threads even in tests
+    # that do not use LiteLLM themselves.
+    def passthrough_litellm(runner: WorkflowRunner | None) -> WorkflowRunner:
+        if runner is None:
+            runner = SandboxedWorkflowRunner()
+        if isinstance(runner, SandboxedWorkflowRunner):
+            return dataclasses.replace(
+                runner,
+                restrictions=runner.restrictions.with_passthrough_modules("litellm"),
+            )
+        return runner
+
+    plugins = [SimplePlugin("litellm-passthrough", workflow_runner=passthrough_litellm)]
     env_type = request.config.getoption("--workflow-environment")
     if env_type == "local":
         env = await WorkflowEnvironment.start_local(
+            plugins=plugins,
             dev_server_extra_args=[
                 "--dynamic-config-value",
                 "activity.enableCallbacks=true",
@@ -55,9 +73,11 @@ async def env(request) -> AsyncGenerator[WorkflowEnvironment, None]:
             dev_server_download_version="v1.10.0",
         )
     elif env_type == "time-skipping":
-        env = await WorkflowEnvironment.start_time_skipping()
+        env = await WorkflowEnvironment.start_time_skipping(plugins=plugins)
     else:
-        env = WorkflowEnvironment.from_client(await Client.connect(env_type))
+        env = WorkflowEnvironment.from_client(
+            await Client.connect(env_type, plugins=plugins)
+        )
     yield env
     await env.shutdown()
 

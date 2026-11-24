@@ -4,7 +4,7 @@ An agent backed by `TemporalMcpToolSet("echo", ...)`, with the worker's plugin
 configured as
 `GoogleAdkPlugin(toolset_providers=[TemporalMcpToolSetProvider("echo", echo_toolset)])`.
 The shared factory in [`toolsets.py`](./toolsets.py) builds an `McpToolset` over
-the in-repo [`echo_mcp_server.py`](./echo_mcp_server.py), a one-tool FastMCP
+the in-repo [`echo_mcp_server.py`](./echo_mcp_server.py), a one-tool MCP
 server that echoes back the message it is given.
 
 The MCP server's `list-tools` and `call-tool` operations run as Temporal

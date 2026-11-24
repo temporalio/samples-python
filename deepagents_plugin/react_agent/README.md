@@ -41,6 +41,7 @@ uv run deepagents_plugin/react_agent/run_workflow.py
 
 | File | Description |
 |------|-------------|
-| `workflow.py` | `get_weather` activity, `web_search` tool, and the `ReactAgent` workflow |
+| `tools.py` | `get_weather` activity and `web_search` tool, wrapped at module level |
+| `workflow.py` | The `ReactAgent` workflow, which imports the tools under `imports_passed_through()` |
 | `run_worker.py` | Adds `DeepAgentsPlugin`, registers `get_weather`, starts the worker |
 | `run_workflow.py` | Executes the workflow and prints the result |

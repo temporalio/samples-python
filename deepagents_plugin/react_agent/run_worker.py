@@ -14,7 +14,8 @@ from temporalio.client import Client
 from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.worker import Worker
 
-from deepagents_plugin.react_agent.workflow import ReactAgent, get_weather
+from deepagents_plugin.react_agent.tools import get_weather
+from deepagents_plugin.react_agent.workflow import ReactAgent
 
 
 async def main() -> None:

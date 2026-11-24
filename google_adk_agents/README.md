@@ -25,7 +25,7 @@ model turn is durable and observable.
   temporal server start-dev
   ```
 - Dependencies installed via `uv sync --group google-adk`, including the standalone
-  `temporalio-google-adk[mcp]` package (requires Temporal 1.34.0 or later)
+  `temporalio-google-adk[mcp]` package (requires Temporal Python SDK 1.36.0 or later)
 - Google API key set as an environment variable:
   `export GOOGLE_API_KEY=your_key_here`
 

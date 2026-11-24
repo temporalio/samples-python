@@ -27,7 +27,7 @@ Samples are organized by API style:
    uv sync --group langgraph
    ```
 
-   This installs the standalone `temporalio-langgraph` and `temporalio-langsmith` packages, which require Temporal 1.34.0 or later.
+   This installs the standalone `temporalio-langgraph` and `temporalio-langsmith` packages, which require Temporal Python SDK 1.36.0 or later.
 
 2. Start a local dev server with the [Temporal CLI](https://docs.temporal.io/cli):
 

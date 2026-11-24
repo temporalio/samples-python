@@ -2,7 +2,11 @@ import uuid
 
 import pytest
 from google.adk.models import BaseLlm, LLMRegistry
-from opentelemetry.sdk.metrics.export import HistogramDataPoint, InMemoryMetricReader
+from opentelemetry.sdk.metrics.export import (
+    HistogramDataPoint,
+    InMemoryMetricReader,
+    NumberDataPoint,
+)
 from temporalio.client import Client
 from temporalio.google_adk import GoogleAdkPlugin
 from temporalio.worker import Replayer, Worker
@@ -76,8 +80,12 @@ def metric_counts(reader: InMemoryMetricReader) -> dict[str, int]:
                 for metric in scope_metrics.metrics:
                     count = 0
                     for point in metric.data.data_points:
-                        if not isinstance(point, HistogramDataPoint):
+                        if isinstance(point, HistogramDataPoint):
+                            count += point.count
+                        elif isinstance(point, NumberDataPoint):
+                            # Newer ADK releases also record token usage as counters.
+                            count += int(point.value)
+                        else:
                             raise TypeError(f"Unexpected metric point: {type(point)}")
-                        count += point.count
                     counts[metric.name] = count
     return counts

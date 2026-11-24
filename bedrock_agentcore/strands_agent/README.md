@@ -8,7 +8,7 @@ It combines three things:
 
 - The [Temporal Strands
   plugin](https://docs.temporal.io/develop/python/integrations/strands-agents),
-  installed as the standalone `temporalio-strands-agents` package (requires Temporal 1.34.0 or later),
+  installed as the standalone `temporalio-strands-agents` package (requires Temporal Python SDK 1.36.0 or later),
   which runs the agent inside a Workflow and turns every model call into a
   Temporal Activity -- so model invocations get durable retries, timeouts, and
   crash recovery.
@@ -156,6 +156,9 @@ temporal worker deployment create-version  \
       --build-id <TEMPORAL_BUILD_ID> \
       --deployment-name <TEMPORAL_DEPLOYMENT_NAME>
 ```
+
+Use a new Build ID for changes that cannot replay existing histories. Keep the previous Worker Deployment Version
+available for Workflows pinned to it.
 
 See [Worker
 deployments](https://docs.temporal.io/production-deployment/worker-deployments).

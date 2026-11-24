@@ -1,8 +1,7 @@
 """Worker for the MCP sample.
 
-The worker launches the ``echo_mcp_server.py`` script as a subprocess at
-startup. The plugin opens a stdio MCP session, enumerates tools once, and
-caches the schema for the worker's lifetime.
+The worker launches the ``echo_mcp_server.py`` script as a subprocess when an
+MCP activity first needs it, and reuses that connection until it sits idle.
 """
 
 # @@@SNIPSTART python-strands-mcp-worker
@@ -11,8 +10,7 @@ import os
 import sys
 from pathlib import Path
 
-from mcp import StdioServerParameters, stdio_client
-from strands.tools.mcp.mcp_client import MCPClient
+import mcp
 from temporalio.client import Client
 from temporalio.strands_agents import StrandsPlugin
 from temporalio.worker import Worker
@@ -22,13 +20,13 @@ from strands_plugin.mcp.workflow import MCPWorkflow
 ECHO_SERVER = Path(__file__).parent / "echo_mcp_server.py"
 
 
-def _make_echo_client() -> MCPClient:
-    return MCPClient(
-        lambda: stdio_client(
-            StdioServerParameters(
-                command=sys.executable,
-                args=[str(ECHO_SERVER)],
-            )
+# Return a new mcp.Client on every call: the plugin calls the factory each time
+# it opens a connection.
+def _make_echo_client() -> mcp.Client:
+    return mcp.Client(
+        mcp.StdioServerParameters(
+            command=sys.executable,
+            args=[str(ECHO_SERVER)],
         )
     )
 

@@ -1,7 +1,7 @@
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 # Create server
-mcp = FastMCP("Prompt Server")
+mcp = MCPServer("Prompt Server")
 
 
 # Instruction-generating prompts (user-controlled)

@@ -24,7 +24,6 @@ async def main():
         task_queue="google-adk-agents-tools",
         workflows=[WeatherAgentWorkflow],
         activities=[get_weather],
-        plugins=[plugin],
     )
     await worker.run()
     # @@@SNIPEND

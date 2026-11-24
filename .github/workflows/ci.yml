@@ -136,6 +136,7 @@ jobs:
       - run: mkdir junit-xml
       - run: poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}.xml
       - run: poe test -s --workflow-environment time-skipping --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--time-skipping.xml
+      - run: poe test-external-storage -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}--external-storage.xml
       # This must remain the last step since it downgrades pydantic
       - name: Uninstall pydantic
         shell: bash

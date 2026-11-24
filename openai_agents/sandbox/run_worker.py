@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 from datetime import timedelta
 
 from agents.sandbox.sandboxes.unix_local import UnixLocalSandboxClient
 from temporalio.client import Client
 from temporalio.openai_agents import (
     ModelActivityParameters,
+    OnHostSandboxClientProvider,
     OpenAIAgentsPlugin,
-    SandboxClientProvider,
 )
 from temporalio.worker import Worker
 
@@ -30,8 +31,16 @@ async def main() -> None:
                 # The plugin registers one set of sandbox activities per
                 # provider, prefixed with the provider name. Register several
                 # providers to let one worker serve several backends.
+                # Unix-local and Docker sandboxes live on this machine, so they
+                # use OnHostSandboxClientProvider, which sends every operation
+                # on a sandbox to the worker that created it. Hosted backends
+                # such as Daytona use SandboxClientProvider.
                 sandbox_clients=[
-                    SandboxClientProvider(SANDBOX_PROVIDER, UnixLocalSandboxClient()),
+                    OnHostSandboxClientProvider(
+                        SANDBOX_PROVIDER,
+                        UnixLocalSandboxClient(),
+                        worker_name=str(uuid.uuid4()),
+                    ),
                 ],
             ),
         ],

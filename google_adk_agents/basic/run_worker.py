@@ -24,7 +24,6 @@ async def main():
         client,
         task_queue="google-adk-agents-basic",
         workflows=[HelloWorldAgentWorkflow],
-        plugins=[plugin],
     )
     await worker.run()
     # @@@SNIPEND

@@ -6,7 +6,8 @@ from temporalio.deepagents import DeepAgentsPlugin
 from temporalio.deepagents.testing import mock_model_provider
 from temporalio.worker import Worker
 
-from deepagents_plugin.react_agent.workflow import ReactAgent, get_weather
+from deepagents_plugin.react_agent.tools import get_weather
+from deepagents_plugin.react_agent.workflow import ReactAgent
 from tests.deepagents_plugin.helpers import INVOKE_TOOL, count_scheduled_activities
 
 

@@ -21,47 +21,21 @@ call in the loop is a durable activity.
 
 from datetime import timedelta
 
-from langchain_core.tools import tool
-from temporalio import activity, workflow
-from temporalio.deepagents import (
-    activity_as_tool,
-    create_temporal_deep_agent,
-    tool_as_activity,
-)
-
-
-# @@@SNIPSTART python-deepagents-react-agent-activity
-@activity.defn
-async def get_weather(city: str) -> str:
-    """Return the current weather for a city."""
-    # A real implementation would call a weather API here; this is a stand-in.
-    return f"It is sunny and 22C in {city}."
-
-
-# @@@SNIPEND
-
+from temporalio import workflow
+from temporalio.deepagents import create_temporal_deep_agent
 
 # @@@SNIPSTART python-deepagents-react-agent-workflow
-@tool
-def web_search(query: str) -> str:
-    """Search the web for a query and return a short result."""
-    # Real I/O (an HTTP call) would go here; wrapped with tool_as_activity so it
-    # runs in an activity, not in workflow code.
-    return f"Top result for {query!r}: Temporal makes code durable."
+# The tools module calls tool_as_activity(...) at import, which registers the
+# tool in the worker process. Pass it through the sandbox so that registration
+# happens once and the activity runs the real tool.
+with workflow.unsafe.imports_passed_through():
+    from deepagents_plugin.react_agent.tools import search_tool, weather_tool
 
 
 @workflow.defn
 class ReactAgent:
     @workflow.run
     async def run(self, question: str) -> str:
-        weather_tool = activity_as_tool(
-            get_weather,
-            start_to_close_timeout=timedelta(seconds=30),
-        )
-        search_tool = tool_as_activity(
-            web_search,
-            start_to_close_timeout=timedelta(seconds=30),
-        )
         agent = create_temporal_deep_agent(
             model="anthropic:claude-sonnet-4-5",
             tools=[weather_tool, search_tool],

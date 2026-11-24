@@ -21,7 +21,7 @@ one side.
 | [hello_world](hello_world) | Minimal single-shot Deep Agent; a bare `model=` string auto-routed through the model activity. Start here. |
 | [react_agent](react_agent) | Tool-calling loop showing the explicit per-tool choice: `activity_as_tool` for an existing activity, `tool_as_activity` for an I/O tool, plus per-agent `activity_options` via `create_temporal_deep_agent`. |
 | [human_in_the_loop](human_in_the_loop) | Pause on `interrupt_on` and resume via the native LangGraph protocol, mapped to a Temporal Query + Update. |
-| [continue_as_new](continue_as_new) | Long-running agent that carries messages and the model/tool result cache across continue-as-new via `run_deep_agent`. |
+| [continue_as_new](continue_as_new) | Long-running agent that carries messages and state files across continue-as-new via `run_deep_agent`. |
 | [filesystem_backend](filesystem_backend) | Durable real filesystem I/O by wrapping a `FilesystemBackend` in `TemporalBackend`. |
 | [subagents](subagents) | Durability propagates across the agent tree — sub-agent model calls become activities with no per-sub-agent wiring. |
 | [streaming](streaming) | Stream model chunks to external subscribers via `streaming_topic` + `WorkflowStream`, keeping the durable result identical. |
@@ -43,7 +43,7 @@ one side.
 
    > The group installs the standalone `temporalio-deepagents` and
    > `temporalio-langsmith` packages plus the Anthropic provider package. Requires
-   > Temporal 1.34.0 or later and Python >= 3.11 — on older interpreters the group resolves to nothing
+   > Temporal Python SDK 1.36.0 or later and Python >= 3.11 — on older interpreters the group resolves to nothing
    > and the samples are skipped.
 
 2. Configure a model provider. Most samples use
@@ -107,8 +107,8 @@ uv run deepagents_plugin/external_storage/main.py
   `tool_as_activity`, and `TemporalBackend` move I/O out of workflow code.
 - **Human-in-the-loop** — the native LangGraph `interrupt_on` return value
   mapped to a Temporal Query and Update.
-- **Long-lived agents** — `run_deep_agent(...)` carries messages and the result
-  cache across server-suggested (or explicitly thresholded) continue-as-new.
+- **Long-lived agents** — `run_deep_agent(...)` carries messages and state files
+  across server-suggested (or explicitly thresholded) continue-as-new.
 - **Sub-agent durability** — sub-agents inherit the durable model object with no
   extra wiring.
 - **Streaming** — forward model chunks to external subscribers while keeping the

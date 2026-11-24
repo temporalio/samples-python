@@ -25,7 +25,7 @@ These samples demonstrate the [Temporal Google GenAI plugin](https://github.com/
    uv sync --group google-genai
    ```
 
-   This installs the standalone `temporalio-google-genai[mcp]` package, which requires Temporal 1.34.0 or later.
+   This installs the standalone `temporalio-google-genai[mcp]` package, which requires Temporal Python SDK 1.36.0 or later.
 
 2. Configure credentials. Most samples use the Gemini Developer API and read an API key from the environment:
 

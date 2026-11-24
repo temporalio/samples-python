@@ -11,7 +11,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
 | [human_in_the_loop](human_in_the_loop) | Pause a tool call on `BeforeToolCallEvent.interrupt()`, resume via Temporal signal. The canonical Strands HITL pattern. |
 | [activity_interrupt](activity_interrupt) | Raise `InterruptException` from a Temporal activity to surface a HITL prompt across the activity boundary. Plugin-specific feature. |
 | [hooks](hooks) | `HookProvider` with both an in-workflow callback and an `activity_as_hook` callback for I/O. |
-| [mcp](mcp) | Connect to an MCP server (`FastMCP` echo) via `TemporalMCPClient`. |
+| [mcp](mcp) | Connect to an MCP server (echo) via `TemporalMCPClient`. |
 | [structured_output](structured_output) | Pydantic-typed agent output via `structured_output_model`. |
 | [streaming](streaming) | Forward model chunks to an external subscriber via `streaming_topic` + `WorkflowStream`. |
 | [continue_as_new](continue_as_new) | Chat-style workflow that hands off `agent.messages` when history grows large. |
@@ -24,7 +24,7 @@ These samples demonstrate the [Temporal Strands plugin](https://github.com/tempo
    uv sync --group strands-agents
    ```
 
-   This installs the standalone `temporalio-strands-agents` package, which requires Temporal 1.34.0 or later.
+   This installs the standalone `temporalio-strands-agents` package, which requires Temporal Python SDK 1.36.0 or later.
 
 2. Configure AWS credentials. The samples use the plugin's default `BedrockModel()`, which picks up the standard AWS SDK credential chain. Make sure the credentials grant access to a Bedrock model in your selected region (e.g., `us-west-2`).
 
@@ -69,7 +69,7 @@ uv run strands_plugin/tools/run_workflow.py
 - **Three ways to define tools** — pure Strands `@tool`, custom Temporal activities, and ecosystem `strands_tools` wrapped as activities.
 - **Human-in-the-loop** — both hook-based (`BeforeToolCallEvent.interrupt()`) and tool-body (`raise InterruptException`) styles.
 - **Hook system** — deterministic in-workflow callbacks plus I/O callbacks dispatched via `activity_as_hook`.
-- **MCP integration** — connect to MCP servers at worker startup; tool calls dispatched through per-server activities.
+- **MCP integration** — list MCP tools and run tool calls through per-server activities.
 - **Structured output** — Pydantic-typed agent results via the plugin's `pydantic_data_converter`.
 - **Streaming** — forward model chunks live to external subscribers.
 - **Long-lived chats** — hand off `agent.messages` via `continue-as-new` to stay under Temporal's history limit.

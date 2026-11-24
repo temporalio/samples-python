@@ -3,7 +3,7 @@ import json
 from datetime import timedelta
 from typing import Any, Callable
 
-import httpx
+import httpx2
 import pytest
 from openai import AsyncOpenAI
 from temporalio.exceptions import ApplicationError
@@ -12,7 +12,7 @@ from temporalio.testing import ActivityEnvironment
 from openrouter.activities import OpenRouterActivities
 from openrouter.shared import OPENROUTER_BASE_URL, OpenRouterRequest
 
-Handler = Callable[[httpx.Request], httpx.Response]
+Handler = Callable[[httpx2.Request], httpx2.Response]
 
 
 def make_activities(handler: Handler) -> OpenRouterActivities:
@@ -21,7 +21,7 @@ def make_activities(handler: Handler) -> OpenRouterActivities:
         base_url=OPENROUTER_BASE_URL,
         api_key="test-key",
         max_retries=0,
-        http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+        http_client=httpx2.AsyncClient(transport=httpx2.MockTransport(handler)),
     )
     return OpenRouterActivities(client)
 
@@ -53,11 +53,11 @@ def completion_body(
 
 
 async def test_success_returns_model_cost_and_cache_status() -> None:
-    requests: list[httpx.Request] = []
+    requests: list[httpx2.Request] = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         requests.append(request)
-        return httpx.Response(
+        return httpx2.Response(
             200,
             json=completion_body(),
             headers={"X-OpenRouter-Cache-Status": "MISS"},
@@ -84,11 +84,11 @@ async def test_success_returns_model_cost_and_cache_status() -> None:
 
 
 async def test_fallback_models_replace_auto_router() -> None:
-    requests: list[httpx.Request] = []
+    requests: list[httpx2.Request] = []
 
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         requests.append(request)
-        return httpx.Response(200, json=completion_body(model="b/second"))
+        return httpx2.Response(200, json=completion_body(model="b/second"))
 
     result = await ActivityEnvironment().run(
         make_activities(handler).call_openrouter,
@@ -103,8 +103,8 @@ async def test_fallback_models_replace_auto_router() -> None:
 
 
 async def test_rate_limit_is_retryable_and_honors_retry_after() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
             429,
             json={"error": {"code": 429, "message": "Rate limited"}},
             headers={"Retry-After": "7"},
@@ -121,8 +121,8 @@ async def test_rate_limit_is_retryable_and_honors_retry_after() -> None:
 
 
 async def test_insufficient_credits_is_non_retryable() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
             402, json={"error": {"code": 402, "message": "Insufficient credits"}}
         )
 
@@ -137,8 +137,8 @@ async def test_insufficient_credits_is_non_retryable() -> None:
 
 
 async def test_in_flight_budget_402_is_transient() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
             402,
             json={
                 "error": {
@@ -161,11 +161,11 @@ async def test_in_flight_budget_402_is_transient() -> None:
 
 
 async def test_provider_error_on_the_choice_is_not_an_answer() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         body = completion_body(answer="partial ans")
         body["choices"][0]["finish_reason"] = "error"
         body["choices"][0]["error"] = {"code": 502, "message": "Provider died"}
-        return httpx.Response(200, json=body)
+        return httpx2.Response(200, json=body)
 
     with pytest.raises(ApplicationError) as excinfo:
         await ActivityEnvironment().run(
@@ -180,8 +180,8 @@ async def test_provider_error_on_the_choice_is_not_an_answer() -> None:
 async def test_empty_or_negative_retry_after_is_ignored() -> None:
     for value in ("", "-5", "0"):
 
-        def handler(request: httpx.Request) -> httpx.Response:
-            return httpx.Response(
+        def handler(request: httpx2.Request) -> httpx2.Response:
+            return httpx2.Response(
                 429,
                 json={"error": {"code": 429, "message": "Rate limited"}},
                 headers={"Retry-After": value},
@@ -195,8 +195,8 @@ async def test_empty_or_negative_retry_after_is_ignored() -> None:
 
 
 async def test_key_limit_exceeded_is_out_of_credits_too() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
             403,
             json={
                 "error": {"code": 403, "message": "Key limit exceeded (total limit)"}
@@ -217,8 +217,8 @@ async def test_key_limit_exceeded_is_out_of_credits_too() -> None:
 
 
 async def test_server_error_is_retryable() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(502, json={"error": {"code": 502, "message": "down"}})
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(502, json={"error": {"code": 502, "message": "down"}})
 
     with pytest.raises(ApplicationError) as excinfo:
         await ActivityEnvironment().run(
@@ -230,8 +230,8 @@ async def test_server_error_is_retryable() -> None:
 
 
 async def test_error_body_inside_200_is_classified_by_its_code() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
             200,
             json={"error": {"code": 403, "message": "Flagged by moderation"}},
         )
@@ -246,8 +246,8 @@ async def test_error_body_inside_200_is_classified_by_its_code() -> None:
 
 
 async def test_fail_once_after_call_fails_first_attempt_only() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
             200,
             json=completion_body(cost=0),
             headers={"X-OpenRouter-Cache-Status": "HIT"},
@@ -269,10 +269,10 @@ async def test_fail_once_after_call_fails_first_attempt_only() -> None:
 
 
 async def test_missing_cost_is_reported_as_unknown() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         body = completion_body()
         del body["usage"]["cost"]
-        return httpx.Response(200, json=body)
+        return httpx2.Response(200, json=body)
 
     result = await ActivityEnvironment().run(
         make_activities(handler).call_openrouter, OpenRouterRequest(prompt="hi")
@@ -287,8 +287,8 @@ async def test_retry_after_http_date_becomes_next_retry_delay() -> None:
 
     when = datetime.now(timezone.utc) + timedelta(seconds=30)
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
             503,
             json={"error": {"code": 503, "message": "No provider available"}},
             headers={"Retry-After": format_datetime(when, usegmt=True)},
@@ -307,8 +307,8 @@ async def test_retry_after_http_date_becomes_next_retry_delay() -> None:
 
 
 async def test_huge_retry_after_is_capped() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(
             429,
             json={"error": {"code": 429, "message": "Rate limited"}},
             headers={"Retry-After": "1000000000"},
@@ -322,10 +322,10 @@ async def test_huge_retry_after_is_capped() -> None:
 
 
 async def test_no_choices_and_no_error_is_retried() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(request: httpx2.Request) -> httpx2.Response:
         body = completion_body()
         body["choices"] = []
-        return httpx.Response(200, json=body)
+        return httpx2.Response(200, json=body)
 
     with pytest.raises(ApplicationError) as excinfo:
         await ActivityEnvironment().run(

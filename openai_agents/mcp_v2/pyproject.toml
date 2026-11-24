@@ -4,7 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "requests>=2.32.0,<3",
-    "temporalio>=1.36.0,<2",
+    "temporalio==1.37.0",
     "temporalio-openai-agents[mcp]>=1.0.0",
 ]
 

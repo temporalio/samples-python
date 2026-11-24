@@ -4,10 +4,14 @@ set -euo pipefail
 FUNCTION_NAME="${1:?Usage: deploy-lambda.sh <function-name>}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Install the published temporalio package (Linux wheels) with the OTel extras
-# needed by the lambda_worker contrib module
+# Export the locked artifact URLs so the Linux install uses the same SDK
+# build and runtime dependencies as the local sample.
+LOCK_DIR="$(mktemp -d)"
+trap 'rm -rf "$LOCK_DIR"' EXIT
+uv export --project "$SCRIPT_DIR" --locked --no-dev --no-emit-project \
+    --format pylock.toml --output-file "$LOCK_DIR/pylock.toml" --quiet
 uv pip install --target "$SCRIPT_DIR/package" --python-platform x86_64-unknown-linux-gnu \
-    --only-binary=:all: "temporalio[lambda-worker-otel]"
+    --only-binary=:all: --requirements "$LOCK_DIR/pylock.toml"
 
 # Copy application code into the package directory (all at zip root)
 cp "$SCRIPT_DIR/lambda_function.py" "$SCRIPT_DIR/workflows.py" \

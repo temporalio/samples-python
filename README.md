@@ -20,7 +20,8 @@ With this repository cloned, run the following at the root of the directory:
 
     uv sync
 
-That loads all required dependencies. Then to run a sample, usually you just run it under uv. For example:
+This installs `temporalio` 1.37.0 from PyPI for the root project.
+To run a sample, usually you just run it under uv. For example:
 
     uv run hello/hello_activity.py
 

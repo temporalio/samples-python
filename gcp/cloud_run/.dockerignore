@@ -1,6 +1,7 @@
 *
 !Dockerfile
 !pyproject.toml
+!uv.lock
 !__init__.py
 !settings.py
 !worker.py

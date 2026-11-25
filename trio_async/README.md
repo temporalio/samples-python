@@ -6,9 +6,7 @@ and worker in a Trio setting, and how Trio-based code can run in both asyncio as
 activities.
 
 This sample requires Python 3.12 or 3.13 and `temporalio` <= 1.36.1. It is a
-standalone uv project pinned to 1.36.1. Starting with 1.37.0, the SDK calls
-`TrioExecutor.submit()` directly and expects a `concurrent.futures.Future`,
-but Trio's executor returns a coroutine.
+standalone uv project pinned to 1.36.1.
 
 Start a local Temporal dev server as described in the [root README](../README.md).
 From the repository root, change to the sample directory and install its dependencies:

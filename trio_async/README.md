@@ -5,8 +5,7 @@ This sample shows how to use Temporal asyncio with [Trio](https://trio.readthedo
 and worker in a Trio setting, and how Trio-based code can run in both asyncio async activities and threaded sync
 activities.
 
-This sample requires Python 3.12 or 3.13 and `temporalio` <= 1.36.1. It is a
-standalone uv project pinned to 1.36.1.
+This sample requires Python 3.12 or 3.13 and `temporalio` <= 1.36.1.
 
 Start a local Temporal dev server as described in the [root README](../README.md).
 From the repository root, change to the sample directory and install its dependencies:

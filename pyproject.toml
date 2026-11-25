@@ -124,7 +124,7 @@ constraint-dependencies = [
 exclude = ["lambda_worker*", "nexus_serialization_context*", "trio_async*"]
 
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.poe.tasks]

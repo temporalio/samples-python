@@ -2,7 +2,7 @@
 name = "temporalio-samples-nexus-serialization-context"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["temporalio>=1.36.0,<2", "cryptography>=41.0.5"]
+dependencies = ["temporalio==1.37.0", "cryptography>=41.0.5"]
 
 [dependency-groups]
 dev = [

@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.11"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio>=1.36.0,<2", "protobuf>=5.29.6,<6"]
+dependencies = ["temporalio==1.37.0", "protobuf>=5.29.6,<6"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -30,7 +30,7 @@ dev = [
 bedrock = ["boto3>=1.34.92,<2"]
 claude-agent-sdk = [
     "temporalio-claude-agent-sdk>=0.0.2",
-    "temporalio[opentelemetry,pydantic]>=1.36.0,<2",
+    "temporalio[opentelemetry,pydantic]",
     "opentelemetry-exporter-otlp-proto-grpc>=1.30.0,<2",
 ]
 deepagents = [
@@ -50,7 +50,7 @@ external-storage-redis = ["redis>=5.0.0,<8"]
 gevent = ["gevent>=25.4.2 ; python_version >= '3.8'"]
 google-adk = [
     "temporalio-google-adk[mcp]>=0.0.1",
-    "temporalio[opentelemetry]>=1.36.0,<2",
+    "temporalio[opentelemetry]",
     "google-adk>=2.2.0,<3",
     "opentelemetry-exporter-prometheus>=0.48b0",
     "prometheus-client>=0.21",
@@ -58,7 +58,7 @@ google-adk = [
 google-genai = ["temporalio-google-genai[mcp]>=0.1.0"]
 langfuse-tracing = [
     "openai>=1.4.0",
-    "temporalio[opentelemetry]>=1.36.0,<2",
+    "temporalio[opentelemetry]",
     # Langfuse's OTLP endpoint is HTTP-only (no gRPC), so use the http exporter.
     "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
     "openinference-instrumentation-openai>=0.1.52",
@@ -68,7 +68,7 @@ langsmith-tracing = [
     "openai>=1.4.0",
     "langsmith>=0.7.0",
     "temporalio-langsmith>=0.1.0",
-    "temporalio[pydantic]>=1.36.0,<2",
+    "temporalio[pydantic]",
 ]
 langgraph = [
     "langgraph>=1.1.3",
@@ -83,12 +83,12 @@ microsoft-agent-framework = [
     # because it needs MCP SDK v2 and other groups here still pin v1.
     "temporalio-microsoft-agent-framework>=0.0.1 ; python_version >= '3.11'",
     "agent-framework-openai>=1.17,<2 ; python_version >= '3.11'",
-    "temporalio[opentelemetry]>=1.36.0,<2 ; python_version >= '3.11'",
+    "temporalio[opentelemetry] ; python_version >= '3.11'",
     "opentelemetry-exporter-otlp-proto-grpc>=1.30.0,<2 ; python_version >= '3.11'",
 ]
 nexus = ["nexus-rpc>=1.1.0,<2"]
 open-telemetry = [
-    "temporalio[opentelemetry]>=1.36.0,<2",
+    "temporalio[opentelemetry]",
     "opentelemetry-exporter-otlp-proto-grpc",
 ]
 openai-agents = [
@@ -106,7 +106,6 @@ strands-agents = [
     "boto3>=1.34.92,<2",
     "temporalio-strands-agents>=0.1.0",
 ]
-trio-async = ["trio>=0.28.0,<0.29", "trio-asyncio>=0.15.0,<0.16"]
 cloud-export-to-parquet = [
     "pandas>=2.3.3,<3 ; python_version >= '3.10' and python_version < '4.0'",
     "numpy>=1.26.0,<2 ; python_version >= '3.10' and python_version < '3.13'",
@@ -122,7 +121,7 @@ constraint-dependencies = [
 ]
 
 [tool.setuptools.packages.find]
-exclude = ["lambda_worker*", "nexus_serialization_context*"]
+exclude = ["lambda_worker*", "nexus_serialization_context*", "trio_async*"]
 
 [build-system]
 requires = ["setuptools>=77"]

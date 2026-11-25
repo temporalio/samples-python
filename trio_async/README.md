@@ -5,21 +5,24 @@ This sample shows how to use Temporal asyncio with [Trio](https://trio.readthedo
 and worker in a Trio setting, and how Trio-based code can run in both asyncio async activities and threaded sync
 activities.
 
-NOTE: This sample only works on Python versions < 3.14.
+This sample requires Python 3.12 or 3.13 and `temporalio` <= 1.36.1.
 
-For this sample, the optional `trio_async` dependency group must be included. To include, run:
+Start a local Temporal dev server as described in the [root README](../README.md).
+From the repository root, change to the sample directory and install its dependencies:
 
-    uv sync --group trio_async
+    cd trio_async
+    uv sync
 
-To run, first see [README.md](../README.md) for prerequisites. Then, run the following from the root directory to start the
-worker:
+Start the worker from the `trio_async` directory:
 
-    uv run trio_async/worker.py
+    uv run worker.py
 
-This will start the worker. Then, in another terminal, run the following to execute the workflow:
+In another terminal, also from the `trio_async` directory, execute the workflow:
 
-    uv run trio_async/starter.py
+    uv run starter.py
 
 The starter should complete with:
 
     INFO:root:Workflow result: ['Hello, Temporal! (from asyncio)', 'Hello, Temporal! (from thread)']
+
+Run the sample tests from the same directory with `uv run poe test`.

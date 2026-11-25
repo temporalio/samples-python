@@ -1,6 +1,5 @@
 # syntax=docker/dockerfile:1
 
-# The git-pinned temporalio compiles the Rust core; drop this builder for a Python base once the plugin ships on PyPI.
 FROM rust:1.91.0-slim-bookworm AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.8.15 /uv /uvx /bin/
@@ -22,8 +21,8 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON=/usr/bin/python3
 
 WORKDIR /app
-COPY pyproject.toml ./
-RUN uv sync --no-dev
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev
 
 FROM debian:bookworm-slim
 

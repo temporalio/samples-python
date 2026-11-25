@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 # these resolve to nothing and the tests are not collected, so the shared
 # standalone CI matrix stays green.
 dependencies = [
-    "temporalio==1.37.0 ; python_version >= '3.11'",
+    "temporalio==1.37.1 ; python_version >= '3.11'",
     "temporalio-microsoft-agent-framework[mcp]>=0.0.1 ; python_version >= '3.11'",
     "agent-framework-openai>=1.17,<2 ; python_version >= '3.11'",
 ]
@@ -46,3 +46,7 @@ asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.uv.sources]
+# Validate against the unreleased sdk-python release branch chore/release-1.37.1.
+temporalio = { git = "https://github.com/temporalio/sdk-python.git", branch = "chore/release-1.37.1" }

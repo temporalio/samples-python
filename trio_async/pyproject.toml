@@ -3,7 +3,7 @@ name = "temporalio-samples-trio-async"
 version = "0.1.0"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "temporalio==1.36.1",
+    "temporalio==1.37.1",
     "trio>=0.28.0,<0.29",
     "trio-asyncio>=0.15.0,<0.16",
 ]
@@ -45,3 +45,7 @@ known-first-party = ["trio_async"]
 
 [tool.mypy]
 ignore_missing_imports = true
+
+[tool.uv.sources]
+# Validate against the unreleased sdk-python release branch chore/release-1.37.1.
+temporalio = { git = "https://github.com/temporalio/sdk-python.git", branch = "chore/release-1.37.1" }

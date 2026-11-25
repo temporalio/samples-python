@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 readme = "README.md"
 license = "MIT"
 dependencies = [
-    "temporalio==1.37.0",
+    "temporalio==1.37.1",
     "temporalio-strands-agents>=0.1.0",
     "strands-agents>=1.39.0",
     "bedrock-agentcore>=1.9.1",
@@ -58,3 +58,7 @@ extend-exclude = ["agentcore"]
 [tool.mypy]
 ignore_missing_imports = true
 exclude = ["agentcore/"]
+
+[tool.uv.sources]
+# Validate against the unreleased sdk-python release branch chore/release-1.37.1.
+temporalio = { git = "https://github.com/temporalio/sdk-python.git", branch = "chore/release-1.37.1" }

@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.11"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio[lambda-worker-otel]==1.37.0"]
+dependencies = ["temporalio[lambda-worker-otel]==1.37.1"]
 
 [dependency-groups]
 dev = [
@@ -45,3 +45,7 @@ asyncio_mode = "auto"
 
 [tool.ruff]
 target-version = "py310"
+
+[tool.uv.sources]
+# Validate against the unreleased sdk-python release branch chore/release-1.37.1.
+temporalio = { git = "https://github.com/temporalio/sdk-python.git", branch = "chore/release-1.37.1" }

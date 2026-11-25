@@ -4,7 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "requests>=2.32.0,<3",
-    "temporalio==1.37.0",
+    "temporalio==1.37.1",
     "temporalio-openai-agents[mcp]>=1.0.0",
 ]
 
@@ -38,3 +38,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.uv.sources]
+# Validate against the unreleased sdk-python release branch chore/release-1.37.1.
+temporalio = { git = "https://github.com/temporalio/sdk-python.git", branch = "chore/release-1.37.1" }

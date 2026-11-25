@@ -6,7 +6,7 @@ authors = [{ name = "Temporal Technologies Inc", email = "sdk@temporal.io" }]
 requires-python = ">=3.11"
 readme = "README.md"
 license = "MIT"
-dependencies = ["temporalio==1.37.0", "protobuf>=5.29.6,<6"]
+dependencies = ["temporalio==1.37.1", "protobuf>=5.29.6,<6"]
 
 [project.urls]
 Homepage = "https://github.com/temporalio/samples-python"
@@ -119,6 +119,10 @@ constraint-dependencies = [
     # install on the Python 3.14 CI jobs.
     "yarl!=1.24.0",
 ]
+
+[tool.uv.sources]
+# Validate against the unreleased SDK release branch (see PR description).
+temporalio = { git = "https://github.com/temporalio/sdk-python.git", branch = "chore/release-1.37.1" }
 
 [tool.setuptools.packages.find]
 exclude = ["lambda_worker*", "nexus_serialization_context*", "trio_async*"]

@@ -29,11 +29,12 @@ def get_object_keys(activity_input: GetObjectKeysActivityInput) -> List[str]:
     """Function that list objects by key."""
     object_keys = []
     s3 = boto3.client("s3")
-    response = s3.list_objects_v2(
+    paginator = s3.get_paginator("list_objects_v2")
+    for page in paginator.paginate(
         Bucket=activity_input.bucket, Prefix=activity_input.path
-    )
-    for obj in response.get("Contents", []):
-        object_keys.append(obj["Key"])
+    ):
+        for obj in page.get("Contents", []):
+            object_keys.append(obj["Key"])
     if len(object_keys) == 0:
         raise FileNotFoundError(
             f"No files found in {activity_input.bucket}/{activity_input.path}"

@@ -130,7 +130,7 @@ re-executions do**, which matches what the Temporal Web UI shows.
 | Reset or retried workflow (new run) | New run under the same Workflow Id | Another `RunWorkflow` span with its own `temporalRunID`, same trace; the session (workflow ID) groups them. A reapplied update gets its own `HandleUpdate` span under the new run |
 | Continue-As-New | New run under the same Workflow Id | The new run's `RunWorkflow` span nests under the previous run's, same trace |
 
-Reproduce each case with the flags below. See the reset limitation after the examples.
+Reproduce each case with the flags below; every run must still verify cleanly:
 
 ```bash
 # Replay stress: disable the workflow cache so EVERY workflow task replays
@@ -168,10 +168,7 @@ temporal workflow reset --workflow-id <workflow id> --type FirstWorkflowTask --r
 uv run verify_trace.py --workflow-id <workflow id> --expect-runs 2
 ```
 
-The reset case has a known limitation with `temporalio` 1.37.0:
-the reapplied `HandleUpdate:approve` span can reuse a span ID from the original run.
-The reset workflow still completes, but the trace can be incomplete.
-The previously pinned 1.36.0 did not have this issue (see PR #420).
+The reset case needs temporalio 1.36.0 exactly (see PR #420).
 
 ![Activity retry attempts in Phoenix](phoenix-retry-attempts.png)
 
@@ -200,8 +197,9 @@ region) and `telemetry.py` exports the same spans to
 `https://otlp.arize.com/v1/traces`; `ARIZE_PROJECT_NAME` selects the project.
 `verify_trace.py` reads Phoenix's REST API, so use the AX UI or the `ax` CLI
 there. Arize ran this sample against an AX space in October 2026: the trace
-trees, sessions, replay, restart, and retry cases matched this README.
-The exporter settings follow
+trees, sessions, replay, restart, and retry cases matched this README, and the
+reset defect they found is fixed in temporalio 1.36.0. The exporter settings
+follow
 [Arize's Temporal guide](https://arize.com/docs/ax/integrations/python-agent-frameworks/temporal/temporal-tracing).
 
 ## Operational notes

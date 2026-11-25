@@ -90,6 +90,7 @@ Some examples require extra dependencies. See each sample's directory for specif
 * [litellm_activity](litellm_activity) - Call LLM providers through LiteLLM from a Temporal Activity.
 * [message_passing/introduction](message_passing/introduction/) - Introduction to queries, signals, and updates.
 * [message_passing/safe_message_handlers](message_passing/safe_message_handlers/) - Safely handling updates and signals.
+* [message_passing/update_with_start/early_return](message_passing/update_with_start/early_return/) - Use update-with-start to return an authorization result before the Workflow finishes.
 * [message_passing/update_with_start/lazy_initialization](message_passing/update_with_start/lazy_initialization/) - Use update-with-start to update a Shopping Cart, starting it if it does not exist.
 * [microsoft_agent_framework_plugin](microsoft_agent_framework_plugin) - Run Microsoft Agent Framework agents as durable Temporal Workflows (model calls, tools, MCP, approvals, streaming, Continue-As-New).
 * [nexus_cancel](nexus_cancel) - Fan out concurrent Nexus operations, take the first result, and cancel the rest.

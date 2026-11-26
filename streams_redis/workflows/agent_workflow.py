@@ -7,7 +7,7 @@ from temporalio.nexus.system.stream_service import StreamRef
 
 with workflow.unsafe.imports_passed_through():
     from streams_redis.activities.model_activity import stream_answer
-    from streams_redis.shared import AgentEvent
+    from streams_redis.shared import LAST_EVENT, AgentEvent
 
 
 @workflow.defn
@@ -30,12 +30,11 @@ class AgentWorkflow:
         self._stream_ref = stream.ref
         try:
             await stream.append(AgentEvent("status", f"Thinking about: {question}"))
-            answer = await workflow.execute_activity(
+            return await workflow.execute_activity(
                 stream_answer,
                 stream.ref,
                 start_to_close_timeout=timedelta(minutes=1),
             )
-            await stream.append(AgentEvent("status", "Done"))
-            return answer
         finally:
-            await stream.close()
+            # A Stream has no close, so a reader stops when it sees this event.
+            await stream.append(LAST_EVENT)

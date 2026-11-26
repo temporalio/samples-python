@@ -16,6 +16,9 @@ class AgentEvent:
     text: str
 
 
+LAST_EVENT = AgentEvent("status", "Done")
+
+
 async def connect() -> Client:
     """Connect a client whose Stream calls, and those of its Workers, go to Redis."""
     config = ClientConfig.load_client_connect_config()

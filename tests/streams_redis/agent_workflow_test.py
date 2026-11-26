@@ -23,7 +23,7 @@ async def test_a_reader_resumes_at_its_offset(client: Client, redis_url: str):
     ):
         events = await run(connect)
 
-    # The reader got each event once and in order, across its disconnect, to the close.
+    # The reader got each event once and in order, across its disconnect, to Done.
     assert events == [
         AgentEvent("status", f"Thinking about: {QUESTION}"),
         *(AgentEvent("token", word) for word in ANSWER.split()),

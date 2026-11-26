@@ -9,18 +9,21 @@ Activities and clients append to it, and a reader goes on from the offset of the
 that it read. `temporalio.contrib.workflow_streams` (see
 [workflow_streams](../workflow_streams)) keeps its events in the Workflow and needs no
 Store. A Stream keeps them in Redis. A client reads them from there, and they stay
-readable for 7 days after the close by default.
+readable after the Workflow ends. A Stream has no close. It expires when its Retention
+(7 days by default) passes with no append.
 
 The sample has one scenario:
 
 * `workflows/agent_workflow.py` - an agent-like Workflow. It creates a Stream with the id
-  of the Workflow, writes a status event, runs the model Activity, writes another status
-  event, and closes the Stream in `finally`.
+  of the Workflow, writes a status event, and runs the model Activity. In `finally` it
+  writes the status event `Done`, which tells a reader to stop.
 * `activities/model_activity.py` - an Activity that stands in for a model. It appends each
   token of its answer to the Stream with `BufferedAppender`.
 * `run_agent.py` - starts the Workflow, gets the `StreamRef` from an Update, and prints the
   events as they come. After four events it disconnects. A new client then reads on from
-  the offset of the last event that it printed, and stops at the close of the Stream.
+  the offset of the last event that it printed, and stops at `Done`. A read never ends
+  by itself, so each reader breaks out of its loop. A terminated Workflow writes no
+  `Done`, so its reader waits until you stop it.
 
 ## Install
 
@@ -68,7 +71,7 @@ The agent prints each event with its offset, which is opaque bytes:
 ...
 000001a2068b9edd0000000000000000  token   rest.
 000001a2068b9f120000000000000000  status  Done
--- The Stream is closed. The Workflow returned: Redis keeps the events, so a reader can leave and come back for the rest.
+-- The Workflow returned: Redis keeps the events, so a reader can leave and come back for the rest.
 ```
 
 ## Test

@@ -32,3 +32,33 @@ Finally, run the workflow:
 ```bash
 uv run run_workflow.py
 ```
+
+## Use an authenticated remote MCP server
+
+[ClickHouse Loom](https://github.com/ClickHouse/loom) is a self-hosted MCP server
+for document search and agent memory. To use it in this sample, set `LOOM_MCP_URL`
+to the full `/mcp` URL and `LOOM_TOKEN` to a Loom token. Use a namespace-scoped
+viewer token when the workflow only needs to search. Load these environment
+variables in the worker process so the bearer token stays out of workflow input
+and history.
+
+In a fresh copy of the sample, add `import os` to `run_worker.py` and replace its
+server factory:
+
+```python
+def streamable_http_server() -> MCPServerStreamableHttp:
+    return MCPServerStreamableHttp(
+        name=MCP_SERVER_NAME,
+        params={
+            "url": os.environ["LOOM_MCP_URL"],
+            "headers": {"Authorization": f"Bearer {os.environ['LOOM_TOKEN']}"},
+        },
+    )
+```
+
+The named worker factory supplies the connection used by
+`temporal_mcp_server(MCP_SERVER_NAME)`. In `workflow.py`, replace the local
+sample's three tool requests with a prompt about documents indexed in your Loom
+namespace. Skip the local MCP server and start the worker and workflow against Loom. See the [Loom
+MCP reference](https://github.com/ClickHouse/loom/blob/main/docs/reference/mcp.md)
+for toolsets and authentication.

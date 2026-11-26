@@ -44,8 +44,22 @@ Replace `hello/hello_activity.py` in the command with any other example filename
 * [hello_search_attributes](hello_search_attributes.py) - Start workflow with search attributes then change while
   running.
 * [hello_signal](hello_signal.py) - Send signals to a workflow.
+* [hello_sync_client](hello_sync_client.py) - Call the async Temporal client from synchronous Python code.
 * [hello_update](hello_update.py) - **Send a request to and a response from a client to a workflow execution.**
 
 Note: To enable the workflow update, set the `frontend.enableUpdateWorkflowExecution` dynamic config value to true.
 
     temporal server start-dev --dynamic-config-value frontend.enableUpdateWorkflowExecution=true
+
+## Calling the client from synchronous code
+
+Run `uv run hello/hello_sync_client.py` to call `greet("World")` from a normal
+synchronous function and print `Result: Hello, World!`. The function uses
+`asyncio.run()` to connect a client, execute a workflow, and wait for its result.
+The sample also starts and stops a worker so it can run on its own.
+
+Use this pattern from a thread that has no running event loop. If your application
+is already asynchronous, await the SDK methods directly. Each call creates a new
+event loop, so create and use the client inside that call rather than reusing a
+client from an earlier call. For applications making many calls, prefer a
+long-lived async client and a separately running worker.

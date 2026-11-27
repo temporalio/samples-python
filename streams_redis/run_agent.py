@@ -46,14 +46,16 @@ async def run(connect: Callable[[], Awaitable[Client]]) -> list[AgentEvent]:
     )
     stream_ref = await handle.execute_update(AgentWorkflow.stream_ref)
     first, offset = await follow(client, stream_ref, after=None, stop_after=4)
-    print("-- The reader disconnects, and the agent goes on.")
-    await asyncio.sleep(1)
+    if LAST_EVENT not in first:
+        print("-- The reader disconnects, and the agent goes on.")
+        await asyncio.sleep(1)
 
-    # A new client needs only the ref and the offset, so it misses no event and
-    # repeats none.
-    rest, _ = await follow(await connect(), stream_ref, after=offset)
+        # A new client needs only the ref and the offset, so it misses no event and
+        # repeats none.
+        rest, _ = await follow(await connect(), stream_ref, after=offset)
+        first.extend(rest)
     print(f"-- The Workflow returned: {await handle.result()}")
-    return first + rest
+    return first
 
 
 if __name__ == "__main__":

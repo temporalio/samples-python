@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from temporalio.client import Client, StreamConfig, WorkflowFailureError
+from temporalio.client import Client, StreamConfig, WorkflowFailureError, WorkflowHandle
 from temporalio.exceptions import CancelledError, TerminatedError
 from temporalio.worker import Worker
 from temporalio_streams_redis import RedisStreamStore
@@ -43,11 +43,21 @@ async def test_an_early_terminal_event_observes_the_workflow_result(
     client = Client(**config)
     follow = run_agent.follow
     events = []
+    read_done = asyncio.Event()
+    result = WorkflowHandle.result
+
+    async def result_after_read(self, *args, **kwargs):
+        # Force the final-event path instead of racing Workflow result delivery.
+        await read_done.wait()
+        return await result(self, *args, **kwargs)
+
+    monkeypatch.setattr(WorkflowHandle, "result", result_after_read)
 
     async def cancel_then_follow(client, stream_ref, **kwargs):
         await client.get_workflow_handle(stream_ref.id).cancel()
         page, offset = await follow(client, stream_ref, **kwargs)
         events.extend(page)
+        read_done.set()
         return page, offset
 
     monkeypatch.setattr(run_agent, "follow", cancel_then_follow)

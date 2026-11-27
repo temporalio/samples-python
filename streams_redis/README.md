@@ -60,5 +60,5 @@ The tests start a local Temporal server and a private `redis-server` from `PATH`
 Collection skips these tests when either unreleased package is absent.
 
 ```bash
-uv run --no-sync pytest tests/streams_redis --deselect=tests/test_envconfig.py::test_load_profiles_no_config_file
+uv run --no-sync pytest tests/streams_redis
 ```

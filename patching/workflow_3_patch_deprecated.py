@@ -13,7 +13,7 @@ class MyWorkflow:
         workflow.deprecate_patch("my-patch")
         self._result = await workflow.execute_activity(
             post_patch_activity,
-            schedule_to_close_timeout=timedelta(minutes=5),
+            start_to_close_timeout=timedelta(seconds=5),
         )
 
     @workflow.query

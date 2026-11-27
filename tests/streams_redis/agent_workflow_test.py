@@ -1,7 +1,6 @@
-from unittest.mock import AsyncMock
-
 import pytest
-from temporalio.client import Client, StreamConfig
+from temporalio.client import Client, StreamConfig, WorkflowFailureError
+from temporalio.exceptions import CancelledError
 from temporalio.worker import Worker
 from temporalio_streams_redis import RedisStreamStore
 
@@ -35,16 +34,32 @@ async def test_a_reader_resumes_at_its_offset(client: Client, redis_url: str):
     ]
 
 
-async def test_an_early_terminal_event_observes_the_workflow_result(monkeypatch):
-    handle = AsyncMock()
-    handle.result.side_effect = RuntimeError("Workflow cancelled")
-    connect = AsyncMock()
-    connect.return_value.start_workflow.return_value = handle
-    follow = AsyncMock(return_value=([LAST_EVENT], b"last"))
-    monkeypatch.setattr(run_agent, "follow", follow)
+async def test_an_early_terminal_event_observes_the_workflow_result(
+    client: Client, redis_url: str, monkeypatch
+):
+    config = client.config()
+    config["stream_config"] = StreamConfig(stores=[RedisStreamStore(redis_url)])
+    client = Client(**config)
+    follow = run_agent.follow
+    events = []
 
-    with pytest.raises(RuntimeError, match="Workflow cancelled"):
-        await run(connect)
-    connect.assert_awaited_once()
-    follow.assert_awaited_once()
-    handle.result.assert_awaited_once()
+    async def cancel_then_follow(client, stream_ref, **kwargs):
+        await client.get_workflow_handle(stream_ref.id).cancel()
+        page, offset = await follow(client, stream_ref, **kwargs)
+        events.extend(page)
+        return page, offset
+
+    monkeypatch.setattr(run_agent, "follow", cancel_then_follow)
+
+    async def connect() -> Client:
+        assert not events, "the reader reconnected after Done"
+        return client
+
+    # Keep the Activity queued so cancellation reaches the Workflow before four events.
+    async with Worker(client, task_queue=TASK_QUEUE, workflows=[AgentWorkflow]):
+        with pytest.raises(WorkflowFailureError) as failure:
+            await run(connect)
+
+    assert isinstance(failure.value.cause, CancelledError)
+    assert 0 < len(events) < 4
+    assert events[-1] == LAST_EVENT

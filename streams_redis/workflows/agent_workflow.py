@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 
 from temporalio import workflow
@@ -30,11 +31,14 @@ class AgentWorkflow:
         self._stream_ref = stream.ref
         try:
             await stream.append(AgentEvent("status", f"Thinking about: {question}"))
-            return await workflow.execute_activity(
+            result = await workflow.execute_activity(
                 stream_answer,
                 stream.ref,
                 start_to_close_timeout=timedelta(minutes=1),
             )
-        finally:
-            # A Stream has no close, so a reader stops when it sees this event.
+        except (Exception, asyncio.CancelledError):
+            # Coroutine cleanup cannot await a Store call, so exclude GeneratorExit.
             await stream.append(LAST_EVENT)
+            raise
+        await stream.append(LAST_EVENT)
+        return result

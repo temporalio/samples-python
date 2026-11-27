@@ -20,7 +20,7 @@ LAST_EVENT = AgentEvent("status", "Done")
 
 
 async def connect() -> Client:
-    """Connect a client whose Stream calls, and those of its Workers, go to Redis."""
+    """Share one Store configuration between the client and its Workers."""
     config = ClientConfig.load_client_connect_config()
     config.setdefault("target_host", "localhost:7233")
     store = RedisStreamStore(os.environ.get("REDIS_URL", "redis://localhost:6379"))

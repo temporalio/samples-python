@@ -1,4 +1,4 @@
-"""Start the agent, print its events as they come, disconnect, and resume."""
+"""Resume Stream reads after a client disconnect."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import asyncio
 import uuid
 from collections.abc import Awaitable, Callable
 
-from temporalio.client import Client
+from temporalio.client import Client, WorkflowHandle
 from temporalio.nexus.system.stream_service import StreamRef
 
 from streams_redis.shared import LAST_EVENT, TASK_QUEUE, AgentEvent, connect
@@ -21,12 +21,8 @@ async def follow(
     after: bytes | None,
     stop_after: int | None = None,
 ) -> tuple[list[AgentEvent], bytes | None]:
-    """Print the events after an offset, to ``LAST_EVENT`` or ``stop_after`` of them.
-
-    Return the events, with the offset of the last one.
-    """
+    """Stop at an application event because Streams have no close operation."""
     events: list[AgentEvent] = []
-    # The read waits for new events and never ends by itself, so the loop breaks.
     async for record in client.get_stream(stream_ref).read(from_offset=after):
         print(f"{record.offset.hex()}  {record.body.kind:<6}  {record.body.text}")
         events.append(record.body)
@@ -34,6 +30,23 @@ async def follow(
         if record.body == LAST_EVENT or len(events) == stop_after:
             break
     return events, after
+
+
+async def read_and_resume(
+    client: Client,
+    handle: WorkflowHandle,
+    connect: Callable[[], Awaitable[Client]],
+) -> list[AgentEvent]:
+    stream_ref = await handle.execute_update(AgentWorkflow.stream_ref)
+    first, offset = await follow(client, stream_ref, after=None, stop_after=4)
+    if LAST_EVENT not in first:
+        print("-- The reader disconnects, and the agent goes on.")
+        await asyncio.sleep(1)
+
+        # The last consumed offset prevents gaps and repeats after reconnect.
+        rest, _ = await follow(await connect(), stream_ref, after=offset)
+        first.extend(rest)
+    return first
 
 
 async def run(connect: Callable[[], Awaitable[Client]]) -> list[AgentEvent]:
@@ -44,18 +57,22 @@ async def run(connect: Callable[[], Awaitable[Client]]) -> list[AgentEvent]:
         id=f"agent-{uuid.uuid4()}",
         task_queue=TASK_QUEUE,
     )
-    stream_ref = await handle.execute_update(AgentWorkflow.stream_ref)
-    first, offset = await follow(client, stream_ref, after=None, stop_after=4)
-    if LAST_EVENT not in first:
-        print("-- The reader disconnects, and the agent goes on.")
-        await asyncio.sleep(1)
-
-        # A new client needs only the ref and the offset, so it misses no event and
-        # repeats none.
-        rest, _ = await follow(await connect(), stream_ref, after=offset)
-        first.extend(rest)
-    print(f"-- The Workflow returned: {await handle.result()}")
-    return first
+    result_task = asyncio.create_task(handle.result())
+    reader_task = asyncio.create_task(read_and_resume(client, handle, connect))
+    try:
+        # Termination skips the Workflow's final event, so also observe its result.
+        done, _ = await asyncio.wait(
+            (reader_task, result_task), return_when=asyncio.FIRST_COMPLETED
+        )
+        if result_task in done:
+            await result_task
+        events = await reader_task
+        print(f"-- The Workflow returned: {await result_task}")
+        return events
+    finally:
+        for task in (reader_task, result_task):
+            task.cancel()
+        await asyncio.gather(reader_task, result_task, return_exceptions=True)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,4 @@
-"""Collection guard and Redis server for the tests of the Streams sample on Redis.
-
-The Streams API of `temporalio` and the `temporalio-streams-redis` package have no
-release yet, so the environment of this repo has neither. The test module imports
-both, and `collect_ignore_glob` skips it before that import fails, as
-`tests/microsoft_agent_framework_plugin/conftest.py` does for its plugin.
-"""
+"""Skip collection until the unreleased Streams packages are installed."""
 
 import shutil
 import socket

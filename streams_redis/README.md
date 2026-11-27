@@ -1,33 +1,22 @@
 # Streams on Redis
 
-> **Experimental.** This sample uses the Streams API of the Temporal Python SDK and the
-> Redis Stream Store of `temporal-community/sdk-streams`. Neither has a release yet, and
-> both APIs may change.
+> **Experimental.** The Streams SDK and Redis Store are unreleased. Their APIs can change.
 
-A Stream is an append-only log of events in a Stream Store, here Redis. Workflow code,
-Activities and clients append to it, and a reader goes on from the offset of the last event
-that it read. `temporalio.contrib.workflow_streams` (see
-[workflow_streams](../workflow_streams)) keeps its events in the Workflow and needs no
-Store. A Stream keeps them in Redis. A client reads them from there, and they stay
-readable after the Workflow ends. A Stream has no close. It expires when its Retention
-(7 days by default) passes with no append.
+This sample reads agent events from Redis after a client disconnects.
+The reader saves the last consumed offset and resumes without repeating or skipping events.
 
-The sample has one scenario:
+The Workflow creates a Stream and returns its `StreamRef` through an Update.
+The Activity uses `BufferedAppender` to write fixed model tokens without an external model service.
+A `Done` event stops the reader. The Workflow result reports success or failure.
+The client also observes that result because termination can prevent the final event.
 
-* `workflows/agent_workflow.py` - an agent-like Workflow. It creates a Stream with the id
-  of the Workflow, writes a status event, and runs the model Activity. In `finally` it
-  writes the status event `Done`, which tells a reader to stop.
-* `activities/model_activity.py` - an Activity that stands in for a model. It appends each
-  token of its answer to the Stream with `BufferedAppender`.
-* `run_agent.py` - starts the Workflow, gets the `StreamRef` from an Update, and prints the
-  events as they come. After four events it disconnects. A new client then reads on from
-  the offset of the last event that it printed, and stops at `Done`. A read never ends
-  by itself, so each reader breaks out of its loop. A terminated Workflow writes no
-  `Done`, so its reader waits until you stop it.
+Streams have no close operation. Each new batch restarts retention, which defaults to seven days.
+Reads and resends do not extend retention. Events remain readable after the Workflow ends.
+The [Workflow Streams sample](../workflow_streams) keeps events in the Workflow and needs no Store.
 
 ## Install
 
-The two packages build from source, with Rust and `protoc`. From the root of this repo:
+Install Rust and `protoc`. Run these commands from the repository root.
 
 ```bash
 uv sync
@@ -37,48 +26,39 @@ git clone --branch moe/retention-from-close https://github.com/temporal-communit
 uv pip install ../sdk-streams/python
 ```
 
-The Store's native module needs the crate `temporalio-streams`, which isn't on crates.io
-yet. `patch-sdk-rust.sh` points the build at the branch of `temporalio/sdk-rust` that has it.
+The patch script selects the unreleased `temporalio-streams` Rust crate.
+Use `--no-sync` below to keep `uv` from replacing these packages with released versions.
 
-## Run it
+## Run
 
-Start Redis and a Temporal dev server:
+Start Redis and Temporal in separate terminals.
 
 ```bash
-redis-server
+redis-server --port 26379
+```
+
+```bash
 temporal server start-dev
 ```
 
-Start the Worker, and then the agent in another terminal:
+Start the Worker and client in separate terminals.
 
 ```bash
-uv run --no-sync streams_redis/run_worker.py
-uv run --no-sync streams_redis/run_agent.py
+REDIS_URL=redis://localhost:26379 uv run --no-sync streams_redis/run_worker.py
 ```
 
-`--no-sync` keeps uv from putting the released `temporalio` back. Set `REDIS_URL` for a
-Redis other than `redis://localhost:6379`.
-
-The agent prints each event with its offset, which is opaque bytes:
-
+```bash
+REDIS_URL=redis://localhost:26379 uv run --no-sync streams_redis/run_agent.py
 ```
-000001a2068b96180000000000000000  status  Thinking about: Why keep the events of an agent in Redis?
-000001a2068b96880000000000000000  token   Redis
-000001a2068b97210000000000000000  token   keeps
-000001a2068b97b90000000000000000  token   the
--- The reader disconnects, and the agent goes on.
-000001a2068b98510000000000000000  token   events,
-...
-000001a2068b9edd0000000000000000  token   rest.
-000001a2068b9f120000000000000000  status  Done
--- The Workflow returned: Redis keeps the events, so a reader can leave and come back for the rest.
-```
+
+The client prints each event and its offset. It reconnects after four events and reads through `Done`.
+A Workflow failure ends the reader and raises the Workflow error.
 
 ## Test
 
-The test starts its own `redis-server`, from the `PATH`. It isn't collected when the two
-packages aren't installed, as in the CI of this repo.
+The tests start a local Temporal server and a private `redis-server` from `PATH`.
+Collection skips these tests when either unreleased package is absent.
 
 ```bash
-uv run --no-sync pytest tests/streams_redis
+uv run --no-sync pytest tests/streams_redis --deselect=tests/test_envconfig.py::test_load_profiles_no_config_file
 ```

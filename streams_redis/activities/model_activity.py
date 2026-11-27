@@ -13,9 +13,9 @@ ANSWER = "Redis keeps the events, so a reader can leave and come back for the re
 
 @activity.defn
 async def stream_answer(stream_ref: StreamRef[AgentEvent]) -> str:
-    """Stand in for a model that streams the tokens of its answer."""
+    """Use fixed tokens so the sample needs no model service."""
     stream = activity.client().get_stream(stream_ref)
-    # The appender writes in the background, so the model never waits for Redis.
+    # Background writes let token generation continue between flushes.
     async with BufferedAppender(stream) as tokens:
         for word in ANSWER.split():
             tokens.append(AgentEvent("token", word))

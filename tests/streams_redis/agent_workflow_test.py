@@ -1,6 +1,8 @@
+import asyncio
+
 import pytest
 from temporalio.client import Client, StreamConfig, WorkflowFailureError
-from temporalio.exceptions import CancelledError
+from temporalio.exceptions import CancelledError, TerminatedError
 from temporalio.worker import Worker
 from temporalio_streams_redis import RedisStreamStore
 
@@ -26,7 +28,6 @@ async def test_a_reader_resumes_at_its_offset(client: Client, redis_url: str):
     ):
         events = await run(connect)
 
-    # The reader got each event once and in order, across its disconnect, to Done.
     assert events == [
         AgentEvent("status", f"Thinking about: {QUESTION}"),
         *(AgentEvent("token", word) for word in ANSWER.split()),
@@ -63,3 +64,34 @@ async def test_an_early_terminal_event_observes_the_workflow_result(
     assert isinstance(failure.value.cause, CancelledError)
     assert 0 < len(events) < 4
     assert events[-1] == LAST_EVENT
+
+
+async def test_a_terminated_workflow_stops_its_reader(
+    client: Client, redis_url: str, monkeypatch
+):
+    config = client.config()
+    config["stream_config"] = StreamConfig(stores=[RedisStreamStore(redis_url)])
+    client = Client(**config)
+    follow = run_agent.follow
+    reader_closed = asyncio.Event()
+
+    async def terminate_then_follow(client, stream_ref, **kwargs):
+        await client.get_workflow_handle(stream_ref.id).terminate()
+        try:
+            return await follow(client, stream_ref, **kwargs)
+        finally:
+            reader_closed.set()
+
+    monkeypatch.setattr(run_agent, "follow", terminate_then_follow)
+
+    async def connect() -> Client:
+        return client
+
+    # A queued Activity keeps the Workflow open without writing its final event.
+    async with Worker(client, task_queue=TASK_QUEUE, workflows=[AgentWorkflow]):
+        async with asyncio.timeout(15):
+            with pytest.raises(WorkflowFailureError) as failure:
+                await run(connect)
+
+    assert isinstance(failure.value.cause, TerminatedError)
+    assert reader_closed.is_set()

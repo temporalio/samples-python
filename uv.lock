@@ -4409,6 +4409,9 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
+activity-sessions = [
+    { name = "rich" },
+]
 bedrock = [
     { name = "boto3" },
 ]
@@ -4536,6 +4539,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
+activity-sessions = [{ name = "rich", specifier = ">=13,<15" }]
 bedrock = [{ name = "boto3", specifier = ">=1.34.92,<2" }]
 claude-agent-sdk = [
     { name = "opentelemetry-exporter-otlp-proto-grpc", specifier = ">=1.30.0,<2" },

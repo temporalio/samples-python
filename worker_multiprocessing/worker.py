@@ -115,7 +115,7 @@ def workflow_worker(client: Client) -> Worker:
         workflows=[ParallelizedWorkflow],
         # Workflow tasks are CPU bound, but generally execute quickly.
         # Because we're leveraging multiprocessing to achieve parallelism,
-        # we want each workflow worker to be confirgured for small workflow
+        # we want each workflow worker to be configured for small workflow
         # task processing.
         max_concurrent_workflow_tasks=2,
         workflow_task_poller_behavior=PollerBehaviorSimpleMaximum(2),

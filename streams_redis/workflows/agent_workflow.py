@@ -31,10 +31,18 @@ class AgentWorkflow:
         self._stream_ref = stream.ref
         try:
             await stream.append(AgentEvent("status", f"Thinking about: {question}"))
+            # Cancellation must preserve the recorded Workflow command order.
+            wait_for_writer = workflow.patched("wait-for-stream-writer-cancellation")
             result = await workflow.execute_activity(
                 stream_answer,
                 stream.ref,
                 start_to_close_timeout=timedelta(minutes=1),
+                heartbeat_timeout=timedelta(seconds=1) if wait_for_writer else None,
+                cancellation_type=(
+                    workflow.ActivityCancellationType.WAIT_CANCELLATION_COMPLETED
+                    if wait_for_writer
+                    else workflow.ActivityCancellationType.TRY_CANCEL
+                ),
             )
         except (Exception, asyncio.CancelledError):
             # Coroutine cleanup cannot await a Store call, so exclude GeneratorExit.

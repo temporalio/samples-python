@@ -6,7 +6,13 @@ import asyncio
 import uuid
 from collections.abc import Awaitable, Callable
 
-from temporalio.client import Client, WorkflowHandle
+from temporalio.client import (
+    Client,
+    WithStartWorkflowOperation,
+    WorkflowUpdateHandle,
+    WorkflowUpdateStage,
+)
+from temporalio.common import WorkflowIDConflictPolicy
 from temporalio.nexus.system.stream_service import StreamRef
 
 from streams_redis.shared import LAST_EVENT, TASK_QUEUE, AgentEvent, connect
@@ -34,10 +40,10 @@ async def follow(
 
 async def read_and_resume(
     client: Client,
-    handle: WorkflowHandle,
+    ref_update: WorkflowUpdateHandle[StreamRef[AgentEvent]],
     connect: Callable[[], Awaitable[Client]],
 ) -> list[AgentEvent]:
-    stream_ref = await handle.execute_update(AgentWorkflow.stream_ref)
+    stream_ref = await ref_update.result()
     first, offset = await follow(client, stream_ref, after=None, stop_after=4)
     if LAST_EVENT not in first:
         print("-- The reader disconnects, and the agent goes on.")
@@ -51,14 +57,21 @@ async def read_and_resume(
 
 async def run(connect: Callable[[], Awaitable[Client]]) -> list[AgentEvent]:
     client = await connect()
-    handle = await client.start_workflow(
+    start = WithStartWorkflowOperation(
         AgentWorkflow.run,
         QUESTION,
         id=f"agent-{uuid.uuid4()}",
+        id_conflict_policy=WorkflowIDConflictPolicy.FAIL,
         task_queue=TASK_QUEUE,
     )
+    ref_update = await client.start_update_with_start_workflow(
+        AgentWorkflow.stream_ref,
+        start_workflow_operation=start,
+        wait_for_stage=WorkflowUpdateStage.ACCEPTED,
+    )
+    handle = await start.workflow_handle()
     result_task = asyncio.create_task(handle.result())
-    reader_task = asyncio.create_task(read_and_resume(client, handle, connect))
+    reader_task = asyncio.create_task(read_and_resume(client, ref_update, connect))
     try:
         # Termination skips the Workflow's final event, so also observe its result.
         done, _ = await asyncio.wait(

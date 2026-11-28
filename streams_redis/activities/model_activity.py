@@ -18,6 +18,7 @@ async def stream_answer(stream_ref: StreamRef[AgentEvent]) -> str:
     # Background writes let token generation continue between flushes.
     async with BufferedAppender(stream) as tokens:
         for word in ANSWER.split():
+            activity.heartbeat()
             tokens.append(AgentEvent("token", word))
             await asyncio.sleep(0.15)
     return ANSWER

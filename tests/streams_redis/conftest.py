@@ -1,5 +1,6 @@
 """Skip collection until the unreleased Streams packages are installed."""
 
+import importlib.util
 import shutil
 import socket
 import subprocess
@@ -8,13 +9,13 @@ import time
 from collections.abc import Iterator
 
 import pytest
+import temporalio.client
 
 collect_ignore_glob: list[str] = []
 
-try:
-    import temporalio_streams_redis  # noqa: F401
-    from temporalio.client import StreamConfig  # noqa: F401
-except ImportError:
+if importlib.util.find_spec("temporalio_streams_redis") is None or not hasattr(
+    temporalio.client, "StreamConfig"
+):
     collect_ignore_glob = ["*_test.py"]
 
 

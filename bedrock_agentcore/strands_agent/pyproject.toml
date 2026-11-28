@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 readme = "README.md"
 license = "MIT"
 dependencies = [
-    "temporalio>=1.36.0,<2",
+    "temporalio==1.37.0",
     "temporalio-strands-agents>=0.1.0",
     "strands-agents>=1.39.0",
     "bedrock-agentcore>=1.9.1",

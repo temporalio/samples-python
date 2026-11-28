@@ -14,7 +14,7 @@ jobs:
     name: Detect standalone sample changes
     runs-on: ubuntu-latest
     outputs:
-      projects: ${{ steps.changes.outputs.projects }}
+      matrix: ${{ steps.changes.outputs.matrix }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -31,30 +31,36 @@ jobs:
             changed_files="$(git ls-files)"
           fi
 
-          projects_json="$({
+          matrix_json="$({
             for project in \
               arize_tracing \
               bedrock_agentcore/strands_agent \
               lambda_worker \
+              nexus_serialization_context \
               microsoft_agent_framework_plugin/mcp \
-              openai_agents/mcp_v2
+              openai_agents/mcp_v2 \
+              trio_async
             do
               if grep -q "^${project}/" <<< "$changed_files"; then
                 printf '%s\n' "$project"
               fi
             done
-          } | jq -Rsc 'split("\n") | map(select(length > 0))')"
+          } | jq -Rsc '
+            split("\n") | map(select(length > 0)) |
+            map(. as $project |
+              (if $project == "trio_async" then ["3.12", "3.13"] else ["3.11", "3.14"] end)[] |
+              {project: $project, python: .})
+          ')"
 
-          echo "projects=$projects_json" >> "$GITHUB_OUTPUT"
+          echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
 
   standalone-lint-test:
     needs: detect-standalone-changes
-    if: needs.detect-standalone-changes.outputs.projects != '[]'
+    if: needs.detect-standalone-changes.outputs.matrix != '[]'
     strategy:
       fail-fast: false
       matrix:
-        python: ["3.11", "3.14"]
-        project: ${{ fromJSON(needs.detect-standalone-changes.outputs.projects) }}
+        include: ${{ fromJSON(needs.detect-standalone-changes.outputs.matrix) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -81,14 +87,14 @@ jobs:
       - name: Verify standalone results
         env:
           DETECTION_RESULT: ${{ needs.detect-standalone-changes.result }}
-          PROJECTS: ${{ needs.detect-standalone-changes.outputs.projects }}
+          MATRIX: ${{ needs.detect-standalone-changes.outputs.matrix }}
           TEST_RESULT: ${{ needs.standalone-lint-test.result }}
         run: |
           if [[ "$DETECTION_RESULT" != "success" ]]; then
             echo "Standalone project detection did not succeed: $DETECTION_RESULT"
             exit 1
           fi
-          if [[ "$PROJECTS" == "[]" && "$TEST_RESULT" == "skipped" ]]; then
+          if [[ "$MATRIX" == "[]" && "$TEST_RESULT" == "skipped" ]]; then
             echo "No standalone projects changed."
           elif [[ "$TEST_RESULT" != "success" ]]; then
             echo "Standalone lint and tests did not succeed: $TEST_RESULT"
@@ -130,7 +136,7 @@ jobs:
           version: "23.x"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - run: uv tool install poethepoet
-      - run: uv sync --group=dsl --group=encryption --group=trio-async
+      - run: uv sync --group=dsl --group=encryption
       - run: poe lint
       - run: mkdir junit-xml
       - run: poe test -s --junit-xml=junit-xml/${{ matrix.python }}--${{ matrix.os }}.xml

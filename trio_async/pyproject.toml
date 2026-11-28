@@ -1,0 +1,47 @@
+[project]
+name = "temporalio-samples-trio-async"
+version = "0.1.0"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "temporalio==1.36.1",
+    "trio>=0.28.0,<0.29",
+    "trio-asyncio>=0.15.0,<0.16",
+]
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["trio_async"]
+package-dir = { trio_async = "." }
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0,<0.6",
+    "mypy>=1.4.1,<2",
+    "poethepoet>=0.36.0",
+    "pytest>=7.1.2,<8",
+    "pytest-asyncio>=0.18.3,<0.19",
+]
+
+[tool.poe.tasks]
+lint = [
+    { cmd = "uv run ruff check --select I" },
+    { cmd = "uv run ruff format --check" },
+    { cmd = "uv run mypy --check-untyped-defs ." },
+]
+test = "uv run pytest"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint.isort]
+known-first-party = ["trio_async"]
+
+[tool.mypy]
+ignore_missing_imports = true
